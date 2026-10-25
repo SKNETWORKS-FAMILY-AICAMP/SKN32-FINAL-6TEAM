@@ -452,6 +452,10 @@ travel:
   # 고객이 보낸 공개 SNS 맛집 링크. 수치는 첫 범위의 요청/조회 예산으로 고른 값이다.
   # User-requested Activity lookup supplement. OFF until a reviewed zero-cost
   # public search endpoint, public identity anchors and shared budgets are supplied.
+  # backend: searxng(search_endpoint JSON) | ddgs(키 없는 무료 검색 결과 수집 — Hermes 웹검색 backend 와 같은 패키지).
+  # ★ddgs 는 공식 API 가 아니라 검색 결과 수집이라 결과가 흔들린다 — URL 발견용일 뿐, 사실은 공식 페이지 JSON-LD 만(wiki/external/activity-public-web.md).
+  #   search_hosts 에 backends 가 실제로 부르는 host(ddgs 등록부 search_url)가 모두 있어야 켜진다. auto/all 은 host 가 정해지지 않아 거절.
+  #   ★출처: 우리가 고른 값 — duckduckgo 한 곳(요청 1회/검색), 한국 지역, 결과 5개(공식 page 는 max_pages 로 다시 자른다).
   activity_public_web:
     enabled: false
     backend: searxng
@@ -461,6 +465,11 @@ travel:
     search_hosts: []
     identities: []
     daily_limits: {}
+    ddgs:
+      backends: [duckduckgo]
+      region: kr-kr
+      safesearch: moderate
+      max_results: 5
   social_dining:
     max_links: 10
     max_url_chars: 2048

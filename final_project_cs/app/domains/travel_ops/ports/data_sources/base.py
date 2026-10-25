@@ -503,7 +503,9 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     from .activity_public_web import build_activity_public_web
     sources.activity_web = build_activity_public_web(settings, guardrails, limiter=limiter, cache=cache)
     if not sources.activity_web.config.get('enabled'):
-        sources.unavailable['activity_web'] = 'public free-search provider not configured/approved/budgeted; lookup remains unknown'
+        sources.unavailable['activity_web'] = ('public free-search provider not configured/approved/budgeted; lookup remains unknown'
+                                               + (f" ({sources.activity_web.config['config_detail']})"
+                                                  if sources.activity_web.config.get('config_detail') else ''))
     # ★키를 안 보고 붙인다 — 이 소스는 인증 파라미터 자체가 없다.
     sources.heritage = HeritageSource(limiter=limiter, cache=cache)
     # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP) — 키가 없다. 응답은 캐시에 담지 않는다(가격·잔여).

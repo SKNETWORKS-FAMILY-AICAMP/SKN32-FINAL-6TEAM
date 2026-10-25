@@ -199,7 +199,7 @@ def _area_keys(conn, tenant_id: str) -> set[str]:
 
 def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blobs: dict[int, bytes],
             see: Callable[[str, bytes], str] | None, chat: Any = None, tour: Any = None, kakao: Any = None,
-            today: date | None = None, dining: Any = None) -> str:
+            today: date | None = None, dining: Any = None, activity_web: Any = None) -> str:
     """뒤에서 한 건을 읽는다. 돌려주는 값은 마지막 상태(review · fatal). `blobs` = {position: 바이트}.
 
     ★2주차(2026-09-27): 규칙 → 남은 줄은 모델이 **가리키기만**(`chat`) → 날짜 해석 → 장소 찾기(`tour` 관광공사 ·
@@ -271,7 +271,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
                         differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
                         position=int(source["position"]), agent_num_predict=reader["num_predict"],
-                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect)
+                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect,
+                        activity_web=activity_web)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -1361,7 +1362,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
                 reading_stream: dict[str, Any] | None = None,
                 on_reading: Callable[[dict[str, Any]], None] | None = None,
-                connect: Callable[[], Any] | None = None) -> list[dict[str, Any]]:
+                connect: Callable[[], Any] | None = None, activity_web: Any = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
     `agent` · `agent_mode` `[2026-10-16 사용자 지시]` — 읽기 에이전트(`agent_read.py`, 가르친 모델 한 번 호출). `on` 이면 에이전트가 먼저 읽고
@@ -1550,7 +1551,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
                                       near=_near_hint(index, items, resolved, dated), at=_visit_at(index, rows, dated),
-                                      conn=connect)       # 공용 별칭의 DB 표 — 연결을 잡지 않고 여는 함수로(`place_by_name.alias_target`)
+                                      conn=connect, activity_web=activity_web)       # 공용 별칭의 DB 표 — 연결을 잡지 않고 여는 함수로(`place_by_name.alias_target`)
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,

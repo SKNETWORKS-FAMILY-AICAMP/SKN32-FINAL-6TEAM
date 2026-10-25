@@ -1405,6 +1405,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             chat=chat if hasattr(chat, "json") else None,
                             tour=_lazy("place", place_factory),
                             kakao=_kakao_raw,
+                            activity_web=getattr(_lazy("travel_sources", _travel_sources), "activity_web", None),
                             dining=_dining_lookup(_ctx))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "screened": None, "human_check": human}
 
