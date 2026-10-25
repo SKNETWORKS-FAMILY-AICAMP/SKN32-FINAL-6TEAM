@@ -188,6 +188,12 @@ def _in_text(lines: list[str], text: Any) -> bool:
     return " ".join(text.split()) in " ".join(flat.split())
 
 
+def _year_written(when: str, quote: str, lines: list[str]) -> bool:
+    """모델 날짜(YYYY-MM-DD)의 연도를 고객이 적었나 — 날짜 인용이나 본문 어딘가(머리줄 「2026년 여행」)에 그 연도 숫자가 있으면 적은 것이다."""
+    year = when[:4]
+    return year in quote or any(year in line for line in lines)
+
+
 def _guessed_pm(value: str, quote: str) -> bool:
     """모델이 원문의 시(時)와 다른 시를 냈다(「1시」→ 13:00) — 오후로 본 것이라 확인을 받는다."""
     m = _DIGIT_HOUR.search(quote)
@@ -230,9 +236,14 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
         if when and dq is None:
             dropped["date"] += 1
             when = None
+        relative = bool(when and dq and not re.search(r"\d", dq.text))
+        if when and dq is not None and not relative and not _year_written(when, dq.text, lines):
+            # ★`[2026-10-26 사용자 확정]` 연도 없는 날짜는 오늘 이후 처음 오는 그 날(오늘 포함)이다. 모델이 붙인 연도가 원문(인용 · 본문)에 없으면
+            #   월 · 일만 받고 연도는 날짜 해석(`dates.resolve_dates` 의 `year_filled`)이 채운다 — 모델이 올해 연도를 붙여 이미 지난 날로 내도 명시 과거로 보지 않는다
+            when = "--" + when[5:]
         out.items.append(AgentItem(
             title=title, day=it.get("day") if isinstance(it.get("day"), int) else None, date=when, date_quote=dq if when else None,
-            date_guessed=bool(when and dq and not re.search(r"\d", dq.text)), start=start, end=end, time_quote=tq if start else None,
+            date_guessed=relative, start=start, end=end, time_quote=tq if start else None,
             time_guessed=bool(start and tq and _guessed_pm(start, tq.text)), time_fixed=fixed,
             kind=it.get("kind") if it.get("kind") in ("activity", "dining", "lodging") else "activity",
             role="origin" if it.get("role") == "origin" else "visit"))

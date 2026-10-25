@@ -422,7 +422,8 @@ class TripDesk:
                 if saved is not None:
                     # ★`[2026-10-19 사용자 결정 A]` 요청한 이름은 「위치 확인 필요」로 저장하고, 「직접 고르기」 카드도 함께 — 바뀐 일정을 수정 모드에서 고치게
                     return chat_edit.with_saved_pick(saved, ops, refused.code, refused.message)
-            status = "clarify" if refused.code.startswith("need_") else "edit_refused"
+            # `[2026-10-26 사용자 확정]` 지난 날짜 되묻기(「혹시 오타 아닌가요?」 + 날짜 버튼)도 질문이다 — 버튼(`choices`)을 실은 거절은 clarify
+            status = "clarify" if refused.code.startswith("need_") or refused.detail.get("choices") else "edit_refused"
             requested = str(raw.get("destination_text") or "").strip()
             choices = ([{"label": requested + " (위치 확인 필요)", "message": requested + " 지점을 확인해 줘"}]
                        if requested and refused.code in ("place_not_found", "intake_incomplete") else [])

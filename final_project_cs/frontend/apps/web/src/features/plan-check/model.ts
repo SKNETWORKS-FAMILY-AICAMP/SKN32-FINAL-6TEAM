@@ -646,14 +646,41 @@ export interface ItemDraft { title: string; date: string; start: string; end: st
 export const draftOfItem = (item: PlanItem): ItemDraft =>
   ({ title: item.written ?? item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
 
+/** Now in Seoul — a date and the minute of the day (the same shape as the trip screen's clock, `trip-timeline.SeoulNow`). */
+export interface SeoulClock { date: string; minute: number }
+
+const clockKey = (date: string, hhmm: string) => `${date}T${hhmm}`;
+const nowKey = (now: SeoulClock) => clockKey(now.date, `${String(Math.floor(now.minute / 60)).padStart(2, "0")}:${String(now.minute % 60).padStart(2, "0")}`);
+
+/**
+ * `[2026-10-26 사용자 확정]` Whether an edit makes a time that has passed — the same rule as the server's 「완료」 (`reopen.plan_edit`), checked here first:
+ * a new stop (`original` null) starting before now; a stop already over whose date or times change; a start moved before now; an end moved to now or before.
+ * A stop keeping its date and times (only its name or place changes) is fine even when it is over. The minute now is not past (times are HH:MM).
+ */
+export function pastEdit(next: Pick<ItemDraft, "date" | "start" | "end">, original: Pick<ItemDraft, "date" | "start" | "end"> | null, now: SeoulClock): boolean {
+  if (!next.date || !next.start) return false;
+  const at = nowKey(now);
+  const start = clockKey(next.date, next.start);
+  if (!original) return start < at;
+  const startMoved = next.date !== original.date || next.start !== original.start;
+  const endMoved = next.date !== original.date || next.end !== original.end;
+  if (!startMoved && !endMoved) return false;
+  // An end not after the start (a stay ending on a later day) does not say when the stop is over on this screen — the server decides then.
+  const originalEnd = original.end && original.end > original.start ? original.end : original.end ? null : original.start;
+  if (original.date && original.start && originalEnd && clockKey(original.date, originalEnd) <= at) return true;
+  return (startMoved && start < at) || (endMoved && clockKey(next.date, next.end || next.start) <= at);
+}
+
 /**
  * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,
- * no place name (unless 「장소 없음」). Everything else — whether the place exists, the date's range — is the server's to say.
+ * no place name (unless 「장소 없음」), and — when editing a registered trip (`past` given) — a date or time that has passed (`pastEdit`).
+ * Everything else — whether the place exists, the date's range — is the server's to say.
  */
-export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | null {
+export function draftProblem(draft: ItemDraft, past?: { original: ItemDraft | null; now: SeoulClock }): "title" | "time" | "place" | "past" | null {
   if (!draft.title.trim()) return "title";
   if (draft.start && draft.end && draft.end <= draft.start) return "time";
   if (!draft.noPlace && !draft.place.trim()) return "place";
+  if (past && pastEdit(draft, past.original, past.now)) return "past";
   return null;
 }
 

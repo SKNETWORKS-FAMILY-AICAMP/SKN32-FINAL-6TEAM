@@ -133,9 +133,10 @@ export function TripEdit({ trip, pick = null, onExit }: { trip: Trip;
   const edit: TripEditMode = useMemo(() => ({
     onCancel: () => setAsking(true),
     now: railNow,
+    clock: now,
     preparing: !result,
     intro: { text: t("일정 수정 화면이에요", "Edit your itinerary"), sub: t("수정 준비를 마치면 고칠 수 있어요 · 지난 일정은 그대로 유지해요", "Editing becomes available when preparation finishes · past stops stay unchanged"), ms: 3_500 },
-  }), [railNow, result, t]);
+  }), [railNow, now, result, t]);
 
   if (query.data && !query.data.review) {
     // The server could not check the plan (`review_error`): nothing is offered as fine that it did not check.

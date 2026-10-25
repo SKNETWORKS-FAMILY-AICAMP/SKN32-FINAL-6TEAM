@@ -65,7 +65,9 @@ def _refusal(code: str, message: str) -> str:
     if code == "place_not_found":
         return f"말씀하신 곳을 장소 목록 · 관광 정보 · 지도에서 하나로 찾지 못해 일정은 바꾸지 않았어요({message}). 장소 이름을 조금 더 정확히 알려 주세요."
     if code == "item_in_past":
-        return f"이미 지난 일정은 바꿀 수 없어 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}."
+        return f"지난 때로는 일정을 넣거나 옮길 수 없어 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}."
+    if code == "no_upcoming_items":
+        return "진행 중이거나 앞으로 남은 일정이 하나는 있어야 해서 일정은 바꾸지 않았어요. 마지막 남은 일정은 뺄 수 없어요."
     if code == "itinerary_infeasible":
         return f"그렇게 바꾸면 일정이 맞지 않아 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}"
     if code == "stale_itinerary":
@@ -417,6 +419,59 @@ def _same_day(day: str, start: str, end: str | None, title: str) -> None:
         raise EditRefused("crosses_midnight", f"「{title}」이(가) 자정을 넘기게 돼 채팅으로는 옮기지 않았어요. 일정 수정 화면에서 날짜와 시각을 함께 고쳐 주세요.")
 
 
+#: `[2026-10-26 사용자 확정]` 지난 날짜 되묻기 선택지 제목 — 화면은 기존 채팅 선택지(`choices` · `choices_title`)로 그린다
+PAST_DATE_TITLE = "혹시 오타 아닌가요?"
+
+
+def future_date_choices(*, title: str, item_id: Any, begin: str, stops: list[Any], now: datetime, verb: str) -> list[dict[str, Any]]:
+    """같은 시각(`begin` HH:MM)을 지키는 **가장 가까운 앞으로의 날짜** 후보 — 여행 날짜(첫 일정 날~마지막 일정 날) 중 그 날 그 시각이 지금 이후인 날.
+    여행 날짜에 하나도 없으면 오늘 · 내일 중 지금 이후인 날. 선택지 수는 가드레일 `travel.chat_edit.past_date_choices`.
+    `message` 는 버튼을 누르면 고객 대신 보낼 문장이다(기존 채팅 선택지 계약 — `label` · `message` · 서버가 확인한 `item_id`)."""
+    from app.core.settings import get_guardrails
+
+    limit = int(get_guardrails().get("travel.chat_edit.past_date_choices"))
+    floor = now.astimezone(KST).replace(second=0, microsecond=0)
+    today = floor.date()
+    dates = sorted({s.starts_at.astimezone(KST).date() for s in stops if getattr(s, "kind", None) != "mobility"})
+    first = dates[0] if dates else None
+    span = [first + timedelta(days=n) for n in range((dates[-1] - first).days + 1)] if dates else []
+    clock = datetime.strptime(begin, "%H:%M").time()
+
+    def fits(day: Any) -> bool:
+        return datetime.combine(day, clock, tzinfo=KST) >= floor
+
+    days = [d for d in span if fits(d)] or [d for d in (today, today + timedelta(days=1)) if fits(d)]
+    out = []
+    for day in days[:limit]:
+        if first is not None and first <= day <= span[-1]:
+            spoken = f"{(day - first).days + 1}일차({day.month}월 {day.day}일)"
+        else:
+            spoken = f"{'오늘' if day == today else '내일'}({day.month}월 {day.day}일)"
+        out.append({"label": f"{trip_day_label(day)} {begin}",
+                    "message": f"{title} {spoken} {begin}{'으로 옮겨줘' if verb == 'move' else '에 넣어줘'}",
+                    **({"item_id": str(item_id)} if item_id is not None else {})})
+    return out
+
+
+def trip_day_label(day: Any) -> str:
+    from app.domains.travel_ops.components.conversation import trip_facts
+
+    return trip_facts._day_label(day)
+
+
+def past_time_refusal(*, title: str, item_id: Any, day: str, begin: str, stops: list[Any], now: datetime, verb: str) -> EditRefused:
+    """`[2026-10-26 사용자 확정]` 채팅 수정이 **지난 날짜 · 시각**을 냈다 — 적용하지 않고 「혹시 오타 아닌가요?」로 되묻고 가장 가까운 앞으로의 날짜를 버튼으로 낸다.
+    코드는 기존 `time_in_past` 그대로(웹 · 기록 호환). 후보가 없으면 버튼 없이 앞으로의 날짜를 알려 달라고만 한다(지어내지 않는다)."""
+    from datetime import date as _date
+
+    asked = _date.fromisoformat(day)
+    choices = future_date_choices(title=title, item_id=item_id, begin=begin, stops=stops, now=now, verb=verb)
+    action = "옮기지" if verb == "move" else "넣지"
+    text = (f"{PAST_DATE_TITLE} {trip_day_label(asked)} {begin}은(는) 이미 지난 때라 「{title}」 일정은 {action} 않았어요. "
+            + ("아래 가까운 날짜 중에서 골라 주시거나 다른 날짜와 시각을 알려 주세요." if choices else "앞으로의 날짜와 시각을 알려 주세요."))
+    return EditRefused("time_in_past", text, **({"choices": choices, "choices_title": PAST_DATE_TITLE} if choices else {}))
+
+
 _ALL = __import__("re").compile(r"전부|전체|모두|다\s*(?:미뤄|밀어|당겨|늦춰)|all\s+(?:of\s+)?(?:my|the)|everything", __import__("re").IGNORECASE)
 _PERIOD_WORDS = (("morning", __import__("re").compile(r"오전|아침")), ("afternoon", __import__("re").compile(r"오후")),
                  ("evening", __import__("re").compile(r"저녁|밤|evening|night", __import__("re").IGNORECASE)))
@@ -574,6 +629,10 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
             raise EditRefused("need_time", f"「{name}」을(를) 몇 시에(또는 어느 일정 앞뒤에) 넣을지 알려 주세요.")
         end = begin + DEFAULT_STAY
         _same_day(begin.date().isoformat(), begin.strftime("%H:%M"), end.strftime("%H:%M") if end.date() == begin.date() else "00:00", name)
+        if begin < now.astimezone(KST).replace(second=0, microsecond=0):
+            # `[2026-10-26 사용자 확정]` 지난 때에 새 일정을 넣지 않는다 — 「혹시 오타 아닌가요?」 + 가장 가까운 앞으로의 날짜 버튼
+            raise past_time_refusal(title=name, item_id=None, day=begin.date().isoformat(), begin=begin.strftime("%H:%M"),
+                                    stops=stops, now=now, verb="add")
         return [EditOp("add", date=begin.date().isoformat(), starts_at=begin.strftime("%H:%M"), ends_at=end.strftime("%H:%M"),
                        place_name=name, title=name)], f"{name} 넣기"
     raise EditRefused("not_an_edit", "무엇을 바꿀지 알아듣지 못해 일정은 바꾸지 않았어요.")
@@ -597,7 +656,15 @@ def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: lis
         if not it.start or not title or title in have or _GENERIC_PLACE.fullmatch(title):
             continue
         when = it.date or fallback_day
+        if when.startswith("--"):
+            # `[2026-10-26 사용자 확정]` 연도 없는 날짜(이해 에이전트가 원문에 없는 연도를 지운 값) — 오늘 이후 처음 오는 그 날(오늘 포함, 계획서 읽기와 같은 `dates._fill_year`)
+            from app.domains.travel_ops.components.intake.dates import _fill_year
+
+            when = _fill_year(when, today).isoformat()
         begin = datetime.fromisoformat(f"{when}T{it.start}").replace(tzinfo=KST)
+        if begin < now.astimezone(KST).replace(second=0, microsecond=0):
+            # 연도를 적은 지난 날짜 · 지난 시각 — 넣지 않고 되묻는다(여러 곳 중 하나라도 지났으면 하나도 넣지 않는다)
+            raise past_time_refusal(title=title, item_id=None, day=when, begin=it.start, stops=stops, now=now, verb="add")
         end = datetime.fromisoformat(f"{when}T{it.end}").replace(tzinfo=KST) if it.end and it.end > it.start else begin + DEFAULT_STAY
         if end.date() != begin.date():
             continue

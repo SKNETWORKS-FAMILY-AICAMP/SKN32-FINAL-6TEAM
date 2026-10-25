@@ -131,7 +131,10 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
         plan = reopen.prepare(conn, tenant_id=tenant, intake_id=intake_id, revision=revision,
                               base_items=base_items, frozen_ids=set(reopened["frozen_item_ids"]), now=now)
     if plan.past:
-        raise CommitRefused(422, "item_in_past", "지난 일정은 바꿀 수 없어요: " + ", ".join(plan.past), items=plan.past)
+        raise CommitRefused(422, "item_in_past", "지난 때로는 넣거나 옮길 수 없어요: " + ", ".join(plan.past), items=plan.past)
+    if plan.no_upcoming:
+        # `[2026-10-26 사용자 확정]` 진행 중이거나 앞으로 올 일정이 하나는 남아야 한다 — 마지막 하나를 빼거나 지난 때로 옮기지 않는다
+        raise CommitRefused(422, "no_upcoming_items", "진행 중이거나 앞으로 남은 일정이 하나는 있어야 해요 — 마지막 남은 일정은 뺄 수 없어요")
     if plan.unchanged:
         return base_version, False, None
     if before_write is not None:
