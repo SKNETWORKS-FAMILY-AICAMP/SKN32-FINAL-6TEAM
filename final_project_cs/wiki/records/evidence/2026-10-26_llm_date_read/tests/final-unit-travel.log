@@ -1,0 +1,390 @@
+LLMDATE root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\mgr-merge-20261026-0045\final_project_cs
+........................................................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+..............................................................s......... [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+......s.....s........................................................... [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+....................................ss............s..................... [ 19%]
+........................................................................ [ 20%]
+...............................................ss....................... [ 21%]
+....ssssssssssssssssssssssss.ssss....sssss.ss.....ssss.................. [ 21%]
+..............sssssssssssssssssssss..................................... [ 22%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+........................................................................ [ 25%]
+..............................................................ssssssssss [ 26%]
+ssssssssssssssssssssssssssss............................................ [ 27%]
+........................................................................ [ 28%]
+.....ssss.sssss..............................................ssss....... [ 29%]
+........................................................................ [ 30%]
+..................................................ssssss................ [ 31%]
+.............................s.......................................... [ 32%]
+........................................................................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+...........................................................s...s........ [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+........................................................................ [ 54%]
+.....................................................F.................. [ 55%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 61%]
+........................................................................ [ 62%]
+........................................................................ [ 63%]
+........................................................................ [ 64%]
+........................................................................ [ 65%]
+........................................................................ [ 65%]
+........................................................................ [ 66%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+........................................................................ [ 70%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 75%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 86%]
+.................FE..................................EEEE.E............. [ 87%]
+........................................................................ [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+.............................................                            [100%]
+=================================== ERRORS ====================================
+_ ERROR at teardown of test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call _
+
+    @pytest.fixture
+    def unique_key():
+        # 다른 시험·실제 공개 응답을 지우지 않고 이 시험이 만든 해시 한 줄만 정리한다.
+        service_key = 'TEST_ONLY_' + uuid4().hex
+        key = ('seoul_bus_arrival', BASE, tuple(sorted({
+            'serviceKey': service_key, 'busRouteId': '100100118', 'resultType': 'json'
+        }.items())))
+        yield service_key, DbResponseCache._hash(key)
+>       with get_connection() as conn, conn.transaction():
+             ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — RuntimeError: llmdate isolated runner: network/database denied
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — RuntimeError: llmdate isolated runner: network/database denied
+_ ERROR at setup of test_a_second_process_reuses_what_the_first_one_fetched_with_the_original_time _
+
+    @pytest.fixture()
+    def clean_table():
+        def wipe():
+            with get_connection() as conn, conn.transaction():
+                conn.execute("DELETE FROM source_response_cache WHERE source IN ('its', 'probe', 'kakao_local')")
+>       wipe()
+
+tests\unit\travel\test_shared_source_cache.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\test_shared_source_cache.py:96: in wipe
+    with get_connection() as conn, conn.transaction():
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_____________ ERROR at setup of test_an_expired_row_is_not_served _____________
+
+    @pytest.fixture()
+    def clean_table():
+        def wipe():
+            with get_connection() as conn, conn.transaction():
+                conn.execute("DELETE FROM source_response_cache WHERE source IN ('its', 'probe', 'kakao_local')")
+>       wipe()
+
+tests\unit\travel\test_shared_source_cache.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\test_shared_source_cache.py:96: in wipe
+    with get_connection() as conn, conn.transaction():
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_________ ERROR at setup of test_the_xml_string_of_a_feed_round_trips _________
+
+    @pytest.fixture()
+    def clean_table():
+        def wipe():
+            with get_connection() as conn, conn.transaction():
+                conn.execute("DELETE FROM source_response_cache WHERE source IN ('its', 'probe', 'kakao_local')")
+>       wipe()
+
+tests\unit\travel\test_shared_source_cache.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\test_shared_source_cache.py:96: in wipe
+    with get_connection() as conn, conn.transaction():
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ ERROR at setup of test_only_allowed_sources_reach_the_db_and_the_service_key_is_not_stored _
+
+    @pytest.fixture()
+    def clean_table():
+        def wipe():
+            with get_connection() as conn, conn.transaction():
+                conn.execute("DELETE FROM source_response_cache WHERE source IN ('its', 'probe', 'kakao_local')")
+>       wipe()
+
+tests\unit\travel\test_shared_source_cache.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\test_shared_source_cache.py:96: in wipe
+    with get_connection() as conn, conn.transaction():
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ ERROR at setup of test_a_source_adapter_through_the_shared_cache_hits_the_network_once_across_processes _
+
+    @pytest.fixture()
+    def clean_table():
+        def wipe():
+            with get_connection() as conn, conn.transaction():
+                conn.execute("DELETE FROM source_response_cache WHERE source IN ('its', 'probe', 'kakao_local')")
+>       wipe()
+
+tests\unit\travel\test_shared_source_cache.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\test_shared_source_cache.py:96: in wipe
+    with get_connection() as conn, conn.transaction():
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+================================== FAILURES ===================================
+_________________ test_batch_is_tenant_scoped_and_idempotent __________________
+
+    def test_batch_is_tenant_scoped_and_idempotent():
+        report_date = date(2026, 8, 12)
+        tenant = "voc_test_" + uuid4().hex
+        other_tenant = "voc_other_" + uuid4().hex
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_feedback.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call _
+
+unique_key = ('TEST_ONLY_3e37936bf9bb418a9d722f916ae4bb1b', 'a67fa8e9cfaeee442c1270d7719f4687d7f933ea7fdfa7fe686f9fa2e2bb2d56')
+
+    def test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call(unique_key):
+        key, key_hash = unique_key
+        observed = datetime.now(KST).replace(microsecond=0) - timedelta(seconds=8)
+        calls = []
+    
+        def transport(url, params):
+            calls.append(1)
+            return httpx.Response(200, json={'msgHeader': {'headerCd': '0'}, 'msgBody': {'itemList': [
+                {'busRouteId': '100100118', 'stId': '111000181', 'staOrd': str(seq),
+                 'rtNm': '753', 'stNm': '여행 출발 정류장', 'dir': direction,
+                 'mkTm': observed.isoformat(sep=' '), 'arrmsg1': message, 'arrmsg2': '출발대기'}
+                for seq, direction, message in [(5, '서울역', '4분38초후[2번째 전]'), (90, '종점', '2분후[1번째 전]')]
+            ]}})
+    
+        first_cache = DbResponseCache(300, get_connection)
+        second_cache = DbResponseCache(300, get_connection)
+        first = SeoulBusArrival(service_key=key, transport=transport, cache=first_cache)
+    
+        def forbidden_call(url, params):
+            pytest.fail('둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다')
+    
+        second = SeoulBusArrival(service_key=key, transport=forbidden_call, cache=second_cache)
+        a = first.arrivals('100100118', stop_id='111000181', stop_sequence=5)
+>       b = second.arrivals('100100118', stop_id='111000181', stop_sequence=90)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\ports\data_sources\seoul_bus.py:96: in arrivals
+    payload = self._fetch_json(BASE, {'serviceKey': self._key, 'busRouteId': str(route_id), 'resultType': 'json'})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\ports\data_sources\base.py:152: in _fetch_json
+    response = self._get(url, params)
+               ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+url = 'http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll'
+params = {'busRouteId': '100100118', 'resultType': 'json', 'serviceKey': 'TEST_ONLY_3e37936bf9bb418a9d722f916ae4bb1b'}
+
+    def forbidden_call(url, params):
+>       pytest.fail('둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다')
+E       Failed: 둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:44: Failed
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — RuntimeError: llmdate isolated runner: network/database denied
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — RuntimeError: llmdate isolated runner: network/database denied
+============================== warnings summary ===============================
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51
+  C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/unit/travel/test_its_key_budget.py::test_known_daily_block_skips_key_until_korean_midnight_without_resetting_total
+tests/unit/travel/test_its_key_budget.py::test_known_daily_block_skips_key_until_korean_midnight_without_resetting_total
+tests/unit/travel/test_its_key_budget.py::test_confirmed_monthly_block_survives_midnight_but_not_a_new_month
+tests/unit/travel/test_its_key_budget.py::test_confirmed_monthly_block_survives_midnight_but_not_a_new_month
+tests/unit/travel/test_its_key_budget.py::test_legacy_provider_mark_does_not_reset_or_replace_global_operator_counter
+tests/unit/travel/test_its_key_budget.py::test_legacy_provider_mark_does_not_reset_or_replace_global_operator_counter
+  C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\mgr-merge-20261026-0045\final_project_cs\tests\unit\travel\test_its_key_budget.py:50: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    self.result = self.db.execute(sql.replace("%s", "?"), params)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\llm-date-read-20261026\final-unit-travel.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_feedback.py::test_batch_is_tenant_scoped_and_idempotent
+FAILED tests/unit/travel/test_seoul_bus_shared_cache_v1.py::test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call
+ERROR tests/unit/travel/test_seoul_bus_shared_cache_v1.py::test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call
+ERROR tests/unit/travel/test_shared_source_cache.py::test_a_second_process_reuses_what_the_first_one_fetched_with_the_original_time
+ERROR tests/unit/travel/test_shared_source_cache.py::test_an_expired_row_is_not_served
+ERROR tests/unit/travel/test_shared_source_cache.py::test_the_xml_string_of_a_feed_round_trips
+ERROR tests/unit/travel/test_shared_source_cache.py::test_only_allowed_sources_reach_the_db_and_the_service_key_is_not_stored
+ERROR tests/unit/travel/test_shared_source_cache.py::test_a_source_adapter_through_the_shared_cache_hits_the_network_once_across_processes
+2 failed, 7397 passed, 128 skipped, 464 deselected, 7 warnings, 6 errors in 101.72s (0:01:41)
+rc=1

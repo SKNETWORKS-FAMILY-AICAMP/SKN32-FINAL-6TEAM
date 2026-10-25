@@ -2110,7 +2110,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
         # ★`[2026-10-19 진단 포인트 2]` 에이전트가 「숙소」라고 읽은 항목은 장소를 숙소 자료에서만 찾는다(`_place_kind_hint`) — 전에는 식사만 넘기고 숙소를 버렸다
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
                       "meal": it.kind == "dining", "lodging": it.kind == "lodging", "booked": booked, "segment": segment(it),
-                      "start": it.start})
+                      "start": it.start, "year_unverified": it.year_unverified})
     agent_count = len(items)
 
     # 규칙이 읽은 시각 있는 줄 중 에이전트가 빠뜨린 줄

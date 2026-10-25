@@ -8,6 +8,13 @@ domain: travel
 
 # guguroute wiki
 
+2026-10-26 [통합 HEAD 전체 시험 · push/서빙 보류 인계](handoff/2026-10-26_merged-head-push-serving-decision.md) — 시험 실패 0, 원격 전진으로 push 중단, 로컬 서빙 v9 유지; Codex 동의.
+
+2026-10-26 [날짜 읽기 LLM 판단 전환 인계](handoff/2026-10-26_llm-date-reading.md) — `date_form` · `year_quote` 스키마 · 프롬프트, 정규식 연도 판정 제거; 로컬 E4B 실측 · Codex 논의, 커밋만.
+2026-10-26 [지난 일정은 삭제만 인계](handoff/2026-10-26_past-edit-delete-only.md) — 서버·웹·채팅 일관, Codex 2회 검토, 관련 320/320 · vitest 1183/1183; 커밋만.
+
+2026-10-26 [과거 날짜 가드레일 확장 인계](handoff/2026-10-26_past-date-guard-extension.md) — 연도 없는 날짜·채팅 되묻기·추가/수정 지금 이후 규칙, 관련 303/303; Codex 검토 미수행(미로그인), 커밋만.
+
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
 
 2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.

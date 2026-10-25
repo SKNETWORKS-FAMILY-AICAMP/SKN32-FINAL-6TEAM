@@ -43,7 +43,8 @@ def _reader(answer):
 
 
 def _it(place, day_date, start, kind="activity", quote=None):
-    return {"place_quote": place, "day": None, "date": day_date, "date_quote": "내일" if day_date else None, "start": start, "end": None,
+    return {"place_quote": place, "day": None, "date": day_date, "date_quote": "내일" if day_date else None, "year_quote": None,
+            "date_form": "relative" if day_date else None, "start": start, "end": None,
             "time_quote": quote or start, "kind": kind}
 
 

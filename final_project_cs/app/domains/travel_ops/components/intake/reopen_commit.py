@@ -102,7 +102,7 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
 
     쓰기는 채팅 변경과 같다(판 · 변경 이력 · 알림 하나, 낡은 판이면 409). 판정도 채팅 변경과 같이 **이번 변경으로 새로 생긴 위반**만 막는다.
     - `request_id` = `intake:{접수}:r{판}` — 두 번 불러도 판은 하나. 바뀐 것이 없으면 판을 쓰지 않는다
-    - 지난 일정(끝 ≤ 지금)을 바꾸거나 빼거나 지난 때에 더하면 422 `item_in_past`
+    - 지난 일정(끝 ≤ 지금)을 고치거나(이름 포함 — 삭제만 허용) 지금 이전에 넣거나 옮기면 422 `item_in_past` `[2026-10-26 사용자 확정]`
     - `before_write` — 새 판을 쓰기 직전에 한 번(웹의 비싼 작업 횟수 세기). `cause_extra` — 변경 이유에 덧붙일 값(채팅이면 `via: chat` · 고객 문장)
     """
     from app.domains.travel_ops.components.actions.itinerary_actions import introduced_violations
@@ -131,7 +131,10 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
         plan = reopen.prepare(conn, tenant_id=tenant, intake_id=intake_id, revision=revision,
                               base_items=base_items, frozen_ids=set(reopened["frozen_item_ids"]), now=now)
     if plan.past:
-        raise CommitRefused(422, "item_in_past", "지난 일정은 바꿀 수 없어요: " + ", ".join(plan.past), items=plan.past)
+        raise CommitRefused(422, "item_in_past", "지난 일정은 고칠 수 없어요(뺄 수만 있어요) · 새로 넣거나 옮기는 날짜·시각은 지금 이후만 돼요: " + ", ".join(plan.past), items=plan.past)
+    if plan.no_upcoming:
+        # `[2026-10-26 사용자 확정]` 진행 중이거나 앞으로 올 일정이 하나는 남아야 한다 — 마지막 하나를 빼거나 지난 때로 옮기지 않는다
+        raise CommitRefused(422, "no_upcoming_items", "진행 중이거나 앞으로 남은 일정이 하나는 있어야 해요 — 마지막 남은 일정은 뺄 수 없어요")
     if plan.unchanged:
         return base_version, False, None
     if before_write is not None:

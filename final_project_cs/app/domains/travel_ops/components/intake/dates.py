@@ -23,6 +23,8 @@ RELATIVE = {"오늘": 0, "지금": 0, "당장": 0, "내일": 1, "모레": 2, "�
 _RELATIVE = re.compile(r"(오늘|지금|당장|내일|모레|글피)")
 #: 일차 머리줄 — 상대 날짜를 찾으러 올라갈 때 여기서 멈춘다(`rules.DAY_HEADING` 과 같은 모양의 앞머리)
 _HEADING = re.compile(r"^\s*(?:\d+\s*일\s*차|DAY\s*\d+|첫째\s*날|둘째\s*날|셋째\s*날)", re.IGNORECASE)
+#: 월 · 일이 달력에 있는지 볼 때 쓰는 윤년(2월 29일이 있는 해) — 값이 아니라 「있는 날인가」만 본다
+LEAP_YEAR = 2000
 
 
 @dataclass
@@ -46,9 +48,16 @@ def resolve_dates(items: list[dict[str, Any]], *, today: date, departure: date |
             out.append(DayDate(written, "written", False))
             continue
         if written:
-            filled = _fill_year(written, today)
+            try:
+                filled = _fill_year(written, today)
+            except ValueError:
+                # 어느 해에도 없는 월 · 일(「2/30」) — 날짜를 지어내지 않고 모른다고 둔다(전에는 그해 28일로 조용히 바꿨다)
+                out.append(DayDate(None, "unknown", True, f"{int(written[2:4])}월 {int(written[5:7])}일은 없는 날짜예요 — 날짜를 확인해 주세요"))
+                continue
+            # `[2026-10-26]` 읽기 에이전트가 「연도를 적었다」고 했지만 그 연도 조각이 원문에 없던 날(`agent_read._grounded_date`) — 메모로 구분해 보인다
             out.append(DayDate(filled.isoformat(), "year_filled", True,
-                               f"해가 적혀 있지 않아 오늘 기준 다가오는 날로 두었다({filled.year}년)"))
+                               f"연도를 원문에서 확인하지 못해 오늘 기준 다가오는 날로 두었다({filled.year}년) — 다르면 고쳐 주세요"
+                               if item.get("year_unverified") else f"해가 적혀 있지 않아 오늘 기준 다가오는 날로 두었다({filled.year}년)"))
             continue
         relative = _relative_for_item(lines, item)
         if relative is not None:
@@ -74,7 +83,10 @@ def _first_day(items, *, today: date, departure: date | None, lines: list[str]) 
         written, day = item.get("date"), item.get("day")
         if not written:
             continue
-        known = date.fromisoformat(written) if not written.startswith("--") else _fill_year(written, today)
+        try:
+            known = date.fromisoformat(written) if not written.startswith("--") else _fill_year(written, today)
+        except ValueError:
+            continue                                        # 없는 날짜는 첫날 계산에 쓰지 않는다(위 `resolve_dates` 가 모른다고 표시)
         offset = (int(day) - 1) if day else 0
         return known - timedelta(days=offset), written.startswith("--")
     if departure is not None:
@@ -89,15 +101,20 @@ def _first_day(items, *, today: date, departure: date | None, lines: list[str]) 
 
 def _fill_year(month_day: str, today: date) -> date:
     """「--10-15」 → 오늘 이후 가장 가까운 그 날(오늘 포함)."""
-    month, day = int(month_day[2:4]), int(month_day[5:7])
-    for year in (today.year, today.year + 1):
+    return next_month_day(int(month_day[2:4]), int(month_day[5:7]), today)
+
+
+def next_month_day(month: int, day: int, today: date) -> date:
+    """연도 없는 월 · 일 → 오늘 이후 처음 오는 그 날(오늘 포함). `[2026-10-26 사용자 확정]`
+    ★「2/29」는 다음 윤년의 2월 29일이다 — 전에는 다음 해 2월 28일로 조용히 바꿨다. 어느 해에도 없는 날(「2/30」)은 `ValueError`."""
+    for year in range(today.year, today.year + 9):          # 윤년은 8년 안에 반드시 온다(1900 · 2100 같은 해 포함)
         try:
             candidate = date(year, month, day)
         except ValueError:
             continue
         if candidate >= today:
             return candidate
-    return date(today.year + 1, month, min(day, 28))
+    raise ValueError(f"없는 날짜: {month}월 {day}일")
 
 
 def _relative_for_item(lines: list[str], item: dict[str, Any]) -> tuple[str, int] | None:
@@ -124,4 +141,4 @@ def _relative_on_line(lines: list[str], line_no: int | None, *, text: str | None
     return None
 
 
-__all__ = ["DayDate", "RELATIVE", "resolve_dates"]
+__all__ = ["DayDate", "RELATIVE", "next_month_day", "resolve_dates"]

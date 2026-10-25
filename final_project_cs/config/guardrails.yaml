@@ -316,6 +316,11 @@ travel:
   #   걸러져 「확인하지 못했어요」가 됐다. 0.45 는 기능 질문 14/14 를 최저점과 0.05 차이로 통과시킨다.
   service_help:
     min_score: 0.45
+  # -- 채팅 수정의 지난 날짜 되묻기 (2026-10-26 사용자 확정, `conversation/chat_edit.past_time_refusal`) --
+  # ★채팅 수정이 지난 날짜 · 시각을 내면 바로 적용하지 않고 「혹시 오타 아닌가요?」와 가장 가까운 앞으로의 날짜 후보를 버튼(choices)으로 낸다.
+  # ★출처: **우리가 고른 값** — 채팅 결정 단위 되묻기 후보 상한(`decision_unit` 스키마 choices maxItems 3)과 같은 크기
+  chat_edit:
+    past_date_choices: 3
   # -- 일정 항목 짚기 가르친 모델 (2026-10-07 사용자 지시, `components/conversation/item_pointer.py`) --
   #   off: 낱말 규칙만 · shadow: 모델도 불러 규칙과의 차이만 기록하고 규칙 결과를 씀 · on: 모델 번호를 씀(실패하면 규칙으로 돌아감)
   #   ★`.env` 의 `ACOP_OLLAMA_POINTER_MODEL` 이 비어 있으면 이 값과 상관없이 규칙만 쓴다.

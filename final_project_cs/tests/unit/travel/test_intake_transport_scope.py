@@ -16,7 +16,7 @@ class Reader:
     model = "transport-scope-fixture"
 
     def __init__(self, quote, scope, *, day=1, preferences=()):
-        self.answer = {"items": [{"place_quote": title, "day": 1, "date": DAY.isoformat(), "date_quote": HEADER,
+        self.answer = {"items": [{"place_quote": title, "day": 1, "date": DAY.isoformat(), "date_quote": HEADER, "year_quote": str(DAY.year), "date_form": "explicit_year",
                                   "start": start, "end": None, "time_quote": start, "kind": "activity"}
                                  for title, start in STOPS],
                        "moves": [{"mode": "taxi", "scope": scope, "day": day, "from_quote": None,

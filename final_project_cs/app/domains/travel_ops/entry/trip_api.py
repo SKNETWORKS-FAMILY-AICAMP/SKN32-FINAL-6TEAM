@@ -2092,7 +2092,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         새 판 쓰기는 공용 함수(`intake/reopen_commit.commit`)가 한다 — `[2026-10-15]` 채팅 고치기(시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳)도 같은 함수다.
         - `request_id` = `intake:{접수}:r{판}` — 두 번 눌러도 판은 하나. 바뀐 것이 없으면 판을 쓰지 않는다(`changed: false`)
-        - 지난 일정(끝 ≤ 지금)을 바꾸거나 빼거나 지난 때에 더하면 422 `item_in_past`
+        - 지난 일정(끝 ≤ 지금)을 고치거나(이름 포함 — 삭제만 허용) 지금 이전에 넣거나 옮기면 422 `item_in_past` `[2026-10-26 사용자 확정]`
         """
         from app.domains.travel_ops.components.intake.pipeline import mark_confirmed
         from app.domains.travel_ops.components.intake.reopen_commit import CommitRefused, commit

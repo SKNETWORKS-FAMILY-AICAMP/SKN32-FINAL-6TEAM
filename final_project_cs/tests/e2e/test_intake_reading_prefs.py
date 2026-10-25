@@ -40,9 +40,9 @@ ANSWER = {
     "guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
     "pieces": [{"kind": "plan_item", "quote": "10시 경복궁"}, {"kind": "plan_item", "quote": "13:30 광장시장"}],
     "items": [
-        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "start": "10:00", "end": None,
+        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "10:00", "end": None,
          "time_quote": "10시", "kind": "activity"},
-        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "start": "13:30", "end": None,
+        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "13:30", "end": None,
          "time_quote": "13:30", "kind": "dining"}],
     "moves": [],
     "conditions": [{"code": "if_rain_indoor", "quote": "비 오면 실내로"}, {"code": "finish_by:21:00", "quote": "9시까지는 숙소 들어가요"}],
