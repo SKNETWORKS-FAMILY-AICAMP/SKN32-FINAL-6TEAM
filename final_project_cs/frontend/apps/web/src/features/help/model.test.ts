@@ -5,9 +5,9 @@ import { faqCount, openingOf, ruleOf, searchHelp, shown, stepDetail, type Featur
 
 const ko = (pair: Pair) => pair[0];
 const en = (pair: Pair) => pair[1];
-const server: Features = { guardian: true, riskPanel: false };          // the server's defaults
-const off: Features = { guardian: false, riskPanel: false };
-const all: Features = { guardian: true, riskPanel: true };
+const server: Features = { guardian: true, riskPanel: false, planInputExtras: false };          // the server's defaults
+const off: Features = { guardian: false, riskPanel: false, planInputExtras: false };
+const all: Features = { guardian: true, riskPanel: true, planInputExtras: true };
 
 describe("「이용 방법」 content (ST4F-717)", () => {
   it("has the intro's seven steps, each opening its own screen, in both languages", () => {
@@ -49,9 +49,23 @@ describe("what the operator switched off is not explained (D4)", () => {
   });
 
   it("shows the risk panel's question only while the operator has the panel on", () => {
-    expect(faqCount("all", all)).toBe(faqCount("all", server) + 1);
+    expect(faqCount("all", { ...server, riskPanel: true })).toBe(faqCount("all", server) + 1);
     expect(searchHelp("현재 일정 위험 확인", ko, server)).toEqual([]);
     expect(searchHelp("현재 일정 위험 확인", ko, all).length).toBeGreaterThan(0);
+  });
+
+  // `[2026-10-25 사용자 지시 — ST4F-739]` 「파일 선택」 · 「계획 짜 주기 (테스트)」 · 「읽는 기준」 · 「여행 취향」 follow one switch, off by default.
+  it("hides the plan screen's extra panels — and the 「보낼 칸」 choice between them — while they are off", () => {
+    const input = SCREENS.find((screen) => screen.id === "input")!;
+    const extras = { ...server, planInputExtras: true };
+    expect(shown(input.points, server)).toHaveLength(input.points.length - 1);
+    expect(shown(input.points, extras)).toHaveLength(input.points.length);
+    expect(shown(input.more, server)).toHaveLength((input.more ?? []).length - 2);
+    expect(shown(FAQ, server).map((faq) => faq.id)).not.toEqual(expect.arrayContaining(["files"]));
+    expect(shown(FAQ, extras).map((faq) => faq.id)).toEqual(expect.arrayContaining(["files", "which-box", "plan-for-me"]));
+    expect(faqCount("all", extras)).toBe(faqCount("all", server) + 3);
+    expect(searchHelp("계획 짜 주기", ko, server)).toEqual([]);
+    expect(searchHelp("계획 짜 주기", ko, extras).length).toBeGreaterThan(0);
   });
 });
 
@@ -65,7 +79,8 @@ describe("search", () => {
   });
 
   it("leads each result to its place", () => {
-    expect(searchHelp("예시 불러오기", ko, server)[0].target).toEqual({ tab: "screens", screen: "input", point: 2 });
+    expect(searchHelp("예시 불러오기", ko, server)[0].target).toEqual({ tab: "screens", screen: "input", point: 1 });          // 「보낼 칸」 is hidden by default (ST4F-739)
+    expect(searchHelp("예시 불러오기", ko, all)[0].target).toEqual({ tab: "screens", screen: "input", point: 2 });
     expect(searchHelp("로그아웃은 어디서", ko, server)[0].target).toEqual({ tab: "faq", faq: "sign-out" });
   });
 });

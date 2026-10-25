@@ -164,6 +164,24 @@ def trip_risk_panel_enabled(tenant_id: str) -> bool:
     return guardrail_default()
 
 
+PLAN_INPUT_EXTRAS = "travel.plan_input.extras_enabled"
+
+
+def plan_input_extras_enabled(tenant_id: str) -> bool:
+    """계획 담기 화면에 보조 칸(파일 선택 · 계획 짜 주기 · 읽는 기준 · 여행 취향)을 보이나. `[2026-10-25 사용자 지시 — ST4F-739]` 기본 꺼짐, 관리 콘솔에서 켠다.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.plan_input_extras_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 공개 읽기 `GET /v1/web/features` 의 `plan_input_extras` 하나다 —
+    접수(`POST /v1/web/intakes`)는 막지 않는다.
+    """
+    value = operator_setting(tenant_id, PLAN_INPUT_EXTRAS)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import plan_input_extras_enabled as guardrail_default
+
+    return guardrail_default()
+
+
 GUARDIAN = "travel.guardian.enabled"
 
 
