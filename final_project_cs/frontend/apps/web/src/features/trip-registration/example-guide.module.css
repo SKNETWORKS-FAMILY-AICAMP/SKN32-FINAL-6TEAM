@@ -1,0 +1,25 @@
+/* `[2026-10-25 사용자 결정 — 예시 불러오기 첫 안내 A안]` 화면을 검게 덮고 단추 하나만 비춘다(목업 `mockups/tripilot-registration-example-guide.html`). 색은 제품 토큰만. */
+.coach { position: fixed; inset: 0; z-index: 1000; }
+.spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 200vmax var(--color-coach); cursor: pointer;
+  transition: left .35s cubic-bezier(.2, .8, .2, 1), top .35s cubic-bezier(.2, .8, .2, 1), width .35s cubic-bezier(.2, .8, .2, 1), height .35s cubic-bezier(.2, .8, .2, 1); }
+.spot::after { content: ""; position: absolute; inset: -5px; border: 2px solid var(--color-on-primary); border-radius: 18px; opacity: .9; animation: ring 1.8s ease-out infinite; }
+:global(:root[data-theme="dark"]) .spot::after { border-color: var(--color-primary); }
+@keyframes ring { 0% { transform: scale(.96); opacity: .95; } 70% { transform: scale(1.08); opacity: 0; } 100% { opacity: 0; } }
+.tip { position: fixed; box-sizing: border-box; padding: 16px 16px 14px; border-radius: 18px; background: var(--color-surface); color: var(--color-text); box-shadow: 0 18px 40px var(--color-shadow-strong);
+  animation: tipIn .32s cubic-bezier(.2, .8, .2, 1) both; }
+:global(:root[data-theme="dark"]) .tip { border: 1px solid var(--color-border-strong); }
+.tip::before { content: ""; position: absolute; left: var(--tail, 40px); width: 14px; height: 14px; background: inherit; transform: rotate(45deg); }
+.tip[data-side="below"]::before { top: -6px; }
+.tip[data-side="above"]::before { bottom: -6px; }
+@keyframes tipIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.step { margin: 0 0 4px; color: var(--color-primary); font-size: 12px; font-weight: 800; letter-spacing: .2px; }
+.title { margin: 0 0 6px; font-size: 17px; line-height: 1.4; letter-spacing: -.3px; }
+.body { margin: 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.6; }
+.actions { display: flex; gap: 8px; margin-top: 14px; }
+.actions button { flex: 1; min-height: 44px; padding: 0 12px; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 750; cursor: pointer; }
+.go { border: 0; background: var(--color-primary); color: var(--color-on-primary); }
+.quiet { border: 1px solid var(--color-border-strong); background: var(--color-surface); color: var(--color-text); }
+.go:focus-visible, .quiet:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* 「애니메이션 건너뛰기」 설정과 기기의 「동작 줄이기」 — 빛남 · 미끄러짐 없이 멈춘 모양만 */
+.coach[data-still] .spot, .coach[data-still] .spot::after, .coach[data-still] .tip { animation: none; transition: none; }
+@media (prefers-reduced-motion: reduce) { .spot, .spot::after, .tip { animation: none; transition: none; } }

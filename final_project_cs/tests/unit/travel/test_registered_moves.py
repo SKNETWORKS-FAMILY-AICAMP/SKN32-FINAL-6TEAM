@@ -49,19 +49,31 @@ def test_registration_preserves_the_checked_mode_times_and_stations_without_muta
     assert [row["seq"] for row in result["items"]] == [1, 2, 3]
 
 
-@pytest.mark.parametrize("change", ["place", "time", "end", "title", "kind", "key", "order", "date", "missing_time"])
+@pytest.mark.parametrize("change", ["place", "time", "end", "legacy_title", "kind", "key", "order", "date", "missing_time"])
 def test_registration_does_not_attach_a_stale_or_wrong_pair(change):
     body, review = example()
     if change == "place": body["places"][1]["lat"] = 37.9
     elif change == "time": body["items"][1]["starts_at"] = "2026-10-18T12:00:00+09:00"
     elif change == "end": body["items"][1]["ends_at"] = None
-    elif change == "title": body["items"][1]["title"] = "다른 장소"
+    elif change == "legacy_title":                       # 원본 위치가 없는 옛 일정은 제목까지 같아야 짝이다
+        body["items"][1]["title"] = "다른 장소"
+        for stop in body["items"]:
+            stop["detail"]["intake"].pop("source_id")
+            stop["detail"]["intake"].pop("index")
     elif change == "kind": body["items"][1]["kind"] = "dining"
     elif change == "key": body["items"][1]["detail"]["intake"]["index"] = 5
     elif change == "order": body["items"].reverse()
     elif change == "date": body["items"][1]["starts_at"] = "2026-10-19T11:00:00+09:00"
     elif change == "missing_time": review["moves"][0]["depart"] = None
     assert len(with_review_moves(body, review)["items"]) == 2
+
+
+def test_a_stop_renamed_to_the_place_the_customer_picked_keeps_its_moves():
+    """`[2026-10-25 사용자 결정]` 등록은 고객이 고른 곳의 이름으로 제목을 바꾼다(`assemble._item_title`) — 원본 위치가 같으면 제목은 견주지 않는다.
+    ☆제목까지 견주다 「인사동 쌈지길」 → 「인사동」 일정 옆 이동이 등록에서 빠졌다(로컬 실서버 여행 f966844a)."""
+    body, review = example()
+    body["items"][1]["title"] = "광장시장 빈대떡집"
+    assert [row["kind"] for row in with_review_moves(body, review)["items"]] == ["activity", "mobility", "activity"]
 
 
 @pytest.mark.parametrize("legacy", [False, True])

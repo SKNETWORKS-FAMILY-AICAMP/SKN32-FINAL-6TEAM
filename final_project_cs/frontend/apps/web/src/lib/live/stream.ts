@@ -1,5 +1,6 @@
 import { translator, type Language, type Translate } from "../i18n";
-import { API_BASE, answerWithin, LiveError, refusal, sessionChecked, sessionInit } from "./client";
+import { API_BASE, answerWithin, currentSession, ensureSession, LiveError, probeSession, refusal, sessionChecked, sessionInit, type WebSession } from "./client";
+import { refusalSentence } from "./error-text";
 import { eventStreamParser } from "./events";
 import { beginWait, TASK_STEPS } from "./waiting";
 
@@ -64,10 +65,10 @@ function streamError(body: Body, t: Translate): LiveError {
 
 type Attempt<T> = { kind: "done"; value: T } | { kind: "lost" };
 
-async function attempt<T>(path: string, language: Language, init: RequestInit, timing: StreamTiming,
+async function attempt<T>(path: string, language: Language, init: RequestInit, session: WebSession, timing: StreamTiming,
   report: (next: Partial<OpProgress>) => void, onEvent?: StreamEventHandler): Promise<Attempt<T>> {
   const t = translator(language);
-  const sent = await sessionInit(language, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Accept: "text/event-stream" } });
+  const sent = await sessionInit(language, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Accept: "text/event-stream" } }, session);
   const url = `${API_BASE}${path}`;
   const controller = new AbortController();
   // ★Until the answer starts, the usual limit holds — a server without streams answers once, after the whole task.
@@ -90,7 +91,15 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
     void response.body?.cancel().catch(() => undefined);
     return { kind: "lost" };
   }
-  if (!response.ok) throw sessionChecked(await refusal(response, language), language);
+  if (!response.ok) {
+    const error = await refusal(response, language);
+    // `[2026-10-23 F-18]` Refresh the cookie's session, then stop before any reconnect can resend the body.
+    if (error.code === "csrf_failed") {
+      await probeSession(language, true);
+      throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
+    }
+    throw sessionChecked(error, language, session);
+  }
   if (!(response.headers.get("content-type") ?? "").includes("text/event-stream") || !response.body) {
     return { kind: "done", value: await response.json() as T };
   }
@@ -148,8 +157,11 @@ export async function streamApi<T>(path: string, language: Language, init: Reque
     onProgress?.(progress);
   };
   try {
+    // `[2026-10-25 F-02 보강]` Every reconnect sends the same body again — only ever with the session this request began with. A sign-in
+    //   or sign-out meanwhile (another tab, or this one) ends it here with `session_changed` instead of carrying the body to the new account.
+    const session = await ensureSession(language);
     for (let tries = 0; ; tries += 1) {
-      const outcome = await attempt<T>(path, language, init, timing, report, onEvent);
+      const outcome = await attempt<T>(path, language, init, session, timing, report, onEvent);
       if (outcome.kind === "done") return outcome.value;
       if (tries >= timing.reconnectMs.length) {
         const t = translator(language);
@@ -157,6 +169,7 @@ export async function streamApi<T>(path: string, language: Language, init: Reque
       }
       report({ lost: true });
       await new Promise((resolve) => setTimeout(resolve, timing.reconnectMs[tries]));
+      if (currentSession() !== session) throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
     }
   } finally { wait.end(); }
 }
