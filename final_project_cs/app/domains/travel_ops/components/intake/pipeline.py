@@ -2076,6 +2076,15 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
             it.start, it.end, it.time_quote, it.time_guessed = same[0].start, it.end or same[0].end, None, False
             it.time_from_rule = True                                          # 근거 표시용 — 아래 값 줄의 방법이 규칙이 된다
 
+    # I06 — 규칙이 예약 사실(booked · booking_no)의 근거로 쓴 원문 조각. D-020 오전 정정 A: 예약은 고정이 아니다 —
+    #   같은 조각은 고객의 고정 · 고정 안 함 요청의 독립 근거가 될 수 없다(뜻 재판정이 아니라 근거 중복 검사)
+    booking_spans = [(c.span.line, c.span.start, c.span.end) for c in read.claims
+                     if c.field.endswith((".booked", ".booking_no")) and getattr(c, "span", None) is not None]
+
+    def booking_quote(quote: Any) -> bool:
+        return any(line == quote.line and max(start, quote.start) < min(end, quote.end)
+                   for line, start, end in booking_spans)
+
     for it in out.items:
         index = len(items)
         booking_rows = _agent_booking_rows(read, it, index)
@@ -2085,6 +2094,16 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
         rows.append({"field": f"items[{index}].title", "value": it.title.text, "method": "llm_agent",
                      "evidence": {"source": "text", **it.title.as_dict(), "segment": segment(it)}, "needs_review": False,
                      "note": "읽기 에이전트가 가리킨 원문 조각"})
+        if (isinstance(getattr(it, "locked", None), bool) and getattr(it, "locked_quote", None) is not None
+                and booking_quote(it.locked_quote)):
+            # 예약 사실 조각을 고정 근거로 인용했다 — 값 줄을 만들지 않고 버린 수를 `reading.agent.dropped` 에 남긴다
+            dropped = out.report.setdefault("dropped", {})
+            dropped["locked_booking"] = dropped.get("locked_booking", 0) + 1
+        elif isinstance(getattr(it, "locked", None), bool) and getattr(it, "locked_quote", None) is not None:
+            # I06 — 고객이 명시한 고정 · 고정 안 함(모델 판단 + `ground` 가 확인한 원문 인용)만 값 줄이 된다. 예약은 고정이 아니다
+            rows.append({"field": f"items[{index}].locked", "value": it.locked, "method": "llm_agent",
+                         "evidence": {"source": "text", **it.locked_quote.as_dict()}, "needs_review": False,
+                         "note": "읽기 에이전트가 읽은 고객의 고정 요청" if it.locked else "읽기 에이전트가 읽은 고객의 「고정 안 함」"})
         if getattr(it, "time_from_rule", False):
             card = cards_by_line.get(it.title.line)
             rows.append({"field": f"items[{index}].starts_at", "value": it.start, "method": "rule",
