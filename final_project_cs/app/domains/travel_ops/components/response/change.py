@@ -51,5 +51,8 @@ def change_basis(basis: dict[str, Any], *, action: str, outcome: dict[str, Any],
     try:
         written = compose_change_response(action=action, outcome=outcome, answer=answer, version=version, scope=scope)
     except Exception as exc:                          # noqa: BLE001 — 실행된 변경 답을 작성 장애로 막지 않는다(기록만)
-        return {**basis, "response_writing": {"status": "failed", "error": type(exc).__name__}}
-    return {**basis, "response": asdict(written)}
+        # 이전 성공 결과가 남아 실패를 가리지 않게 `response` 는 뺀다
+        return {**{k: v for k, v in basis.items() if k != "response"},
+                "response_writing": {"status": "failed", "error": type(exc).__name__}}
+    # 성공하면 이전 작성 실패 기록을 지운다(둘이 함께 남지 않는다). `answered` 는 질문 종결이고 저장 완료 여부는 execution 이다
+    return {**{k: v for k, v in basis.items() if k != "response_writing"}, "response": asdict(written)}

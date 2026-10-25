@@ -40,6 +40,16 @@ def test_blank_answer_is_recorded_as_writing_failure_not_hidden():
     assert "response" not in basis and basis["kind"] == "edit"
 
 
+def test_writing_success_and_failure_never_coexist():
+    stale = {"kind": "edit", "response": {"completion": "complete"}, "response_writing": {"status": "failed"}}
+    failed = ch.change_basis(stale, action="lock_item", outcome={"status": "adjusted"}, answer="", version=1, scope=None)
+    assert "response" not in failed and failed["response_writing"]["status"] == "failed"
+    ok = ch.change_basis(stale, action="lock_item", outcome={"status": "already_applied"}, answer="이미 고정돼 있어요.",
+                         version=1, scope=None)
+    assert "response_writing" not in ok and ok["response"]["questions"][0]["status"] == "answered"
+    assert ok["response"]["execution"] == {"status": "already_applied", "saved_version": None}   # 저장 완료는 execution 으로만 본다
+
+
 def _run(monkeypatch, outcome, action="lock_item"):
     from app.domains.travel_ops.components.conversation import trip_messages as tm, decision_unit as du, chat_log
     from app.application import classification
