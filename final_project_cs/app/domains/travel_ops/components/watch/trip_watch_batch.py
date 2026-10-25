@@ -480,6 +480,8 @@ class WatchBatch:
                                                 "execution_plan": self.plan.evidence()})
         arguments = change_arguments(trip_id=trip["trip_id"], base_version=base, change=change)
         arguments["batch"] = {
+            "outcomes": [{"item_id": str(o.item.item_id), "kind": o.kind,
+                          "reasons": list(o.reasons), "checked_at": o.checked_at} for o in outcomes],
             "causes": {str(o.item.item_id): o.causes for o in outcomes if o.kind in ("applied", "asked", "consent")},
             "consents": [{"item_id": str(o.item.item_id), "causes": o.causes, "indoor_unknown": o.indoor_unknown} for o in consent],
             "applied": [str(o.item.item_id) for o in applied],

@@ -133,6 +133,8 @@ class DawnCheck:
                 payload = digest([Outcome(meal, 'source_failed', reasons=[status['reason']],
                                           checked_at=self.clock().isoformat())], kind='guidance')
                 with self._connect() as conn, conn.transaction():
+                    from app.domains.travel_ops.components.planning.pending import _response_payload
+                    payload = _response_payload(conn, store=self.store, trip_id=trip_id, payload=payload, status='failed')
                     self.store.enqueue_message(conn, trip_id=trip_id,
                                                key=f"dawn-deferred:{meal.item_id}:{day}:{status['reason']}", payload=payload)
                 return
