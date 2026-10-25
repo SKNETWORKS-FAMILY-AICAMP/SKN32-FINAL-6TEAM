@@ -2,6 +2,7 @@
 
 import { useId, type CSSProperties, type ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
+import { checkLineText } from "@/lib/live/error-text";
 import { useT } from "@/lib/settings";
 import type { CheckKind, CheckResult, CheckRow, PlaceInfo, PrefillNotes, Verdict } from "./model";
 import type { Grab } from "./use-time-edit";
@@ -18,7 +19,7 @@ export function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
       <span className={styles.mark} aria-hidden="true">{GLYPH[row.result]}</span>
       <b className={styles.checkKind}>{kindLabel(row.kind, t)}</b>
       {/* `[2026-10-20 C안 — 고른 뒤 다시 확인]` A check asked again keeps its words while its mark spins; only one with no words yet says it is being checked. */}
-      <span className={styles.checkText}>{row.result === "pending" && !row.text ? t("확인하는 중…", "Checking…") : row.text}</span>
+      <span className={styles.checkText}>{row.result === "pending" && !row.text ? t("확인하는 중…", "Checking…") : checkLineText(row, t)}</span>
       <span className="sr-only">{resultLabel(row.result, t)}</span>
     </li>)}</ul>;
 }
@@ -89,7 +90,7 @@ export function kindLabel(kind: CheckKind, t: Translate): string {
   return {
     place: t("장소", "Place"), time: t("시간", "Time"), hours: t("운영시간", "Hours"), closed: t("휴무일", "Closed"), booking: t("예약", "Booking"),
     route: t("경로", "Route"), mode: t("수단", "Mode"), arrival: t("도착", "Arrival"),
-    risk: t("날씨·도로", "Weather · roads"),
+    risk: t("날씨·도로", "Weather · roads"), date: t("날짜", "Date"),
   }[kind];
 }
 

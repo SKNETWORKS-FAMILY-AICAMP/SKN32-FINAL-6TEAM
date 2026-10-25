@@ -14,7 +14,8 @@ import type { WebTaxiPricing } from "./taxi-pricing";
 /** ✓ ok · ✎ filled (a rule filled it in) · ! warn · ✕ bad (must be fixed) · – unknown (not known yet). */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown";
 /** `booking` (2026-10-03, server 8b0d4c88): shown only for a booking word or a meal line with no name — 예약 있음 · 예약 없이 간다 · 예약 있다는데 장소 모름 · 예약 여부 모름. */
-export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk";
+/** `[2026-10-26]` `date` (server d2ab93a65): a new plan whose every stop is before today — on each stop, `bad`, with the server's sentence. */
+export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk" | "date";
 export type MoveRow = "route" | "mode" | "arrival";
 export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string; can_acknowledge?: boolean }
 
