@@ -275,7 +275,7 @@ def test_force_review_prepares_the_new_token_before_returning(storage, monkeypat
     monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: lambda *a, **kw: None)
     monkeypatch.setattr(settings_module, "dining_agent_judge", lambda: {"deadline_s": 30})
     monkeypatch.setattr(review_module, "build", lambda *a, **kw: meal_review())
-    payload, error = pipeline._review_of(conn, "tenant", "intake", 2, [{"transcript": "할랄 필수"}], [], force=True)
+    payload, error = pipeline._review_of(conn, "tenant", "intake", 2, [{"transcript": "할랄 필수"}], [], force=True, now=NOW)
     assert error is None and payload["dining_judge"]["status"] == "pending"
     assert payload["dining_judge"]["run_id"] != previous
     assert saved["payload"]["dining_judge"]["run_id"] == payload["dining_judge"]["run_id"]
@@ -286,7 +286,7 @@ def test_loading_an_old_cached_review_does_not_create_a_new_gate(storage, monkey
     from app.domains.travel_ops.components.intake import risks
     monkeypatch.setattr(risks, "decorate", lambda conn, **kw: kw["review"])
     conn, _ = storage
-    payload, error = pipeline._review_of(conn, "tenant", "intake", 2, [], [])
+    payload, error = pipeline._review_of(conn, "tenant", "intake", 2, [], [], now=NOW)
     assert error is None and "dining_judge" not in payload
 
 
@@ -328,7 +328,7 @@ def test_force_revalidation_keeps_the_saved_scope_answer(storage, monkeypatch, r
     monkeypatch.setattr(risks, "decorate", lambda conn, **kw: kw["review"])
     monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: None)
     monkeypatch.setattr(review_module, "build", lambda *a, **kw: {**meal_review(), "revision": revision})
-    payload, error = pipeline._review_of(conn, "tenant", "intake", revision, [{"transcript": "할랄 필수"}], [], force=True)
+    payload, error = pipeline._review_of(conn, "tenant", "intake", revision, [{"transcript": "할랄 필수"}], [], force=True, now=NOW)
     assert error is None
     assert payload["dining_questions"][0]["answer"] == question["answer"]
     assert payload["dining_questions"][0]["choices"][0]["item_id"] == "0-1"
