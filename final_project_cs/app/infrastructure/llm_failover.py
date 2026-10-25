@@ -666,8 +666,9 @@ class FailoverChat:
             user, on_piece, api_only=api_only))
 
     # ── 계획 읽기(reader) 전용 입구 `[2026-10-26 L03]` ──
-    #   고객이 쓴 계획서 원문은 이름 · 예약번호 · 구분자 없는 전화번호를 다 가린다고 보장할 수 없다 → 외부(유료) 대체는 기본 차단
-    #   (`travel.intake_reader.external_fallback_enabled: false`). 켜면 매 유료 시도마다 reader 예산(`reader_budget`, 못 읽으면 거부)을 예약하고,
+    #   고객이 쓴 계획서 원문은 이름 · 예약번호 · 구분자 없는 전화번호를 다 가린다고 보장할 수 없다 → 외부(유료) 대체는 호출부가
+    #   `external_fallback_enabled=True` 를 줄 때만(가드레일 `travel.intake_reader.external_fallback_enabled` — 2026-10-26 08:20 사용자 결정으로
+    #   기본 true, 관리 콘솔 false 면 끔. 이 인자를 빼면 차단). 켜면 매 유료 시도마다 reader 예산(`reader_budget`, 못 읽으면 거부)을 예약하고,
     #   넘김 · 다시 시도 모두 한 절대 시한(`min(max_seconds, total_seconds)`) 안에서 남은 시간만 쓴다.
     def reader_json_stream(self, system: str, user: str, *, on_piece: Callable[[str, str], None] | None = None,
                            first_wait: float = 15.0, stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0,

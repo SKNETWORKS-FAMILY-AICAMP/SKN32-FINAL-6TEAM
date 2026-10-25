@@ -56,7 +56,7 @@ supersedes: program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md §0 「�
   - 구간별 이동 수단, 조건(「비 오면 실내」), 성향, 고객만 아는 빠진 값.
 - 시간이 9초를 넘으면 지금 채팅 장치대로 유료 대체 모델을 1회 부른다. 그것도 실패하면 **규칙 미리보기 + 못 읽은 조각 표시**로 보여 준다.
   - `[2026-10-16 바뀜 — 계획 읽기 2회차 합의 · 「유료모델 호출 기준 시간 조정」 세션 결정]` 9초 고정 대신 **답을 조금씩 받으며 멈춤을 본다**(첫 조각 15초 · 조각 사이 5초 · 맨 위 120초, 가드레일 `travel.intake_reading`). 로컬이 멈추면 유료가 처음부터 읽고, 묶음 하나라도 유료로 넘어가면 첫 묶음부터 유료로 다시 읽는다(한 계획은 한 모델). 끝내 실패하면 갈래를 나눈다 — **모델 쪽**(로컬 · 유료 모두 답 못 함)은 같은 모델을 또 부르지 않고 접수 「읽기 실패」(`reading_model_failed`, 다시 보내기), **답 내용 쪽**(모양 · 스키마)은 줄 읽기로 한 번 더 읽고 그것도 실패하면 「읽기 실패」. 규칙 미리보기 + 못 읽은 조각으로 조용히 끝내지 않는다(버리는 줄 없음). 근거: `final_project_cs/wiki/records/reports/2026-10-16_계획읽기_묶음나누기.md`.
-  - `[2026-10-26 바뀜 — 계획 읽기 reader 안전(L03) 이식]` 계획서 원문의 **유료 대체는 기본 꺼짐**(`travel.intake_reader.external_fallback_enabled: false`) — 원문의 이름 · 예약번호 · 구분자 없는 전화번호를 다 가린다고 보장할 수 없어서다. 꺼져 있으면 로컬이 멈추거나 실패할 때 유료로 다시 읽지 않고 모델 쪽 실패 「읽기 실패」(`reading_model_failed`)로 끝난다. 켜면 위 넘김 규칙에 매 시도 reader 예산(못 읽으면 거부) · 한 절대 시한이 더해진다. 채팅 「넣기」의 같은 입구는 채팅 해석 계약(가린 글로 넘김)을 따른다. 근거: `final_project_cs/wiki/external/llm-failover.md` 7-1.
+  - `[2026-10-26 바뀜 — 계획 읽기 reader 안전(L03) 이식]` 계획서 원문은 넘김 장치의 reader 전용 입구로만 읽는다. `[2026-10-26 08:20 사용자 결정]` **유료 대체는 끄지 않는다**(`travel.intake_reader.external_fallback_enabled: true`) — 로컬이 답 조각 감시(5초 멈춤)로 멈추면 유료가 처음부터 읽는 이 문서의 원래 계약을 유지한다(L03 이식 때 둔 「기본 꺼짐」은 이 결정으로 되돌렸다). 원문의 이름 · 예약번호 · 구분자 없는 전화번호를 다 가린다는 보장은 없으므로 관리 콘솔에서 끌 수 있다. 꺼져 있으면 로컬이 멈추거나 실패할 때 유료로 다시 읽지 않고 모델 쪽 실패 「읽기 실패」(`reading_model_failed`)로 끝난다. 켜면 위 넘김 규칙에 매 시도 reader 예산(못 읽으면 거부) · 한 절대 시한이 더해진다. 채팅 「넣기」의 같은 입구는 채팅 해석 계약(가린 글로 넘김)을 따른다. 근거: `final_project_cs/wiki/external/llm-failover.md` 7-1.
 
 ### 3. 코드는 사실 검사만 한다
 
@@ -130,4 +130,4 @@ supersedes: program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md §0 「�
 | DB | 값 줄 방법 이름 `llm_agent` 를 받게 제약을 넓혔다(없으면 접수가 「읽기 실패」가 된다) | `app/infrastructure/db/migrations/905_intake_claims_llm_agent.sql` |
 | 3-A. 장소는 종류 먼저 `[2026-10-19]` | 격리 사본 구현 · 커밋 전(commit 세션 전달) · 세 서버 배포 안 함 — 에이전트가 읽은 `lodging` 을 버리지 않고 넘겨 숙소는 숙소 자료에서만 찾고, 원문 글자로 확인되는 숙소 말 · 이동 말 · 대표 장소 정답표 · 시장 구역을 장소 찾기 앞에서 본다. 장소 해석 순서는 「고객 별칭 → **종류 · 정답표** → 정확 → 자모 오타 → 카카오 · 관광공사」. [기록](../../final_project_cs/wiki/records/reports/2026-10-19_place-kind-first.md) | `intake/landmarks.py` · `config/seoul_landmarks.yaml` · `intake/places.py` · `intake/pipeline.py` |
 
-스위치: 가드레일 `travel.intake_reader` — `mode`(on · shadow · off, 운영 설정 같은 이름이 먼저) · `prefill`(on · off) · `chunk_chars` · `num_predict`.
+스위치: 가드레일 `travel.intake_reader` — `mode`(on · shadow · off, 운영 설정 같은 이름이 먼저) · `prefill`(on · off) · `chunk_chars` · `num_predict` · `external_fallback_enabled`(원문 읽기 유료 대체, 기본 true — 2026-10-26 08:20 사용자 결정).

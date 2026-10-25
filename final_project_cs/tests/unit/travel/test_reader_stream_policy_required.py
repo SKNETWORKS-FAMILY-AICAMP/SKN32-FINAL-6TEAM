@@ -14,7 +14,7 @@ from app.infrastructure.llm_failover import CircuitBreaker, FailoverChat, _Backe
 from app.infrastructure.ollama_chat import OllamaError
 
 
-def counterexample_chat():
+def counterexample_chat(strict_ok=False):
     events = {'local': [], 'paid': [], 'global_reserve': [], 'strict_reserve': [], 'line': []}
 
     class Local:
@@ -47,7 +47,7 @@ def counterexample_chat():
 
     def strict_reserve():
         events['strict_reserve'].append(True)
-        return False
+        return strict_ok
 
     def backend(name, provider, **options):
         return _Backend(name, provider, CircuitBreaker(name, threshold=1, open_seconds=1), **options)
@@ -68,6 +68,23 @@ def test_read_source_omitted_stream_cannot_bypass_reader_policy():
     assert len(events['local']) == 1                              # 가드레일 스트림 정책으로 reader 입구만 탔다
     path = llm_failover.current_path()
     assert path['op'] == 'reader_structured_stream' and ('paid', 'reader_external_disabled') in path['reasons']
+
+
+def test_read_source_enabled_restarts_on_paid_through_reader_entry_only():
+    """`[2026-10-26 08:20 사용자 결정]` 운영 기본(가드레일 true → `agent_reader_config` 가 넘김)이면 로컬 실패 뒤 유료가 처음부터 읽는다 —
+    reader 입구로만, 매 유료 시도마다 reader 예산 예약, 일반 예산 0회, 유료로 가는 글은 가린 글."""
+    from app.infrastructure import llm_failover
+    chat, events = counterexample_chat(strict_ok=True)
+    # 구분자 있는 전화는 `redaction.masked` 가 가린다. 구분자 없는 전화 · 이름 · 예약번호는 못 가린다(llm-failover.md 7-1, 켜 둔 결정의 알려진 한계).
+    source = '김여행 010-1234-5678'
+    try:
+        pipeline.read_source(source, agent=chat, agent_mode='on', today=date(2026, 10, 24), external_fallback_enabled=True)
+    except pipeline.IntakeRejected:
+        pass                                                       # 빈 답의 뒷처리는 이 시험의 대상이 아니다
+    assert len(events['local']) >= 1 and len(events['paid']) >= 1, repr(events)
+    assert len(events['strict_reserve']) == len(events['paid']) and events['global_reserve'] == []
+    assert all('010-1234-5678' not in user for _, user in events['paid'])
+    assert llm_failover.current_path()['op'] in ('reader_structured_stream', 'reader_json_stream')
 
 
 @pytest.mark.parametrize('mode', ['on', 'shadow'])

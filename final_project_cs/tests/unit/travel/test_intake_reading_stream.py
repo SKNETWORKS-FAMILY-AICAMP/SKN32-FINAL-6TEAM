@@ -140,14 +140,27 @@ def test_a_cold_local_model_goes_straight_to_paid_without_tripping_the_breaker()
     assert classify(ModelNotLoaded("x")).counts is False
 
 
-def test_reader_paid_restart_stays_blocked_by_default():
-    """`[2026-10-26 L03]` 계획 읽기 입구(`reader_json_stream`)는 명시 허용이 없으면 로컬이 멈춰도 유료로 다시 읽지 않는다."""
+def test_reader_paid_restart_stays_blocked_when_explicitly_disabled():
+    """`[2026-10-26 L03]` 계획 읽기 입구(`reader_json_stream`)는 유료 대체를 끈 설정이면 로컬이 멈춰도 유료로 다시 읽지 않는다(유료 0회)."""
     from app.infrastructure.ollama_chat import OllamaError
     local, paid = Local(stall=True), Paid()
     with pytest.raises(OllamaError, match="reader_external_disabled"):
-        chat_of(local, paid).reader_json_stream("sys", "1: 오후엔 경복궁 가 보고 싶어", on_piece=lambda t, path: None)
+        chat_of(local, paid).reader_json_stream("sys", "1: 오후엔 경복궁 가 보고 싶어", on_piece=lambda t, path: None,
+                                                external_fallback_enabled=False)
     assert local.asked and paid.asked == []
     assert ("openai", "reader_external_disabled") in llm_failover.current_path()["reasons"]
+
+
+def test_reader_external_fallback_is_on_by_default_in_guardrails(monkeypatch):
+    """`[2026-10-26 08:20 사용자 결정]` 계획 읽기 유료 대체는 끄지 않는다 — D-025 원래 계약(로컬이 조각 감시 5초로 멈추면 유료가 처음부터 읽는다).
+    가드레일 기본은 켜짐이고, 관리 콘솔 값(false)이 있으면 그것이 먼저다."""
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.components.intake import pipeline
+    monkeypatch.setattr(settings_hook, "operator_setting", lambda tenant_id, name: None)
+    assert pipeline.agent_reader_config("t")["external_fallback_enabled"] is True
+    monkeypatch.setattr(settings_hook, "operator_setting",
+                        lambda tenant_id, name: False if name == "travel.intake_reader.external_fallback_enabled" else None)
+    assert pipeline.agent_reader_config("t")["external_fallback_enabled"] is False
 
 
 def test_reader_paid_restart_runs_only_when_explicitly_enabled():

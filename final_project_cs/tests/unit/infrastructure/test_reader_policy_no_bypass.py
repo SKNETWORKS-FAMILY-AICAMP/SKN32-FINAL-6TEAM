@@ -115,7 +115,18 @@ READER_CALLS = {
 
 
 @pytest.mark.parametrize("name", sorted(READER_CALLS))
-def test_reader_entry_never_reaches_paid_or_any_budget_by_default(name):
+def test_reader_entry_never_reaches_paid_or_any_budget_when_disabled(name):
+    """`[2026-10-26]` 가드레일 기본은 켜짐(사용자 결정) — 끈 설정(`external_fallback_enabled=False`)이면 유료 · 예산 0회."""
+    rec = Recorder()
+    with pytest.raises(OllamaError):
+        READER_CALLS[name](make(rec), external_fallback_enabled=False)
+    assert rec.events["paid"] == [] and rec.events["global"] == [] and rec.events["strict"] == []
+    assert ("openai", "reader_external_disabled") in llm_failover.current_path()["reasons"]
+
+
+@pytest.mark.parametrize("name", sorted(READER_CALLS))
+def test_reader_entry_without_the_argument_stays_blocked(name):
+    """인자를 빼고 부르면(가드레일 값을 안 거친 호출) 유료 · 예산 0회 — 켜는 것은 `agent_reader_config` 가 넘길 때만."""
     rec = Recorder()
     with pytest.raises(OllamaError):
         READER_CALLS[name](make(rec))

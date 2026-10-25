@@ -333,8 +333,10 @@ travel:
   intake_reader:
     mode: "on"
     num_predict: 3072
-    # Reader raw free text is not guaranteed PII-free; explicit review required to enable.
-    external_fallback_enabled: false
+    #   external_fallback_enabled: 계획서 원문 읽기의 유료 대체(`llm_failover.md` 7-1). `[2026-10-26 08:20 사용자 결정]` 켜 둔다 — D-025 원래 계약:
+    #       로컬이 답 조각 감시(5초 멈춤)로 멈추면 유료가 처음부터 읽는다. 켜져 있어도 매 유료 시도마다 reader 예산 예약(못 읽으면 거부, 다시 시도 없음) ·
+    #       한 절대 시한 · reader 전용 입구 · `redaction.masked` 가 그대로 돈다. 끄려면 관리 콘솔 같은 이름에 false(원문은 다 가린다는 보장이 없다).
+    external_fallback_enabled: true
     chunk_chars: 1800
     #   prefill: 읽은 직후 빈칸을 담당(식당 팀 · 활동 팀 · 이동 판정 · 계획 에이전트)에게 보내 맞춰 본 제안만 「우리가 채움」으로 싣는다(`intake/prefill.py`).
     #   고정 · 예약 일정은 건드리지 않는다. 고객만 아는 값은 질문으로 남긴다. mode 가 on 일 때만 돈다.
