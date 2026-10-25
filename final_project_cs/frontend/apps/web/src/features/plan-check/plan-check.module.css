@@ -24,6 +24,22 @@
 .steps li[data-state="done"] .node { border-color: var(--color-success); background: var(--color-success); }
 .steps li[data-state="done"] .node::after { content: "✓"; color: var(--color-on-primary); font-size: 10px; font-weight: 800; line-height: 1; }
 .stepLabel { white-space: nowrap; }
+/* ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` The plan check's bar: one cell per step of the server (done and passed cells filled — a grey passed cell read as
+   「the last cell never fills」), the name of the step it is at under its cell, one line under it (mockup `tripilot-plan-check-progress-steps.html` ③). */
+.progress[data-steps] { margin: 18px 2px 0; }
+.cellRow { position: relative; padding-bottom: 20px; }
+.cells { display: flex; gap: 3px; }
+.cells > span { flex: 1; height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; }
+.cells > span > i { display: block; height: 100%; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.cells[data-size="small"] { gap: 2px; }
+.cells[data-size="small"] > span { height: 4px; border-radius: 2px; }
+.cellName { position: absolute; top: 12px; white-space: nowrap; font-size: 11.5px; font-weight: 750; color: var(--color-success); transform: translateX(-50%); transition: left .4s var(--ease-soft); }
+.cellName[data-edge="start"] { transform: none; }
+.cellName[data-edge="end"] { transform: translateX(-100%); }
+.progress[data-steps] .progressAt { min-height: 20px; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); }
+.progressAt b { color: var(--color-text); font-weight: 750; }
+.late { color: var(--color-warning); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .cells > span > i, .cellName { transition: none; } }
 
 /* ①② The plan being read (2026-10-07: the per-line list is gone — the bar and the count are what is left) */
 .reading { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 20px; }
@@ -39,6 +55,9 @@
 .checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
 /* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
 .map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom 380ms var(--soft); }
+/* `[2026-10-25 사용자 지적 — 지도 오른쪽 아래 흰 바탕]` 지도 아래 20px 는 시트 밑에 깔려 Leaflet 저작권 줄(흰 80% 배경)이 그 자리에 놓인다. 시트 오른쪽 위 둥근
+   모서리 틈으로 그 흰 배경만 비쳐서, 이 화면(계획 확인 · 여행 화면)의 지도에서는 배경을 투명하게 둔다. */
+.map :global(.leaflet-container .leaflet-control-attribution) { background: transparent; }
 .bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -528,8 +547,6 @@ button.moveHead { cursor: pointer; }
 .titleInput { width: 100%; min-width: 0; padding: 4px 8px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 15px; font-weight: 750; }
 .progressAt { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
 .headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.headTrack { display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
-.headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
 
 /* 한국관광공사 출처 표시 — 확인 목록의 맨 아래 */
 .credit { --credit-enter: 200ms; --credit-exit: 150ms; margin: 8px 0 4px; font-size: 12px; line-height: 1.6; color: var(--color-muted); transition: opacity var(--credit-enter) var(--ease-soft); }

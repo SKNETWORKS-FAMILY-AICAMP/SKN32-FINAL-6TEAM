@@ -78,6 +78,8 @@ test("고르면 질문이 접히고 그 카드가 그 자리에서 다시 확인
   const [sent] = await server.received("POST", "/edits");
   expect(sent.body).toMatchObject({ revision: 1 });
   expect((sent.body as { check?: boolean }).check).toBeUndefined();
+  // `[2026-10-25 이동 확인 C안대로]` 검사는 하되 다른 일정의 시각은 옮기지 않게(`keep_times`) — 늦어지는 구간은 그 구간이 닿는 카드가 묻는다
+  expect((sent.body as { keep_times?: boolean }).keep_times).toBe(true);
 });
 
 test("질문 칸을 보려고 내린 채 골라도 목록이 멈췄던 카드 자리로 돌아와 다시 확인이 보인다", async ({ page, request }) => {

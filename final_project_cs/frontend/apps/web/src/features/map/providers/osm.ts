@@ -19,6 +19,13 @@ export const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyri
 
 const SEOUL = { lat: 37.5665, lng: 126.978 };
 
+/** Leaflet treats strings as HTML, so place names are passed as text in an element. */
+export function tooltipContent(doc: Pick<Document, "createElement">, title: string): HTMLElement {
+  const node = doc.createElement("span");
+  node.textContent = title;
+  return node;
+}
+
 export function createOsmAdapter(tileUrl: string): MapAdapter {
   return {
     async create(container, options) {
@@ -201,11 +208,11 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
               className: `trip-route-line${line.dashed ? " trip-route-line--dashed" : ""}${walk ? " trip-route-line--walk" : ""}`,
             }).addTo(routes);
             lineLayers.push({ id: line.id, shown, dashed: line.dashed, mode: line.mode, walk });
-            if (!options.onSelectLine) shown.bindTooltip(line.title, { sticky: true });
+            if (!options.onSelectLine) shown.bindTooltip(tooltipContent(document, line.title), { sticky: true });
           });
           if (!options.onSelectLine) return;
           L.polyline(path, { pane: "routes", color: "#000", weight: 22, opacity: 0, lineCap: "round", lineJoin: "round", interactive: true, className: "trip-route-hit" })
-            .bindTooltip(line.title, { sticky: true }).on("click", () => options.onSelectLine?.(line.id)).addTo(routes);
+            .bindTooltip(tooltipContent(document, line.title), { sticky: true }).on("click", () => options.onSelectLine?.(line.id)).addTo(routes);
         });
         styleLines();
       }

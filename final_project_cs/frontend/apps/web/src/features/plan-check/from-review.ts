@@ -4,10 +4,10 @@ import { modeChoiceOf, moveRoutesOf, routeChoiceOf } from "@/lib/live/move-optio
 import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
 import { itemRiskOf, problemText, type ItemRisk } from "@/lib/live/risks";
 import { proposedTimeOf } from "./risk-candidate-edits";
-import type { StreamLine, StreamState } from "@/lib/live/intake-events";
+import type { ProgressPacket, StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CandidateLeg, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
-import type { CheckRow, PlaceInfo, PlanAsk, PlanCandidate, PlanCandidateLeg, PlanCheckView, PlanDay, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
+import type { CheckRow, PlaceInfo, PlanAsk, PlanCandidate, PlanCandidateLeg, PlanCheckView, PlanDay, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, ServerProgress, Verdict } from "./model";
 
 /**
  * The plan-check screen's data from the server's own check (`review`, `wiki/external/rest-endpoints.md` 「확인 화면 검사 …」).
@@ -231,8 +231,19 @@ export function streamingViewOf(intake: IntakeView, stream: StreamState, infos?:
   const asks = asksOf(intake, drawnView.days);
   const view = asks.length ? { ...drawnView, asks } : drawnView;
   // ★`[2026-10-03]` The server's own count (`progress` packet) rides on the view as it is; with none (an older server) the bar is worked out from the rows as before.
-  const packet = stream.progress;
-  return packet ? { ...view, serverProgress: { phase: packet.phase, done: packet.done, total: packet.total, title: packet.current?.title ?? null } } : view;
+  const served = serverProgressOf(stream);
+  return served ? { ...view, ...served } : view;
+}
+
+/**
+ * The server's own counts as the view carries them: the furthest packet (`serverProgress`) and ★`[2026-10-24 ST4F-732]` the last one of every step (`serverPhases`).
+ * Null until the server has sent one.
+ */
+export function serverProgressOf(stream: Pick<StreamState, "progress" | "phases">): Pick<PlanCheckView, "serverProgress" | "serverPhases"> | null {
+  if (!stream.progress) return null;
+  const of = (packet: ProgressPacket): ServerProgress =>
+    ({ phase: packet.phase, done: packet.done, total: packet.total, title: packet.current?.title ?? null, ...(packet.step && { step: packet.step }) });
+  return { serverProgress: of(stream.progress), serverPhases: Object.fromEntries(Object.entries(stream.phases).map(([phase, packet]) => [phase, of(packet)])) };
 }
 
 /** Candidates → the change screen's cards. `distance.from` is the nearby stop the distance was measured from. */

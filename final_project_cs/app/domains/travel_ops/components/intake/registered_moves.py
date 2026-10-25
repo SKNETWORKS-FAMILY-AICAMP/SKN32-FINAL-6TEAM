@@ -24,13 +24,17 @@ def _xy(place):
 
 
 def _match(stop, checked, place):
-    """원본 항목 키를 우선하며 옛 여행은 값이 유일하게 일치할 때만 연결한다."""
+    """원본 항목 키를 우선하며 옛 여행은 값이 유일하게 일치할 때만 연결한다.
+
+    ★`[2026-10-25]` 원본 항목 키가 있으면 제목은 견주지 않는다 — 등록은 고객이 고른 곳의 이름으로 제목을 바꾼다(`assemble._item_title`).
+    ☆제목까지 견주다 「인사동 쌈지길」을 「인사동」으로 고른 일정이 짝을 못 찾아 그 옆 이동이 등록에서 빠졌다(로컬 실서버 여행 `f966844a`)."""
     meta = (stop.get("detail") or {}).get("intake") or {}
-    if "source_id" in meta and (str(meta["source_id"]), meta.get("index")) != (str(checked.get("source_id")), checked.get("index")):
+    keyed = "source_id" in meta
+    if keyed and (str(meta["source_id"]), meta.get("index")) != (str(checked.get("source_id")), checked.get("index")):
         return False
     start = _stamp(stop["starts_at"])
     end = _stamp(stop["ends_at"]) if stop.get("ends_at") else None
-    return (stop["title"] == checked.get("title") and stop["kind"] == checked.get("kind")
+    return ((keyed or stop["title"] == checked.get("title")) and stop["kind"] == checked.get("kind")
             and start.date().isoformat() == checked.get("date") and start.strftime("%H:%M") == checked.get("starts_at")
             and (end.strftime("%H:%M") if end else None) == checked.get("ends_at")
             and _xy(place) == _xy(checked.get("place")) and all(v is not None for v in _xy(place)))

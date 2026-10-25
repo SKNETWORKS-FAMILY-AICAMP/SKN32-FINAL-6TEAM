@@ -1,7 +1,7 @@
 import type { Language } from "../i18n";
 import { api } from "./client";
 import { STREAM_TIMING, streamApi } from "./stream";
-import type { IntakeView } from "./intake";
+import type { IntakeEdit, IntakeView } from "./intake";
 import type { WebTaxiPricing } from "./taxi-pricing";
 
 /**
@@ -15,9 +15,43 @@ import type { WebTaxiPricing } from "./taxi-pricing";
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown";
 /** `booking` (2026-10-03, server 8b0d4c88): shown only for a booking word or a meal line with no name — 예약 있음 · 예약 없이 간다 · 예약 있다는데 장소 모름 · 예약 여부 모름. */
 /** `[2026-10-26]` `date` (server d2ab93a65): a new plan whose every stop is before today — on each stop, `bad`, with the server's sentence. */
-export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk" | "date";
+export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk" | "date" | "dining_check" | "dietary" | "kids" | "payment" | "business";
 export type MoveRow = "route" | "mode" | "arrival";
-export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string; can_acknowledge?: boolean }
+export interface CheckLine<Row extends string = string> {
+  row: Row; result: CheckResult; text: string; can_acknowledge?: boolean;
+  requirement?: "required" | "preference";
+  blocks_registration?: boolean;
+}
+
+export interface IntakeDiningJudge {
+  status: "disabled" | "pending" | "running" | "completed" | "failed";
+  revision: number;
+  run_id: string | null;
+  started_at?: string | null;
+  deadline_at?: string | null;
+  completed_at?: string | null;
+  error_code?: string | null;
+  blocks_registration?: boolean;
+}
+
+export interface DiningQuestion {
+  id: string;
+  quote: string;
+  attribute: "halal" | "vegetarian" | "kids" | "card";
+  required: boolean;
+  choices: { item_id: string; date: string | null; starts_at: string | null; title: string | null }[];
+  answer: { item_ids: string[]; excluded: boolean } | null;
+}
+
+export interface DiningAnswer {
+  revision: number; run_id: string; question_id: string; item_ids: string[]; excluded: boolean;
+}
+
+export function answerDiningQuestion(intakeId: string, answer: DiningAnswer, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/dining-answers`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(answer),
+  });
+}
 
 /** keep · adjusted (a rule filled it, or the customer changed it) · review (needs the customer). */
 export type ItemStatus = "keep" | "adjusted" | "review";
@@ -121,6 +155,8 @@ export interface Review {
   risk_mode?: "fresh" | "cached";
   risk_checked_at?: string | null;
   risk_schema_version?: number;
+  dining_judge?: IntakeDiningJudge | null;
+  dining_questions?: DiningQuestion[];
   taxi_pricing?: WebTaxiPricing;
   revision: number;
   built_at: string;
@@ -254,17 +290,25 @@ export interface AutofixChange {
   from: { place: AutofixPlace | null; starts_at: string | null; ends_at: string | null };
   to: { place: AutofixPlace | null; starts_at: string | null; ends_at: string | null };
   reason: "place" | "time" | "place_and_time";
+  /** `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` (`push`) A stop after the asked one, made later so it is still reached. */
+  pushed?: boolean;
 }
 
-/** `booked` (server 8b0d4c88): a stop the plan says is booked is changed in neither place nor time. */
-export type AutofixKeptReason = "locked" | "booked" | "no_time" | "no_candidates" | "no_fitting_place" | "no_fitting_time" | "nothing_to_change";
+/**
+ * `booked` (server 8b0d4c88): a stop the plan says is booked is changed in neither place nor time.
+ * `push_refused` `[2026-10-25]` (`push`): the stops after it could not be made later (a closing time · the day's end · a fixed or booked stop) — the server's sentence in `message`.
+ */
+export type AutofixKeptReason = "locked" | "booked" | "no_time" | "no_candidates" | "no_fitting_place" | "no_fitting_time" | "nothing_to_change" | "push_refused";
 
 export interface AutofixResult {
   applied: boolean;
   revision: number;
   changed: AutofixChange[];
-  kept: { id: string; title: string; reason: AutofixKeptReason }[];
+  /** `push_refused` also says the times it tried (`starts_at` · `ends_at`) and why (`message`). */
+  kept: { id: string; title: string; reason: AutofixKeptReason; starts_at?: string; ends_at?: string; message?: string }[];
   view: ReviewedIntakeView;
+  /** `[2026-10-25]` (`push`, something changed) The edits that make that plan — sent as they are (`keep_times`) they save what was shown. */
+  edits?: IntakeEdit[];
 }
 
 const base = (intakeId: string) => `/v1/web/trip-intakes/${encodeURIComponent(intakeId)}`;
@@ -310,8 +354,8 @@ export function getPlacePhotos(ref: string, language: Language): Promise<PlacePh
 }
 
 /** `dryRun`: only show how the plan would look (server 224e7a1b, 2026-10-03) — the server saves nothing and the answer's `view.preview` is true. */
-export function autofixIntake(intakeId: string, revision: number, language: Language, dryRun = false, itemId?: string): Promise<AutofixResult> {
-  return api(`${base(intakeId)}/autofix`, language, json({ revision, ...(dryRun ? { dry_run: true } : {}), ...(itemId ? { item_id: itemId } : {}) }));
+export function autofixIntake(intakeId: string, revision: number, language: Language, dryRun = false, itemId?: string, push = false): Promise<AutofixResult> {
+  return api(`${base(intakeId)}/autofix`, language, json({ revision, ...(dryRun ? { dry_run: true } : {}), ...(itemId ? { item_id: itemId } : {}), ...(itemId && push ? { push: true } : {}) }));
 }
 
 export function revalidateIntake(intakeId: string, revision: number, language: Language): Promise<ReviewedIntakeView> {

@@ -2,7 +2,8 @@ import { distanceM } from "@/features/map/map-geometry";
 import type { Language, Translate } from "@/lib/i18n";
 import { eun, ro } from "@/lib/josa";
 import { checkLineText } from "@/lib/live/error-text";
-import type { MoveOptions } from "@/lib/live/move-options";
+import type { IntakeEdit } from "@/lib/live/intake";
+import { MODE_WORDS, type MoveOptionMode, type MoveOptions } from "@/lib/live/move-options";
 import type { PlanAsk, PlanCandidate, PlanCheckView, PlanItem, PlanMove } from "./model";
 import { fareText } from "./move-mode";
 import { canAcknowledgeHours } from "./hours-warning";
@@ -26,6 +27,10 @@ export function basisTag(basis: PlanCandidate["basis"], t: Translate): string | 
 }
 export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" } | { type: "acknowledge-hours" }
   | { type: "taxi"; moveId: string } | { type: "later"; start: string; end: string }
+  // `[2026-10-25 사용자 결정 — D7]` Another way that reaches in time (not the one used now, not the taxi).
+  | { type: "mode"; moveId: string; mode: MoveOptionMode; name: string }
+  // `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` The server's plan with this stop later and the stops after it pushed: its edits, sent as they are, and each stop's new times.
+  | { type: "push"; edits: IntakeEdit[]; changes: PushedStop[] }
   // `[2026-10-21 P6]` An option of an interpretation question; `search`: the stop is put back and the change screen's place search opens on these words.
   | { type: "interpret"; option: string; search: string | null };
 /**
@@ -40,9 +45,14 @@ export interface StopOption {
   reason: string | null;
   /** 「고르면:」 — only where the label does not say what happens (empty = no line). */
   effect: string;
+  /** `[2026-10-25 사용자 결정 — D3]` Lines under 「고르면:」 — each stop pushed later (「인사동 쌈지길 15:00 → 16:10」, from the fourth 「외 n곳」). */
+  lines?: string[];
+  /** `[2026-10-25 사용자 결정 — D4]` The server's sentence of a push it could not make, shown on the greyed option. */
+  refused?: string | null;
   act: StopAct; why?: string | null; recommended?: boolean; tag?: { text: string; basis: string } | null;
 }
-export interface StopAsk { need: StopNeed; question: string; options: StopOption[] }
+/** `pending`: `[2026-10-25 사용자 결정 — D5]` what is still being counted under the options (the later start), or null. */
+export interface StopAsk { need: StopNeed; question: string; options: StopOption[]; pending?: string | null }
 
 /** As many alternatives as the card offers (A · B · C). */
 export const STOP_CANDIDATES = 3;
@@ -195,7 +205,18 @@ export interface LaterStart {
   start: string; end: string;
   /** `[2026-10-21 사용자 결정]` The stop after it on that day in the server's preview (`autofix {item_id, dry_run}` moves only this stop): how much it would overlap it, or be late to it. Absent when unknown. */
   next?: { title: string; start: string | null; overlapMin: number; lateMin: number } | null;
+  /**
+   * ★`[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D1~D6]` This stop alone cannot be fitted (`autofix … push`): it starts at `start`–`end` (as long as it was) and these stops after it
+   * on that day are made later too, in day order, with the edits that make that plan. Absent: only this stop moves (「늦추기」).
+   */
+  push?: { stops: PushedStop[]; edits: IntakeEdit[] };
+  /** The push the server refused (a closing time · the day's end · a fixed or booked stop): its sentence. */
+  refused?: string | null;
 }
+/** A stop's times in a push: where it was (`from`, its start) and where it goes. */
+export interface PushedStop { id: string; title: string; from: string | null; start: string; end: string }
+/** `[2026-10-25 사용자 결정 — D3]` Pushed stops listed one per line, this many, then 「외 n곳」. */
+export const PUSH_LINES = 3;
 
 /** 「고르면:」 of 「늦추기」 — its new times and what that does to the stop after it, as the server's preview has it. */
 function laterEffect(later: LaterStart, t: Translate): string {
@@ -209,11 +230,24 @@ function laterEffect(later: LaterStart, t: Translate): string {
     : t(`${span} · 다음 「${next.title}」${when}에 ${next.lateMin}분 늦게 닿아요 — 그 일정을 이어서 물어요`, `${span} · reaches the next stop “${next.title}”${when} ${next.lateMin} min late — it is asked next`);
 }
 
-export function arrivalQuestion(item: PlanItem, move: PlanMove, from: PlanItem | null, ways: MoveOptions | null, later: LaterStart | null, t: Translate): StopAsk {
+/**
+ * `laterPending` `[2026-10-25 사용자 결정 — D5]`: the later start is still being counted (a push takes the server 10~17 s — 2026-10-25 local): the ways are shown, and a line says it.
+ * `[2026-10-25 사용자 결정 — D7]` A way other than the one used now and the taxi that reaches in time (`fits: true`) is offered too, before the taxi; one that does not reach is not shown.
+ */
+export function arrivalQuestion(item: PlanItem, move: PlanMove, from: PlanItem | null, ways: MoveOptions | null, later: LaterStart | null, t: Translate, laterPending = false): StopAsk {
   const late = Math.max(0, -(move.slackMin ?? 0));
   const leg = `${from?.title ?? ""} → ${item.title}`;
   const taxi = ways?.options.find((option) => option.mode === "taxi");
   const options: StopOption[] = [];
+  for (const way of ways?.options ?? []) {
+    if (way.mode === "taxi" || way.mode === ways?.currentMode || way.fits !== true) continue;
+    // The screen's own name for the way (「도보」 as the travel line says it), not the server's route name (「지하철 1호선→4호선」).
+    const name = way.mode === "walk" ? t("도보", "Walk") : t(MODE_WORDS[way.mode][0], MODE_WORDS[way.mode][1]);
+    const spare = way.slackMin === null ? null : t(`${way.slackMin}분 여유`, `${way.slackMin} min to spare`);
+    options.push({ key: `mode-${way.mode}`, label: t(`${ro(name)} 바꾸기`, `Switch to ${name}`), reason: null,
+      fact: [way.minutes !== null ? `${name} ${t(`${way.minutes}분`, `${way.minutes} min`)}` : null, spare, way.mode === "walk" ? null : fareText(way, t)].filter(Boolean).join(" · "),
+      effect: "", act: { type: "mode", moveId: move.id, mode: way.mode, name } });
+  }
   if (taxi) {
     const spare = taxi.slackMin === null ? null : taxi.slackMin < 0 ? t(`일정보다 ${-taxi.slackMin}분 늦어요`, `${-taxi.slackMin} min late`) : t(`${taxi.slackMin}분 여유`, `${taxi.slackMin} min to spare`);
     options.push({ key: "taxi", label: t("택시로 바꾸기", "Take a taxi"), reason: null,
@@ -223,7 +257,21 @@ export function arrivalQuestion(item: PlanItem, move: PlanMove, from: PlanItem |
       why: taxi.fits === true ? null : taxi.whyNot ?? (taxi.fits === null ? t("계산이 오래 걸려 확인하지 못했어요", "The server could not finish counting this one")
         : t("다음 일정 시작 안에 닿지 않아요", "It does not reach before the next stop starts")) });
   }
-  if (later) options.push({ key: "later", label: t(`「${item.title}」 ${later.start} 시작으로 늦추기`, `Start “${item.title}” at ${later.start}`), reason: null,
+  if (later?.push || later?.refused) {
+    // ★`[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` Only where this stop alone cannot be made later (the server answers 「늦추기」 when it can — D1).
+    const label = t(`「${item.title}」 ${later.start} 시작 · 뒤 일정도 함께 미루기`, `Start “${item.title}” at ${later.start} · push the stops after it too`);
+    const span = `${later.start}${later.end ? `–${later.end}` : ""}`;
+    if (later.push) {
+      const pushed = later.push.stops.filter((stop) => stop.id !== item.id);
+      const lines = pushed.slice(0, PUSH_LINES).map((stop) => `${stop.title} ${stop.from ?? "–"} → ${stop.start}`);
+      if (pushed.length > PUSH_LINES) lines.push(t(`외 ${pushed.length - PUSH_LINES}곳`, `and ${pushed.length - PUSH_LINES} more`));
+      options.push({ key: "push", label, reason: null, lines,
+        effect: pushed.length ? `${span} · ${t(`뒤 일정 ${pushed.length}곳도 미뤄요`, `${pushed.length} stop${pushed.length === 1 ? "" : "s"} after it move too`)}` : span,
+        act: { type: "push", edits: later.push.edits, changes: later.push.stops } });
+    } else options.push({ key: "push", label, reason: null, effect: "", refused: later.refused, why: later.refused,
+      act: { type: "push", edits: [], changes: [] } });
+  } else if (later) options.push({ key: "later", label: t(`「${item.title}」 ${later.start} 시작으로 늦추기`, `Start “${item.title}” at ${later.start}`), reason: null,
     effect: laterEffect(later, t), act: { type: "later", start: later.start, end: later.end } });
-  return { need: "fix", options, question: t(`「${leg}」 이동이 일정보다 ${late}분 늦어요. 어떻게 할까요?`, `The way “${leg}” arrives ${late} min late. What should we do?`) };
+  return { need: "fix", options, question: t(`「${leg}」 이동이 일정보다 ${late}분 늦어요. 어떻게 할까요?`, `The way “${leg}” arrives ${late} min late. What should we do?`),
+    pending: laterPending ? t("늦추는 시각을 계산하는 중…", "Working out a later start…") : null };
 }

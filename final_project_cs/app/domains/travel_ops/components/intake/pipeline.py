@@ -296,21 +296,24 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'",
                         ("checking" if filling or asking else "review", tenant_id, intake_id))
         if filling:
-            _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+            _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining, push=push)
         if filling or asking:
             # 로딩 중에 받아 둔 해석 답을 첫 검사 · 먼저 채우기 뒤에 반영한다(그 지점부터 다시 검사 — `pipeline.edit`)
-            _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+            _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining, push=push)
             with connect() as conn, conn.transaction(), conn.cursor() as cur:
                 cur.execute("UPDATE trip_intakes SET stage='review', updated_at=now() "
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
             # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+        # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
+        #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
+        # ★`[2026-10-24 사용자 결정 — ST4F-731]` 요식 판정보다 **먼저** 준비한다(전에는 판정 14~31초 뒤에야 시작해 멈춘 질문의 대안이 늦었다). 식사는 판정이
+        #   「확인 필요」를 바꿀 수 있어 판정 뒤에 준비한다
+        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat, which="not_meals")
         # ★`[2026-10-19]` 판정은 **지금 판**을 본다 — 먼저 채우기가 새 판을 만들었으면 그 판이다. 전에는 늘 1판을 봐서 채운 판에는 판정이 안 붙었다
         #   (1판 판정은 합치기 직전 「지난 판」으로 막히고 · 1판에서 장소가 없던 이름 없는 식사는 판정 입력조차 못 됐다)
         _dining_judge(connect, tenant_id, intake_id, sources, revision=None)
-        # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
-        #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
-        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat)
+        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat, which="meals")
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -344,21 +347,26 @@ def _has_questions(connect: Callable[[], Any], tenant_id: str, intake_id: UUID) 
         return False
 
 
-def _apply_interpretations(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any) -> None:
-    """`[2026-10-20]` 로딩 중에 저장만 해 둔 해석 답 → 새 판(`interpretations.apply_pending`). 실패해도 확인 화면은 1안(AI 의 읽기)으로 간다."""
+def _apply_interpretations(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
+                           push: progress_module.Sink | None = None) -> None:
+    """`[2026-10-20]` 로딩 중에 저장만 해 둔 해석 답 → 새 판(`interpretations.apply_pending`). 실패해도 확인 화면은 1안(AI 의 읽기)으로 간다.
+    `push` `[2026-10-24 ST4F-732]` 처음 검사의 진행 알림(`progress{answers}`)."""
     from . import interpretations
 
     try:
         with connect() as conn:
-            new = interpretations.apply_pending(conn, tenant_id=tenant_id, intake_id=intake_id, tour=tour, kakao=kakao, dining=dining)
+            new = interpretations.apply_pending(conn, tenant_id=tenant_id, intake_id=intake_id, tour=tour, kakao=kakao, dining=dining,
+                                                on_progress=(lambda body: push("progress", {"phase": "answers", **body})) if push else None)
         if new is not None:
             log.info("intake interpretation answers applied intake=%s revision=%s", intake_id, new)
     except Exception:                                  # noqa: BLE001 — 답 반영 장애가 접수를 막지 않는다(고객이 확인 화면에서 다시 고른다)
         log.warning("intake interpretation answers not applied intake=%s", intake_id, exc_info=True)
 
 
-def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, kakao: Any, chat: Any) -> None:
-    """`[2026-10-19]` 접수 대안 미리 준비(`prepared.prepare`) — 가드레일 `travel.candidates.prepare_on_intake`(기본 켜짐)가 끄면 하지 않는다."""
+def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, kakao: Any, chat: Any,
+                          which: str = "all") -> None:
+    """`[2026-10-19]` 접수 대안 미리 준비(`prepared.prepare`) — 가드레일 `travel.candidates.prepare_on_intake`(기본 켜짐)가 끄면 하지 않는다.
+    `which` — 식사 일정을 빼고(`not_meals`, 요식 판정 전) · 식사만(`meals`, 판정 뒤) · 모두(`all`) (`prepared.prepare`)."""
     from app.core.settings import get_guardrails
 
     from . import prepared
@@ -366,7 +374,7 @@ def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id:
     try:
         if get_guardrails().get("travel.candidates.prepare_on_intake") is False:
             return
-        done = prepared.prepare(connect, tenant_id=tenant_id, intake_id=intake_id, kakao=kakao, chat=chat)
+        done = prepared.prepare(connect, tenant_id=tenant_id, intake_id=intake_id, kakao=kakao, chat=chat, which=which)
         log.info("intake alternatives prepared intake=%s %s", intake_id, done)
     except Exception:                                  # noqa: BLE001 — 준비 장애가 접수를 건드리지 않는다
         log.warning("intake alternatives prepare failed intake=%s", intake_id, exc_info=True)
@@ -393,9 +401,11 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
             "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off"}
 
 
-def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any) -> None:
+def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
+             push: progress_module.Sink | None = None) -> None:
     """`[2026-10-16 D-025]` 비서처럼 먼저 채우기(`prefill.py`) — 빈칸을 담당에게 보내 제안을 받고 맞춰 본 것만 「우리가 채움」으로 싣는다.
-    ★실패해도 읽은 값 · 확인 화면은 그대로다(채우기만 빠지고 경고가 남는다). 그 사이 고객이 먼저 고쳤으면(판이 바뀌었으면) 하지 않는다."""
+    ★실패해도 읽은 값 · 확인 화면은 그대로다(채우기만 빠지고 경고가 남는다). 그 사이 고객이 먼저 고쳤으면(판이 바뀌었으면) 하지 않는다.
+    `push` `[2026-10-24 ST4F-732]` 처음 검사의 진행 알림(`progress{prefill}`)."""
     from . import prefill as prefill_module
 
     try:
@@ -407,7 +417,8 @@ def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tou
             if row is None or int(row[1]) != 1:
                 return
             prefill_module.run(conn, tenant_id=tenant_id, customer_id=row[0], intake_id=intake_id, revision=1,
-                               tour=tour, kakao=kakao, dining=dining)
+                               tour=tour, kakao=kakao, dining=dining,
+                               on_progress=(lambda body: push("progress", {"phase": "prefill", **body})) if push else None)
     except Exception:                                  # noqa: BLE001 — 채우기 장애가 확인 화면을 막지 않는다
         log.warning("intake prefill failed intake=%s", intake_id, exc_info=True)
 
@@ -614,9 +625,13 @@ def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: li
                claims: list[dict[str, Any]], *, force: bool = False, quick: bool = False,
                **options: Any) -> tuple[dict[str, Any] | None, str | None]:
     """그 판의 검사(`review.py`) — 저장된 것이 있으면 그것, 없으면 지금 계산한다. 실패하면 (None, 코드): 확인 화면은 읽은 값으로 계속 간다.
-    ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다)."""
+    ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다).
+    ★`[2026-10-24 사용자 결정 — ST4F-731]` 접수 행은 **새로 계산해 저장하는 호출(`force`)만** 잠근다 — 읽기(조회 · 실시간 진행 · 후보 · 미리 보기의 추천 계산)는
+      쓰기를 기다리지 않는다(전에는 모든 호출이 잠가 미리 보기 12~29초 뒤에 후보 · 조회가 줄을 섰다). 읽다가 저장이 필요해지면 `review.ensure` 가 그때 잠근다."""
     try:
         with conn.transaction():
+            if force:
+                review_module.intake_state(conn, tenant_id, intake_id)
             return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
                                         sources=sources, claims=claims, force=force, quick=quick,
                                         previous_revision=revision - 1 if revision > 1 else None, **options), None
@@ -650,12 +665,14 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None, learn_aliases: bool = True, reflow: bool = False, check: bool = True) -> int:
+         dining: Any = None, learn_aliases: bool = True, reflow: bool = False, check: bool = True,
+         keep_times: bool = False) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `check=False` 면 **저장만** 한다: 장소를 바꿔도 앞뒤 시각 재배치
     (`direct_schedule.fit` — 이동 계산기를 부른다)를 하지 않고, 새 판의 검사는 계산기 없이(`review.ensure(quick=True)`) `checked: false` 로 남긴다.
     고객이 「다시 제출」을 누르면 `revalidate` 가 계산기로 한 번에 검사한다. 일정 수 · 기간(7일) 같은 값 검사는 그대로 한다.
+    `keep_times=True` `[2026-10-25 사용자 결정 — 이동 확인 C안대로]` 검사는 하되 재배치(`direct_schedule.fit`)는 하지 않는다 — 계획 확인의 질문 칸 고르기.
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
     싣는다. `{"none": true}` 는 「장소 없음」(자유시간 · 이름 없는 호텔). 돌려주는 값은 새 판 번호.
@@ -749,6 +766,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         if any(field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None
                for _, field, value, _, _ in rows):
             rows = _link_stay_places(review_module.load(conn, tenant_id, intake_id, current), rows)
+        rows += _kept_ends(source_rows, current_claims, rows)
         # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
@@ -756,7 +774,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         explicit_times = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
                           if field.startswith("items[") and field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
         touched |= explicit_times
-        if added and not check:
+        if added and (not check or keep_times):
             from ..planning.planner import MAX_DAYS
             from .assemble import collect
             prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
@@ -767,7 +785,10 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             dates = sorted({r["date"] for r in got.rows if r["date"]})
             if dates and (date.fromisoformat(dates[-1]) - date.fromisoformat(dates[0])).days >= MAX_DAYS:
                 raise IntakeRejected("trip_too_long", "서울 여행은 최대 7일까지 추가할 수 있습니다")
-        if (touched or added) and via != "autofix" and check:
+        # ★`[2026-10-25 사용자 결정 — 이동 확인 C안대로]` `keep_times` 면 다른 일정의 시각을 옮기지 않는다 — 검사는 그대로 해서 늦어지는 구간은 「확인 필요」로 남고
+        #   그 구간이 닿는 카드가 「도착」을 묻는다(택시 · 늦추기 · 직접 수정). 전에는 계획 확인의 질문 칸 고르기도 재배치를 돌려, 그날 뒤 일정을 말없이 밀거나
+        #   밀다가 원래부터 운영시간이 안 맞던 일정(밤 창덕궁)에 걸려 고르기 전체를 거절했다(2026-10-24 로컬, 바꾸기 전 코드에서도 같음)
+        if (touched or added) and via != "autofix" and check and not keep_times:
             from . import direct_schedule
             from .assemble import collect
             prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
@@ -1011,23 +1032,33 @@ class _DryRunRollback(Exception):
 
 
 def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None,
-            kakao: Any = None, dry_run: bool = False, dining: Any = None, item_id: str | None = None) -> dict[str, Any]:
+            kakao: Any = None, dry_run: bool = False, dining: Any = None, item_id: str | None = None,
+            push: bool = False) -> dict[str, Any]:
     """**전체 자동 추천** — 확인이 필요한 일정을 검증한 대체 일정(장소 · 시각)으로 한 번에 바꾼다(`autofix.py`).
     바꿀 것이 있으면 `edits` 와 같은 길로 **새 판** 하나가 된다. 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
 
     ★`dry_run` `[2026-10-03 ui 세션 요청서 3번]` — **저장하지 않고** 바뀔 모습만 돌려준다. 실제 적용과 **같은 길**(`edit`)로 새 판을 만들어 `view` 를 읽은 뒤 그 저장 구간을
       되돌린다(세이브포인트 롤백) — 그래서 미리 보기의 검사가 적용한 결과와 같다(따로 흉내 내는 계산이 아니다). 응답의 `view.preview` 가 참이고 `view.revision` 은 적용하면 생길 판 번호다.
-      바꿀 것이 없으면 현재 모습 그대로(`preview` 없음)."""
+      바꿀 것이 없으면 현재 모습 그대로(`preview` 없음).
+      ★`[2026-10-24 사용자 결정 — ST4F-731]` 추천 계산(`autofix.plan` — 시간 대부분)은 접수 행을 잠그지 않는다(`_review_of` 는 읽기를 잠그지 않는다).
+      적용해 보는 세이브포인트 안의 `edit` 만 잠그고 롤백하면 풀린다 — 그동안 후보 · 조회가 기다리지 않는다. 계산하는 사이 판이 바뀌었으면 `edit` 가 `stale_revision` 으로 끝낸다.
+    ★`push` `[2026-10-25 사용자 결정 — 도착 질문 「뒤 일정까지 함께 미루기」 D1 · D2]` `item_id` 하나로 못 맞추면(`no_fitting_time`) 그 일정을 앞 일정에서 닿는 가장 이른 시각으로
+      옮기고(머무는 시간 그대로) 그날 뒤 일정을 늦춘다(`_pushed`). 응답에 그 판을 만드는 `edits` 를 싣는다 — 웹은 미리 보기의 그 값을 `edits`(`keep_times`)로 그대로 저장한다."""
     from . import autofix as autofix_module
 
     _, found = current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
     if item_id is not None and not any(item["id"] == item_id for item in found["items"]):
         raise LookupError("intake item not found")
     got = autofix_module.plan(conn, tenant_id=tenant_id, review=found, kakao=kakao, item_id=item_id)
+    pushing = (push and item_id is not None and not got["changes"]
+               and any(k["id"] == item_id and k["reason"] == "no_fitting_time" for k in got["kept"]))
+    if pushing:
+        got = _pushed(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, review=found, item_id=item_id, kept=got["kept"])
     edits = [{"source_id": c["source_id"], "field": f"items[{c['index']}].{e['field']}", "value": e["value"]}
-             for c in got["changes"] for e in c["edits"]]
+             for c in got["changes"] for e in c["edits"]] + got.get("edits", [])
     new = revision
     changed = [{k: v for k, v in c.items() if k != "edits"} for c in got["changes"]]
+    shown_edits = {"edits": edits} if pushing and got["changes"] else {}
     if edits and dry_run:
         preview: dict[str, Any] | None = None
         try:
@@ -1040,12 +1071,109 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
             pass
         if preview is not None:
             preview["preview"] = True
-        return {"applied": False, "dry_run": True, "revision": revision, "changed": changed, "kept": got["kept"], "view": preview}
+        return {"applied": False, "dry_run": True, "revision": revision, "changed": changed, "kept": got["kept"], "view": preview, **shown_edits}
     if edits:
         new = edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision, edits=edits,
                    tour=tour, kakao=kakao, via="autofix", dining=dining)
-    return {"applied": bool(edits), "dry_run": dry_run, "revision": new, "changed": changed, "kept": got["kept"],
+    return {"applied": bool(edits), "dry_run": dry_run, "revision": new, "changed": changed, "kept": got["kept"], **shown_edits,
             **({"view": view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)} if dry_run else {})}
+
+
+def _kept_ends(source_rows: list[dict[str, Any]], current_claims: list[dict[str, Any]],
+               rows: list[tuple[Any, str, Any, dict[str, Any], str | None]]) -> list[tuple[str, str, str, dict[str, Any], str]]:
+    """`[2026-10-25 사용자 결정 — 뒤 일정을 늦출 때 앞 일정 끝은 보이던 그대로]` 이 고치기로 **시작이 늦어지는** 일정마다 같은 날 바로 앞 일정의 **추정 끝**을
+    지금 보이는 값으로 저장할 값 줄(`edit` 의 `rows` 모양).
+
+    원문에 끝이 없는 일정은 `assemble.collect` 가 「시작 + 기본 시간(활동 90 · 식사 60분), 다음 일정 시작은 넘지 않게」로 끝을 **판마다 새로 계산한다** —
+    그대로 두면 다음 일정 시작에 끊겨 있던 끝이 늦춘 시작까지 늘어 출발이 같이 늦어진다(2026-10-25 로컬 접수 37a94e6d: 호텔 끝 10:00 → 경복궁을 10:50 으로
+    늦추자 10:30 · 같은 「도착」 질문이 다시 떴다). 앞당길 때는 고정하지 않는다 — 앞서 이렇게 고정한 끝(`via: kept_end`)이 새 시작보다 늦으면 새 시작으로
+    줄인다(고정이 없을 때 끊기는 것과 같은 값). 날짜를 옮기는 일정 · 같은 요청에서 시각을 고치는 앞 일정 · 고객이 적은 끝 · 자동 추천이 정한 끝은 그대로 둔다."""
+    from .assemble import collect
+
+    starts = {(str(sid), _item_no(f)): v for sid, f, v, _, _ in rows if f.startswith("items[") and f.endswith(".starts_at")}
+    if not starts:
+        return []
+    timed = {(str(sid), _item_no(f)) for sid, f, _, _, _ in rows if f.startswith("items[") and f.endswith((".starts_at", ".ends_at", ".date"))}
+    moved_day = {(str(sid), _item_no(f)) for sid, f, _, _, _ in rows if f.startswith("items[") and f.endswith(".date")}
+    kept = {(str(c["source_id"]), _item_no(c["field"])) for c in current_claims
+            if c["field"].startswith("items[") and c["field"].endswith(".ends_at") and (c.get("evidence") or {}).get("via") == "kept_end"}
+    got = collect(sources=[{**s, "source_id": str(s["source_id"])} for s in source_rows],
+                  claims=[{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None} for c in current_claims])
+    out: list[tuple[str, str, str, dict[str, Any], str]] = []
+    for i, row in enumerate(got.rows):
+        key = (str(row["source_id"]), row["index"])
+        new = starts.get(key)
+        if new is None or key in moved_day or not row["date"] or not row["start"]:
+            continue
+        before = next((r for r in reversed(got.rows[:i]) if r["date"] == row["date"] and r["start"]), None)
+        if before is None or not before["end"] or (str(before["source_id"]), before["index"]) in timed:
+            continue
+        evidence = {"source": "customer", "via": "kept_end"}
+        field = f"items[{before['index']}].ends_at"
+        inferred = ((before.get("provenance") or {}).get("ends_at") or {}).get("rule") == "intake.default_duration"
+        if new > row["start"] and inferred:
+            out.append((str(before["source_id"]), field, before["end"], evidence, "뒤 일정을 늦춰도 앞 일정 끝은 보이던 그대로(추정 끝 고정)"))
+        elif new < row["start"] and (str(before["source_id"]), before["index"]) in kept and before["end"] > new:
+            out.append((str(before["source_id"]), field, new, evidence, "앞당긴 일정과 겹치지 않게 고정한 끝을 그 시작으로 줄임"))
+    return out
+
+
+def _pushed(conn, *, tenant_id: str, intake_id: UUID, revision: int, review: dict[str, Any], item_id: str,
+            kept: list[dict[str, Any]]) -> dict[str, Any]:
+    """`autofix(push=True)` — 그 일정을 앞에서 닿는 시각으로 옮기고 그날 뒤 일정을 늦춘 바뀜(`autofix.plan` 과 같은 모양 `{changes, kept}` + 시각을 지키는 `edits`).
+
+    시각은 `autofix.push_start`(시간표로 확인되게 닿는 가장 이른 시각 · 머무는 시간 그대로), 뒤 일정은 `direct_schedule.fit(forward_only=True)` — 채팅 고치기의
+    「뒤 일정도 맞춰」(`edit(reflow=True)`)와 같은 계산이다. ★접수 행을 잠그지 않고 그 판의 값 줄로 센다(`ST4F-731` — 적용해 보는 세이브포인트만 잠근다).
+    늦추다가 문 닫는 시각 · 하루 끝 · 고정/예약 일정에 걸리면 바꾸지 않고 그 일정 줄을 `push_refused`(옮기려던 시각 · 서버 문장)로 바꾼다.
+    `fit` 이 앞 일정의 추정 끝을 고정한 값 줄(바뀌는 시각은 없다)은 `changes` 에 넣지 않고 `edits` 로만 싣는다 — 저장하면 그 끝이 늘지 않는다."""
+    from . import autofix as autofix_module
+    from . import direct_schedule
+    from .assemble import collect
+
+    moved = autofix_module.push_start(review, item_id)
+    if moved is None:
+        return {"changes": [], "kept": kept}
+    item = next(x for x in review["items"] if x["id"] == item_id)
+    begin, finish = (moment.strftime("%H:%M") for moment in moved)
+    source_id, index = str(item["source_id"]), item["index"]
+    source_rows = _sources(conn, tenant_id, intake_id)
+    prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
+                   for c in effective(_claims(conn, tenant_id, intake_id, revision))]
+    for field_name, value in ((f"items[{index}].starts_at", begin), (f"items[{index}].ends_at", finish)):
+        value, evidence, note = _checked(field_name, value)
+        prospective.append({"source_id": source_id, "field": field_name, "value": value, "method": "customer",
+                            "evidence": evidence, "needs_review": False, "note": note})
+    got = collect(sources=[{**s, "source_id": str(s["source_id"])} for s in source_rows], claims=prospective)
+    own = (source_id, index)
+    try:
+        adjusted = direct_schedule.fit(conn, tenant_id=tenant_id, rows=got.rows, touched={own},
+                                       party_size=(got.trip.get("party_size") or {}).get("value"),
+                                       mode_picks=review_module.picked_modes(prospective), fixed_times={own}, forward_only=True)
+    except direct_schedule.ScheduleConflict as exc:
+        if exc.code != "schedule_conflict":
+            raise IntakeConflict(exc.code, str(exc)) from exc
+        refused = {"id": item_id, "title": item["title"], "reason": "push_refused", "starts_at": begin, "ends_at": finish, "message": str(exc)}
+        return {"changes": [], "kept": [refused if k["id"] == item_id else k for k in kept]}
+    times: dict[tuple[str, int], dict[str, str]] = {own: {"starts_at": begin, "ends_at": finish}}
+    for change in adjusted:
+        times.setdefault((str(change["source_id"]), _item_no(change["field"])), {})[change["field"].rsplit(".", 1)[1]] = change["value"]
+    changes: list[dict[str, Any]] = []
+    held: list[dict[str, Any]] = []
+    for x in review["items"]:                                       # 그날 시각 순
+        key = (str(x["source_id"]), x["index"])
+        if key not in times:
+            continue
+        to = {"starts_at": times[key].get("starts_at", x["starts_at"]), "ends_at": times[key].get("ends_at", x["ends_at"])}
+        fields = [{"field": name, "value": value} for name, value in times[key].items()]
+        if key != own and to == {"starts_at": x["starts_at"], "ends_at": x["ends_at"]}:
+            held += [{"source_id": x["source_id"], "field": f"items[{x['index']}].{f['field']}", "value": f["value"]} for f in fields]
+            continue
+        place = review_module.public_place(x["place"])
+        changes.append({"id": x["id"], "source_id": x["source_id"], "index": x["index"], "title": x["title"],
+                        "from": {"place": place, "starts_at": x["starts_at"], "ends_at": x["ends_at"]},
+                        "to": {"place": place, **to}, "reason": "time", "hours_known": False,
+                        **({"pushed": True} if key != own else {}), "edits": fields})
+    return {"changes": changes, "kept": [k for k in kept if k["id"] != item_id], "edits": held}
 
 
 #: 고객이 보낸 관광공사 번호가 그 좌표의 장소 것으로 인정되는 거리(m) — `place_info.CATALOG_MATCH_M` 와 같은 값

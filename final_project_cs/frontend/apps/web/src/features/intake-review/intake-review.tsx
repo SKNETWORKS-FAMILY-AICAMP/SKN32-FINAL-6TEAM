@@ -16,7 +16,7 @@ import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-
 import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
 import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
 import { assumedYear, candidatesOf, readingOf, resultOf, sendingOf, tripIssuesOf } from "@/features/plan-check/from-intake";
-import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
+import { reviewResultOf, serverProgressOf, streamingViewOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
@@ -26,7 +26,9 @@ import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
 import { clearIntakeArrival, entryReturnOf, forgetIntakeSubmission, intakeArrival, rememberEmptyIntake } from "@/lib/live/intake-start";
-import type { ReviewedIntakeView } from "@/lib/live/intake-review";
+import { answerDiningQuestion, type DiningAnswer, type ReviewedIntakeView } from "@/lib/live/intake-review";
+import { DiningQuestions, diningAnswer, canApplyDiningAnswer } from "./dining-questions";
+import { currentDiningJudge, diningPending, diningRegistrationReason, diningStatusText, intakeRefetchInterval, intakeRegistrationReady } from "@/features/plan-check/dining-status";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { useIntakeRoutes } from "@/features/map/use-intake-routes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
@@ -76,8 +78,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     refetchOnWindowFocus: false,
     // Keep recently read data when reopening; a new submission opens its progress screen before this first GET finishes.
     staleTime: 2_000,
-    refetchInterval: (state) => state.state.data?.status === "review" ? 180_000
-      : polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
+    refetchInterval: (state) => intakeRefetchInterval(state.state.data, polling, state.state.error) || (state.state.data?.status === "review" && !state.state.error ? 180_000 : false),
   });
   const refresh = useRef({ running: false, queued: false });
   const reread = useCallback(() => {
@@ -143,6 +144,14 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onSuccess: (result) => registered(result.trip.trip_id),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
+  const conditionAnswer = useMutation({
+    mutationFn: (answer: DiningAnswer) => answerDiningQuestion(intakeId, answer, language),
+    onMutate: async () => { await queryClient.cancelQueries({ queryKey: key }); },
+    onSuccess: (next, sent) => queryClient.setQueryData<ReviewedIntakeView>(key, (current) => canApplyDiningAnswer(current, next, sent) ? next : current),
+    onError: (error) => {
+      if (error instanceof LiveError && ["stale_revision", "stale_dining_question"].includes(error.code)) void query.refetch();
+    },
+  });
 
   // ★`[2026-10-03]` The plan-check screen (mockup `tripilot-plan-check-streaming.html`) shows the server's intake:
   //   while it reads (`readingOf` — it first draws the lines it has not drawn yet when reading ends), then the result
@@ -152,7 +161,12 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   //   come from it and the changes (lock, recommend, search, photos, re-check) go through its calls (`useServerReview`).
   //   Without one (`review: null` — the check failed — or an older server), it says only what the read values say.
   const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
-  const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
+  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
+  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
+  // `[2026-10-24 ST4F-731]` While the reading screen is up (`flow.shown` — its questions and 「계획을 다 읽었어요」) the 「전체 자동 추천」 dry run waits.
+  const server = useServerReview({ intakeId, view: query.data, language, apply, reread, waitWarmUp: flow.shown });
   // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen also draws that plan; every call still goes with the real one.
   // ★`[2026-10-04 사용자 지시]` The two are held side by side — the plan as it is (`reviewed`) and the one the server proposed (`previewed`) — so the list can scroll from one into the other.
   const shown = query.data;
@@ -164,8 +178,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     if (!query.data) return null;
     if (query.data.status === "reading") return streamingViewOf(query.data, stream, server.infos);
     const base = reviewed ?? readingOf(query.data);
-    const last = stream.progress;
-    return last ? { ...base, serverProgress: { phase: last.phase, done: last.done, total: last.total, title: last.current?.title ?? null } } : base;
+    const served = serverProgressOf(stream);
+    return served ? { ...base, ...served } : base;
   }, [query.data, stream, reviewed, server.infos]);
   const result = useMemo(() => {
     if (!query.data || query.data.status === "reading" || query.data.status === "fatal") return null;
@@ -176,10 +190,6 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const routeShapes = useIntakeRoutes(intakeId, query.data?.revision ?? 0, language, Boolean(reviewed));
   // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
-  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
-  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
-  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
-  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
   const readingExtras = flow.shown ? { top: <><ReadingQuestions flow={flow} />{flow.phase === "idle" && <IdleWarning flow={flow} />}</>, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
   const [readingSeen, setReadingSeen] = useState(arriving);
   const [readingDrawn, setReadingDrawn] = useState(false);
@@ -227,11 +237,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const lostNote: BusToast | null = view.status === "reading" && follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") } : null;
     // `[2026-10-21 사용자 지적]` Slow and quiet are not said while the check is stopped at a question (`slowNotice`); a lost connection still is.
+    // ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` No 「늦어지고 있어요」 toast while the server sends its counts: the line under the bar says what it is at and,
+    //   past 8 s on one step, for how long (「n초째」). It stays for an older server that sends none. The silence notices (no news at all) stay as they are.
     const slowNote: BusToast | null = view.status !== "reading" || lostNote ? null
-      : follow.slow ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"), sub: stream.progress?.current?.title
-        // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
-        ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
-        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.") }
+      : follow.slow && !stream.progress ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"),
+        sub: t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.") }
       : silence?.stage === 60 ? { text: t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute"), sub: t("이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "Keep waiting here, or go back and send it again shortly."), note: t("60초 이상 새 진행 소식이 없어요.", "No new progress for at least 60 seconds.") }
       : silence?.stage === 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
       : null;
@@ -275,8 +285,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const yearNote = year ? t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`) : null;
   const details = [unchecked, asked, yearNote].filter(Boolean).join("\n");
   const finalNotice: BusToast | null = details ? { text: t("계획 확인 안내", "Plan check notice"), sub: [details, testNote?.text, testNote?.sub].filter(Boolean).join("\n"), stay: Boolean(unchecked) } : testNote;
+  const dining = currentDiningJudge(view);
   return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} notice={finalNotice} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
+    conditionQuestions={dining && <DiningQuestions key={`${view.revision}-${dining.run_id}`} questions={view.review?.dining_questions ?? []}
+      busy={diningPending(dining) || conditionAnswer.isPending || confirm.isPending} status={diningStatusText(dining, t)}
+      onAnswer={async (question, selected, excluded) => {
+        if (!dining.run_id) throw new Error(t("식당 확인 상태를 다시 불러와 주세요.", "Reload the restaurant check first."));
+        await conditionAnswer.mutateAsync(diningAnswer(view.revision, dining.run_id, question, selected, excluded));
+      }} />}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
       // `[2026-10-04]` Several stops' new times in ONE request (title · date · place stay as they are; an empty start leaves the start alone).
@@ -297,10 +314,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
     }}
     registration={{
-      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending || leaving,
+      ready: intakeRegistrationReady(view), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending || leaving || conditionAnswer.isPending,
       // The plan the server holds when it is pressed — a plan saved a moment before (the proposed one, registered from) has a newer revision than this render's.
       onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
-      error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
+      error: confirm.error?.message ?? diningRegistrationReason(view, t), problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
       loginRequired: loginRequired(confirm.error),
       loginHref: `${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.intake(intakeId))}`,
       registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,

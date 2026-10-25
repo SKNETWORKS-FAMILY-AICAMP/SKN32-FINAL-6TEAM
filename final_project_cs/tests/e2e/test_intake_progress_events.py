@@ -49,13 +49,15 @@ def test_each_item_is_reported_before_the_slow_moves_and_the_counts_climb_to_the
     assert names.count("item") == len(built["items"]) and names.count("move") == len(built["moves"]) > 0
     last_item = max(i for i, n in enumerate(names) if n == "item")
     assert last_item < first_move                                                                   # 모든 일정이 첫 이동보다 먼저 나간다
-    # 「n/m」 — 운영시간은 일정마다, 이동은 구간마다 1씩 늘어 total 에서 끝난다
+    # 「n/m」 — 운영시간은 일정마다, 이동은 구간마다 0 부터 1씩 늘어 total 에서 끝난다
+    # ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` `current` 는 **지금 보는** 일정 · 구간(보기 전에 알린다) — 끝에 `current: null`
     hours = [b for n, b in events if n == "progress" and b["phase"] == "hours"]
     moves = [b for n, b in events if n == "progress" and b["phase"] == "moves"]
-    assert [b["done"] for b in hours] == list(range(1, len(built["items"]) + 1)) and {b["total"] for b in hours} == {len(built["items"])}
-    assert [b["done"] for b in moves] == list(range(1, len(built["moves"]) + 1)) and {b["total"] for b in moves} == {len(built["moves"])}
+    assert [b["done"] for b in hours] == list(range(0, len(built["items"]) + 1)) and {b["total"] for b in hours} == {len(built["items"])}
+    assert [b["done"] for b in moves] == list(range(0, len(built["moves"]) + 1)) and {b["total"] for b in moves} == {len(built["moves"])}
     assert hours[0]["current"] == {"id": built["items"][0]["id"], "title": built["items"][0]["title"]}      # 지금 무엇을 확인하나
     assert moves[0]["current"]["title"].count("→") == 1 and moves[0]["current"]["id"].count(">") == 1
+    assert hours[-1]["current"] is None and moves[-1]["current"] is None                                   # 끝났다
     # 이벤트의 값이 최종 검사와 같다(같은 키로 DB 의 최종 값이 와서 덮어도 되는 모양)
     by_id = {b["id"]: b for n, b in events if n == "item"}
     for item in built["items"]:

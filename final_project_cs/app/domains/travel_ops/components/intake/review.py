@@ -645,10 +645,11 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     parts: list[Part] = []
     seq_of: dict[int, int] = {}
     for i, r in enumerate(rows):
+        # ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` `current` 는 **지금 보는** 일정이다(보기 전에 알린다) — 끝에 `current: null`
+        note("progress", {"phase": "hours", "done": i, "total": len(rows),
+                          "current": {"id": _item_id(r, positions), "title": r["title"]}})
         start, end = _dt(r["date"], r["start"]), _dt(r.get("end_date") or r["date"], r["end"])   # 숙소는 끝이 체크아웃 날이다
         facts[i] = facts_for(conn, tenant_id, r["place"], r["kind"], start, end)
-        note("progress", {"phase": "hours", "done": i + 1, "total": len(rows),
-                          "current": {"id": _item_id(r, positions), "title": r["title"]}})
         if start is None:
             continue
         seq_of[i] = len(parts) + 1
@@ -656,6 +657,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         parts.append(Part(seq=len(parts) + 1, kind=r["kind"], title=r["title"] or "(제목 없음)", starts_at=start,
                           ends_at=end, place={"name": r["title"] or "", "attributes": attributes,
                                               **({"activity": facts[i].activity} if facts[i].activity else {})}))
+    if rows:
+        note("progress", {"phase": "hours", "done": len(rows), "total": len(rows), "current": None})
     violations = check_itinerary(parts)
     by_seq: dict[int, list[Violation]] = {}
     for v in violations:
@@ -811,10 +814,14 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         """구간 하나가 정해졌다 — 모으고 곧바로 알린다(이동 계산이 시간의 대부분이라 화면이 이 알림으로 진행을 안다)."""
         moves.append(move)
         note("move", {k: v for k, v in move.items() if k != "sig"})
+
+    def measuring(ia: dict[str, Any], ib: dict[str, Any]) -> None:
+        """`[2026-10-24 ST4F-732]` 이 구간을 잰다 — `progress{moves}` 의 `current` 는 **지금 재는** 구간이다(끝에 `current: null`)."""
         note("progress", {"phase": "moves", "done": len(moves), "total": move_total,
                           "current": {"id": f"{ia['id']}>{ib['id']}", "title": f"{ia['title']} → {ib['title']}"}})
 
     for (a, ia), (b, ib) in pairs:
+        measuring(ia, ib)
         # `[2026-10-13]` 숙소는 체크인 시각에 떠난다고 본다 — 끝(체크아웃)은 며칠 뒤다
         a_end = _dt(a["date"], a["start"] if a["kind"] == "lodging" else (a["end"] or a["start"]))
         b_start = _dt(b["date"], b["start"])
@@ -850,6 +857,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
                   "route_choice": rchoice}, ia, ib)
 
     for (a, ia), (b, ib) in morning:
+        measuring(ia, ib)
         floor, b_start = _dt(b["date"], STAY_MORNING_FROM), _dt(b["date"], b["start"])
         if a["place"] is None or b["place"] is None or b_start is None:
             add_move({**_waiting_move(ia, ib, mode_pick.get(f"{ia['id']}~{ib['id']}")), "day": ib["day"], "date": ib["date"],
@@ -881,6 +889,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice,
                   "route_choice": rchoice, "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
 
+    if move_total:
+        note("progress", {"phase": "moves", "done": len(moves), "total": move_total, "current": None})
     # 겹침은 보통 앞 구간이 「늦게 닿는다」로 잡혀 이동이 확인 필요를 센다. 이동으로 안 잡히는 겹침(한쪽 장소를 모르거나 같은 곳이라 이동이 없는 것)은
     # 등록 판정이 거절할 일이므로 그 일정을 확인 필요로 센다 — 안 그러면 겹친 일정이 「등록 가능」으로 보인다
     counted = {m["to"] for m in moves if m["status"] == "review"}
@@ -1164,6 +1174,18 @@ def intake_state(conn, tenant_id: str, intake_id: Any) -> tuple[str, int] | None
     return (row[0], int(row[1])) if row else None
 
 
+def _store_read(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str, Any], *,
+                base: dict[str, Any] | None) -> bool:
+    """`[2026-10-24 사용자 결정 — ST4F-731]` 읽기 길(`force` 아님)의 저장 — 읽기는 접수 행을 잠그지 않으므로 **저장할 때만** 잠그고 저장본을 다시 읽어,
+    읽은 것(`base`, 없었으면 None)과 같을 때만 저장한다. 그 사이 다른 쓰기가 저장본을 바꿨으면 덮지 않는다(이번 계산은 응답에만 쓴다)."""
+    with conn.transaction():
+        intake_state(conn, tenant_id, intake_id)
+        if load(conn, tenant_id, intake_id, revision) != base:
+            return False
+        store(conn, tenant_id, intake_id, revision, payload)
+        return True
+
+
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
            claims: list[dict[str, Any]], force: bool = False, previous_revision: int | None = None,
            quick: bool = False, **options: Any) -> dict[str, Any]:
@@ -1189,21 +1211,43 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             mode = "cached" if cached.get("risk_schema_version") == risks.SCHEMA_VERSION else "fresh"
             payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
             if mode == "fresh":
-                store(conn, tenant_id, intake_id, revision, payload)
+                _store_read(conn, tenant_id, intake_id, revision, payload, base=cached)
+            from . import dining_review
+            payload = dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
             return guard_dates(payload)
+    answered_review = load(conn, tenant_id, intake_id, revision) if force else None
     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, new_registration=False, **options)
+    from .dining_questions import merge_questions, answers
+    saved_answers = answers(answered_review or previous or {})
+    if saved_answers:
+        payload["dining_questions"] = saved_answers
+        merge_questions(payload, [], "\n".join(source.get("transcript") or "" for source in sources))
     payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
     from . import risks
 
     # ★`[2026-10-20 「대안 적용 13.9초」]` 앞 판에서 방금 점검한 일정(장소 · 날짜 · 시각이 같음)은 그 결과를 쓴다 — 바꾼 일정만 바깥 조회를 다시 한다
     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
-    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
-    store(conn, tenant_id, intake_id, revision, payload)
+    # `[2026-10-24 ST4F-732]` 처음 검사(`pipeline.process`)가 진행 알림을 받을 때만 위험 점검의 알림도 건넨다
+    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous,
+                             **({"on_event": options["on_event"]} if options.get("on_event") else {}))
+    if force:
+        store(conn, tenant_id, intake_id, revision, payload)
+    elif not _store_read(conn, tenant_id, intake_id, revision, payload, base=None):
+        return load(conn, tenant_id, intake_id, revision) or payload     # 그 사이 다른 쓰기가 먼저 저장했다 — 그것을 쓴다
+    if not quick and any(item.get("kind") == "dining" for item in payload.get("items") or []):
+        from . import dining_review
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+        from app.core.settings import dining_agent_judge
+
+        payload = dining_review.prepare(conn, tenant_id, intake_id, revision, payload,
+                                        enabled=dining_ledger.agent_judge_runner() is not None,
+                                        deadline_s=(dining_agent_judge() or {}).get("deadline_s", dining_review.DEFAULT_DEADLINE_S),
+                                        notes="\n".join(source.get("transcript") or "" for source in sources))
     return guard_dates(payload)
 
 

@@ -89,7 +89,8 @@ export function resultLabel(result: CheckResult, t: Translate): string {
 export function kindLabel(kind: CheckKind, t: Translate): string {
   return {
     place: t("장소", "Place"), time: t("시간", "Time"), hours: t("운영시간", "Hours"), closed: t("휴무일", "Closed"), booking: t("예약", "Booking"),
-    route: t("경로", "Route"), mode: t("수단", "Mode"), arrival: t("도착", "Arrival"),
+    route: t("경로", "Route"), mode: t("수단", "Mode"), arrival: t("도착", "Arrival"), dining_check: t("식당 확인", "Restaurant check"),
+    dietary: t("식사 조건", "Dietary"), kids: t("아이 동반", "Children"), payment: t("결제", "Payment"), business: t("운영 상태", "Business"),
     risk: t("날씨·도로", "Weather · roads"), date: t("날짜", "Date"),
   }[kind];
 }

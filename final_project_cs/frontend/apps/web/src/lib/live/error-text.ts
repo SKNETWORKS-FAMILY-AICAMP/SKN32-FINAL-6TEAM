@@ -36,6 +36,8 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   // 로그인 · 세션
   unauthenticated: ["로그인이 끝났어요. 다시 로그인해 주세요.", "Your sign-in has ended. Please sign in again."],
   session_expired: ["로그인이 끝났어요. 다시 로그인해 주세요.", "Your sign-in has ended. Please sign in again."],
+  // `[2026-10-23 F-02]` The session was refreshed without resending the refused request.
+  session_changed: ["로그인 상태가 바뀌어 요청을 보내지 않았어요. 화면을 확인하고 다시 시도해 주세요.", "Your sign-in changed, so the request was not sent. Please check the screen and try again."],
   too_many_auth: [`로그인을 너무 자주 시도했어요. ${AGAIN[0]}`, `Too many sign-in attempts. ${AGAIN[1]}`],
   too_many_sessions: [`요청이 너무 많아요. ${AGAIN[0]}`, `Too many requests. ${AGAIN[1]}`],
   too_many_requests: [`연결을 너무 자주 시도했어요. ${AGAIN[0]}`, `Too many attempts to connect. ${AGAIN[1]}`],

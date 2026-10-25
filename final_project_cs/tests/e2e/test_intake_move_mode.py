@@ -214,3 +214,34 @@ def test_auto_fix_all_fits_times_with_the_chosen_mode_where_one_is_kept(calc):
                     json={"revision": chosen["revision"], "dry_run": True})
     assert r.status_code == 200, r.text
     assert "bus" in calc.calls, "고른 구간(올리브영→광장시장)을 고른 수단(버스)으로 맞춰 봐야 한다 — 추천 수단으로만 맞추면 적용 뒤 고른 수단이 안 닿아 되돌아간다"
+
+
+# ★`[2026-10-25 사용자 지시]` 수단 · 경로를 고르면 새 판이다 — 고치기처럼 그 판의 식사를 뒤에서 다시 판정한다. 전에는 걸지 않아 식사가 있는 계획의 새 판 판정이
+#   시작도 안 하고 기한 뒤 실패로 남아 「식당 이용 조건을 확인하지 못했어요」가 떴다(2026-10-25 로컬 · 접수 8648a25d 판 3)
+@pytest.fixture()
+def rejudged(monkeypatch):
+    from app.domains.travel_ops.components.intake import pipeline
+
+    calls: list[tuple[str, int]] = []
+    monkeypatch.setattr(pipeline, "rejudge", lambda connect, tenant, intake_id, revision: calls.append((str(intake_id), revision)))
+    return calls
+
+
+def test_picking_a_mode_rejudges_the_meals_of_the_new_revision_and_a_refused_pick_does_not(calc, rejudged):
+    client, headers, view = _setup(calc)
+    _pick(client, headers, view, "walk", status=422)                                    # 안 닿는 수단 — 판이 없으니 판정도 없다
+    assert rejudged == []
+    done = _pick(client, headers, view, "taxi")
+    assert rejudged == [(view["intake_id"], done["revision"])]
+
+
+def test_picking_a_route_rejudges_the_meals_of_the_new_revision(calc, rejudged, monkeypatch):
+    from app.domains.travel_ops.components.intake import move_options
+
+    client, headers, view = _setup(calc)
+    # 경로 고르기 자체는 move_options 단위 시험이 본다 — 여기서는 새 판이 나오면 판정을 거는지만 본다
+    monkeypatch.setattr(move_options, "choose_route", lambda conn, **kw: {"revision": kw["revision"] + 1, "review": {}})
+    r = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/moves/0-1~0-2/route", headers=headers,
+                    json={"revision": view["revision"], "key": "recommended"})
+    assert r.status_code == 200, r.text
+    assert rejudged == [(view["intake_id"], view["revision"] + 1)]

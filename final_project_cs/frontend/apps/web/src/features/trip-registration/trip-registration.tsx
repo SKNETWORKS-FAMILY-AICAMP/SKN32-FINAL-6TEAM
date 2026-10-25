@@ -14,12 +14,14 @@ import { SLOW_AFTER_MS } from "@/features/intake-review/intake-starting";
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
+import { useTrips } from "@/features/trip/use-trip";
 import { LiveError, probeSession, startSession } from "@/lib/live/client";
 import { submitIntake } from "@/lib/live/intake";
 import { beginIntake, clearIntakeFailure, intakeFailure, loginRequiredBy, rememberIntakeArrival, type PlanRequest } from "@/lib/live/intake-start";
 import { previousPath } from "@/lib/nav-history";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { ExampleGuide, exampleGuideSeen } from "./example-guide";
 import { examplePlan } from "./example-plan";
 import { TestPlans } from "./test-plans";
 import { textToSend } from "./test-plan-input";
@@ -220,6 +222,15 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const pending = signUp.isPending || sent || screening;
   // The chosen panel has nothing to send yet: pressing 「계획 확인하기」 says why under the panels and moves the focus there (the button is NOT switched off).
   const reason = paneReason(active, { text: value, files: files.length, ask }, today);
+  // ★`[2026-10-25 사용자 결정 — 예시 불러오기 첫 안내 A안]` Decided once, when this browser's trips are known: a first trip (none registered), an empty box on 「직접 입력」,
+  //   nothing being sent or given back, and the guide never finished here. A draft in the box or a returning customer never sees it.
+  const trips = useTrips();
+  const sampleButton = useRef<HTMLButtonElement>(null);
+  const submitButton = useRef<HTMLButtonElement>(null);
+  const [guide, setGuide] = useState<"wait" | "on" | "off">("wait");
+  if (guide === "wait" && (trips.isSuccess || trips.isError)) {
+    setGuide(trips.isSuccess && trips.data.length === 0 && value === "" && active === "text" && !pending && !returned && !exampleGuideSeen() ? "on" : "off");
+  }
 
   /** The panel the customer touched becomes the chosen one; anything said about the last sending goes with it. */
   function choose(pane: RegistrationPane) {
@@ -372,7 +383,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const textBox = <>
     <div className={styles.labelRow}>
       <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
-      <Button variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
+      <Button ref={sampleButton} variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
     </div>
     <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
       placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
@@ -529,9 +540,10 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
         <Button onClick={() => { if (previousPath() !== null) router.back(); else router.push(routes.home); }}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</Button>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
         {/* `[2026-10-06 사용자 지적]` Empty: it LOOKS switched off (grey) but still answers a press - it says what to do. It is not `disabled`, which would say nothing. */}
-        <Button variant="primary" type="submit" disabled={pending && !screening} className={reason ? styles.blocked : ""} aria-disabled={reason || screening ? true : undefined} aria-busy={screening || undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        <Button ref={submitButton} variant="primary" type="submit" disabled={pending && !screening} className={reason ? styles.blocked : ""} aria-disabled={reason || screening ? true : undefined} aria-busy={screening || undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
     {card && <GuardianCard kind="start" onPrimary={() => proceed("on")} onSecondary={() => proceed("off")} onClose={() => setCard(false)} />}
+    {guide === "on" && <ExampleGuide sample={sampleButton} submit={submitButton} onLoad={() => updateSource(examplePlan(language))} onDone={() => setGuide("off")} />}
   </>;
 }

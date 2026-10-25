@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 
+from contextlib import nullcontext
 from datetime import datetime
 import json
 from typing import Any, Callable
@@ -75,6 +76,26 @@ def store_place(conn, cur, tenant: str, trip_id: UUID, *, name: str, kind: str, 
 
 
 def commit(*, store: Any, connect: Callable[[], Any], tenant: str, intake_id: UUID, revision: int,
+           reopened: dict[str, Any], status: str, built: Any, now: datetime, cause_extra: dict[str, Any] | None = None,
+           before_write: Callable[[], None] | None = None) -> tuple[int, bool, Any]:
+    """현재 접수 잠금·식사 확인부터 새 판 저장·확정 표시까지 같은 트랜잭션으로 묶는다."""
+    from . import registration
+    from .pipeline import mark_confirmed
+
+    try:
+        with connect() as conn, conn.transaction():
+            registration.require_review(conn, tenant, intake_id, revision)
+            result = _commit_locked(store=store, connect=lambda: nullcontext(conn), tenant=tenant,
+                                    intake_id=intake_id, revision=revision, reopened=reopened,
+                                    status=status, built=built, now=now, cause_extra=cause_extra,
+                                    before_write=before_write)
+            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(reopened["trip_id"])))
+            return result
+    except registration.RegistrationRefused as exc:
+        raise CommitRefused(exc.status, exc.code, exc.message, **exc.detail) from None
+
+
+def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intake_id: UUID, revision: int,
            reopened: dict[str, Any], status: str, built: Any, now: datetime, cause_extra: dict[str, Any] | None = None,
            before_write: Callable[[], None] | None = None) -> tuple[int, bool, Any]:
     """수정 접수의 그 판 → 같은 여행의 새 판. (판 번호, 바꿨나, 새 판 계산(`reopen.EditPlan` · 바꾼 것 없으면 None)).
