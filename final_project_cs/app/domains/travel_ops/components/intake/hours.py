@@ -102,7 +102,7 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
     # ⑤ 활동 원장 — 관광지만. 장소 행이 있으면 그 행으로, 없거나 원장과 안 이어졌으면 관광공사 번호로
     if kind == "activity" and activity_verdict:
         _apply_activity_ledger(conn, tenant_id, core_id, content_id, start, end, out)
-        _settle_stored_conditions(conn, start, out)
+        _settle_stored_conditions(conn, start, end, out)
     if not out.known:
         _apply_landmark(place, start, out)
     else:
@@ -112,7 +112,7 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
     return out
 
 
-def _settle_stored_conditions(conn, start: datetime, out: HoursFacts) -> None:
+def _settle_stored_conditions(conn, start: datetime, end: datetime | None, out: HoursFacts) -> None:
     """⑤-2 읽어 둔 조건 문장(`hours_read.conditions` — 관광공사 휴무 원문 가운데 요일표로 못 편 것) 가운데 **그날엔 해당 없다**고
     확정되는 것을 뺀다. `[2026-10-20 x600 실서버 확인]`
 
@@ -130,10 +130,16 @@ def _settle_stored_conditions(conn, start: datetime, out: HoursFacts) -> None:
     holiday = _HolidayCalendar(conn)
     kept: list[str] = []
     for text in out.conditions:
-        verdict = activity_ledger.closure(text, start, holiday=holiday) if text in stored else None
-        if verdict is not None and verdict.get("closed") is False:
+        verdict = activity_ledger.closure(text, start, holiday=holiday, until=end) if text in stored else None
+        if verdict is not None and verdict.get("reason") == "visit_restriction":
+            out.tips = list(dict.fromkeys([*out.tips, *verdict.get("guidance", [])]))
+            if verdict.get("closed") is False:
+                continue
+            kept.append(verdict.get("quote") or text)
+        elif verdict is not None and verdict.get("closed") is False:
             continue
-        kept.append(text)
+        else:
+            kept.append(text)
     out.conditions = kept
 
 

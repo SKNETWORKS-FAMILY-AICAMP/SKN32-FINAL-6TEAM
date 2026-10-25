@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from inspect import signature
 from typing import Any, Callable
 
 from app.core.service_bindings import collect_registration, read_binding
@@ -68,7 +69,7 @@ def state_by_content(conn, content_id: str | None, at: datetime | None, until: d
     return selected(conn, content_id, at, until, holiday=holiday)
 
 
-def closure(text: str | None, at: datetime | None, *, holiday: Callable[..., Any] | None = None) -> dict[str, Any] | None:
+def closure(text: str | None, at: datetime | None, *, holiday: Callable[..., Any] | None = None, until: datetime | None = None) -> dict[str, Any] | None:
     """휴무 원문 한 조각(관광공사 운영시간을 읽을 때 따로 남긴 조건 문장)이 그 시각에 휴무인가. `[2026-10-20]`
 
     반환 `{"closed": True|False|None, "reason", "quote"}` — `closed` 는 휴무 · 그날엔 해당 없음 · 모름.
@@ -77,9 +78,9 @@ def closure(text: str | None, at: datetime | None, *, holiday: Callable[..., Any
     selected = read_binding("activity_ledger", "closure", globals()["_closure"])
     if selected is None or not text or not isinstance(at, datetime):
         return None
-    read = selected(text, at, holiday)
+    read = selected(text, at, holiday, until=until) if "until" in signature(selected).parameters else selected(text, at, holiday)
     return {"closed": getattr(read, "value", None), "reason": getattr(read, "reason", None),
-            "quote": getattr(read, "quote", None)}
+            "quote": getattr(read, "quote", None), "guidance": list(getattr(read, "guidance", ()))}
 
 
 def indoor(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | None:

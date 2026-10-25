@@ -89,6 +89,7 @@ class ClosureRead:
     reason: str
     #: 휴무로 냈지만 공휴일 예외를 확인하지 못했다 — 답변에 「공휴일과 겹치면 다를 수 있다」를 단다.
     needs_caveat: bool = False
+    guidance: tuple[str, ...] = ()
 
 
 def holiday_dates_needed(text: str | None, at: Any) -> list[date]:
@@ -103,7 +104,7 @@ def holiday_dates_needed(text: str | None, at: Any) -> list[date]:
     return []
 
 
-def read_closure(text: str | None, at: Any, holiday: HolidayLookup | None = None) -> ClosureRead:
+def read_closure(text: str | None, at: Any, holiday: HolidayLookup | None = None, *, until: datetime | None = None) -> ClosureRead:
     """그 시각(`at`)이 원문상 휴무인가. `holiday` 가 없으면 공휴일 조건은 모름으로 읽는다."""
     lookup = holiday or (lambda _d: None)
     raw = (text or "").strip()
@@ -111,6 +112,10 @@ def read_closure(text: str | None, at: Any, holiday: HolidayLookup | None = None
         return ClosureRead(None, None, "empty")
     if not isinstance(at, datetime):
         return ClosureRead(None, None, "time_unknown")
+    restriction = _read_visit_condition(raw, at, until, holiday)
+    if restriction is not None:
+        return restriction
+    raw = _REST_LABEL.sub("", raw, count=1)
     d = local_date(at)
     clauses = _clauses(raw)
     exception = next((c for c in clauses if _EXCEPT_OPEN.search(c)), None)
@@ -273,3 +278,81 @@ def _festive(c: str, d: date, holiday: HolidayLookup) -> tuple[bool | None, str]
         return None, "festive_unknown"
     middle = all(_FESTIVE_NAME.search(str(i.get("holiday_name") or i.get("name") or "")) for i in around)
     return (True, "festive") if middle else (None, "festive_day_ambiguous")
+
+
+#: 조건 문장 앞의 라벨 — 「쉬는 날: 연중무휴」 (`catalog_hours` 가 「쉬는 날: …」 원문을 인용해 담는다)
+_REST_LABEL = re.compile(r"^\s*(?:쉬는\s*날|휴무일|휴관일|정기\s*휴무일?|정기\s*휴관일?|휴무|휴관)\s*[:：]\s*")
+#: 구역·시설의 **방문 제한시간** 문장의 표지 — 이 말이 있어야 시간대 제한으로 읽는다(그냥 시간 범위는 무엇의 시간인지 모른다)
+_VISIT_LIMIT = re.compile(r"(?:방문|입장|출입)\s*(?:제한|금지)")
+_CLOCK_RANGE = re.compile(r"(\d{1,2}):(\d{2})\s*[~\-–～]\s*(익일|다음\s*날)?\s*(\d{1,2}):(\d{2})")
+#: 요일 · 달 · 계절 · 주차 단서가 붙은 제한은 이 날에 적용되는지 이 함수가 모른다 → 모름
+_RESTRICTION_QUALIFIER = re.compile(r"\d+\s*월|[월화수목금토일]요일|평일|주말|공휴일|하절기|동절기|여름|겨울|봄|가을|매주|매월|주차|첫째|둘째|셋째|넷째|마지막")
+
+
+def _split_restrictions(text: str) -> list[tuple[str, bool]] | None:
+    """방문 제한시간 표지가 있는 문장이면 (조각, 제한시간 조각인가) 목록, 아니면 `None`. 조각은 줄바꿈 · `;` 로 나눈다."""
+    if not _VISIT_LIMIT.search(text):
+        return None
+    pieces = [p.strip() for p in re.split(r"[;\n]", text) if p.strip()]
+    return [(piece, bool(_VISIT_LIMIT.search(piece))) for piece in pieces] or None
+
+
+def _restriction_verdict(segment: str, start: datetime, end: datetime | None) -> str:
+    """`clear`(방문 시각과 안 겹침이 확정) · `hit`(겹침) · `unknown`(모호 — 시각이 하나가 아니거나 단서가 붙었거나 끝이 시작과 같음 …).
+
+    ★경계는 반개구간이다 — 제한 `[시작, 끝)`. 방문이 정확히 끝 시각(10:00)에 시작하거나 시작 시각(17:00)에 끝나는 것은 겹침이 아니다
+      (그 장소의 운영시간 줄 「10:00–17:00」과 같은 읽기). 끝 시각이 없으면 시작 한 시각만 본다.
+    ★「익일」이 있거나 끝이 시작보다 앞이면 밤을 넘기는 구간이다. 「익일」인데 끝이 시작 이후이면 24시간을 넘어 모호하므로 모름.
+    ★해석은 문장 안의 시각에서만 나온다 — 장소 이름 · 번호 · 날짜 · 시각을 코드에 두지 않는다."""
+    found = _CLOCK_RANGE.findall(segment)
+    if len(found) != 1 or _RESTRICTION_QUALIFIER.search(segment):
+        return "unknown"
+    match = _CLOCK_RANGE.search(segment)
+    if segment[match.end():].strip(" ."):
+        return "unknown"
+    residue = _CLOCK_RANGE.sub("", segment)
+    prefix = segment[:match.start()]
+    if not re.fullmatch(r"\s*※?\s*(?:입장\s*금지\s*시간\s*안내\s*-\s*)?(?:방문|입장|출입)\s*(?:제한|금지)\s*(?:시간)?\s*(?:\([^\d]*\))?\s*[:：]?\s*", prefix):
+        return "unknown"
+    if re.search(r"\d|휴무|휴관|종일|매일|또는|및|않|아니|불가|휴일|예외|제외|단[, :]|외에는|이외|이후|이전|별도|상이|참조|확인|문의|변동|공연|[월화수목금토일][·,/ ~]", residue):
+        return "unknown"
+    sh, sm, next_day, eh, em = found[0]
+    begin, finish = int(sh) * 60 + int(sm), int(eh) * 60 + int(em)
+    if not (0 <= begin < 24 * 60 and 0 <= int(sm) < 60 and 0 <= int(em) < 60 and 0 <= finish <= 24 * 60) or (int(eh) == 24 and int(em)):
+        return "unknown"
+    if begin == finish or (next_day and finish > begin):
+        return "unknown"
+    wraps = bool(next_day) or finish < begin
+    seoul = KST
+    s = start.astimezone(seoul).replace(tzinfo=None) if start.tzinfo else start
+    e = (end.astimezone(seoul).replace(tzinfo=None) if end.tzinfo else end) if end is not None else None
+    if e is not None and e <= s:
+        return "unknown"
+    if e is not None and e - s >= timedelta(days=1):
+        return "hit"
+    for offset in (-1, 0, 1):
+        day0 = datetime.combine(s.date(), datetime.min.time()) + timedelta(days=offset)
+        w0 = day0 + timedelta(minutes=begin)
+        w1 = day0 + timedelta(days=1 if wraps else 0, minutes=finish)
+        if (s < w1 and e > w0) if e is not None else (w0 <= s < w1):
+            return "hit"
+    return "clear"
+
+
+
+def _read_visit_condition(text: str, at: datetime, until: datetime | None, holiday: HolidayLookup | None) -> ClosureRead | None:
+    segments = _split_restrictions(text)
+    if segments is None:
+        return None
+    left, guidance = [], []
+    for segment, restricted in segments:
+        if restricted:
+            if _restriction_verdict(segment, at, until) == "clear":
+                guidance.append(segment)
+                continue
+        elif read_closure(segment, at, holiday).value is False:
+            continue
+        left.append(segment)
+    return ClosureRead(None if left else False, "; ".join(left) if left else None,
+                       "visit_restriction", guidance=tuple(guidance))
+
