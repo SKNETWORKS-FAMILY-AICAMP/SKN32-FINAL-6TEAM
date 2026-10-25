@@ -790,7 +790,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         classify_case(conn, tenant_id=tenant, case_id=case_id, text=message, classifier=broken, actor_id=actor_id,
                       diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
         answer = ("지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요.")
-        return view({"status": "escalated", "reason": "decision_failed", "failure": failure, "answer": answer})
+        return view({"status": "escalated", "reason": "decision_failed", "answer": answer})
 
     decision = fact_first(decision)      # 사실 질문이면 되묻지 않고 먼저 답한다(사용자 지시 2026-09-29)
     from app.domains.travel_ops.components.conversation import chat_log, fact_context
