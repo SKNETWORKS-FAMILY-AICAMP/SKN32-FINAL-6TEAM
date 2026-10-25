@@ -317,8 +317,11 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         code = getattr(exc, "code", "unsupported_format")
         _fatal(connect, tenant_id, intake_id, code, str(exc))
         return "fatal"
-    except Exception as exc:                         # ★받아쓰기 모델 장애 등 — 숨기지 않고 남긴다
-        _fatal(connect, tenant_id, intake_id, "reading_failed", f"{type(exc).__name__}: {exc}"[:300])
+    except Exception:                                # ★받아쓰기 모델 장애 등 — 숨기지 않고 남긴다
+        # ★`[2026-10-26 라우팅 감사 1번]` 실패 내용(`fatal.detail`)은 고객 화면에 그대로 보인다 — 내부 예외 글 대신 고객 문장을 남기고
+        #   예외 종류 · 내용은 서버 로그에만 둔다(☆전에는 `PermissionError: unapproved_egress` 같은 글이 그대로 저장됐다)
+        log.warning("intake reading outcome=failed by=unexpected intake=%s", intake_id, exc_info=True)
+        _fatal(connect, tenant_id, intake_id, "reading_failed", READING_ERROR_TEXT)
         return "fatal"
     finally:
         if "beat" in locals():
@@ -1313,6 +1316,8 @@ READING_STREAM_KEYS = ("first_token_seconds", "stall_seconds", "max_seconds", "p
 
 #: 남은 줄 모델이 끝내 답하지 못했을 때 고객에게 보이는 말(접수 `fatal_detail`) — 무엇이 안 됐고 무엇을 하면 되는지. 기술 사유는 로그에 남긴다
 READING_FAILED_TEXT = "계획을 읽는 모델이 지금 답하지 않아 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."
+#: 예상하지 못한 읽기 장애(`reading_failed`)의 고객 문장 — 내부 예외 글은 서버 로그에만 남긴다
+READING_ERROR_TEXT = "계획을 읽는 중에 문제가 생겨 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."
 
 
 def _model_side_failure(exc: BaseException) -> bool:

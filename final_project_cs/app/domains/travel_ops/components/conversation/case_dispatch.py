@@ -344,7 +344,10 @@ def _resume_route(case: dict[str, Any], message: str | None) -> str | None:
 
     with get_connection() as conn:
         _, items = TripStore(case["tenant_id"]).latest(conn, UUID(str(ref["id"])))
-    matches = [i for i in items if str(i.item_id) == str(target) or text in (i.title, str(i.item_id))]
+    # ★`[2026-10-26 라우팅 감사 6번]` 팀이 대상을 찾는 규칙(`conversation_work._target`: id · 제목 · 장소 이름)과 같게 —
+    #   ☆전에는 장소 이름 답이 자리 표시 담당(`activity`)에 남아 식당이면 `target_kind_mismatch` 로 넘어갔다
+    matches = [i for i in items if str(i.item_id) == str(target) or text in (i.title, str(i.item_id))
+               or (text and (i.place or {}).get("name") == text)]
     if len(matches) == 1 and matches[0].kind in ("dining", "activity", "mobility", "lodging", "flight"):    # ★`[2026-10-15 LB-02]` 숙소 · 항공도 자기 팀으로
         return matches[0].kind
     return None
