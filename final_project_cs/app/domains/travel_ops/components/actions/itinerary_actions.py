@@ -188,6 +188,13 @@ class ItineraryApply:
                 missing = sorted(str(old) for old in replacements if old not in present)
                 if missing:
                     raise ActionRejected(f"items not in the current itinerary: {missing}")
+                if str(arguments.get("reason")) == "customer_request":
+                    # ★`[2026-10-26 T16 · D-020]` 고객 요청 교체도 **지금 판**의 고정 · 예약 항목은 바꾸지 않는다 — 판정 문을 건너뛰는 것은
+                    #   「고객이 고른 것」이라서지, 고정을 우회해도 된다는 뜻이 아니다(고른 보류 제안은 `customer_choice`). 마지막 안전망이다
+                    for item in current:
+                        if item.item_id in replacements and (item.locked or item.booking_id):
+                            raise ActionRejected(f"{'item_locked' if item.locked else 'item_booked'}: "
+                                                 f"customer_request cannot replace protected item {item.item_id}")
                 new_items = [replacements.get(item.item_id, item) for item in current]
                 # ☆`[2026-09-29 이동 계산기 문제목록 #44]` 여행 버전(ItineraryChange.new_items)과 같게 — 장소가 멀리 바뀐
                 #   항목의 바로 앞뒤 이동을 새 장소 기준으로 다시 만든다(두 경로의 결과가 갈리지 않게)
