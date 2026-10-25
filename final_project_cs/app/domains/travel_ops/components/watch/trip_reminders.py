@@ -56,6 +56,7 @@ from app.infrastructure.notify.phrase import Phrase
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleDeparture, TripStore
 from app.domains.travel_ops.components.itinerary.itinerary_changes import option_hits, planned_option, route_of, route_targets
 from app.domains.travel_ops.components.planning.pending import PendingStore
+from app.domains.travel_ops.components.planning.survey import auto_on_disruption
 from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS
 
 KST = ZoneInfo("Asia/Seoul")
@@ -159,9 +160,11 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
 #   없으므로 **언어마다 한 번만** 옮기면 된다(wiki `architecture/notifications.md` 「언어」).
 #   ☆완성 문장을 담아 두면 값이 다른 알림끼리 섞인다 — 그래서 틀만 담는다.
 def day_phrase(items: list[Item], day: date, *, eve: bool = False,
-               changed: int = 0, waiting: list[str] | None = None) -> Phrase:
+               changed: int = 0, waiting: list[str] | None = None, auto_adjust: bool = False) -> Phrase:
     """① 하루 시작. ★`[2026-09-24]` 새벽 3시까지 모인 이슈를 함께 싣는다(D-020) —
-    `changed` 어제 이후 바뀐 일정 버전 수, `waiting` 답을 기다리는 일정 제목."""
+    `changed` 어제 이후 바뀐 일정 버전 수, `waiting` 답을 기다리는 일정 제목.
+    ★`[2026-10-26 D-020]` `auto_adjust` 항로 지킴이 켜짐(`survey.auto_on_disruption`)일 때만 「먼저 조정하고 알림」을
+    약속한다. 꺼짐·미응답·운영자 끔은 먼저 묻는다 — 기본값도 먼저 확인이다."""
     stops = [f"{_hm(i.starts_at)} {i.title}" for i in _by_day(items).get(day, []) if i.kind != "mobility"]
     head = ("내일 일정을 미리 안내해 드릴게요." if eve else "좋은 아침이에요! 오늘 일정을 안내해 드릴게요.")
     template = head + "\n{stops}"
@@ -173,7 +176,8 @@ def day_phrase(items: list[Item], day: date, *, eve: bool = False,
         template += ("\n답을 기다리는 일정: {waiting} — 계획서 링크에서 골라 주세요. "
                      "답이 없으면 원래 일정대로 진행합니다.")
         values["waiting"] = ", ".join(waiting)
-    template += "\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요."
+    template += ("\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요." if auto_adjust else
+                 "\n\n일정에 영향을 주는 변동이 확인되면 바꾸기 전에 먼저 여쭤볼게요.")
     return Phrase(template, values)
 
 
@@ -474,7 +478,8 @@ class TripReminders:
             changed = self._changed_since(trip_id, reminder.due_at) if reminder.kind == "day_start" else 0
             titles = [i.title for i in items if i.item_id in waiting]
             return {**base, **notice_fields(day_phrase(items, reminder.day, eve=reminder.kind == "day_eve",
-                                                       changed=changed, waiting=titles))}
+                                                       changed=changed, waiting=titles,
+                                                       auto_adjust=auto_on_disruption(trip.get("constraints"))))}
         # ★답을 기다리는 일정으로 가는 이동이면 「출발하세요」를 보내지 않는다(D-020)
         target = next((i for i in items if i.seq > reminder.move.seq and i.kind != "mobility"), None)
         pending_target = reminder.move if reminder.move.item_id in waiting else (
