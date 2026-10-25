@@ -232,9 +232,7 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
     conn.commit()
     patch = _interpret_reply(state, message, chat)
     def route(current, safe_message):
-        current_state = {**(current.get("state_json") or {}), **patch}
-        owner = _resume_route({**current, "state_json": current_state}, safe_message)
-        return {"owner_team_id": owner or current["owner_team_id"], "state_patch": patch} if patch else owner
+        return resume_owner(current, safe_message, patch)
 
     def prepare(current, safe_message):
         current_state = current.get("state_json") or {}
@@ -257,6 +255,17 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
         # Controller가 WAIT_EXPIRED를 기록했다. 명시 연결이 없는 새 메시지는 버리지 않는다.
         return None
     return response(tenant=tenant, case_id=case_id, execution=execution)
+
+
+def resume_owner(current: dict[str, Any], safe_message: str | None, patch: dict[str, Any]) -> Any:
+    """재개 담당 — 고른 일정의 팀, 없으면 저장된 담당. ★`[2026-10-26]` 옛 기록의 `booking` 은 팀 id(`booking_handoff`)로 읽는다(이관 없음)."""
+    from .trip_messages import canonical_team_id
+
+    current_state = {**(current.get("state_json") or {}), **patch}
+    stored = current.get("owner_team_id")
+    legacy = canonical_team_id(stored)
+    owner = _resume_route({**current, "state_json": current_state}, safe_message) or (legacy if legacy != stored else None)
+    return {"owner_team_id": owner or stored, "state_patch": patch} if patch else owner
 
 
 def _matches_implicit_reply(state: dict[str, Any], message: str) -> bool:

@@ -28,6 +28,28 @@ QUESTION_SCOPES = ("travel_activity", "travel_dining", "travel_access", "travel_
 CAN_DO = ("이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · "
           "「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」")
 
+#: ★`[2026-10-26 D-024 채팅 적용]` 채팅에서 해결 못 한 답 끝에 붙이는 문의함 안내 — 계약 `wiki/external/chat-inquiry-guide.md`.
+#: 상담원 연결 · 대신 수정을 약속하지 않는다. 경로는 사용자 웹 `routes.supportNew` 와 같은 값이다
+INQUIRY_GUIDE = ("채팅으로 해결하지 못한 일은 메뉴 › 「문의함」 › 「문의 작성」에서 남겨 주세요. "
+                 "운영팀이 문의함으로 답변드려요(일정·예약은 대신 고치지 않아요).")
+INQUIRY_PATH = "/support/new"
+#: 해결되지 못하고 끝난 Case 상태 — 이 상태로 끝났고 답(`answered`)이 아니면 안내한다
+_UNRESOLVED_CASE = ("escalated", "failed")
+
+
+def with_inquiry_guide(result: dict[str, Any]) -> dict[str, Any]:
+    """채팅 결과 → (해결 못 한 결과면) 답 끝에 문의함 안내를 한 번 붙인 새 결과. 아니면 받은 것을 그대로 돌려준다."""
+    if result.get("case_status") not in _UNRESOLVED_CASE or result.get("status") == "answered":
+        return result
+    guided = dict(result)
+    for key in ("answer", "answer_web"):
+        text = guided.get(key)
+        if isinstance(text, str) and text and INQUIRY_GUIDE not in text:
+            guided[key] = f"{text}\n{INQUIRY_GUIDE}"
+    guided["inquiry_path"] = INQUIRY_PATH
+    return guided
+
+
 def _answers() -> dict[str, str]:
     from app.domains.travel_ops.instances._shared.itinerary_team import ANSWERS
 
@@ -172,5 +194,5 @@ def outcome_reply(status: str | None, outcome: dict[str, Any], message: str) -> 
             + CAN_DO)
 
 
-__all__ = ["CAN_DO", "OUTCOME_ANSWERS", "QUESTION_SCOPES", "item_fact", "not_understood_reply", "other_reply", "outcome_reply",
-           "question_reply", "trip_summary"]
+__all__ = ["CAN_DO", "INQUIRY_GUIDE", "INQUIRY_PATH", "OUTCOME_ANSWERS", "QUESTION_SCOPES", "item_fact", "not_understood_reply",
+           "other_reply", "outcome_reply", "question_reply", "trip_summary", "with_inquiry_guide"]

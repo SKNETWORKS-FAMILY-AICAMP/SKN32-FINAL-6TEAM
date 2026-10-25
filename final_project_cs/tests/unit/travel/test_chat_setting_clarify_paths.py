@@ -79,9 +79,19 @@ def test_setting_swap_without_a_target_is_asked_with_activities_only(action):
 
 
 def test_swap_without_a_target_and_without_a_setting_is_unchanged():
+    """조건이 없으면 실내·야외 조건 경로는 요청을 건드리지 않는다(조건 칸 · 조건 선택지 없음).
+
+    contract_correction `[2026-10-26 L01 Routing P2 이식]`: 옛 기대 `request["action"] == "apply_change"`(대상 없는 바꾸기를
+    활동 팀 기본 배정으로 넘김)는 D-CS-014 · `wiki/external/chat-inquiry-guide.md` 「담당 근거가 없을 때」로 바뀌었다 — 대상 없는
+    바꾸기는 **모든 종류** 후보로 되묻고(`pending_action` 보존) 고른 일정의 팀이 맡는다. 조건 경로 비개입 단언은 그대로다.
+    """
     items = _test12()
     decision, request = _ask(_raw(action="apply_change", target_item="none", place_setting=ANY), items, "바꿔줘")
-    assert decision.action == "apply_change" and request["action"] == "apply_change" and "setting" not in request
+    assert decision.action == "apply_change" and "setting" not in request
+    assert request["action"] == "clarify" and request["pending_action"] == "apply_change"
+    assert not request["question"].startswith(ASK_OUTDOOR)
+    kinds = {next(i.kind for i in items if str(i.item_id) == c["item_id"]) for c in request["choices"]}
+    assert "dining" in kinds and "activity" in kinds            # 조건 선택지(활동만)가 아니라 모든 종류 대체 목록
 
 
 def test_setting_clarify_with_no_activity_left_does_not_offer_meals():
