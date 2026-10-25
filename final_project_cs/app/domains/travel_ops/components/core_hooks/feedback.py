@@ -27,11 +27,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any, Protocol
 
 from app.core.settings import get_settings
 from app.core.redaction import masked
+
+logger = logging.getLogger(__name__)
 
 
 class ClassificationFailed(RuntimeError):
@@ -161,34 +164,60 @@ def _default_llm() -> LLM:
     return _ollama_llm if (get_settings().ollama_base_url or "").strip() else _openai_llm
 
 
+def plan_stream() -> dict[str, float]:
+    """분류 계획 호출의 답 조각 감시 값(가드레일 `travel.watch.plan_stream` — 값과 근거는 그 주석). 없는 키는 그대로 오류."""
+    from app.core.settings import get_guardrails
+
+    guard = get_guardrails()
+    return {key: float(guard.get(f"travel.watch.plan_stream.{key}"))
+            for key in ("first_token_seconds", "stall_seconds", "max_seconds")}
+
+
 def ask_json(system: str, text: str, *, schema: dict[str, Any] | None = None,
              num_predict: int | None = None) -> dict[str, Any]:
     """분류 에이전트의 추가 계약도 같은 설정·모델 제공자와 마스킹을 사용한다.
 
     ★`[2026-10-26]` `schema` 를 주면 Ollama 경로는 그 JSON 스키마를 `format` 으로 보낸다(`structured` — enum·필수 키 밖을 못 낸다).
       실행 계획(`execution_plan.classify_plan`)이 묶음 항목 id 를 스키마에 묶어 모든 항목을 한 번씩 배정하게 한다 — 자유 JSON 이던 때
-      로컬 E4B 가 둘째 항목을 빠뜨려 `plan_coverage_invalid` 였다. OpenAI 직접 경로는 지금처럼 json_object 다(검증은 부르는 쪽이 한다)."""
-    from app.core.settings import get_guardrails
-    timeout = float(get_guardrails().get("travel.watch.plan_timeout_seconds"))
+      로컬 E4B 가 둘째 항목을 빠뜨려 `plan_coverage_invalid` 였다. OpenAI 직접 경로는 지금처럼 json_object 다(검증은 부르는 쪽이 한다).
+    ★`[2026-10-26 사용자 결정 · 12c]` 고정 제한시간(`plan_timeout_seconds` 50) 대신 계획 읽기 · 채팅 해석과 같은 **답 조각 감시**
+      (`model_stream.collect` — 첫 조각 · 조각 사이 · 맨 위 상한, `travel.watch.plan_stream`). 모델이 조각을 계속 보내는 동안은 기다리고,
+      조각 사이 `stall_seconds` 동안 새 조각이 없으면 멈춘 것으로 보고 `ClassificationFailed` → 계획 `plan_provider_failed` →
+      Case `classification_failed`(기존 계약 경로). 받다 만 답은 버리고 고정 순서로 대체하지 않는다."""
+    stream = plan_stream()
     if schema is not None and (get_settings().ollama_base_url or "").strip():
-        return _ollama_structured(masked(text), system=system, schema=schema, timeout_seconds=timeout,
+        return _ollama_structured(masked(text), system=system, schema=schema, stream=stream,
                                   num_predict=int(num_predict or 160))
-    return _default_llm()(masked(text), system=system, timeout_seconds=timeout)
+    return _default_llm()(masked(text), system=system, timeout_seconds=stream["max_seconds"])
 
 
-def _ollama_structured(text: str, *, system: str, schema: dict[str, Any], timeout_seconds: float,
+def _ollama_structured(text: str, *, system: str, schema: dict[str, Any], stream: dict[str, float],
                        num_predict: int) -> dict[str, Any]:
-    """`_ollama_llm` 과 같은 설정·제한시간으로, 답 모양을 JSON 스키마로 묶어 묻는다."""
-    from app.infrastructure.ollama_chat import OllamaError, from_settings
+    """`_ollama_llm` 과 같은 설정으로, 답 모양을 JSON 스키마로 묶어 **조금씩 받으며** 묻는다(`structured_stream`).
 
-    settings = get_settings().model_copy(update={"ollama_timeout_seconds": timeout_seconds,
-                                                  "llm_failover_total_seconds": timeout_seconds})
+    받은 답은 `structured` 와 같이 스키마로 검사하고, 계획의 뜻 검사는 부르는 쪽(`validate_plan`)이 한다.
+    ★모델이 안 올라와 있어도 고정 대기로 바꾸지 않는다(Codex 검토) — 적재가 첫 조각 감시를 넘기면 이번 회차는 `classification_failed`,
+      그 호출이 적재를 시작했으므로 다음 회차(`retry`)는 올라온 모델로 답한다. 넘김 장치는 식은 로컬을 건너뛰어 다음 경로로 간다.
+      넘김 · 재시도까지 한 호출 전체는 맨 위 상한(`max_seconds`, `llm_failover_total_seconds`) 안이다.
+    조금씩 받기를 못 하는 대역(시험의 가짜)만 `structured` 로 한 번에 받는다."""
+    from app.infrastructure.ollama_chat import OllamaError, from_settings, validate_structured
+
+    settings = get_settings().model_copy(update={"ollama_timeout_seconds": stream["max_seconds"],
+                                                  "llm_failover_total_seconds": stream["max_seconds"]})
     chat = from_settings(settings)
     if chat is None:
         raise ClassificationFailed("Ollama base url is missing")
+    streamer = getattr(chat, "structured_stream", None)
     try:
+        if callable(streamer):
+            return validate_structured(streamer(system, text, schema, num_predict=num_predict,
+                                                first_wait=stream["first_token_seconds"], stall=stream["stall_seconds"],
+                                                max_seconds=stream["max_seconds"]), schema)
         return chat.structured(system, text, schema, num_predict=num_predict)
     except OllamaError as exc:
+        # 멈춤(첫 조각 · 조각 사이 · 맨 위 상한)은 원인 이름만 남긴다 — 밖으로는 그대로 `plan_provider_failed`
+        logger.warning("classification_plan_stream_failed reason=%s",
+                       f"stream_stalled:{exc.which}" if hasattr(exc, "which") else type(exc).__name__)
         raise ClassificationFailed(f"Ollama classification failed: {exc}") from exc
 
 

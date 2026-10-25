@@ -85,10 +85,11 @@ def test_classifier_receives_query_latest_itinerary_situation_and_only_recorded_
     observed = []
     def model(system, body, **_):
         observed.append((system, json.loads(body)))
-        # ★`[2026-10-26]` 답 모양 v2 — 항목 id 를 키로 하는 `assignments`(test_execution_plan_assignments.py)
+        # ★`[2026-10-26]` 답 모양 — 항목 id 를 키로 하는 `assignments`(test_execution_plan_assignments.py).
+        #   12c: 도구·호출 상한은 답에 없다(담당 Team 선언에서 채운다)
         return {"schema_version": "1.0", "base_version": 8, "assignments": {str(item.item_id): {
             "team_id": "activity", "order": 1, "priority": 1,
-            "depends_on": [], "tools": ["read.itinerary"], "max_calls": 1, "reason": "기록된 선호와 통제 구간"}}}
+            "depends_on": [], "reason": "기록된 선호와 통제 구간"}}}
     plan = ep.classify_plan(query="관람 전에 점검해 주세요", trip=trip, items=[item], issues=[issue], teams=teams, llm=model)
     body = observed[0][1]
     assert body["query"] == "관람 전에 점검해 주세요" and body["base_version"] == plan.base_version == 8

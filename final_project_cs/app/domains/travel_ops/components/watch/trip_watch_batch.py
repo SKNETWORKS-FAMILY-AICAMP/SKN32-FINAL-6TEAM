@@ -264,12 +264,14 @@ class WatchBatch:
         entries = (task.context.current_state.get("trigger") or {}).get("batch") or []
         started_at = time.monotonic()
         try:
-            self.plan = self.planner(query=task.input_text, trip=trip, items=current, issues=entries, teams=self._teams())
+            planned = self.planner(query=task.input_text, trip=trip, items=current, issues=entries, teams=self._teams())
             # 주입한 모델도 동일 검증을 통과해야 한다. 검증된 모델 객체를 믿고 우회하지 않는다.
             from app.domains.travel_ops.components.planning.execution_plan import validate_plan
             by_id = {str(i.item_id): i for i in current}
-            self.plan = validate_plan(self.plan.model_dump(), version=trip["version"],
+            self.plan = validate_plan(planned.model_dump(), version=trip["version"],
                 issues=[{**e, "kind": by_id[str(e["item_id"])].kind} for e in entries], teams=self._teams())
+            # 도구 · 예산 출처(분류 모델 경로는 Team 선언 — 12c)는 다시 검증해도 증거에 남긴다
+            self.plan._scope_source = getattr(planned, "_scope_source", None)
         except Exception as exc:  # 계획·제공자 실패는 성공으로 대체하지 않는다.
             self._diagnostic("classification_failed", error_code=str(exc) if isinstance(exc, PlanFailed) else "plan_invalid")
             return work._escalate(task, "classification_failed", ctx["evidence"],

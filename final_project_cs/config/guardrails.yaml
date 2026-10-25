@@ -415,12 +415,23 @@ travel:
     plan_max_tool_calls: 72
     plan_priority_max: 10
     plan_max_input_chars: 24000
-    # 분류 에이전트 계획 호출(`classify_plan`) 한 번의 제한시간 — 넘김(failover) 총예산도 이 값이다.
-    # ★`[2026-10-26]` 12 → 50. 로컬 E4B(tripilot-pointer:e4b-ft, 유휴) 실측: 2항목 16.1초 · 4항목 28.5초 · 6항목(batch_max_items) 42.3초,
-    #   부하 중 2항목 27초. 12초로는 한 번도 통과하지 못했다(라우팅 감사 12 리허설 ReadTimeout). 계획도 묶음 시간
-    #   (team_timeout_seconds 90 × batch_time_ratio 0.6 = 54초) 안에서 쓰므로 54 미만으로 둔다 — 계획이 늦으면 남은 항목은 `retry`.
-    #   첫 항목 시작도 보장하지 않는다(계획 전 경과 시간 포함). 결정: Codex 검토(2026-10-26), 6항목 유휴 실측 대비 약 8초 여유.
-    plan_timeout_seconds: 50
+    # 분류 에이전트 계획 호출(`classify_plan` → `feedback.ask_json`) — 고정 제한시간 대신 **답 조각 감시**(`model_stream.collect`, 계획 읽기 ·
+    # 채팅 해석과 같은 장치). `[2026-10-26 사용자 결정 · 라우팅 감사 12c]` 모델이 조각을 계속 보내는 동안은(맨 위 상한 max_seconds 안에서) 기다리고, 조각 사이 stall_seconds 동안
+    # 새 조각이 없으면 멈춘 것으로 보고 `plan_provider_failed` → Case `classification_failed`(남은 항목은 다음 회차 `retry`). 넘김(유료)도 같은 값이다.
+    # ☆예전 `plan_timeout_seconds`(12 → 50) 고정 대기를 대체한다 — 쓰는 중인 정상 답(v2 6항목 42.3초)도 고정 한도에 걸릴 수 있었다.
+    # ★출처: 실측 — 로컬 E4B(tripilot-pointer:e4b-ft · ctx 8192) v3 계획 2·4·6항목 조금씩 받기(2026-10-26 라우팅 감사 12c 보고서):
+    #   first_token_seconds 15 — 첫 조각 실측 1.02초(2항목) · 1.19초(4) · 1.38초(6). 감시 작업은 같은 Ollama 의 채팅 · 읽기 요청 뒤에 줄 설 수 있어
+    #     계획 읽기와 같은 값(그쪽 줄 선 실측 최대 10.2초)으로 넉넉히 둔다.
+    #   stall_seconds 5 — 사용자 결정 값(계획 읽기 · 채팅 해석과 같다). 조각 사이 최대 간격 실측 0.03초(2항목) · 0.14초(4) · 0.13초(6).
+    #   max_seconds 45 — 맨 위 상한. 묶음 시간(team_timeout_seconds 90 × batch_time_ratio 0.6 = 54초) 안이어야 첫 항목을 시작한다.
+    #     v3 조금씩 받기 실측 5.4초(2항목) · 9.3초(4) · 12.0초(6 = batch_max_items). 같은 날 앞선 측정(옛 v2 지시문 · 도구 목록까지 쓰던 답)의
+    #     6항목 42.3초 · 부하 중 2항목 27초도 끊지 않는 값 가운데 54초보다 짧게. 줄 선 시간 · 넘김 · 재시도를 포함한 호출 전체 상한이다.
+    #     ☆54초 미만이어도 첫 항목 시작을 보장하지는 않는다(계획 전 경과 시간 포함) — 늦으면 남은 항목은 다음 회차 `retry`.
+    #     모델이 안 올라와 있어도 고정 대기로 바꾸지 않는다 — 적재가 첫 조각 감시를 넘기면 이번 회차 실패, 다음 회차는 올라온 모델로 답한다.
+    plan_stream:
+      first_token_seconds: 15
+      stall_seconds: 5
+      max_seconds: 45
     # 묶음 계산이 Team 시간 제한의 이 비율을 넘기면 **새 항목을 시작하지 않고** 남은 것은 다음 회차로 넘긴다(`retry`). Team 코드가 동기라 시간 제한이 도중에 끊지 못하므로 스스로 본다.
     # ★출처: **우리가 고른 값**(측정 안 함) — 마지막 항목 하나가 남은 40%(36초) 안에 끝난다고 봤다. 외부 점검 한 번이 최대 8초(`source_timeout_seconds`)다.
     batch_time_ratio: 0.6

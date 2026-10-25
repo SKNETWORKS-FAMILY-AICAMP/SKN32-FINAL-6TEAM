@@ -26,10 +26,9 @@ def _batch():
     return items, issues
 
 
-def _assignment(team, order, depends=(), tools=None, calls=12):
-    return {"team_id": team, "order": order, "priority": 2, "depends_on": list(depends),
-            "tools": tools or ["read.disruptions" if team == "activity" else "read.dining_state"],
-            "max_calls": calls, "reason": "통제 구간 확인"}
+def _assignment(team, order, depends=()):
+    # ★`[2026-10-26 12c]` v3 — 도구·호출 상한은 모델이 고르지 않는다(담당 Team 선언에서 온다, test_execution_plan_team_scope.py)
+    return {"team_id": team, "order": order, "priority": 2, "depends_on": list(depends), "reason": "통제 구간 확인"}
 
 
 def _keyed(items, orders=(1, 2)):
@@ -56,7 +55,7 @@ def test_schema_requires_every_issue_once_with_only_its_owner_values():
     assert keyed["additionalProperties"] is False
     activity = keyed["properties"][ids[0]]["properties"]
     assert activity["team_id"]["enum"] == ["activity"]
-    assert activity["tools"]["items"]["enum"] == TEAMS["activity"]["tools"]
+    assert "tools" not in activity and "max_calls" not in activity
     assert activity["depends_on"]["items"]["enum"] == [ids[1]]          # 자기 자신에게 기대지 못한다
     assert activity["order"] == {"type": "integer", "minimum": 1, "maximum": 2}
     assert schema["properties"]["base_version"]["enum"] == [3]
@@ -104,7 +103,8 @@ def test_model_decides_the_order_and_dependencies():
     # 앞선 항목이 아닌 것에 기대면 그대로 막힌다
     (lambda a, ids: a["assignments"][ids[0]].update(depends_on=[ids[1]]), "plan_dependencies_invalid"),
     (lambda a, ids: a["assignments"][ids[0]].update(team_id="dining"), "plan_team_forbidden"),
-    (lambda a, ids: a["assignments"][ids[0]].update(tools=["write.payment"]), "plan_tools_forbidden"),
+    # 모델이 도구를 내면 덮어쓰지 않고 거절한다(도구 범위는 담당 Team 선언)
+    (lambda a, ids: a["assignments"][ids[0]].update(tools=["write.payment"]), "plan_schema_invalid"),
     (lambda a, ids: a["assignments"][ids[0]].update(order="1"), "plan_schema_invalid"),
 ])
 def test_keyed_answers_still_pass_through_the_unchanged_validator(mutate, code):
@@ -127,13 +127,20 @@ def test_recorded_v1_answer_that_dropped_the_second_issue_is_rejected():
         ep.validate_plan(v1, version=3, issues=[{**e, "kind": i.kind} for e, i in zip(issues, items)], teams=TEAMS)
 
 
-def test_ask_json_sends_the_schema_to_the_local_model_with_the_plan_timeout(monkeypatch):
+def test_ask_json_streams_the_schema_to_the_local_model_with_the_plan_stream_watch(monkeypatch):
+    """★`[2026-10-26 12c]` 고정 제한시간 대신 답 조각 감시 — 첫 조각 · 조각 사이 · 맨 위 상한을 가드레일 `travel.watch.plan_stream` 에서."""
     calls = []
 
     class Chat:
-        def structured(self, system, user, schema, *, num_predict):
-            calls.append((system, user, schema, num_predict))
+        def structured_stream(self, system, user, schema, *, num_predict, first_wait, stall, max_seconds):
+            calls.append((system, user, schema, num_predict, first_wait, stall, max_seconds))
             return {"ok": True}
+
+        def structured_stream_validated(self, *_a, **_k):
+            raise AssertionError("the cold-model fixed-wait branch must not be used (Codex review)")
+
+        def structured(self, *_a, **_k):
+            raise AssertionError("fixed-wait call must not be used when the chat can stream")
 
         def json(self, *_):
             raise AssertionError("free JSON must not be used when a schema is given")
@@ -142,19 +149,31 @@ def test_ask_json_sends_the_schema_to_the_local_model_with_the_plan_timeout(monk
     real = feedback.get_settings()
     monkeypatch.setattr(feedback, "get_settings", lambda: real.model_copy(update={"ollama_base_url": "http://127.0.0.1:9"}))
     monkeypatch.setattr("app.infrastructure.ollama_chat.from_settings", lambda s, *a, **k: built.append(s) or Chat())
-    schema = {"type": "object"}
+    schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]}
     assert feedback.ask_json("SYS", "본문", schema=schema, num_predict=480) == {"ok": True}
-    assert calls == [("SYS", "본문", schema, 480)]
-    timeout = float(ep.get_guardrails().get("travel.watch.plan_timeout_seconds"))
-    assert built[0].ollama_timeout_seconds == timeout == built[0].llm_failover_total_seconds
+    guard = ep.get_guardrails()
+    watch = [float(guard.get(f"travel.watch.plan_stream.{k}")) for k in ("first_token_seconds", "stall_seconds", "max_seconds")]
+    assert calls == [("SYS", "본문", schema, 480, *watch)]
+    assert built[0].ollama_timeout_seconds == watch[2] == built[0].llm_failover_total_seconds
+
+
+def test_ask_json_keeps_working_with_a_chat_that_cannot_stream(monkeypatch):
+    class Chat:
+        def structured(self, system, user, schema, *, num_predict):
+            return {"ok": num_predict}
+
+    real = feedback.get_settings()
+    monkeypatch.setattr(feedback, "get_settings", lambda: real.model_copy(update={"ollama_base_url": "http://127.0.0.1:9"}))
+    monkeypatch.setattr("app.infrastructure.ollama_chat.from_settings", lambda *a, **k: Chat())
+    assert feedback.ask_json("SYS", "본문", schema={"type": "object"}, num_predict=7) == {"ok": 7}
 
 
 def test_ask_json_provider_error_is_a_classification_failure(monkeypatch):
-    from app.infrastructure.ollama_chat import OllamaError
+    from app.infrastructure.model_stream import StreamStalled
 
     class Chat:
-        def structured(self, *a, **k):
-            raise OllamaError("timed out")
+        def structured_stream(self, *a, **k):
+            raise StreamStalled("stalled", which="stall")
 
     real = feedback.get_settings()
     monkeypatch.setattr(feedback, "get_settings", lambda: real.model_copy(update={"ollama_base_url": "http://127.0.0.1:9"}))
@@ -163,10 +182,14 @@ def test_ask_json_provider_error_is_a_classification_failure(monkeypatch):
         feedback.ask_json("SYS", "본문", schema={"type": "object"})
 
 
-def test_plan_timeout_covers_measured_local_six_item_plan_and_stays_inside_the_batch_window():
-    """실측 6항목(batch_max_items) 유휴 42.3초. 계획도 묶음 시간(team_timeout × batch_time_ratio) 안에서 쓴다."""
+def test_plan_stream_replaces_the_fixed_timeout_and_its_ceiling_stays_inside_the_batch_window():
+    """사용자 결정: 조각 사이 5초. 맨 위 상한은 묶음 시간(team_timeout × batch_time_ratio) 안 — 계획 뒤 첫 항목을 시작할 수 있게."""
     guard = ep.get_guardrails()
-    timeout = float(guard.get("travel.watch.plan_timeout_seconds"))
     window = float(guard.get("reliability.team_timeout_seconds")) * float(guard.get("travel.watch.batch_time_ratio"))
+    assert float(guard.get("travel.watch.plan_stream.stall_seconds")) == 5
+    first = float(guard.get("travel.watch.plan_stream.first_token_seconds"))
+    ceiling = float(guard.get("travel.watch.plan_stream.max_seconds"))
     assert int(guard.get("travel.watch.batch_max_items")) == 6
-    assert 42.3 < timeout < window
+    assert 5 < first < ceiling < window
+    with pytest.raises(Exception):
+        guard.get("travel.watch.plan_timeout_seconds")                 # 고정 제한시간은 없어졌다
