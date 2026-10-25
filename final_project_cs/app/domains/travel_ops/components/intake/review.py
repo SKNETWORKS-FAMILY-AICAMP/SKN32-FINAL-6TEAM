@@ -895,15 +895,26 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     return admission_dates(payload, now=now) if new_registration else payload
 
 
-def admission_dates(payload: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
-    """검사 캐시도 매 요청의 오늘 날짜로 검사한다. 원본 날짜/일정은 바꾸지 않는다."""
+#: 모든 일정이 오늘 이전일 때 고객에게 보이는 문장 — 검사 줄 · 접수 `fatal_detail`(`pipeline.process`) · 등록 422 가 같은 문장을 쓴다
+ALL_PAST_MESSAGE = "모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요"
+
+
+def wholly_past(payload: dict[str, Any], *, now: datetime | None = None) -> bool:
+    """검사의 일정이 하나 이상이고 **모두** 서울 기준 오늘보다 앞인가 — 등록 가드와 같은 판정(`all_dates_before_today`).
+    날짜를 모르는 일정이 하나라도 있거나 밤을 넘겨 오늘 끝나면 아니다."""
     from app.domains.travel_ops.components.itinerary.itinerary_checks import all_dates_before_today
 
     items = payload.get("items") or []
     spans = [(_dt(it.get("date"), "00:00"), _dt(it.get("end_date") or it.get("date"), "00:00")) for it in items]
-    if not all_dates_before_today(spans, now=now):
+    return all_dates_before_today(spans, now=now)
+
+
+def admission_dates(payload: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
+    """검사 캐시도 매 요청의 오늘 날짜로 검사한다. 원본 날짜/일정은 바꾸지 않는다."""
+    if not wholly_past(payload, now=now):
         return payload
-    message = "모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요"
+    items = payload.get("items") or []
+    message = ALL_PAST_MESSAGE
     items = [{**it, "status": "review", "can_lock": False,
               "rows": [*[row for row in it.get("rows", []) if not (row.get("row") == "date" and row.get("text") == message)],
                        _line("date", "bad", message)]} for it in items]

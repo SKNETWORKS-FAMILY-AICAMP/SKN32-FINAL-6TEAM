@@ -281,6 +281,12 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                                      claims=_claims(conn, tenant_id, intake_id, 1), force=True, on_event=push)
         except Exception:                                  # noqa: BLE001 — 검사 장애가 읽기를 지우지 않는다
             log.warning("intake review failed intake=%s", intake_id, exc_info=True)
+        # ★`[2026-10-26 사용자 지시]` 「전부 과거면 계획 고르는 화면으로 넘어가면 안되고 그 전에 있는 계획담기 페이지의 가드레일에 걸려서 통과 안되게」 —
+        #   확인 화면 상태(`review`)로 넘기기 **전에** 첫 검사의 날짜를 등록 가드와 같은 판정으로 본다. 모두 오늘 이전이면 계획 담기에서 끝낸다(`fatal`, 등록 거절과 같은 코드).
+        #   일부만 과거 · 오늘 · 미래 · 날짜 미확정 · 오늘 끝나는 밤 일정은 지금처럼 확인 화면으로 간다. 검사가 실패했으면(저장본 없음) 판정하지 않는다
+        if _wholly_past(connect, tenant_id, intake_id):
+            _fatal(connect, tenant_id, intake_id, ALL_PAST_CODE, review_module.ALL_PAST_MESSAGE)
+            return "fatal"
         filling = reader["prefill"] == "on" and reader["mode"] == "on"
         # ★`[2026-10-20 사용자 지시]` 해석 확인 질문(`interpretations.py`)이 있으면 그 답을 반영할 때까지 고객에게는 「읽는 중」(첫 기다림)으로 둔다
         asking = _has_questions(connect, tenant_id, intake_id)
@@ -2241,6 +2247,17 @@ def _stage(connect, tenant_id: str, intake_id: UUID, stage: str) -> None:
                     (stage, tenant_id, intake_id))
         if cur.rowcount == 0:
             raise _Abandoned()
+
+
+#: 읽은 일정이 모두 오늘 이전인 접수의 `fatal_code` — 등록 거절(`itinerary_infeasible`)의 `violations[].code` 와 같다
+ALL_PAST_CODE = "all_dates_in_past"
+
+
+def _wholly_past(connect, tenant_id: str, intake_id: UUID) -> bool:
+    """읽기가 끝난 첫 판 검사의 일정이 모두 오늘 이전인가(`review.wholly_past`). 검사 저장본이 없으면 모른다(False)."""
+    with connect() as conn:
+        payload = review_module.load(conn, tenant_id, intake_id, 1)
+    return payload is not None and review_module.wholly_past(payload)
 
 
 def _fatal(connect, tenant_id: str, intake_id: UUID, code: str, detail: str) -> None:
