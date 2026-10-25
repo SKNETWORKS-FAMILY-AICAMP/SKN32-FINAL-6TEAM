@@ -580,7 +580,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
           previous: dict[str, Any] | None = None, now: datetime | None = None,
           on_event: Callable[[str, dict[str, Any]], None] | None = None,
           engine_for_mode: Callable[[str], Any] | None = None, estimate_needs_review: bool = False,
-          engine_wide: Callable[[], Any] | None = None) -> dict[str, Any]:
+          engine_wide: Callable[[], Any] | None = None, new_registration: bool = True) -> dict[str, Any]:
     """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`).
 
     `engine_for_mode(수단)` `[2026-10-07 이동수단 고르기]` — 고객이 구간 수단을 골랐을 때 그 수단만으로 계산하는 계산기. 안 주고 기본 계산기를 쓰면 기본 팩토리를 쓴다.
@@ -885,13 +885,31 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     if estimate_codes:
         _LOG.info("검사 이동 어림 %d/%d구간 · 이유 %s · 남은 한도 %.1f초", sum(estimate_codes.values()), len(moves),
                   dict(sorted(estimate_codes.items())), budgeted.left if budgeted is not None else 0.0)
-    return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
+    payload = {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
             "party_size": party,          # `[2026-10-16]` 숙소 후보(숙소 팀 숙소 비교)가 인원을 읽는다 — 모르면 `None`
             "items": items, "moves": moves, "taxi_pricing": (pricing if pricing is not None else taxi_pricing.default()) if taxi_pick_on else None,
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
+    return admission_dates(payload, now=now) if new_registration else payload
+
+
+def admission_dates(payload: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
+    """검사 캐시도 매 요청의 오늘 날짜로 검사한다. 원본 날짜/일정은 바꾸지 않는다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import all_dates_before_today
+
+    items = payload.get("items") or []
+    spans = [(_dt(it.get("date"), "00:00"), _dt(it.get("end_date") or it.get("date"), "00:00")) for it in items]
+    if not all_dates_before_today(spans, now=now):
+        return payload
+    message = "모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요"
+    items = [{**it, "status": "review", "can_lock": False,
+              "rows": [*[row for row in it.get("rows", []) if not (row.get("row") == "date" and row.get("text") == message)],
+                       _line("date", "bad", message)]} for it in items]
+    moves = int((payload.get("needs") or {}).get("moves") or 0)
+    return {**payload, "items": items, "ready": False,
+            "needs": {"items": len(items), "moves": moves, "total": len(items) + moves}}
 
 
 def public_place(place: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -1134,6 +1152,15 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `quick` = 이동 계산기를 부르지 않는 **미룬 검사**: 바뀐 구간은 직선 어림값,
     안 바뀐 구간은 앞 판의 시간표 값(`sig`)을 그대로 쓴다. 위험(날씨 · 재난)은 저장해 둔 값만 읽는다. 저장본에 `checked: false` · `ready: false` 를 남긴다 — 등록(`confirm`)은 이 판을 받지 않고
     재검증(`revalidate`, `force`)이 계산기로 다시 잰다(어림 구간은 `basis` 가 시간표가 아니라 재사용되지 않는다). 옛 저장본에는 `checked` 가 없다 — 검사된 것으로 읽는다."""
+    def guard_dates(payload):
+        candidate = admission_dates(payload, now=options.get("now"))
+        if candidate is payload:
+            return payload
+        with conn.cursor() as cur:
+            cur.execute("SELECT status, reopen_trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s",
+                        (tenant_id, intake_id))
+            admission = cur.fetchone()
+        return candidate if admission is not None and admission[0] != "confirmed" and admission[1] is None else payload
     if not force:
         cached = load(conn, tenant_id, intake_id, revision)
         if cached is not None:
@@ -1143,13 +1170,13 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
             if mode == "fresh":
                 store(conn, tenant_id, intake_id, revision, payload)
-            return payload
+            return guard_dates(payload)
     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
-                    previous=previous, **options)
+                    previous=previous, new_registration=False, **options)
     payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
     from . import risks
 
@@ -1157,7 +1184,7 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
     payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
-    return payload
+    return guard_dates(payload)
 
 
 def unchecked(payload: dict[str, Any] | None) -> bool:

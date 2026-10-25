@@ -8,6 +8,10 @@ domain: travel
 
 # guguroute wiki
 
+2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+
+2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
+
 현재 제품 사양은 **확정 결정·현재 계약**, 구현·배포 상태는 **코드·환경별 실행 기록**으로 확인합니다. 과거 계획·보고서를 현재 사실로 사용하지 않습니다.
 
 세션을 이어받는 경우(Codex↔Claude) [인계 안내 목차](handoff/index.md)에서 가장 최근 인계부터 읽습니다. **커밋되지 않은 작업이 많아 git 이력만으로는 최근 상태가 보이지 않습니다** — 인계의 「한 일 목록」과 [변경 기록](log.md)을 함께 봅니다.

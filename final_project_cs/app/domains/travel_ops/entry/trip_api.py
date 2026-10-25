@@ -982,6 +982,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                      "same request_id was used for a different body")
                     created = False
                 else:
+                    from app.domains.travel_ops.components.itinerary.itinerary_checks import all_dates_before_today
+
+                    if all_dates_before_today((it.starts_at, it.ends_at) for it in request.items):
+                        raise _error(422, "itinerary_infeasible", "모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요",
+                                     violations=[{"code": "all_dates_in_past", "items": [it.seq for it in request.items],
+                                                  "reason": "모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요",
+                                                  "remedy": "여행 날짜를 확인해주세요"}])
                     # ★`[2026-10-04 D-CS-011]` 게스트는 여행 1개 · 계획 기간 상한 — 같은 트랜잭션에서 사용자 행을 잠가 동시 생성까지 막는다
                     guest_policy.check_new_trip(conn, tenant_id=tenant, customer_id=request.customer_id,
                                                 starts=[it.starts_at for it in request.items],

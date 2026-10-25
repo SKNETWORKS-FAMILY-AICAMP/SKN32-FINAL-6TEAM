@@ -10,6 +10,10 @@ domain: travel
 
 # cs 프로젝트 구현 wiki
 
+2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+
+2026-10-25 전체 과거 날짜 신규 등록 가드 독립 후보: [날짜 기준·공통 검사·검증 및 미반영 경계](records/reports/2026-10-25_all-past-calendar-hotfix.md). 기존 확정 재시도/reopen 정책과 다른 정상 검사는 보존합니다.
+
 2026-10-23 Next.js 보안 갱신(ST4F-724): 02시 리뷰 뒤 공개된 Next.js 권고(16.0.0~16.4.0)로 web 16.4.0 도 critical 이 되어 web · admin · dev-console 을 16.4.2 로 올렸습니다. 운영 의존성 audit 3/3 앱 0건 · check 12/12 · 단위 1,198/1,198 통과, 개발 서버 보안 경고 사라짐. 배포 전입니다. [작업 기록](records/reports/2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).
 
 2026-10-23 프론트엔드 리뷰: role-eval-ui 기준 격리 브랜치에서 P1 4건·P2 15건을 확인했습니다. 세 앱 check 12/12·단위 1,158/1,158 통과, 제품 수정·운영 반영 전입니다. [전체 보고서](records/reports/2026-10-23_frontend-audit.md).
