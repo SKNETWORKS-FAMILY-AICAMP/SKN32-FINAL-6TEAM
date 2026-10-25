@@ -68,6 +68,8 @@ export async function alsoAgree(page: Page, extra: ConsentSeed) {
 export async function start(page: Page, session: string | null = "acop_u_known", seedConsent = true) {
   await page.addInitScript(() => {
     if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko" }));
+    // `[2026-10-25]` 첫 여행 안내(덮개 · 「예시 불러오기」 A안)는 본 것으로 — 덮개가 다른 시험의 누름을 막지 않게. 안내 자체는 `example-guide.spec.ts` 가 지우고 본다.
+    if (!localStorage.getItem("tripilot.web.example-guide.v1")) localStorage.setItem("tripilot.web.example-guide.v1", "done");
   });
   if (session) {
     await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);

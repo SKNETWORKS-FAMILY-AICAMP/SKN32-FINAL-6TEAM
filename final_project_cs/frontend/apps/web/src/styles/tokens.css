@@ -43,6 +43,7 @@
   --color-inverse: #24392f;
   --color-on-inverse: #ffffff;
   --color-scrim: rgba(36, 57, 47, 0.45);
+  --color-coach: rgba(4, 8, 6, 0.82);              /* `[2026-10-25 사용자 결정 — 첫 안내 A안]` 화면을 검게 덮는 안내의 덮개(`trip-registration/example-guide.module.css`) */
   /* `[2026-10-12 사용자 결정 — 일정 줄]` 지금 표시(주황 — 일정 점의 초록과 겹치지 않게) · 줄(머무는 실선 · 끝 ⊖ · 가는 선) · 지난 일정(회색 칸). 목업 2026-10-12_타임라인_지금시각_목업.html 의 값. */
   --color-now: #c8552a;
   --color-now-soft: #fbe9e1;
@@ -133,6 +134,7 @@
   --color-inverse: #e4ece7;
   --color-on-inverse: #13201a;
   --color-scrim: rgba(0, 0, 0, 0.6);
+  --color-coach: rgba(0, 0, 0, 0.82);
   --color-now: #f08a5d;
   --color-now-soft: #3a2218;
   --color-rail-stay: #3f6f55;
