@@ -1213,6 +1213,13 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
         warnings.append(f"{name}: {unchecked_text(unchecked)}")
     if warnings:
         text += " " + " ".join(warnings)
+    # ★`[2026-10-26 x600 a465c602]` 「다른 곳으로 바꿔줘」가 들고 있던 첫 안으로 바꿨을 때(고른 안 없음) 다른 안을 말하지 않았다 —
+    #   남은 다른 안(원래 곳은 되돌리기 몫이라 빼고)을 셋까지 보이고, 고를 수 있게 `more_options` 로 넘긴다(`case_dispatch.response` 가 선택지로 싣는다)
+    more = [a for a in remaining if a is not applied][:RELAX_WANT] if choice is None and current.kind in ("activity", "dining") else []
+    if more:
+        text += (" 다른 안: " + " · ".join(f"{n}) {(a.get('note') + ' ') if a.get('note') else ''}{a.get('option_label') or a['name']}"
+                                          for n, a in enumerate(more, start=1))
+                 + " — 다른 곳이 좋으면 고르세요. 답이 없으면 지금대로 둡니다.")
     # ★`[2026-10-13]` 숙소 · 항공 후보(외부 소스 — 예약 전)는 고른 안을 그대로 남기고 예약 링크를 알린다(숙소 · 항공 팀의 `_choose` 와 같은 칸)
     outside = current.kind in ("lodging", "flight")
     if outside:
@@ -1236,7 +1243,8 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
         replacement = replace(replacement, ends_at=None)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement, **shifted},
-                           summary={"to": name, "rechecked": rechecked, **({"unchecked": unchecked} if unchecked else {})})
+                           summary={"to": name, "rechecked": rechecked, **({"unchecked": unchecked} if unchecked else {}),
+                                    **({"more_options": more, "kind": current.kind} if more else {})})
 
 
 #: ★`[2026-10-20]` 고객이 고른 교체라도 **못 읽으면 바꾸지 않는** 자료 — 몸이 다칠 수 있는 사건의 소스(`pending.SAFETY_CATEGORIES`)와 기상특보.
@@ -1697,7 +1705,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     #   `seen` = 떨어진 곳 + 통과한 곳(통과한 곳은 셋까지만 센다 — `choose` 가 셋만 돌려준다)
     return ItineraryChange(reason="customer_report" if reported_closed else "customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement},
-                           summary={"from": current.place["name"], "to": name,
+                           summary={"from": current.place["name"], "to": name, "kind": current.kind,
                                     "more_options": more, "radius_m": radius,
                                     "seen": len(rejected) + 1 + len(alternates),
                                     "rejected": {c.name: c.rejected for c in rejected[:20]}})
@@ -1740,19 +1748,28 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
     old_ids = {i.item_id for i in old_items}
     leaving = {i.seq: i for i in current_items if i.item_id not in old_ids and i.kind != "mobility" and i.place}
     first_day = min((seoul(i.starts_at) for i in [*current_items, *old_items]), default=None)
-    pairs = []
+    pairs, clocks = [], []
     for item in old_items:
         if item.item_id in current_ids or item.kind == "mobility" or not item.place:
             continue
         now = leaving.get(item.seq)
-        if now is not None and first_day is not None:
-            pairs.append((_slot(item, first_day.date()), now.place["name"], item.place["name"]))
+        if now is None or first_day is None:
+            continue
+        # ★`[2026-10-26 x600 a465c602]` 같은 곳의 시각만 되돌린 것을 「남산서울타워에서 남산서울타워(으)로」라고 답했다 —
+        #   장소 기록이 같으면 시각 되돌리기로 말하고, 이름은 일정에 보이는 이름(`title`)을 쓴다
+        same_place = (str(now.place.get("place_id")) == str(item.place.get("place_id"))
+                      or now.place.get("name") == item.place.get("name"))
+        if not same_place:
+            pairs.append((_slot(item, first_day.date()), now.title or now.place["name"], item.title or item.place["name"]))
+        elif (now.starts_at, now.ends_at) != (item.starts_at, item.ends_at):
+            clocks.append((item.title or item.place["name"], seoul(now.starts_at), seoul(item.starts_at)))
     if redo:
-        text = ("요청하신 변경을 다시 적용했어요 — " + " · ".join(f"{slot} {a} → {b}" for slot, a, b in pairs) + "."
-                if pairs else "요청하신 변경을 다시 적용했어요.")
+        parts = [f"{slot} {a} → {b}" for slot, a, b in pairs] + [f"{title} 시각 {a:%H:%M} → {b:%H:%M}" for title, a, b in clocks]
+        text = ("요청하신 변경을 다시 적용했어요 — " + " · ".join(parts) + "." if parts else "요청하신 변경을 다시 적용했어요.")
     else:
-        text = (" · ".join(f"{slot}{object_particle(slot)} {a}에서 {b}(으)로" for slot, a, b in pairs) + " 되돌렸어요."
-                if pairs else "일정을 바꾸기 전 상태로 되돌렸어요.")
+        parts = ([f"{slot}{object_particle(slot)} {a}에서 {b}(으)로" for slot, a, b in pairs]
+                 + [f"{title} 시각을 {b:%H:%M} 시작으로" for title, _, b in clocks])
+        text = (" · ".join(parts) + " 되돌렸어요." if parts else "일정을 바꾸기 전 상태로 되돌렸어요.")
     notice = {"text": text, "language": "ko", "causes": [cause],
               "changed": {"rollback_to": to_version, "restored": restored},
               "other_options": [], "replay": False}

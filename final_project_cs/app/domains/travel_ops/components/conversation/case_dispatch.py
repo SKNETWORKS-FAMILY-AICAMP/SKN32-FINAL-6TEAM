@@ -49,6 +49,13 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
         status = "ask_rollback"
         outcome["status"] = status
     choices = last.get("choices") or request.get("choices") or []
+    if not choices and status == "adjusted" and outcome.get("more_options") and outcome.get("to"):
+        # ★`[2026-10-26 x600 a465c602]` 바꾼 뒤 「다른 안: 1) … 고르세요」라고 답하면서 고를 선택지가 비어 있었다(식당 · 활동 「다른 곳으로」).
+        #   답에 적은 다른 안을 그대로 선택지로 싣는다 — 누르면 「바꾼 곳 대신 그 곳으로」 문장이 같은 채팅 입구로 간다. 식당이면 종류를 붙인다
+        kind = "식당 " if outcome.get("kind") == "dining" else ""
+        choices = [{"label": f"{kind}{(o['note'] + ' ') if o.get('note') else ''}{o.get('option_label') or o['name']}",
+                    "message": f"{outcome['to']} 대신 {o.get('option_label') or o['name']}(으)로 바꿔 줘"}
+                   for o in outcome["more_options"] if isinstance(o, dict) and o.get("name")]
     result = {"case_id": str(case_id), "case_status": str(case["status"]), "version": case["version"],
               "classification": {"intent": case.get("intent"), "issue_code": case.get("issue_code")},
               "status": status, "reason": "team_conversation", "outcome": outcome,
@@ -70,6 +77,8 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
             result["resume_token"] = execution["resume_token"]
         if choices:
             result["choices"] = choices
+    elif choices and status == "adjusted":
+        result.update(choices=choices, choices_title="다른 안")
     if request.get("type") == "stock_out" and status == "store_recommended":
         result["status"] = outcome["status"] = "answered"
         outcome["text"] = result["answer"]
