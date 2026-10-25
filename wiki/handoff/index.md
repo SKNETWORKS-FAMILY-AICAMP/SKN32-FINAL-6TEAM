@@ -9,6 +9,8 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 # 세션 인계 안내 목차
 
+2026-10-26 — [통합 HEAD 전체 시험 · push/서빙 보류](2026-10-26_merged-head-push-serving-decision.md): HEAD `2cccbfaef` unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183(이전 가지도 실패 0). 원격 role-manager 가 `1e4e3b246` 으로 앞서 push 0 · PR 0, 로컬 서빙은 v9 유지(v10 미구성 · 무영향 미확인). Codex 동의.
+
 2026-10-26 — [날짜 읽기 LLM 판단 전환](2026-10-26_llm-date-reading.md): 모델이 날짜 형식(`explicit_year` · `relative` · `yearless`)과 연도 인용을 내고 코드는 인용 존재만 확인. 로컬 E4B 실측 개발 28/41 → 39/41, 깨끗한 보류 12/20 → 15/20. Codex 3회(1회는 샌드박스가 파일 읽기 막음), 강등 정책 1건은 실측 근거로 반영 안 함. 커밋만 · 원격 0/2.
 2026-10-26 — [지난 일정은 삭제만](2026-10-26_past-edit-delete-only.md): 서버·웹·채팅 일관 구현(관련 320/320 = 100%, vitest 1183/1183), Codex 2회 검토, 커밋만 · 원격 0/2.
 

@@ -10,6 +10,8 @@ domain: travel
 
 # cs 프로젝트 구현 wiki
 
+2026-10-26 [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183; role-manager 원격 전진(웹 5파일 충돌)으로 push 0, v9 로컬 서빙 유지(agent_read 프롬프트 충돌 · E4B 재측정 필요).
+
 2026-10-26 [날짜 읽기를 모델 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 모델이 `date_form` · `year_quote` 를 내고 코드는 인용만 확인(본문 「2026원」 연도 오판 제거); 로컬 E4B 깨끗한 보류 표본 12/20 → 15/20, 거절 위험 오류 10 → 1건; Codex 3회 논의.
 2026-10-26 [지난 일정은 삭제만](records/reports/2026-10-26_past-edit-delete-only.md) — 끝난 일정은 이름 포함 수정 불가 · 삭제만(서버 `plan_edit` · 웹 `pastEdit` · 채팅); 이미 지난 고정 일정 삭제 경로는 남음.
 
