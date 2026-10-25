@@ -1,6 +1,7 @@
 import type { Language } from "../i18n";
 import { translator } from "../i18n";
 import { LiveError } from "./client";
+import { ALL_PAST_CODE, ALL_PAST_TEXT } from "./error-text";
 import { getIntake, planIntake, type IntakePlanInput } from "./intake";
 import type { PlanRequest } from "./intake-start";
 import type { OpProgress } from "./stream";
@@ -62,6 +63,8 @@ export async function planFromIntake(intakeId: string, ask: PlanRequest, languag
   }
   if (hooks.cancelled()) return null;
   if (view.status === "fatal") {
+    // `[2026-10-26]` Every stop read from the text is before today: the same sentence as the plan entry's guard, in the screen's language.
+    if (view.fatal?.code === ALL_PAST_CODE) throw new LiveError(ALL_PAST_CODE, t(ALL_PAST_TEXT[0], ALL_PAST_TEXT[1]));
     throw new LiveError(view.fatal?.code ?? "fatal", view.fatal?.detail || t("서버가 이 글을 읽지 못했어요.", "The server could not read this text."));
   }
   const input: IntakePlanInput = { start_date: ask.start_date, days: ask.days, party_size: ask.party_size, keep_read_items: false, ...(ask.survey && { survey: ask.survey }) };

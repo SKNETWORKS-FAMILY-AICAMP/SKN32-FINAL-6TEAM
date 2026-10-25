@@ -24,8 +24,13 @@ const number = (detail: Detail, key: string) => (typeof detail?.[key] === "numbe
  * server's own sentence, kept as it is; English is the web's.
  */
 export const ALL_PAST_TEXT = ["모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요", "Every stop is before today. Please check the trip dates."] as const;
+/**
+ * `[2026-10-26 사용자 지시]` The same code names it everywhere: the registration refusal's `violations[].code`, and the `fatal.code` of an intake the server
+ * ended on the plan entry because every stop it read is before today (`wiki/external/rest-endpoints/web-intakes.md` 「전부 과거인 계획은 계획 담기에서 막는다」).
+ */
+export const ALL_PAST_CODE = "all_dates_in_past";
 const allDatesInPast = (detail: Detail) => Array.isArray(detail?.violations)
-  && detail.violations.some((violation) => (violation as { code?: unknown } | null)?.code === "all_dates_in_past");
+  && detail.violations.some((violation) => (violation as { code?: unknown } | null)?.code === ALL_PAST_CODE);
 
 export const REFUSAL_TEXT: Record<string, Text> = {
   // 로그인 · 세션
