@@ -2,7 +2,7 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard | retention 중 하나만 돌린다.
+    --only      classifying | routing | wait_expiry | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard | retention 중 하나만 돌린다.
                 `team:<이름>` 은 팀이 끼운 정기 작업 하나를 시간대와 상관없이 지금 돌린다(`team_hooks/scheduled_jobs`).
 
 ★`retention` 은 **약관의 보관 기간 · 회원 자료 정리**다(`[2026-10-07 사용자 결정]`, 마이그레이션 056). 마지막 이용 뒤 `retention.member_idle_days` 가 지난 회원의 자료를 지우는데,
@@ -85,6 +85,7 @@ from app.core.service_bindings import bind_services, current_bindings
 from app.core.team_availability import TeamUnavailable
 from app.application.classification_sweeper import sweep_stuck_classifying
 from app.application.routing_sweeper import sweep_stuck_routing
+from app.application.wait_expiry_sweeper import sweep_expired_waits
 from app.core.settings import get_settings
 from app.infrastructure.db.session import get_connection
 
@@ -231,6 +232,13 @@ def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
             with get_connection() as conn:
                 return sweep_stuck_routing(conn, tenant_id=tenant_id, run_case=run_case, actor_id="sweeper")
         run("routing", route, team=True)
+    # ★`[2026-10-26]` 고객 입력 대기의 재개 토큰이 만료됐는데 고객이 돌아오지 않은 Case 를 `escalated` 로(INV-CS-RT-018).
+    #   전에는 재개를 시도할 때만 만료가 기록돼 `waiting_input` 에 영원히 남았다. 이 테넌트만 · 고객 알림 없음 · Case 마다 CAS
+    if only in (None, "wait_expiry"):
+        def expire():
+            with get_connection() as conn:
+                return sweep_expired_waits(conn, tenant_id=tenant_id, actor_id="wait_expiry_sweeper")
+        run("wait_expiry", expire)
     # ★`[결정 2026-09-18]` 기본 감시는 **Case 버전**(`trip_cases`)이다. 시나리오용 여행 버전(`trip`)은
     #   `--only trip` 으로만 돈다. 둘을 함께 돌리지 않는다 — 같은 사건을 두 경로가 다룬다.
     if only == "trip":
@@ -671,7 +679,7 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    fixed = ("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts", "catalog_hours",
+    fixed = ("classifying", "routing", "wait_expiry", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts", "catalog_hours",
              "trip_reminders", "trip_places", "web_guard", "retention")
 
     def job_name(value: str) -> str:

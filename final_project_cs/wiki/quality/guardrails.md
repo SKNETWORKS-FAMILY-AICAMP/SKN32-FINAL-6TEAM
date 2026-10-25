@@ -112,6 +112,7 @@ domain: neutral
 |---|---|---|
 | `classifying` | `classification_stuck_after_seconds: 300` | `classification_sweep_limit: 100` |
 | `routing` | `routing_stuck_after_seconds: 600` | `routing_sweep_limit: 50` |
+| `waiting_input`(고객 입력 대기, 재개 토큰 만료) `[2026-10-26]` | `resume.token_ttl_hours: 24`(토큰 만료 시각) | `wait_expiry_sweep_limit: 50` |
 
 ```bash
 python -m scripts.run_sweepers --interval 60

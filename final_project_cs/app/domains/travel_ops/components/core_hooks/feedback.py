@@ -161,11 +161,35 @@ def _default_llm() -> LLM:
     return _ollama_llm if (get_settings().ollama_base_url or "").strip() else _openai_llm
 
 
-def ask_json(system: str, text: str) -> dict[str, Any]:
-    """분류 에이전트의 추가 계약도 같은 설정·모델 제공자와 마스킹을 사용한다."""
+def ask_json(system: str, text: str, *, schema: dict[str, Any] | None = None,
+             num_predict: int | None = None) -> dict[str, Any]:
+    """분류 에이전트의 추가 계약도 같은 설정·모델 제공자와 마스킹을 사용한다.
+
+    ★`[2026-10-26]` `schema` 를 주면 Ollama 경로는 그 JSON 스키마를 `format` 으로 보낸다(`structured` — enum·필수 키 밖을 못 낸다).
+      실행 계획(`execution_plan.classify_plan`)이 묶음 항목 id 를 스키마에 묶어 모든 항목을 한 번씩 배정하게 한다 — 자유 JSON 이던 때
+      로컬 E4B 가 둘째 항목을 빠뜨려 `plan_coverage_invalid` 였다. OpenAI 직접 경로는 지금처럼 json_object 다(검증은 부르는 쪽이 한다)."""
     from app.core.settings import get_guardrails
-    return _default_llm()(masked(text), system=system,
-                          timeout_seconds=float(get_guardrails().get("travel.watch.plan_timeout_seconds")))
+    timeout = float(get_guardrails().get("travel.watch.plan_timeout_seconds"))
+    if schema is not None and (get_settings().ollama_base_url or "").strip():
+        return _ollama_structured(masked(text), system=system, schema=schema, timeout_seconds=timeout,
+                                  num_predict=int(num_predict or 160))
+    return _default_llm()(masked(text), system=system, timeout_seconds=timeout)
+
+
+def _ollama_structured(text: str, *, system: str, schema: dict[str, Any], timeout_seconds: float,
+                       num_predict: int) -> dict[str, Any]:
+    """`_ollama_llm` 과 같은 설정·제한시간으로, 답 모양을 JSON 스키마로 묶어 묻는다."""
+    from app.infrastructure.ollama_chat import OllamaError, from_settings
+
+    settings = get_settings().model_copy(update={"ollama_timeout_seconds": timeout_seconds,
+                                                  "llm_failover_total_seconds": timeout_seconds})
+    chat = from_settings(settings)
+    if chat is None:
+        raise ClassificationFailed("Ollama base url is missing")
+    try:
+        return chat.structured(system, text, schema, num_predict=num_predict)
+    except OllamaError as exc:
+        raise ClassificationFailed(f"Ollama classification failed: {exc}") from exc
 
 
 def classify(text: str, llm: LLM | None = None) -> Classification:

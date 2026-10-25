@@ -92,6 +92,8 @@ cancelled       → (없음)
 
 **`INV-CS-RT-018`이 특히 값지다.** 대기가 만료됐을 때 "그냥 완료 처리"하면 **고객은 답을 못 받았는데 시스템은 해결됐다고 본다.** 이걸 테스트가 막는다.
 
+`[2026-10-26]` 만료는 두 곳에서 기록한다. ① 고객이 만료 뒤 답하면 Controller가 `wait_expired`로 escalate한다. ② 고객이 끝내 돌아오지 않으면 `wait_expiry_sweeper`(`scripts/run_sweepers.py`의 `wait_expiry`, `--only` 없는 회차에 기본 포함)가 재개 토큰(`resume.token_ttl_hours`)이 지난 `waiting_input`·`wait_reason=customer_input` Case를 `transition_case(wait_expired)`로 escalate한다. 실행 프로세스 tenant만 보고, Case마다 `expected_version` CAS, 고객 알림(outbox)은 없다. 만료 시각을 못 읽은 Case는 옮기지 않고 `invalid_expiry`로 센다. 승인·외부 대기는 재개 토큰 만료가 없어 대상이 아니다. 시험: `tests/unit/core/test_wait_expiry_sweeper.py`, `tests/integration/controller/test_wait_expiry_sweep.py`.
+
 ## 상태 기계 불변식
 
 | ID | 불변식 | 실행 위치 |

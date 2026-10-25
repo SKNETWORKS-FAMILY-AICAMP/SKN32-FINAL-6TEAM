@@ -99,6 +99,9 @@ reliability:
   #   에이전트 실행은 원래 수십 초 걸리므로 짧으면 정상 실행을 되잡는다.
   routing_stuck_after_seconds: 600
   routing_sweep_limit: 50
+  # ★고객 입력 대기의 재개 토큰(`resume.token_ttl_hours`)이 만료된 `waiting_input` Case 를 escalate 하는 되잡기(2026-10-26,
+  #   `wait_expiry_sweeper`, INV-CS-RT-018). 한 회차에 읽는 후보 수 — 우리가 고른 값(routing 과 같게). 넘는 것은 다음 회차에 본다.
+  wait_expiry_sweep_limit: 50
 
 # ── 동시성 (v5 §6-1) ────────────────────────────────────────────────
 concurrency:
@@ -412,7 +415,12 @@ travel:
     plan_max_tool_calls: 72
     plan_priority_max: 10
     plan_max_input_chars: 24000
-    plan_timeout_seconds: 12
+    # 분류 에이전트 계획 호출(`classify_plan`) 한 번의 제한시간 — 넘김(failover) 총예산도 이 값이다.
+    # ★`[2026-10-26]` 12 → 50. 로컬 E4B(tripilot-pointer:e4b-ft, 유휴) 실측: 2항목 16.1초 · 4항목 28.5초 · 6항목(batch_max_items) 42.3초,
+    #   부하 중 2항목 27초. 12초로는 한 번도 통과하지 못했다(라우팅 감사 12 리허설 ReadTimeout). 계획도 묶음 시간
+    #   (team_timeout_seconds 90 × batch_time_ratio 0.6 = 54초) 안에서 쓰므로 54 미만으로 둔다 — 계획이 늦으면 남은 항목은 `retry`.
+    #   첫 항목 시작도 보장하지 않는다(계획 전 경과 시간 포함). 결정: Codex 검토(2026-10-26), 6항목 유휴 실측 대비 약 8초 여유.
+    plan_timeout_seconds: 50
     # 묶음 계산이 Team 시간 제한의 이 비율을 넘기면 **새 항목을 시작하지 않고** 남은 것은 다음 회차로 넘긴다(`retry`). Team 코드가 동기라 시간 제한이 도중에 끊지 못하므로 스스로 본다.
     # ★출처: **우리가 고른 값**(측정 안 함) — 마지막 항목 하나가 남은 40%(36초) 안에 끝난다고 봤다. 외부 점검 한 번이 최대 8초(`source_timeout_seconds`)다.
     batch_time_ratio: 0.6
