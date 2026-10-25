@@ -1109,6 +1109,12 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
     status = outcome.get("status")
+    if action in EDIT_ACTIONS and "response" not in basis:
+        # L02a — 채팅 변경 답도 공통 writer 로 닫는다(문장 불변 · 내부 근거 `basis.response` 만 — 공개 필드 추가 없음, L02b 보류)
+        from app.domains.travel_ops.components.response.change import change_basis
+
+        basis = change_basis(basis, action=action, outcome=outcome, answer=answer, version=base,
+                             scope={"tenant_id": tenant, "customer_id": str(current["customer_id"]), "trip_id": str(trip_id)})
     chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more", "pick") if k in outcome}
     if outcome.get("text_web"):
         chat_reply["answer_web"] = outcome["text_web"]
