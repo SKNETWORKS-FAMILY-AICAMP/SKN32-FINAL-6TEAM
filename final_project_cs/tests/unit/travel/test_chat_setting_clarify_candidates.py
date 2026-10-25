@@ -150,11 +150,13 @@ def test_after_outdoor_swap_the_same_outdoor_stop_is_not_offered_again():
 
 
 def test_model_choices_that_still_fit_are_kept_as_the_model_gave_them():
-    """모델 후보 중 아직 그 조건이 아닌 일정은 그대로 남는다(할 일 · 순서 그대로) — 활동 목록으로 덮어쓰지 않는다."""
+    """모델 후보 중 아직 그 조건이 아닌 일정은 그대로 남는다(할 일 · 순서 그대로 앞에).
+    ★`[2026-10-26 x600 재시험 da4ccd97]` 남는 자리는 바꿀 수 있는 다른 활동으로 채운다 — 모델 후보만 두면 N서울타워가 빠졌다(test_chat_setting_swap_targets)."""
     items = _test12()
     raw = _raw(choices=[{"action": "propose_alternatives", "target_item": "i3", "target_change": "none", "fact": "none"}])
     _, request = _ask(raw, items)
-    assert [(c["action"], c["item_id"]) for c in request["choices"]] == [("propose_alternatives", str(items[4].item_id))]
+    assert [(c["action"], c["item_id"]) for c in request["choices"]][0] == ("propose_alternatives", str(items[4].item_id))
+    assert [c["item_id"] for c in request["choices"]] == [str(items[i].item_id) for i in (4, 0, 6)]
 
 
 #: 실 E4B(tripilot-pointer:e4b-ft, 127.0.0.1:11434, ctx 8192) 원출력 — x600 trip c3feb784 v1 과 같은 일정 · 선택 없음 (outdoor-diag2 live-1, 8.9초)

@@ -807,7 +807,31 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                 and _local(target.starts_at).date() == _local(now).date()):
             decision = replace(decision,action="advance_trip",item=previous,minutes=None,
                 raw={**raw,"now_progress":{"requested_item_id":str(target.item_id),"current_item_id":str(previous.item_id)}})
-    return _current_route_read(decision, stops=stops, message=message or "", now=now)
+    return guard_setting_target(_current_route_read(decision, stops=stops, message=message or "", now=now))
+
+
+def guard_setting_target(decision: Decision) -> Decision:
+    """★`[2026-10-26 x600 재시험 da4ccd97]` 실내·야외 조건이 붙은 장소 바꾸기의 대상이 **장소 기록상 이미 그 조건**이면 바로 바꾸지 않는다.
+
+    ☆박물관 → 용산가족공원(야외)으로 바꾼 뒤 「야외로 바꿔줘」 — 모델이 대상으로 용산가족공원을 냈고(직전 대화에 그 이름) 팀이 이촌한강공원으로 또 바꿨다.
+    조건 = 검증을 지난 `place_setting`(인용 확인) · 장소 바꾸기 할 일 · 시각/날짜 바꾸기가 아님 · 대상 장소의 `place_setting()` 이 요청과 같음(모름은 아님).
+    대상 되묻기로 돌리고 무엇을 막았는지 `setting_guard` 에 남긴다 — 되묻기(`trip_messages._clarify_with_choices`)가 「이미 야외 장소예요」와
+    야외로 바꿀 다른 활동, 그리고 그 일정을 다른 야외 장소로 바꾸기(마지막)를 묻는다. 칸과 장소 기록만 본다(낱말을 보지 않는다)."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS, place_setting
+
+    from .edit_intent import requested_setting
+
+    raw = decision.raw or {}
+    item = decision.item
+    setting = requested_setting(raw)
+    if (setting is None or decision.action not in ("apply_change", "propose_alternatives") or item is None
+            or raw.get("change_scope") in ("time", "date") or (raw.get("time_edit") or {}).get("boundary", "none") != "none"
+            or place_setting(getattr(item, "place", None)) != setting):
+        return decision
+    note = f"{item.title}은(는) 이미 {SETTING_LABELS[setting]} 장소예요."
+    return replace(decision, action="clarify", item=None, change=None, choices=[], question=note,
+                   raw={**raw, "setting_guard": {"item_id": str(item.item_id), "action": decision.action,
+                                                 "setting": setting, "note": note}})
 
 
 def _current_route_read(decision, *, stops, message, now):

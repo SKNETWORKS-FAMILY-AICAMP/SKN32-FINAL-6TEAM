@@ -62,8 +62,8 @@ def _raw(**over):
     return raw
 
 
-def _decide(raw, message):
-    museum = _item(_place("중앙박물관", indoor=True))
+def _decide(raw, message, *, indoor=True):
+    museum = _item(_place("중앙박물관", indoor=indoor))
     model = SimpleNamespace(structured=lambda *a, **k: dict(raw))
     return decide(model, stops=stops_of([museum]), changes=[], history=[], selected_item_id=None,
                   message=message, now=START), museum
@@ -93,11 +93,13 @@ def test_unquoted_place_search_still_fails_closed():
                      place_setting={"want": "any", "evidence": ""}), "다른 곳으로 바꿔줘")
 
 
-@pytest.mark.parametrize("message,want,evidence", [("실내를 야외로 바꿔줘", "outdoor", "야외로"),
-                                                    ("야외로 바꿔줘", "outdoor", "야외로"),
-                                                    ("실내로 바꿔줘", "indoor", "실내로")])
-def test_quoted_setting_survives_decision_as_a_plain_change(message, want, evidence):
-    got, museum = _decide(_raw(place_setting={"want": want, "evidence": evidence}), message)
+# ★`[2026-10-26 x600 재시험]` 장소 기록이 이미 요청한 조건인 대상은 바로 바꾸지 않고 되묻는다(`decision_unit.guard_setting_target` —
+#   test_chat_setting_swap_targets). 「실내로」 칸이 살아남는지는 실내·야외를 모르는 장소(indoor=None)로 본다
+@pytest.mark.parametrize("message,want,evidence,indoor", [("실내를 야외로 바꿔줘", "outdoor", "야외로", True),
+                                                           ("야외로 바꿔줘", "outdoor", "야외로", True),
+                                                           ("실내로 바꿔줘", "indoor", "실내로", None)])
+def test_quoted_setting_survives_decision_as_a_plain_change(message, want, evidence, indoor):
+    got, museum = _decide(_raw(place_setting={"want": want, "evidence": evidence}), message, indoor=indoor)
     assert got.action == "apply_change" and got.item.item_id == museum.item_id
     assert got.raw["place_setting"] == {"want": want, "evidence": evidence}
 
@@ -256,7 +258,7 @@ def test_setting_word_copied_into_condition_is_not_a_conditional_request():
     assert got.action == "apply_change" and "condition_guard" not in got.raw
     assert got.raw["condition_is_setting"] == {"text": "야외로", "evidence": "야외로"}
     real, _ = _decide(_raw(condition_text="비 오면", place_setting={"want": "indoor", "evidence": "실내로"}),
-                      "비 오면 실내로 바꿔줘")
+                      "비 오면 실내로 바꿔줘", indoor=None)      # 이미 실내 기록이면 조건과 무관하게 되묻는다(guard_setting_target)
     assert real.action == "propose_alternatives" and real.raw["condition_guard"]["condition"] == "비 오면"
 
 
@@ -354,9 +356,15 @@ def test_setting_quote_copied_into_place_search_does_not_block_the_park(message,
     picked = {**raw, "target_item": "i3",
               "choices": [{"action": "apply_change", "target_item": "i3", "target_change": "none", "fact": "none"}]}
     got = _decide_on(picked, message, items, selected=items[2].item_id)
-    assert got.action == "apply_change" and got.item.item_id == items[2].item_id
     assert "near_guard" not in got.raw and "찾아 바꾸지는 못해요" not in got.question
     assert got.raw["place_setting"]["want"] == "outdoor" and got.raw["near_is_setting"]["was"]["anchor_item"] == "i1"
+    # ★`[2026-10-26 x600 재시험]` 남산공원은 장소 기록이 이미 야외(indoor=False)다 — 근처 막기가 아니라 「이미 야외 장소예요」 되묻기다
+    #   (`decision_unit.guard_setting_target` · test_chat_setting_swap_targets). 실내·야외를 모르는 활동이면 그대로 바꾸기다(아래)
+    assert got.action == "clarify" and got.raw["setting_guard"]["item_id"] == str(items[2].item_id)
+    unknown = _day_trip()
+    unknown[2].place = {**unknown[2].place, "attributes": {}}
+    plain = _decide_on(picked, message, unknown, selected=unknown[2].item_id)
+    assert plain.action == "apply_change" and plain.item.item_id == unknown[2].item_id and "near_guard" not in plain.raw
 
 
 def _real_near(target):

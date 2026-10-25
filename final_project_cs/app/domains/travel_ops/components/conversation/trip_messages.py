@@ -1231,41 +1231,80 @@ def _setting_swap(decision: Any) -> str | None:
     return setting
 
 
+#: 장소를 바꾸는 할 일 — 실내·야외 조건이 붙을 수 있는 것
+_SETTING_SWAPS = ("apply_change", "propose_alternatives")
+
+
+def _setting_swap_choices(decision: Any, items: list[Any], setting: str, *, first: datetime | None,
+                          at: datetime | None, selected: UUID | None) -> list[dict[str, Any]]:
+    """실내·야외 조건이 붙은 장소 바꾸기의 대상 되묻기 선택지 — **어디서 온 후보든** 활동 일정만, 장소 기록이 이미 그 조건인 일정은 뺀다(모름은 남긴다).
+
+    ★`[2026-10-26 x600 재시험 da4ccd97]` 모델이 낸 되묻기 후보(북촌 · 광장시장 점심 · 박물관)가 비어 있지 않아 활동 목록으로 가지 않았고,
+      「이미 그 조건」만 걸러 식사가 남고 N서울타워가 빠졌다. 기준은 팀의 후보 거르기와 같다 — 일정 종류(`kind == "activity"`)와
+      장소 기록의 `place_setting()`. 낱말을 보지 않는다.
+    - 순서: 아직 맞는 모델 · 대상 확인 후보(그 할 일 그대로) → 화면에서 고른 일정 → 지금부터의 활동(없으면 앞에서부터) — 한 일정은 한 번, 셋까지
+    - 대상이 이미 그 조건이라 바꾸지 않았으면(`setting_guard`) 그 일정을 다른 같은 조건 장소로 바꾸기를 마지막 선택지로 남긴다(그 뜻일 수 있다)"""
+    from app.domains.travel_ops.components.conversation.decision_unit import choice_message
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import place_setting
+
+    raw = decision.raw or {}
+    guard = raw.get("setting_guard") or {}
+    held = next((i for i in items if guard and str(i.item_id) == guard.get("item_id")), None)
+    action = raw.get("action") if raw.get("action") in _SETTING_SWAPS else "apply_change"
+
+    def fits(item: Any) -> bool:
+        return (item is not None and item.kind == "activity" and item.place is not None
+                and place_setting(item.place) != setting and item is not held)
+
+    ranked: list[tuple[dict[str, Any], bool]] = [
+        (c, True) for c in decision.choices if c.get("action") in _SETTING_SWAPS and fits(c.get("item"))]
+    stops = sorted((i for i in items if fits(i)), key=lambda i: (i.starts_at, i.seq))
+    picked = [i for i in stops if selected is not None and i.item_id == selected]
+    ahead = [i for i in stops if at is None or i.starts_at >= at] or stops
+    ranked += [({"action": action, "item": i, "change": None, "fact": "none"}, False)
+               for i in picked + [i for i in ahead if i not in picked]]
+    room = 3 - (1 if held is not None else 0)
+    choices: list[dict[str, Any]] = []
+    for choice, from_decision in ranked:
+        if len(choices) >= room:
+            break
+        if any(c["item_id"] == str(choice["item"].item_id) for c in choices):
+            continue
+        text = choice_message(choice, first)
+        if text:
+            choices.append({"label": text, "message": text, "action": choice["action"], "item_id": str(choice["item"].item_id),
+                            # 결정 후보에서 온 것은 예전처럼 `fact` · `to_version` 칸을 싣는다(출처 구분)
+                            **({"fact": choice.get("fact"),
+                                "to_version": choice["change"].version - 1 if choice.get("change") else None}
+                               if from_decision else {})})
+    if held is not None:
+        kept = guard.get("action") if guard.get("action") in _SETTING_SWAPS else "apply_change"
+        text = choice_message({"action": kept, "item": held, "change": None, "fact": "none"}, first)
+        if text:
+            choices.append({"label": text, "message": text, "action": kept, "item_id": str(held.item_id)})
+    return choices
+
+
 def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = None, *,
                           at: datetime | None = None, selected: UUID | None = None) -> dict[str, Any]:
     """★`[2026-09-29 사용자 제안]` 이해하지 못했으면 **이해한 범위 안에서** 「다음 중 하나인가요?」 — 번호 목록과 버튼용 문장.
     고객이 「1번」이라고 답하면 결정 단위가 앞 대화(이 목록)로 푼다. 후보가 없으면 되묻는 한 문장."""
     from app.domains.travel_ops.components.conversation.decision_unit import choice_message
-    from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS, place_setting
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS
 
     first = min((i.starts_at for i in items if i.kind != "mobility"), default=None)
     setting = _setting_swap(decision)
-    options = decision.choices
-    if setting:
-        # 장소 기록이 이미 그 조건(실내·야외)인 일정을 그 조건으로 바꾸자는 후보는 묻지 않는다 — 모름은 남긴다
-        options = [c for c in options if not (c.get("action") in ("apply_change", "propose_alternatives")
-                                              and c.get("item") is not None and place_setting(c["item"].place) == setting)]
     choices = []
-    for choice in options:
-        text = choice_message(choice, first)
-        if text and all(text != c["message"] for c in choices):
-            choices.append({"label": text, "message": text, "action": choice["action"],
-                            "item_id": str(choice["item"].item_id) if choice.get("item") else None,
-                            "fact": choice.get("fact"),
-                            "to_version": choice["change"].version - 1 if choice.get("change") else None})
-    if not choices and setting:
-        # ★`[2026-10-26 x600 QA]` 해석이 「실내·야외 조건이 붙은 장소 바꾸기 + 대상 미확정」으로 끝났다(검증을 지난 `place_setting`) —
-        #   요청 종류를 모르는 아래 대체 목록(식사 포함)이 아니라 **바꿀 수 있는 활동**을 묻는다. 장소 기록이 이미 그 조건인 활동은 뺀다.
-        #   ☆x600 test12 「실내를 야외로 바꿔줘」: 모델 되묻기·후보 없음 → 「말씀을 정확히 알아듣지 못했어요 … 광장시장」이 나갔다
-        action = decision.raw.get("action") if decision.raw.get("action") in ("apply_change", "propose_alternatives") else "apply_change"
-        stops = sorted((i for i in items if i.kind == "activity" and i.place and place_setting(i.place) != setting),
-                       key=lambda i: (i.starts_at, i.seq))
-        picked = [i for i in stops if selected is not None and i.item_id == selected]
-        ahead = [i for i in stops if at is None or i.starts_at >= at] or stops
-        for item in (picked + [i for i in ahead if i not in picked])[:3]:
-            text = choice_message({"action": action, "item": item, "change": None, "fact": "none"}, first)
-            if text:
-                choices.append({"label": text, "message": text, "action": action, "item_id": str(item.item_id)})
+    if setting:
+        choices = _setting_swap_choices(decision, items, setting, first=first, at=at, selected=selected)
+    else:
+        for choice in decision.choices:
+            text = choice_message(choice, first)
+            if text and all(text != c["message"] for c in choices):
+                choices.append({"label": text, "message": text, "action": choice["action"],
+                                "item_id": str(choice["item"].item_id) if choice.get("item") else None,
+                                "fact": choice.get("fact"),
+                                "to_version": choice["change"].version - 1 if choice.get("change") else None})
     generic = not choices
     if not choices:
         # ★`[2026-09-29 ui 세션 지적 · 사용자 제안]` 모델이 해석 후보를 못 냈어도 **고를 수 있는 것**을 보인다 —
@@ -1284,8 +1323,10 @@ def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = No
         return {"status": "clarify", "text": " ".join(x for x in (lead, decision.question or _CLARIFY) if x)}
     listed = "\n".join(f"{n}) {c['label']}" for n, c in enumerate(choices, start=1))
     if setting and not lead and not generic:
-        # 무엇을 원하는지(실내·야외 장소로 바꾸기)는 알아들었다 — 「알아듣지 못했어요」가 아니라 바꿀 일정만 묻는다
-        ask = f"어느 일정을 {SETTING_LABELS[setting]} 장소로 바꿀까요?"
+        # 무엇을 원하는지(실내·야외 장소로 바꾸기)는 알아들었다 — 「알아듣지 못했어요」가 아니라 바꿀 일정만 묻는다.
+        #   대상이 이미 그 조건이라 바꾸지 않았으면(`decision_unit.guard_setting_target`) 그것을 먼저 말한다
+        note = ((decision.raw or {}).get("setting_guard") or {}).get("note")
+        ask = " ".join(x for x in (note, f"어느 일정을 {SETTING_LABELS[setting]} 장소로 바꿀까요?") if x)
         return {"status": "clarify", "choices": choices, "text_web": ask,
                 "text": f"{ask}\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}
     head = lead or "말씀을 정확히 알아듣지 못했어요."
