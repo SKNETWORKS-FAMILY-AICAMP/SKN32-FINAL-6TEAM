@@ -272,7 +272,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
                         position=int(source["position"]), agent_num_predict=reader["num_predict"],
                         agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect,
-                        activity_web=activity_web)
+                        external_fallback_enabled=reader.get("external_fallback_enabled", False), activity_web=activity_web)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -385,7 +385,7 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
     못 읽으면 `off`(규칙으로 읽는다). ★기다리는 시간은 여기서 정하지 않는다 — 채팅과 같은 넘김 장치(`llm_failover_primary_timeout_seconds`)를 따른다."""
     from app.core.settings import get_guardrails
 
-    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off"}
+    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off", "external_fallback_enabled": False}
     try:
         guard = get_guardrails()
         mode = str(guard.get("travel.intake_reader.mode"))
@@ -394,11 +394,19 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
         prefill = str(guard.get("travel.intake_reader.prefill"))
     except Exception:                                  # noqa: BLE001 — 설정이 없으면 규칙으로
         return default
+    try:
+        external = guard.get("travel.intake_reader.external_fallback_enabled") is True
+    except Exception:
+        external = False
+    configured_external = settings_hook.operator_setting(tenant_id, "travel.intake_reader.external_fallback_enabled")
+    if isinstance(configured_external, bool):
+        external = configured_external
     console = settings_hook.operator_setting(tenant_id, "travel.intake_reader.mode")
     if console in ("on", "shadow", "off"):
         mode = console
     return {"mode": mode if mode in ("on", "shadow", "off") else "off", "num_predict": num_predict,
-            "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off"}
+            "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off",
+            "external_fallback_enabled": external}
 
 
 def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
@@ -1488,7 +1496,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
                 differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
-                reading_stream: dict[str, Any] | None = None,
+                reading_stream: dict[str, Any] | None = None, external_fallback_enabled: bool = False,
                 on_reading: Callable[[dict[str, Any]], None] | None = None,
                 connect: Callable[[], Any] | None = None, activity_web: Any = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
@@ -1531,14 +1539,14 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
                                           chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS,
                                           stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None,
-                                          now=now)
+                                          now=now, external_fallback_enabled=external_fallback_enabled)
         except Exception as exc:                      # noqa: BLE001 — 갈래를 나눈다(아래)
             agent_error = f"{type(exc).__name__}: {exc}"[:200]
             # ★`[2026-10-16 2회차 합의 ②]` 버리는 줄 없음 — 실패 이유로 갈래를 나눈다
             #   · 모델 쪽(로컬 · 유료 모두 답 못 함 — 연결 · 시간 초과 · 멈춤): 같은 모델을 또 부르지 않고 곧바로 「읽기 실패」(유료를 두 번 태우지 않는다)
             #   · 답 내용 쪽(스키마 · 모양 · 인용 검사 — 모델은 답했다): 아래에서 줄 읽기(`label_lines`)로 한 번 더 읽고, 그것도 실패하면 「읽기 실패」
             #   ☆전에는(D-025 첫 판) 어느 쪽이든 「규칙 미리보기 + 못 읽은 줄」로 끝냈다 — 못 읽은 줄이 조용히 남았다
-            if agent_mode == "on" and _model_side_failure(exc):
+            if isinstance(exc, agent_module.ReaderPolicyError) or (agent_mode == "on" and _model_side_failure(exc)):
                 log.warning("intake reading outcome=failed by=agent_model error=%s", agent_error)
                 raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
             log.warning("intake agent read failed (answer side — reading lines instead): %s", agent_error)
@@ -1580,7 +1588,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         if chat is not None and read.unread_lines:
             try:
                 _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now,
-                                                    stream=_reading_stream(reading_stream), on_progress=on_reading)
+                                                    stream=_reading_stream(reading_stream), on_progress=on_reading,
+                                                    external_fallback_enabled=external_fallback_enabled)
             except ReadingFailed as exc:
                 log.warning("intake reading outcome=failed by=lines after=%s lines=%d: %s", outcome, len(read.unread_lines), exc)
                 raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc

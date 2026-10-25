@@ -394,9 +394,26 @@ def _clear_path() -> None:
     clear_path()
 
 
+class ReaderPolicyError(RuntimeError):
+    """Reader admission failure: never retry through a general-purpose caller."""
+
+
+#: 이해 에이전트를 부르는 자리 — `intake`(계획서 읽기, 기본 · reader 정책) · `chat_add`(채팅 「넣기」 메시지, 채팅 해석 계약).
+READ_PURPOSES = ("intake", "chat_add")
+
+
+def validate_reader(chat: Any, *, stream: Any = None, agent: bool = False) -> None:
+    from app.infrastructure.llm_failover import OpenAIChat
+    if isinstance(chat, OpenAIChat):
+        raise ReaderPolicyError("reader_unbudgeted_external")
+    if agent and callable(getattr(chat, "reader_json", None)) and not stream:
+        raise ReaderPolicyError("reader_stream_required")
+
+
 def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: int = 3072,
          chunk_chars: int = fragments_module.CHUNK_CHARS, stream: dict[str, Any] | None = None,
-         on_progress: Any = None, clock: Any = time.monotonic, now=None) -> AgentRead:
+         on_progress: Any = None, clock: Any = time.monotonic, now=None,
+         external_fallback_enabled: bool = False, purpose: str = "intake") -> AgentRead:
     """묶음마다 한 번씩 부른다(짧은 글은 한 번). 모델 · 모양 오류는 그대로 올린다 — 부르는 쪽(`pipeline.read_source`)이 규칙 미리보기로 읽는다.
 
     `lines` 는 규칙 읽기와 같은 줄(`text.splitlines()`) — 줄 번호가 규칙 · 확인 화면 · 이 읽기에서 같다.
@@ -405,11 +422,23 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
       첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(`app/infrastructure/model_stream.py`). 로컬이 멈추면 넘김 장치가 그 묶음을 유료로 처음부터 읽는다.
       ★한 계획은 한 모델이 읽는다 — 어느 묶음이 유료로 답하면 그 뒤 묶음도 유료만 쓰고(`api_only`), 앞 묶음을 로컬이 읽었으면 **첫 묶음부터 유료로 다시** 읽는다.
       `on_progress({phase: reading|reading_api, done, total, final?})` — 원문에 글자 그대로 있는 인용이 나온 서로 다른 줄 수 / 보낸 줄 수(`progress_seconds` 마다)."""
+    if purpose not in READ_PURPOSES:
+        raise ValueError(f"unknown reader purpose: {purpose!r}")
+    if purpose == "intake":
+        # ★`[2026-10-26]` 계획서(접수 원문)만 reader 정책을 탄다 — 외부(유료) 대체 기본 차단 · reader 예산 fail-closed.
+        #   채팅 「넣기」(`chat_add`, `trip_desk._read_plan`)는 채팅 해석 계약 그대로다(가린 글로 일반 넘김 · 일반 예산, `llm-failover.md`).
+        validate_reader(chat, stream=stream, agent=True)
     started = time.perf_counter()
     frags = fragments_module.explode([(text, {"source": 0})])
     chunks = fragments_module.chunk(frags, limit=chunk_chars) or [fragments_module.Chunk([])]
     many = len(chunks) > 1
-    streamer = getattr(chat, "structured_stream", None) if stream else None
+    # ★`[2026-10-26 L03]` reader 정책 wrapper(`reader_json` 을 가진 넘김 장치)는 reader 전용 입구로만 부른다 — 일반 `structured_stream` 은
+    #   감시 분류 계획 · 다른 업무의 기존 넘김이라 계획서 원문이 그 길로 유료에 닿으면 안 된다. 순수 로컬(`OllamaChat`) · 시험 대역은 그대로.
+    policy_wrapper = purpose == "intake" and callable(getattr(chat, "reader_json", None))
+    if policy_wrapper and stream and not callable(getattr(chat, "reader_structured_stream", None)):
+        raise ReaderPolicyError("reader_stream_entry_missing")
+    streamer = (getattr(chat, "reader_structured_stream" if policy_wrapper else "structured_stream", None)
+                if stream else None)
     progress = _Progress(lines, on_progress, every=float(stream["progress_seconds"]), clock=clock) if callable(streamer) else None
     if progress is not None:
         progress.emit()
@@ -431,6 +460,8 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
             if callable(streamer):
                 progress.start(list(part.new_numbers) if many else list(range(1, len(lines) + 1)))
                 extra = {"api_only": True} if api_only else {}
+                if policy_wrapper:
+                    extra["external_fallback_enabled"] = external_fallback_enabled
                 raw = streamer(system, user, SCHEMA, num_predict=num_predict, on_piece=progress.piece,
                                first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
                                max_seconds=float(stream["max_seconds"]), **extra)
@@ -465,7 +496,7 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
     if progress is not None:
         progress.emit(final=True)
     total.requests = requests_from(total)
-    total.report.update({"seconds": round(time.perf_counter() - started, 2), "model": getattr(chat, "model", None),
+    total.report.update({"seconds": round(time.perf_counter() - started, 2), "model": (paths[-1] or {}).get("model") or getattr(chat, "model", None),
                          "items": len(total.items), "chunks": len(chunks), "paths": paths})
     if restarted:
         total.report["restarted_on_api"] = True
@@ -488,7 +519,7 @@ def _path() -> Any:
     except Exception:                                  # noqa: BLE001 — 기록용이다
         return None
     found = current_path()
-    return {"path": found.get("path"), "seconds": found.get("seconds")} if isinstance(found, dict) else None
+    return {key: found.get(key) for key in ("path", "seconds", "backend", "model")} if isinstance(found, dict) else None
 
 
 def report_value(read_out: AgentRead) -> dict[str, Any]:

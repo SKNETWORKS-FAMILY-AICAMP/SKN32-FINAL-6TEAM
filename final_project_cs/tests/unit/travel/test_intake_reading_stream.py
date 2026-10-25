@@ -115,7 +115,8 @@ class Paid(Local):
 
 def chat_of(local, paid, *, clock=time.monotonic):
     backends = [_Backend("ollama", local, CircuitBreaker("ollama", threshold=3, open_seconds=60, clock=clock), timeout=9.0),
-                _Backend("openai", paid, CircuitBreaker("openai", threshold=3, open_seconds=60, clock=clock), is_api=True, timeout=8.0)]
+                _Backend("openai", paid, CircuitBreaker("openai", threshold=3, open_seconds=60, clock=clock), is_api=True, timeout=8.0,
+                         reader_budget=lambda: True)]
     return FailoverChat(backends, total_seconds=15.0, sleep=lambda _s: None, clock=clock)
 
 
@@ -137,6 +138,25 @@ def test_a_cold_local_model_goes_straight_to_paid_without_tripping_the_breaker()
     assert llm_failover.current_path()["reasons"] == [("ollama", "not_loaded")]
     assert chat._backends[0].breaker.snapshot()["failures"] == 0
     assert classify(ModelNotLoaded("x")).counts is False
+
+
+def test_reader_paid_restart_stays_blocked_by_default():
+    """`[2026-10-26 L03]` 계획 읽기 입구(`reader_json_stream`)는 명시 허용이 없으면 로컬이 멈춰도 유료로 다시 읽지 않는다."""
+    from app.infrastructure.ollama_chat import OllamaError
+    local, paid = Local(stall=True), Paid()
+    with pytest.raises(OllamaError, match="reader_external_disabled"):
+        chat_of(local, paid).reader_json_stream("sys", "1: 오후엔 경복궁 가 보고 싶어", on_piece=lambda t, path: None)
+    assert local.asked and paid.asked == []
+    assert ("openai", "reader_external_disabled") in llm_failover.current_path()["reasons"]
+
+
+def test_reader_paid_restart_runs_only_when_explicitly_enabled():
+    local, paid = Local(stall=True), Paid()
+    pieces = []
+    out = chat_of(local, paid).reader_json_stream("sys", "1: 오후엔 경복궁 가 보고 싶어", on_piece=lambda t, path: pieces.append(path),
+                                                  external_fallback_enabled=True)
+    assert out == answer_for("1: 오후엔 경복궁 가 보고 싶어")
+    assert pieces[0] == "local" and pieces[-1] == "api" and local.asked and paid.asked
 
 
 # ── ③ 유료 답 상한 ─────────────────────────────────────────

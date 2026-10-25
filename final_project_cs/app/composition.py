@@ -31,7 +31,7 @@ from app.core.redaction import masked
 from app.tools.read_tools import ReadToolbox
 
 
-def _llm_failover_budget(settings: Any):
+def _llm_failover_budget(settings: Any, *, fail_closed: bool = False):
     """모델 서버 넘김 장치(`llm_failover.py`)가 **API 로 넘긴 호출**을 세는 장치 — `external_call_budget` 의 `openai_failover` 줄(일 · 월 상한).
     ★인프라는 도메인의 `CallBudget` 을 모르므로(계층 규칙) 조립 루트가 만들어 꽂는다. 한도 표를 못 읽으면 **부른다**(서비스를 살리는 쪽) — 경고를 남긴다.
     한도를 넘으면 `False` — 넘김 장치가 더 부르지 않고 실패로 올린다."""
@@ -47,8 +47,29 @@ def _llm_failover_budget(settings: Any):
         try:
             return bool(budget.try_reserve(METER))
         except Exception as exc:                                  # noqa: BLE001 — 세는 일이 서비스를 막지 않게
+            if fail_closed:
+                logging.getLogger("app.llm_failover").warning("reader call budget unreadable (%s) — API denied", type(exc).__name__)
+                return False
             logging.getLogger("app.llm_failover").warning("call budget unreadable (%s) — calling the API anyway", type(exc).__name__)
             return True
+    return allowed
+
+
+def _llm_reader_budget(settings: Any):
+    """Reader reserve is fail-closed; preserve the general fail-open gate.
+
+    The gate is built when a reader API attempt asks, not when the failover chat is assembled: unreadable
+    cap settings must deny the reader's API call, never break building the (local-first) model chain."""
+    import logging
+
+    def allowed() -> bool:
+        try:
+            gate = _llm_failover_budget(settings, fail_closed=True)
+        except Exception as exc:                                  # noqa: BLE001 — 상한을 못 읽으면 reader API 를 막는다
+            logging.getLogger("app.llm_failover").warning("reader call budget unavailable (%s) — API denied",
+                                                          type(exc).__name__)
+            return False
+        return gate()
     return allowed
 
 
@@ -64,9 +85,10 @@ def _llm_failover_warm(chat: Any) -> Any:
 
 
 def _register_llm_failover() -> None:
-    from app.infrastructure.llm_failover import register_budget_provider, register_warm_starter
+    from app.infrastructure.llm_failover import register_budget_provider, register_reader_budget_provider, register_warm_starter
 
     register_budget_provider(_llm_failover_budget)
+    register_reader_budget_provider(_llm_reader_budget)
     register_warm_starter(_llm_failover_warm)
 
 

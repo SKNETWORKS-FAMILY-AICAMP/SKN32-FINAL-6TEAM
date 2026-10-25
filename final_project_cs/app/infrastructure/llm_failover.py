@@ -40,6 +40,9 @@ from app.infrastructure.ollama_chat import OllamaChat, OllamaContentError, Ollam
 
 log = logging.getLogger("app.llm_failover")
 
+# Request-local SDK attempt authorization. General API calls retain their policy.
+_reader_attempt: contextvars.ContextVar[Any] = contextvars.ContextVar("reader_attempt", default=None)
+
 METER = "openai_failover"
 
 #: 호출 직후 「이 호출이 어느 경로로 답했나」 — 같은 스레드에서 읽는다(요청마다 스레드가 다르므로 섞이지 않는다)
@@ -310,6 +313,10 @@ class OpenAIChat:
 
     def _complete(self, messages: list[dict[str, Any]], *, response_format: dict[str, Any] | None = None,
                   max_tokens: int = 600, timeout: float | None = None) -> str:
+        authorize = _reader_attempt.get()
+        if authorize is not None:
+            remaining = authorize()
+            timeout = min(timeout if timeout is not None else self.timeout, remaining)
         token_limit = "max_completion_tokens" if self.model.startswith("gpt-6") else "max_tokens"
         kwargs: dict[str, Any] = {"model": self.model, "messages": messages, token_limit: int(max_tokens)}
         if self.model.startswith("gpt-6-luna"):
@@ -398,8 +405,13 @@ class OpenAIChat:
 
     def _stream_text(self, messages: list[dict[str, Any]], response_format: dict[str, Any], max_tokens: int, *,
                      on_piece: Callable[[str], None] | None, first_wait: float, stall: float, max_seconds: float) -> str:
-        from app.infrastructure.model_stream import collect
+        from app.infrastructure.model_stream import collect, StreamLifetime
 
+        authorize = _reader_attempt.get()
+        if authorize is not None:
+            remaining = authorize()
+            max_seconds = min(max_seconds, remaining)
+            first_wait, stall = min(first_wait, remaining), min(stall, remaining)
         token_limit = "max_completion_tokens" if self.model.startswith("gpt-6") else "max_tokens"
         kwargs: dict[str, Any] = {"model": self.model, "stream": True, token_limit: int(max_tokens), "response_format": response_format,
                                   "timeout": float(max_seconds), "messages": messages}
@@ -408,6 +420,7 @@ class OpenAIChat:
         if not self.model.startswith(_NO_TEMPERATURE):
             kwargs["temperature"] = 0
         held: dict[str, Any] = {}
+        lifetime = StreamLifetime()
 
         def pieces():
             try:
@@ -416,9 +429,10 @@ class OpenAIChat:
                 raise
             except Exception as exc:                          # noqa: BLE001 — SDK 예외를 이유 이름으로 바꾼다
                 raise _api_error(exc) from None
-            held["stream"] = stream
+            if not lifetime.acquire(stream):
+                return
             try:
-                for chunk in stream:
+                for chunk in lifetime.iterate(stream):
                     for choice in getattr(chunk, "choices", None) or []:
                         if getattr(choice, "finish_reason", None) == "length":
                             held["length"] = True
@@ -430,12 +444,7 @@ class OpenAIChat:
             except Exception as exc:                          # noqa: BLE001
                 raise _api_error(exc) from None
 
-        def close() -> None:
-            stream = held.get("stream")
-            if stream is not None:
-                stream.close()
-
-        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, close=close).strip()
+        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, lifetime=lifetime).strip()
         if held.get("length"):
             raise OllamaContentError(f"답이 상한({max_tokens}토큰)에 걸려 잘렸다")
         if not text:
@@ -497,6 +506,7 @@ class _Backend:
     timeout: float = 6.0
     #: 이 경로가 호출 하나에 최대로 쓰는 시간(초) — 다시 시도 · 넘김이 전체 시간 안에 드는지 가늠할 때 쓴다
     budget: Callable[[], bool] | None = field(default=None, repr=False)
+    reader_budget: Callable[[], bool] | None = field(default=None, repr=False)
 
 
 class FailoverChat:
@@ -523,10 +533,14 @@ class FailoverChat:
         return getattr(self._primary, name)
 
     # ── 호출 ──
-    def _run(self, op: str, call: Callable[[Any, bool], Any], *, image: bool = False) -> Any:
+    def _run(self, op: str, call: Callable[..., Any], *, image: bool = False, deadline: float | None = None, reader: bool = False, reader_external: bool = False) -> Any:
         started = self._clock()
         reasons: list[tuple[str, str]] = []
         for index, backend in enumerate(self._backends):
+            if reader and backend.is_api and not reader_external:
+                reasons.append((backend.name, "reader_external_disabled"))
+                _count(f"skip:{backend.name}:reader_external_disabled")
+                continue
             if backend.is_api and image and not self.vision:
                 reasons.append((backend.name, "vision_off"))
                 _count(f"skip:{backend.name}:vision_off")
@@ -535,7 +549,7 @@ class FailoverChat:
                 reasons.append((backend.name, "circuit_open"))
                 _count(f"skip:{backend.name}:circuit_open")
                 continue
-            if backend.is_api and backend.budget is not None and not backend.budget():
+            if backend.is_api and not reader and backend.budget is not None and not backend.budget():
                 backend.breaker.release()
                 reasons.append((backend.name, "budget_exhausted"))
                 _count(f"skip:{backend.name}:budget_exhausted")
@@ -544,6 +558,37 @@ class FailoverChat:
             later_api = any(b.is_api for b in self._backends[index + 1:])
             attempt = 0
             while True:
+                if deadline is not None and deadline <= self._clock():
+                    backend.breaker.release()
+                    reasons.append((backend.name, "deadline_exhausted"))
+                    break
+                if reader and backend.is_api and not isinstance(backend.chat, OpenAIChat):
+                    try:
+                        allowed = backend.reader_budget is not None and bool(backend.reader_budget())
+                    except Exception:
+                        allowed = False
+                    if not allowed:
+                        backend.breaker.release()
+                        reasons.append((backend.name, "reader_budget_unavailable"))
+                        break
+                    if deadline is not None and deadline <= self._clock():
+                        backend.breaker.release()
+                        reasons.append((backend.name, "deadline_exhausted"))
+                        break
+                def authorize_sdk_attempt():
+                    if deadline is not None and deadline <= self._clock():
+                        raise ModelSkipped("reader deadline exhausted")
+                    try:
+                        allowed = backend.reader_budget is not None and bool(backend.reader_budget())
+                    except Exception:
+                        allowed = False
+                    if not allowed:
+                        raise ModelSkipped("reader strict budget unavailable")
+                    remaining = deadline - self._clock() if deadline is not None else self.total_seconds
+                    if remaining <= 0:
+                        raise ModelSkipped("reader deadline exhausted")
+                    return remaining
+                token = _reader_attempt.set(authorize_sdk_attempt if reader and backend.is_api else None)
                 try:
                     result = call(backend.chat, backend.is_api)
                 except OllamaError as exc:
@@ -551,7 +596,8 @@ class FailoverChat:
                     _count(f"fail:{backend.name}:{failure.reason}")
                     elapsed = self._clock() - started
                     tail = max((b.timeout for b in self._backends[index + 1:]), default=0.0) if later_api else 0.0
-                    if failure.retryable and attempt == 0 and elapsed + self._backoff + backend.timeout + tail <= self.total_seconds:
+                    time_left = deadline - started if deadline is not None else self.total_seconds
+                    if failure.retryable and attempt == 0 and elapsed + self._backoff + backend.timeout + tail <= time_left:
                         attempt += 1
                         self._sleep(self._backoff)
                         continue
@@ -564,6 +610,8 @@ class FailoverChat:
                 except BaseException:                                # 우리가 모르는 예외 — 시험(반쪽) 자리가 잠겨 서버가 영영 안 불리지 않게 돌려주고 그대로 올린다
                     backend.breaker.release()
                     raise
+                finally:
+                    _reader_attempt.reset(token)
                 backend.breaker.success()
                 self._record(op, backend, reasons, self._clock() - started)
                 return result
@@ -573,7 +621,7 @@ class FailoverChat:
     def _record(self, op: str, backend: _Backend, reasons: list[tuple[str, str]], seconds: float) -> None:
         path = "api" if backend.is_api else "local"
         _count(f"ok:{op}:{backend.name}")
-        _path_var.set({"path": path, "backend": backend.name, "op": op, "reasons": list(reasons), "seconds": round(seconds, 2)})
+        _path_var.set({"path": path, "backend": backend.name, "model": getattr(backend.chat, "model", None), "op": op, "reasons": list(reasons), "seconds": round(seconds, 2)})
         if reasons:
             with _stats_lock:
                 _last_switch.update(op=op, to=backend.name, reasons=[list(r) for r in reasons], at=time.time())
@@ -583,12 +631,20 @@ class FailoverChat:
     def json(self, system: str, user: str) -> dict[str, Any]:
         return self._run("json", lambda chat, api: chat.json(system, masked(user) if api else user))
 
+    def reader_json(self, system: str, user: str, *, external_fallback_enabled: bool = False,
+                    max_seconds: float | None = None) -> dict[str, Any]:
+        """Reader compatibility path; existing blocking transport timeout still applies."""
+        deadline = self._clock() + min(self.total_seconds, max_seconds if max_seconds is not None else self.total_seconds)
+        return self._run("reader_json", lambda chat, api: chat.json(system, masked(user) if api else user),
+                         deadline=deadline, reader=True, reader_external=external_fallback_enabled)
+
     def json_stream(self, system: str, user: str, *, on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
                     stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0) -> dict[str, Any]:
         """`json` 을 **조금씩 받기 + 멈춤 감시**로. `[2026-10-16 2회차 합의 · 사용자 승인]`
         ★한 답은 한 경로가 처음부터 끝까지 쓴다 — 로컬이 멈추거나(조각 끊김) 실패하면 받다 만 답을 버리고 **다음 경로(유료)가 처음부터 다시** 읽는다.
         ★로컬 Ollama 는 부르기 전에 모델이 올라와 있나 본다(`loaded`) — 안 올라와 있으면 올리느라 수십 초 걸리므로 곧바로 다음 경로로 간다(서버 장애로 세지 않는다).
-        `on_piece(지금까지 모은 글, 경로)` — 경로는 `local` · `api`. 경로가 바뀌면 글이 처음부터 다시 쌓인다."""
+        `on_piece(지금까지 모은 글, 경로)` — 경로는 `local` · `api`. 경로가 바뀌면 글이 처음부터 다시 쌓인다.
+        ★`[2026-10-26]` 계획 읽기(접수 원문)는 이것이 아니라 `reader_json_stream` 을 쓴다(외부 대체 기본 차단 · reader 예산)."""
         return self._run("json_stream", self._streaming(
             lambda chat, text, relay: chat.json_stream(system, text, on_piece=relay, first_wait=first_wait, stall=stall,
                                                        max_seconds=max_seconds, max_tokens=max_tokens), user, on_piece, api_only=False))
@@ -597,12 +653,44 @@ class FailoverChat:
                           on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
                           max_seconds: float = 180.0, api_only: bool = False) -> dict[str, Any]:
         """`structured` 를 **조금씩 받기 + 멈춤 감시**로 — 넘김 규칙은 `json_stream` 과 같다. `[2026-10-16]`
-        `api_only` — 로컬을 건너뛰고 유료만 쓴다. 계획 읽기 에이전트가 긴 글을 조각으로 읽다 한 조각이 유료로 넘어가면 **처음 조각부터 유료로** 다시 읽을 때 쓴다
-        (한 계획은 한 모델이 읽는다 — `intake/agent_read.read`)."""
+        `api_only` — 로컬을 건너뛰고 유료만 쓴다.
+        ★`[2026-10-26]` 계획 읽기 에이전트(`intake/agent_read.read`)는 이것이 아니라 `reader_structured_stream` 을 쓴다.
+          이 메서드는 일반 업무(예: 감시 분류 계획 `feedback._ollama_structured`)의 기존 넘김 그대로다(가린 글 · 일반 예산)."""
         return self._run("structured_stream", self._streaming(
             lambda chat, text, relay: chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
                                                              first_wait=first_wait, stall=stall, max_seconds=max_seconds),
             user, on_piece, api_only=api_only))
+
+    # ── 계획 읽기(reader) 전용 입구 `[2026-10-26 L03]` ──
+    #   고객이 쓴 계획서 원문은 이름 · 예약번호 · 구분자 없는 전화번호를 다 가린다고 보장할 수 없다 → 외부(유료) 대체는 기본 차단
+    #   (`travel.intake_reader.external_fallback_enabled: false`). 켜면 매 유료 시도마다 reader 예산(`reader_budget`, 못 읽으면 거부)을 예약하고,
+    #   넘김 · 다시 시도 모두 한 절대 시한(`min(max_seconds, total_seconds)`) 안에서 남은 시간만 쓴다.
+    def reader_json_stream(self, system: str, user: str, *, on_piece: Callable[[str, str], None] | None = None,
+                           first_wait: float = 15.0, stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0,
+                           external_fallback_enabled: bool = False) -> dict[str, Any]:
+        deadline = self._clock() + min(max_seconds, self.total_seconds)
+        def stream(chat, text, relay):
+            remaining = deadline - self._clock()
+            if remaining <= 0:
+                raise ModelSkipped("reader deadline exhausted")
+            return chat.json_stream(system, text, on_piece=relay, first_wait=min(first_wait, remaining),
+                                    stall=min(stall, remaining), max_seconds=remaining, max_tokens=max_tokens)
+        return self._run("reader_json_stream", self._streaming(stream, user, on_piece, api_only=False),
+                         deadline=deadline, reader=True, reader_external=external_fallback_enabled)
+
+    def reader_structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
+                                 on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
+                                 stall: float = 5.0, max_seconds: float = 180.0, api_only: bool = False,
+                                 external_fallback_enabled: bool = False) -> dict[str, Any]:
+        deadline = self._clock() + min(max_seconds, self.total_seconds)
+        def stream(chat, text, relay):
+            remaining = deadline - self._clock()
+            if remaining <= 0:
+                raise ModelSkipped("reader deadline exhausted")
+            return chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
+                                          first_wait=min(first_wait, remaining), stall=min(stall, remaining), max_seconds=remaining)
+        return self._run("reader_structured_stream", self._streaming(stream, user, on_piece, api_only=api_only),
+                         deadline=deadline, reader=True, reader_external=external_fallback_enabled)
 
     def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
                                     validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
@@ -661,6 +749,12 @@ class FailoverChat:
 #: 호출 상한을 세는 장치를 만드는 함수 — **조립 루트(`composition.py`)가 꽂는다**. 인프라는 도메인의 `CallBudget` 을 모르기 때문이다(계층 규칙).
 #: 꽂히지 않았으면(스크립트 · 좁은 시험) 상한 없이 부르고 경고를 남긴다.
 _budget_provider: Callable[[Any], Callable[[], bool]] | None = None
+_reader_budget_provider: Callable[[Any], Callable[[], bool]] | None = None
+
+
+def register_reader_budget_provider(provider: Callable[[Any], Callable[[], bool]] | None) -> None:
+    global _reader_budget_provider
+    _reader_budget_provider = provider
 
 
 def register_budget_provider(provider: Callable[[Any], Callable[[], bool]] | None) -> None:
@@ -760,7 +854,8 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     if key:
         api = _Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
                        breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock),
-                       is_api=True, timeout=api_timeout, budget=gate)
+                       is_api=True, timeout=api_timeout, budget=gate,
+                       reader_budget=_reader_budget_provider(settings) if _reader_budget_provider else None)
         backends = [api] + backends if api_first else backends + [api]
     else:
         log.warning("llm_failover server API key absent — preserving final internal model recovery")

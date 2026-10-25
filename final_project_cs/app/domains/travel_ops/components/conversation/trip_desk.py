@@ -386,7 +386,7 @@ class TripDesk:
         if not callable(getattr(chat, "structured", None)) or config["mode"] != "on":
             return None
         return lambda text, today: agent_read.read(text, text.splitlines(), chat, today=today, num_predict=config["num_predict"],
-                                                   chunk_chars=config["chunk_chars"])
+                                                   chunk_chars=config["chunk_chars"], purpose="chat_add")
 
     def edit(self, *, trip_id: UUID, base_version: int, decision: Any, now: datetime, message: str | None = None,
              request_id: str | None = None) -> dict[str, Any]:

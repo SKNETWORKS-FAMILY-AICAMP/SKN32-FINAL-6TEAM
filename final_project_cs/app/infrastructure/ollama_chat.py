@@ -76,6 +76,11 @@ class OllamaChat:
         self._post = transport or (lambda url, payload: httpx.post(url, json=payload,
                                                                   timeout=httpx.Timeout(self.timeout, connect=min(5.0, self.timeout))))
 
+    @property
+    def reader_provenance(self) -> dict[str, str]:
+        """Identity of this configured local reader, without a provider call."""
+        return {"path": "local", "backend": "ollama", "model": self.model}
+
     def _options(self, base: dict[str, Any]) -> dict[str, Any]:
         return {**base, "num_ctx": self.num_ctx} if self.num_ctx > 0 else base
 
@@ -164,7 +169,7 @@ class OllamaChat:
 
     def _stream(self, system: str, user: str, fmt: Any, max_tokens: int, *, on_piece: Callable[[str], None] | None,
                 first_wait: float, stall: float, max_seconds: float) -> dict[str, Any]:
-        from app.infrastructure.model_stream import collect
+        from app.infrastructure.model_stream import collect, StreamLifetime
 
         options: dict[str, Any] = {"temperature": 0}
         if max_tokens > 0:
@@ -174,16 +179,17 @@ class OllamaChat:
                                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
-        held: dict[str, Any] = {}
+        lifetime = StreamLifetime()
 
         def pieces():
             try:
                 with httpx.stream("POST", f"{self.base_url}/api/chat", json=payload,
                                   timeout=httpx.Timeout(max_seconds, connect=min(5.0, max_seconds))) as response:
-                    held["response"] = response
+                    if not lifetime.acquire(response):
+                        return
                     if response.status_code != 200:
                         raise OllamaError(f"Ollama HTTP {response.status_code}: {response.read()[:160]!r}")
-                    for line in response.iter_lines():
+                    for line in lifetime.iterate(response.iter_lines()):
                         if not line:
                             continue
                         part = json.loads(line)
@@ -193,12 +199,7 @@ class OllamaChat:
             except httpx.HTTPError as exc:
                 raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
 
-        def close() -> None:
-            response = held.get("response")
-            if response is not None:
-                response.close()
-
-        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, close=close).strip()
+        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, lifetime=lifetime).strip()
         if not text:
             raise OllamaError("Ollama 가 빈 답을 냈다")
         try:

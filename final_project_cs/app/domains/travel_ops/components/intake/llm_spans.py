@@ -137,6 +137,7 @@ def output_budget(lines: int, chars: int, settings: dict[str, Any] | None) -> in
 
 def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime | None = None,
                 stream: dict[str, Any] | None = None, on_progress: Callable[[dict[str, Any]], None] | None = None,
+                external_fallback_enabled: bool = False,
                 clock: Callable[[], float] = time.monotonic) -> tuple[list[Claim], list[SpanItem], dict[str, Any]]:
     """(claims, 항목, 보고). ★모델이 가리킨 조각 중 원문에 그대로 있는 것만 받는다.
 
@@ -157,20 +158,28 @@ def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime
     if not unread or chat is None:
         return [], [], report
     user = "\n".join(f"{at}: {lines[n - 1]}" for at, n in enumerate(unread, start=1))
-    streamer = getattr(chat, "json_stream", None) if stream else None
+    # ★`[2026-10-26 L03]` reader 정책 wrapper(`reader_json` 을 가진 넘김 장치)는 reader 전용 입구(`reader_json_stream` · `reader_json`)로만 부른다
+    policy_wrapper = callable(getattr(chat, "reader_json", None))
+    streamer = getattr(chat, "reader_json_stream" if policy_wrapper else "json_stream", None) if stream else None
     progress: _Progress | None = None
     _clear_path()
     started = clock()
     try:
+        from .agent_read import validate_reader
+        validate_reader(chat)
+        if policy_wrapper and stream and not callable(streamer):
+            raise RuntimeError("reader_stream_entry_missing")
+        reader_json = getattr(chat, "reader_json", None)
+        policy = {"external_fallback_enabled": external_fallback_enabled} if callable(reader_json) else {}
         if callable(streamer):
             progress = _Progress(lines, unread, on_progress, every=float(stream["progress_seconds"]), clock=clock)
             progress.emit()
             budget = output_budget(len(unread), sum(len(lines[n - 1]) for n in unread), stream)
             raw = streamer(SYSTEM, user, on_piece=progress.piece, first_wait=float(stream["first_token_seconds"]),
-                           stall=float(stream["stall_seconds"]), max_seconds=float(stream["max_seconds"]), max_tokens=budget)
+                           stall=float(stream["stall_seconds"]), max_seconds=float(stream["max_seconds"]), max_tokens=budget, **policy)
             report["output_tokens"] = budget
         else:
-            raw = chat.json(SYSTEM, user)
+            raw = reader_json(SYSTEM, user, **policy) if callable(reader_json) else chat.json(SYSTEM, user)
     except Exception as exc:                             # noqa: BLE001 — 숨기지 않고 부르는 쪽에 올린다(접수 「읽기 실패」)
         reasons = (_call_path() or {}).get("reasons")
         raise ReadingFailed(f"{type(exc).__name__}: {exc}"[:200] + (f" · 경로 {reasons}" if reasons else "")) from exc

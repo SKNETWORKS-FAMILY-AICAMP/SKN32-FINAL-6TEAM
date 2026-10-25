@@ -333,6 +333,8 @@ travel:
   intake_reader:
     mode: "on"
     num_predict: 3072
+    # Reader raw free text is not guaranteed PII-free; explicit review required to enable.
+    external_fallback_enabled: false
     chunk_chars: 1800
     #   prefill: 읽은 직후 빈칸을 담당(식당 팀 · 활동 팀 · 이동 판정 · 계획 에이전트)에게 보내 맞춰 본 제안만 「우리가 채움」으로 싣는다(`intake/prefill.py`).
     #   고정 · 예약 일정은 건드리지 않는다. 고객만 아는 값은 질문으로 남긴다. mode 가 on 일 때만 돈다.
