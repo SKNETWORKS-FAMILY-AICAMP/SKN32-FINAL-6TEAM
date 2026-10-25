@@ -265,8 +265,8 @@ class EditPlan:
     added_ids: list[UUID] = field(default_factory=list)
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    #: 지난 때를 새로 만든 것(제목) — 하나라도 있으면 쓰지 않는다. `[2026-10-26 사용자 확정]` 새로 넣거나 바꾸는 날짜 · 시각은 지금 이후만:
-    #:  지금 이전에 시작하는 새 일정 · 지금 이전으로 옮긴 시작이나 끝 · 이미 끝난 일정의 날짜 · 시각 변경. 지난 일정의 이름 등 수정과 삭제는 넣지 않는다
+    #: 지난 때를 새로 만들거나 지난 일정을 고친 것(제목) — 하나라도 있으면 쓰지 않는다. `[2026-10-26 사용자 확정]` 새로 넣거나 바꾸는 날짜 · 시각은 지금 이후만:
+    #:  지금 이전에 시작하는 새 일정 · 지금 이전으로 옮긴 시작이나 끝. `[2026-10-26 사용자 확정 — 삭제만]` 이미 끝난 일정은 무엇이든 고치면(이름 포함) 넣는다. 삭제는 넣지 않는다
     past: list[str] = field(default_factory=list)
     #: `[2026-10-26 사용자 확정]` 진행 중이거나 앞으로 올 일정이 있었는데 새 판에 하나도 안 남는다(마지막 하나를 빼거나 지난 때로 옮겼다) — 쓰지 않는다
     no_upcoming: bool = False
@@ -376,7 +376,10 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             replaced.add(origin.item_id)
             plan.changed.append(title if title == origin.title else f"{origin.title} → {title}")
             plan.changed_ids.append(item.item_id)
-            if _moved_into_past(origin, item, row, now):
+            if _end(origin) <= now:
+                # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 기록이다 — 이름 · 장소 · 날짜 · 시각 · 고정 무엇이든 고치지 않는다(뺄 수만 있다). 원래 이름으로 알린다
+                plan.past.append(origin.title)
+            elif _moved_into_past(origin, item, row, now):
                 plan.past.append(title)
         else:
             plan.added.append(title)
@@ -424,14 +427,12 @@ def _upcoming(items: list[Item], now: datetime) -> bool:
 
 
 def _moved_into_past(origin: Item, item: Item, row: dict[str, Any], now: datetime) -> bool:
-    """`[2026-10-26 사용자 확정]` 바뀐 일정이 지난 때를 새로 만들었나 — 이미 끝난 일정의 날짜 · 시각을 바꿨거나, 시작을 지금 이전으로 · 끝을 지금 이전으로 바꿨다.
-    날짜 · 시각을 그대로 두고 이름 · 장소만 고친 것은 지난 일정이어도 허용한다. 끝 없이 등록해 확인 화면이 채운 끝(`ends_at` 값 줄 없음)은 바꾼 것이 아니다(`_same`)."""
+    """`[2026-10-26 사용자 확정]` 진행 중이거나 앞으로 올 일정을 고친 것이 지난 때를 새로 만들었나 — 시작을 지금 이전으로 · 끝을 지금 이전으로 바꿨다.
+    이미 끝난 일정은 여기 오기 전에 막는다(`plan_edit` — 삭제만). 끝 없이 등록해 확인 화면이 채운 끝(`ends_at` 값 줄 없음)은 바꾼 것이 아니다(`_same`)."""
     start_moved = item.starts_at != origin.starts_at
     end_moved = item.ends_at != origin.ends_at and not (origin.ends_at is None and "ends_at" not in row["claims"])
     if not (start_moved or end_moved):
         return False
-    if _end(origin) <= now:
-        return True
     return (start_moved and item.starts_at < _minute(now)) or (end_moved and _end(item) <= now)
 
 

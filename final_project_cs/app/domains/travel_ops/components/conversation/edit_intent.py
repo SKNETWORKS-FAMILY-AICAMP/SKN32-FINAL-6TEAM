@@ -172,7 +172,10 @@ def time_ops(decision, *, items, now: datetime):
     if item.kind not in {"activity", "dining"} or item.booking_id or item.locked:
         raise EditRefused("locked_item", "예약·고정된 일정이라 시간을 바꾸지 않았어요.")
     if (item.ends_at or item.starts_at) <= now:
-        raise EditRefused("item_in_past", "이미 끝난 일정이라 시간을 바꾸지 않았어요.")
+        # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 기록이다 — 다시 하려면 새로 추가한다
+        from .chat_edit import past_item_refusal
+
+        raise past_item_refusal(item)
     if boundary == "start":
         from .chat_edit import _day_of, _inside_trip, moved_to
 

@@ -9,6 +9,7 @@ domain: travel
 # guguroute wiki
 
 2026-10-26 [날짜 읽기 LLM 판단 전환 인계](handoff/2026-10-26_llm-date-reading.md) — `date_form` · `year_quote` 스키마 · 프롬프트, 정규식 연도 판정 제거; 로컬 E4B 실측 · Codex 논의, 커밋만.
+2026-10-26 [지난 일정은 삭제만 인계](handoff/2026-10-26_past-edit-delete-only.md) — 서버·웹·채팅 일관, Codex 2회 검토, 관련 320/320 · vitest 1183/1183; 커밋만.
 
 2026-10-26 [과거 날짜 가드레일 확장 인계](handoff/2026-10-26_past-date-guard-extension.md) — 연도 없는 날짜·채팅 되묻기·추가/수정 지금 이후 규칙, 관련 303/303; Codex 검토 미수행(미로그인), 커밋만.
 

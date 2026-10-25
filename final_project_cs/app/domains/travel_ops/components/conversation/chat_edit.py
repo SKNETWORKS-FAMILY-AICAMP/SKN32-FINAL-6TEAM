@@ -65,7 +65,9 @@ def _refusal(code: str, message: str) -> str:
     if code == "place_not_found":
         return f"말씀하신 곳을 장소 목록 · 관광 정보 · 지도에서 하나로 찾지 못해 일정은 바꾸지 않았어요({message}). 장소 이름을 조금 더 정확히 알려 주세요."
     if code == "item_in_past":
-        return f"지난 때로는 일정을 넣거나 옮길 수 없어 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}."
+        # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 고치지 않고(이름 포함) 뺄 수만 있다 · 새로 넣거나 옮기는 날짜 · 시각은 지금 이후만
+        return (f"지난 일정은 고칠 수 없고 새로 넣거나 옮기는 날짜·시각은 지금 이후만 돼서 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}. "
+                "지난 일정을 다시 하려면 새 일정으로 추가해 주세요.")
     if code == "no_upcoming_items":
         return "진행 중이거나 앞으로 남은 일정이 하나는 있어야 해서 일정은 바꾸지 않았어요. 마지막 남은 일정은 뺄 수 없어요."
     if code == "itinerary_infeasible":
@@ -194,9 +196,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 continue
             if op.item_id not in where:
                 item = by_id.get(op.item_id)
-                title = item.title if item else "그 일정"
                 if str(op.item_id) in frozen:
-                    raise EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
+                    raise frozen_refusal(item, op.kind, now=now)
                 raise EditRefused("unknown_item", "바꿀 일정을 지금 일정에서 하나로 찾지 못해 일정은 바꾸지 않았어요. 일정 이름을 알려 주세요.")
             if reopen._policy_locked(by_id[op.item_id]):
                 # `[2026-10-15 ST4F-490]` 숙소 · 항공 · 업체 예약 일정은 수정 접수에 **잠금**으로 들어온다(웹 「일정 수정」에서 풀어 고친다). 채팅은 전처럼 바꾸지 않고
@@ -419,6 +420,28 @@ def _same_day(day: str, start: str, end: str | None, title: str) -> None:
         raise EditRefused("crosses_midnight", f"「{title}」이(가) 자정을 넘기게 돼 채팅으로는 옮기지 않았어요. 일정 수정 화면에서 날짜와 시각을 함께 고쳐 주세요.")
 
 
+def _over(item: Any, now: datetime) -> bool:
+    """끝난 일정인가 — 끝 ≤ 지금(끝이 없으면 시작). 서버 「완료」(`reopen._end`) · 수정 접수의 고정 이유 `past` 와 같은 판단."""
+    return (item.ends_at or item.starts_at) <= now
+
+
+def past_item_refusal(item: Any) -> EditRefused:
+    """`[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 기록이다 — 이름 · 장소 · 시각 · 순서 · 고정 무엇이든 고치지 않는다. 다시 하려면 새 일정으로 추가한다."""
+    return EditRefused("item_in_past", f"「{item.title}」은(는) 이미 지난 일정이라 고치지 않았어요. 지난 일정은 기록으로 두고 뺄 수만 있어요 — "
+                                       "다시 하려면 새 일정으로 추가해 주세요.")
+
+
+def frozen_refusal(item: Any, op_kind: str, *, now: datetime) -> EditRefused:
+    """수정 접수에 들어오지 않은(고정) 일정을 채팅이 건드렸을 때의 답. 지난 일정이면 그렇게 말한다 — 고치기는 `past_item_refusal`,
+    빼기는 아직 길이 없다(수정 접수가 지난 일정을 싣지 않는다 — 2026-10-26 기록의 남은 일). 지나지 않은 고정(예약 · 자정 넘김 등)은 전과 같다."""
+    if item is not None and _over(item, now):
+        if op_kind == "remove":
+            return EditRefused("item_in_past", f"「{item.title}」은(는) 이미 지난 일정이에요. 지난 일정 빼기는 아직 채팅으로 하지 못해 일정은 바꾸지 않았어요.")
+        return past_item_refusal(item)
+    title = item.title if item is not None else "그 일정"
+    return EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
+
+
 #: `[2026-10-26 사용자 확정]` 지난 날짜 되묻기 선택지 제목 — 화면은 기존 채팅 선택지(`choices` · `choices_title`)로 그린다
 PAST_DATE_TITLE = "혹시 오타 아닌가요?"
 
@@ -518,6 +541,11 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
     other = by_alias.get(str(raw.get("anchor_item") or "none"))
     name = str(raw.get("destination_text") or "").strip()[:80]
 
+    # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 고치지 않는다(빼기 · 그 뒤에 넣기 · 그 뒤 일정 옮기기는 지난 일정을 고치는 것이 아니다)
+    if action in ("replace_named", "lock_item", "unlock_item", "swap_order"):
+        for target in (item, other if action == "swap_order" else None):
+            if target is not None and _over(target, now):
+                raise past_item_refusal(target)
     if action == "change_time":
         from .edit_intent import time_ops
 
@@ -534,6 +562,9 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                        if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now and not i.booking_id]
         if not targets:
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
+        for target in targets:
+            if _over(target, now):
+                raise past_item_refusal(target)            # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 다른 때로 옮기지 않는다 — 새로 추가한다
         ops = []
         meal = None
         if not decision.minutes and raw.get("anchor_kind") in (None, "none", "time"):

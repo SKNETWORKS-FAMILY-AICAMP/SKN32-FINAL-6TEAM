@@ -2,7 +2,7 @@
 """일정 추가 · 수정의 지난 때 규칙(`reopen.plan_edit` — 웹 「일정 수정」과 채팅 고치기가 같은 「완료」를 쓴다). `[2026-10-26 사용자 확정]` DB 없이 돈다.
 
 1. 새로 넣거나 바꾸는 날짜 · 시각은 지금 이후만 — 지난 때에 새 일정을 만들거나(끝이 앞으로여도) 지난 때로 옮기면 `past`
-2. 이미 지난 일정은 날짜 · 시각을 바꾸지 않는 수정(이름 등)과 삭제를 허용한다 — 날짜 · 시각을 바꾸면 `past`
+2. 이미 지난 일정은 삭제만 허용한다 — `[2026-10-26 사용자 확정 — 삭제만]` 이름 등 무엇이든 고치면 `past`(앞 규칙 「이름 수정 허용」을 대체, `test_past_stop_delete_only.py`)
 3. 진행 중이거나 앞으로 올 일정이 하나는 남아야 한다 — 마지막 하나를 빼거나 지난 때로 옮기면 `no_upcoming`
 """
 from __future__ import annotations
@@ -77,11 +77,11 @@ def test_adding_a_stop_from_now_on_is_allowed():
     assert plan.past == [] and plan.added == ["덕수궁"]
 
 
-def test_a_past_stop_may_be_renamed_and_removed_but_not_moved():
+def test_a_past_stop_may_be_removed_but_not_renamed_or_moved():
     base = _trip()
     rows, origin_of = _all_rows(base)
     renamed = _plan(base, [_row(base[0], 0, title="창덕궁 후원"), *rows[1:]], origin_of)
-    assert renamed.past == [] and renamed.changed == ["창덕궁 → 창덕궁 후원"]
+    assert renamed.past == ["창덕궁"]                                    # `[2026-10-26 사용자 확정 — 삭제만]` 이름도 고치지 않는다
     removed = _plan(base, rows[1:], origin_of)
     assert removed.past == [] and removed.removed == ["창덕궁"]
     moved = _plan(base, [_row(base[0], 0, date="2026-10-28", start="09:00", end="10:00"), *rows[1:]], origin_of)
