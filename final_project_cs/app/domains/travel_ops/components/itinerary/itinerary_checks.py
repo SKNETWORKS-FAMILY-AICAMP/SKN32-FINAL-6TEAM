@@ -102,6 +102,15 @@ def _seoul(moment: datetime) -> datetime:
 seoul = _seoul
 
 
+def all_dates_before_today(spans: Iterable[tuple[datetime | None, datetime | None]], *,
+                           now: datetime | None = None) -> bool:
+    """신규 등록만의 날짜 검사. 미확정/빈 일정은 과거라고 추정하지 않는다."""
+    spans = list(spans)
+    today = seoul(now or datetime.now(KST)).date()
+    return bool(spans) and all(start is not None and seoul(start).date() < today
+                               and seoul(end or start).date() < today for start, end in spans)
+
+
 def seoul_part(part: Part) -> Part:
     """판정에 넣기 전에 **시각을 모두 서울 시각(시간대 있는 값)으로** 맞춘다. `[2026-10-03 적대 검토]`
 
