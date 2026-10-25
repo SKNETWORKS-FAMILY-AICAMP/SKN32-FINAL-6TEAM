@@ -15,7 +15,7 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Callable
@@ -43,6 +43,7 @@ class EditOp:
     item_kind: str | None = None     # 넣기: activity · dining
     reflow: bool = False             # 명시된 시각을 지키며 같은 날 뒤 일정을 맞춘다
     end_said: bool = False           # 넣기: 끝 시각을 고객이 말했나(아니면 `DEFAULT_STAY` 로 채운 값 — 못 찾음 카드에 미리 채우지 않는다)
+    kept: tuple[str, ...] = ()       # 범위 옮기기: 범위 안이지만 그대로 둔 일정(고정 · 예약 · 이미 시작) — 답에 보인다(`done_text`)
 
 
 class EditRefused(Exception):
@@ -473,10 +474,16 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
         query = decision.query if item is None else None
         if item is None and query is None and decision.minutes:
             query = _range_from_sentence(message, raw.get("at_day"), stops, now)
+        kept: list[Any] = []
         if item is None and query is not None:
             # 범위 안에서 **아직 안 지났고 예약이 묶이지 않은** 활동 · 식사만(지난 일정 · 예약 일정은 웹과 같이 못 옮기므로 빼고 나머지를 옮긴다)
-            targets = [i for i in matching(query, items=items, now=now)[0]
-                       if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now and not i.booking_id]
+            # ★`[2026-10-26 x600 6152ae77 · Codex 결정]` 이미 시작한 일정(과거 시작 금지)과 고객이 고정한 일정도 옮기지 않고 「그대로 둔 일정」으로 답에 보인다
+            ranged = [i for i in matching(query, items=items, now=now)[0]
+                      if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now]
+            targets = [i for i in ranged if not i.booking_id and not i.locked and i.starts_at > now]
+            kept = [i for i in ranged if i not in targets]
+            if not targets and kept:
+                raise EditRefused("range_kept", "그 범위의 일정은 이미 시작했거나 고정·예약된 일정뿐이라 옮기지 않았어요.")
         if not targets:
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
         ops = []
@@ -508,7 +515,16 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                 span = first.strftime("%m월 %d일") if first == last else f"{first.strftime('%m월 %d일')}~{last.strftime('%m월 %d일')}"
                 raise EditRefused("day_outside_trip", f"{new_day[5:7]}월 {new_day[8:10]}일은 이 여행에 없는 날이라 「{target.title}」은(는) 옮기지 않았어요. 여행은 {span}이에요.")
             _same_day(new_day, start, end, target.title)
+            if item is None and query is not None and decision.minutes:
+                # 범위를 같은 분만큼 옮길 때 — 날을 넘기거나 지난 시각이 되는 일정이 하나라도 있으면 모두 그대로 둔다(뒤 일정 옮기기와 같은 보호)
+                if new_day != target.starts_at.astimezone(KST).date().isoformat():
+                    raise EditRefused("crosses_midnight", f"「{target.title}」이(가) 자정을 넘게 돼 일정은 바꾸지 않았어요.")
+                if datetime.fromisoformat(f"{new_day}T{start}").replace(tzinfo=KST) < now:
+                    raise EditRefused("time_in_past", f"「{target.title}」을(를) 이미 지난 시각으로 옮기게 돼 일정은 바꾸지 않았어요.")
             ops.append(EditOp("time", item_id=target.item_id, date=new_day, starts_at=start, ends_at=end))
+        if kept:
+            ops[0] = replace(ops[0], kept=tuple(f"{trip_facts._day_label(i.starts_at.astimezone(KST).date())} {_hm(i.starts_at)} {i.title}"
+                                                 f"({'고정' if i.locked else '예약' if i.booking_id else '이미 시작'})" for i in kept))
         what = (f"{targets[0].title} 시각 옮기기" if len(targets) == 1 else f"일정 {len(targets)}개 시각 옮기기")
         return ops, what
     if action == "remove_item":
@@ -626,6 +642,9 @@ def done_text(ops: list[EditOp], *, items_after: list[Any], plan: Any) -> str:
             "unlock": "고정을 풀었어요.", "place": "말씀하신 곳으로 바꿨어요.", "time": "시각을 옮겼어요."}[ops[0].kind]
     if plan.removed:
         lines += [f"· 뺀 일정: {t}" for t in plan.removed]
+    kept = [k for op in ops for k in op.kept]
+    if kept:
+        lines += [f"· 그대로 둔 일정: {k}" for k in kept]
     tail = "변경한 일정과 확인 상태는 계획서에 반영했어요. 마음에 안 드시면 「되돌려 줘」라고 말씀해 주세요."
     return "\n".join([head, *lines, tail])
 

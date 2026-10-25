@@ -376,6 +376,11 @@ def time_ops(decision, *, items, now: datetime):
     stops = _stops(items)
     by_alias = {f"i{n}": i for n, i in enumerate(stops, 1)}
     item = (by_alias.get(decision.raw.get("anchor_item")) if spec.get("scope") == "following" else decision.item)
+    if (item is None and boundary == "shift" and spec.get("scope") == "following" and decision.item is None
+            and decision.raw.get("anchor_item") in (None, "none") and getattr(decision, "query", None) is not None):
+        # ★`[2026-10-26 x600 6152ae77]` 기준 일정 없이 following 을 냈지만 검증된 범위(query)가 있다 — 「일정 전부다 1시간씩 미뤄줘」.
+        #   기준을 되묻지 않고 범위 이동(`chat_edit.ops_for` 의 query 경로)으로 보낸다. 범위가 없으면 아래에서 그대로 되묻는다(칸 구조만 본다)
+        return None
     if item is None:
         raise EditRefused("need_target", "머무는 시각을 바꿀 기준 일정을 알려 주세요.")
     # decision.minutes is source-validated by decision_unit (not raw model minutes).
