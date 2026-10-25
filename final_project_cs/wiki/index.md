@@ -10,6 +10,8 @@ domain: travel
 
 # cs 프로젝트 구현 wiki
 
+2026-10-26 [지난 일정은 삭제만](records/reports/2026-10-26_past-edit-delete-only.md) — 끝난 일정은 이름 포함 수정 불가 · 삭제만(서버 `plan_edit` · 웹 `pastEdit` · 채팅); 이미 지난 고정 일정 삭제 경로는 남음.
+
 2026-10-26 [과거 날짜 가드레일 확장](records/reports/2026-10-26_past-date-guard-extension.md) — 모델 연도 없는 날짜 다가오는 날·채팅 「오타 아닌가요?」 choices·`plan_edit` 지금 이후/`no_upcoming_items`; 지난 고정 일정 이름·삭제 경로는 남음.
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.

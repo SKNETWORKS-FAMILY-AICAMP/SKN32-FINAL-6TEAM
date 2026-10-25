@@ -7,7 +7,7 @@ import { draftProblem, pastEdit, type ItemDraft } from "./model";
 /**
  * `[2026-10-26 사용자 확정]` 과거 날짜 가드레일 — 화면 쪽.
  * 1. 계획서 전부가 과거면 서버 검사(`review.ready=false`)대로 등록 버튼을 열지 않는다(확인 단계에 머문다)
- * 2. 등록한 여행을 고칠 때 새로 넣거나 바꾸는 날짜·시각은 지금 이후만 — 지난 일정은 날짜·시각을 그대로 두고 이름만 고칠 수 있다. 최종 판정은 서버
+ * 2. 등록한 여행을 고칠 때 새로 넣거나 바꾸는 날짜·시각은 지금 이후만. `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 무엇도(이름 포함) 고칠 수 없고 뺄 수만 있다. 최종 판정은 서버
  */
 const NOW = { date: "2026-10-26", minute: 12 * 60 };
 const draft = (patch: Partial<ItemDraft> = {}): ItemDraft => ({ title: "경복궁", date: "2026-10-26", start: "13:00", end: "14:00", place: "경복궁", noPlace: false, ...patch });
@@ -35,10 +35,26 @@ describe("edit dates and times only from now on", () => {
     expect(pastEdit(draft({ date: "2026-10-25" }), null, NOW)).toBe(true);
   });
 
-  it("lets a past stop keep its date and time while its name changes, but not move", () => {
+  it("refuses any change to a past stop — its name, place or 「no place」 as well as its date and time", () => {
     const over = draft({ start: "09:00", end: "10:00" });
-    expect(pastEdit(draft({ ...over, title: "경복궁 야간" }), over, NOW)).toBe(false);
+    expect(pastEdit(over, over, NOW)).toBe(false);
+    expect(pastEdit({ ...over, title: "경복궁 야간" }, over, NOW)).toBe(true);
+    expect(pastEdit({ ...over, place: "창경궁" }, over, NOW)).toBe(true);
+    expect(pastEdit({ ...over, noPlace: true }, over, NOW)).toBe(true);
     expect(pastEdit({ ...over, date: "2026-10-28" }, over, NOW)).toBe(true);
+  });
+
+  it("reads a stay's check-out day: running until check-out, a record after it", () => {
+    const staying = { ...draft({ title: "한옥스테이", date: "2026-10-25", start: "15:00", end: "16:00" }), endDate: "2026-10-26" };
+    expect(pastEdit({ ...staying, title: "한옥스테이 별관" }, staying, NOW)).toBe(false);
+    const left = { ...staying, end: "11:00" };
+    expect(pastEdit({ ...left, title: "한옥스테이 별관" }, left, NOW)).toBe(true);
+    expect(draftProblem({ ...draft(staying), title: "한옥스테이 별관" }, { original: staying, now: NOW })).toBe(null);
+  });
+
+  it("still lets a running stop be renamed", () => {
+    const running = draft({ start: "11:00", end: "13:00" });
+    expect(pastEdit({ ...running, title: "경복궁 야간" }, running, NOW)).toBe(false);
   });
 
   it("lets a running stop stay longer but not restart before now or end before now", () => {
@@ -57,7 +73,9 @@ describe("edit dates and times only from now on", () => {
 
 describe("server refusals for past edits", () => {
   it("has its own sentence for item_in_past and no_upcoming_items on the English screen", () => {
-    expect(refusalSentence("item_in_past", "지난 때로는 넣거나 옮길 수 없어요: 덕수궁", undefined, "en")).toBe("Stops can't be added at or moved to a time that has passed.");
+    expect(refusalSentence("item_in_past", "지난 일정은 고칠 수 없어요(뺄 수만 있어요) · 새로 넣거나 옮기는 날짜·시각은 지금 이후만 돼요: 덕수궁", undefined, "en"))
+      .toBe("A past stop can't be changed, only removed. Stops can only be added or moved to a time from now on.");
+    expect(refusalSentence("item_in_past", undefined, undefined, "ko")).toContain("지난 일정은 고칠 수 없고 뺄 수만 있어요");
     expect(refusalSentence("no_upcoming_items", "진행 중이거나 앞으로 남은 일정이 하나는 있어야 해요 — 마지막 남은 일정은 뺄 수 없어요", undefined, "en"))
       .toBe("At least one current or upcoming stop must stay. The last one can't be removed.");
   });
