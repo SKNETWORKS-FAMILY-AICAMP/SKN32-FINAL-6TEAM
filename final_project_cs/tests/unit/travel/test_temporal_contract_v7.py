@@ -74,12 +74,44 @@ def test_relative_range_generation_and_exact_targets(case,message,kind,anchor,cl
         assert o.date=='2030-01-02'
 
 @pytest.mark.parametrize('protection',['locked','booking_id'])
-def test_relative_range_refuses_all_on_protected_target(protection):
+def test_relative_range_keeps_protected_target_and_moves_the_rest(protection):
+    # contract_correction 2026-10-26 integ-rm9 (Codex): was `locked_item` all-or-nothing refusal (L05).
+    # The range policy is now one place (`chat_edit.shift_range`): a protected stop stays and is shown, the rest move.
     source=items();setattr(source[1],protection,True if protection=='locked' else uuid4())
+    before={i.item_id:(i.starts_at,i.ends_at) for i in source}
     q=dict(day='d1',period='all',kind='all',position='all');r=raw(scope='range',target='none',query=q,minutes=60)
+    ops,what=ops_for(du.Decision('change_time',None,None,'none',60,'',raw=r,query=q),items=source,now=NOW)
+    assert [o.item_id for o in ops]==[source[0].item_id,source[2].item_id] and what=='일정 2개 시각 옮기기'
+    assert [(o.starts_at,o.ends_at) for o in ops]==[('11:00','12:00'),('16:00','17:30')]
+    assert not any(o.reflow for o in ops)
+    label='고정' if protection=='locked' else '예약'
+    assert [k for o in ops for k in o.kept]==[f'1월 2일(수) 12:00 인사동({label})']
+    assert {i.item_id:(i.starts_at,i.ends_at) for i in source}==before   # ops only, items untouched
+
+@pytest.mark.parametrize('minutes,code',[(9*60,'crosses_midnight'),(-25*60,'crosses_midnight')])
+def test_relative_range_still_refuses_all_when_one_moved_stop_crosses_midnight(minutes,code):
+    source=items();q=dict(day='d1',period='all',kind='all',position='all');r=raw(scope='range',target='none',query=q,minutes=minutes)
     with pytest.raises(EditRefused) as e:
-        ops_for(du.Decision('change_time',None,None,'none',60,'',raw=r,query=q),items=source,now=NOW)
-    assert e.value.code=='locked_item'
+        ops_for(du.Decision('change_time',None,None,'none',minutes,'',raw=r,query=q),items=source,now=NOW)
+    assert e.value.code==code
+
+def test_relative_range_before_anchor_excludes_anchor_from_targets_and_kept():
+    source=items();q=dict(day='d1',period='all',kind='all',position='all')
+    r=raw('인사동 이전 일정만 한 시간 당겨줘. 인사동은 그대로야',scope='range',target='none',kind='item',anchor='i2',relation='before',query=q,minutes=-60)
+    ops,_=ops_for(du.Decision('change_time',None,None,'none',-60,'',raw=r,query=q),items=source,now=NOW)
+    assert [o.item_id for o in ops]==[source[0].item_id] and not [k for o in ops for k in o.kept]
+
+def test_scope_range_and_following_query_path_share_one_policy_on_a_started_trip():
+    # 「일정 전부다 1시간씩 미뤄줘」 on a trip in progress: ended stop dropped, started stop kept, the rest move — same on both paths.
+    source=items();now=datetime(2030,1,2,12,30,tzinfo=KST)
+    q=dict(day='all',period='all',kind='all',position='all')
+    rng=raw('일정 전부다 1시간씩 미뤄줘',scope='range',target='none',query=q,minutes=60)
+    fol=raw('일정 전부다 1시간씩 미뤄줘',scope='following',target='none',query=q,minutes=60)
+    got=[ops_for(du.Decision('change_time',None,None,'none',60,'',raw=r,query=q),items=source,now=now,message='일정 전부다 1시간씩 미뤄줘') for r in (rng,fol)]
+    assert got[0]==got[1]
+    ops,_=got[0]
+    assert [o.item_id for o in ops]==[source[2].item_id,source[3].item_id]
+    assert [k for o in ops for k in o.kept]==['1월 2일(수) 12:00 인사동(이미 시작)']
 
 @pytest.mark.parametrize('wrong', ['day','item','period','position'])
 def test_generated_range_cannot_invent_unquoted_date_or_visit_or_extra_filter(wrong):

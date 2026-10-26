@@ -418,6 +418,46 @@ def _same_day(day: str, start: str, end: str | None, title: str) -> None:
         raise EditRefused("crosses_midnight", f"「{title}」이(가) 자정을 넘기게 돼 채팅으로는 옮기지 않았어요. 일정 수정 화면에서 날짜와 시각을 함께 고쳐 주세요.")
 
 
+def split_range(candidates: list[Any], now: datetime) -> tuple[list[Any], list[Any]]:
+    """범위 옮기기의 대상 정책 **한 곳**(`edit_intent.time_ops` scope=range 와 `ops_for` query 경로가 함께 쓴다) → (옮길 일정, 그대로 둔 일정).
+
+    ★`[2026-10-26 integ-rm9 · Codex 결정]` 끝난 일정과 활동 · 식사가 아닌 항목(숙소 · 이동)은 범위에서 뺀다(표시하지 않는다).
+      고객 고정 · 예약 · 이미 시작한 활동 · 식사는 옮기지 않고 「그대로 둔 일정」이다. 나머지를 옮긴다."""
+    ranged = [i for i in candidates if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now]
+    targets = [i for i in ranged if not i.booking_id and not i.locked and i.starts_at > now]
+    return targets, [i for i in ranged if i not in targets]
+
+
+def _kept_label(item: Any) -> str:
+    from app.domains.travel_ops.components.conversation import trip_facts
+
+    why = "고정" if item.locked else "예약" if item.booking_id else "이미 시작"
+    return f"{trip_facts._day_label(item.starts_at.astimezone(KST).date())} {_hm(item.starts_at)} {item.title}({why})"
+
+
+def shift_range(candidates: list[Any], minutes: int, now: datetime) -> tuple[list[EditOp], str]:
+    """범위를 같은 분만큼 옮긴다(`split_range` 로 고른 일정만). 하나라도 날을 넘기거나 지난 시각이 되면 전부 그대로 둔다(`crosses_midnight` · `time_in_past`).
+    옮길 일정 없이 그대로 둔 일정만 있으면 `range_kept`, 둘 다 없으면 `need_target`. 바뀐 시각 밖의 일정은 맞추지 않는다(reflow 없음 — 겹치면 중앙 저장기가 전부 거절)."""
+    targets, kept = split_range(candidates, now)
+    if not targets:
+        if kept:
+            raise EditRefused("range_kept", "그 범위의 일정은 이미 시작했거나 고정·예약된 일정뿐이라 옮기지 않았어요.\n"
+                              + "\n".join(f"· 그대로 둔 일정: {_kept_label(i)}" for i in kept))
+        raise EditRefused("need_target", "말씀하신 범위에 옮길 일정이 없어요.")
+    ops = []
+    for target in targets:
+        day, begin, until = shifted(target, minutes)
+        if day != target.starts_at.astimezone(KST).date().isoformat():
+            raise EditRefused("crosses_midnight", f"「{target.title}」이(가) 자정을 넘게 돼 일정은 바꾸지 않았어요.")
+        _same_day(day, begin, until, target.title)
+        if datetime.fromisoformat(f"{day}T{begin}").replace(tzinfo=KST) < now:
+            raise EditRefused("time_in_past", f"「{target.title}」을(를) 이미 지난 시각으로 옮기게 돼 일정은 바꾸지 않았어요.")
+        ops.append(EditOp("time", item_id=target.item_id, date=day, starts_at=begin, ends_at=until))
+    if kept:
+        ops[0] = replace(ops[0], kept=tuple(_kept_label(i) for i in kept))
+    return ops, (f"{targets[0].title} 시각 옮기기" if len(targets) == 1 else f"일정 {len(targets)}개 시각 옮기기")
+
+
 _ALL = __import__("re").compile(r"전부|전체|모두|다\s*(?:미뤄|밀어|당겨|늦춰)|all\s+(?:of\s+)?(?:my|the)|everything", __import__("re").IGNORECASE)
 _PERIOD_WORDS = (("morning", __import__("re").compile(r"오전|아침")), ("afternoon", __import__("re").compile(r"오후")),
                  ("evening", __import__("re").compile(r"저녁|밤|evening|night", __import__("re").IGNORECASE)))
@@ -476,14 +516,15 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
             query = _range_from_sentence(message, raw.get("at_day"), stops, now)
         kept: list[Any] = []
         if item is None and query is not None:
-            # 범위 안에서 **아직 안 지났고 예약이 묶이지 않은** 활동 · 식사만(지난 일정 · 예약 일정은 웹과 같이 못 옮기므로 빼고 나머지를 옮긴다)
-            # ★`[2026-10-26 x600 6152ae77 · Codex 결정]` 이미 시작한 일정(과거 시작 금지)과 고객이 고정한 일정도 옮기지 않고 「그대로 둔 일정」으로 답에 보인다
-            ranged = [i for i in matching(query, items=items, now=now)[0]
-                      if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now]
-            targets = [i for i in ranged if not i.booking_id and not i.locked and i.starts_at > now]
-            kept = [i for i in ranged if i not in targets]
+            # ★`[2026-10-26 x600 6152ae77 · integ-rm9 Codex 결정]` 범위는 `split_range` 한 곳의 정책으로 고른다(scope=range 와 같다) —
+            #   끝난 일정 · 숙소 · 이동은 빼고, 고정 · 예약 · 이미 시작한 일정은 「그대로 둔 일정」으로 답에 보인다
+            ranged = matching(query, items=items, now=now)[0]
+            if decision.minutes:
+                return shift_range(ranged, decision.minutes, now)
+            targets, kept = split_range(ranged, now)
             if not targets and kept:
-                raise EditRefused("range_kept", "그 범위의 일정은 이미 시작했거나 고정·예약된 일정뿐이라 옮기지 않았어요.")
+                raise EditRefused("range_kept", "그 범위의 일정은 이미 시작했거나 고정·예약된 일정뿐이라 옮기지 않았어요.\n"
+                                  + "\n".join(f"· 그대로 둔 일정: {_kept_label(i)}" for i in kept))
         if not targets:
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
         ops = []
@@ -515,16 +556,9 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                 span = first.strftime("%m월 %d일") if first == last else f"{first.strftime('%m월 %d일')}~{last.strftime('%m월 %d일')}"
                 raise EditRefused("day_outside_trip", f"{new_day[5:7]}월 {new_day[8:10]}일은 이 여행에 없는 날이라 「{target.title}」은(는) 옮기지 않았어요. 여행은 {span}이에요.")
             _same_day(new_day, start, end, target.title)
-            if item is None and query is not None and decision.minutes:
-                # 범위를 같은 분만큼 옮길 때 — 날을 넘기거나 지난 시각이 되는 일정이 하나라도 있으면 모두 그대로 둔다(뒤 일정 옮기기와 같은 보호)
-                if new_day != target.starts_at.astimezone(KST).date().isoformat():
-                    raise EditRefused("crosses_midnight", f"「{target.title}」이(가) 자정을 넘게 돼 일정은 바꾸지 않았어요.")
-                if datetime.fromisoformat(f"{new_day}T{start}").replace(tzinfo=KST) < now:
-                    raise EditRefused("time_in_past", f"「{target.title}」을(를) 이미 지난 시각으로 옮기게 돼 일정은 바꾸지 않았어요.")
             ops.append(EditOp("time", item_id=target.item_id, date=new_day, starts_at=start, ends_at=end))
         if kept:
-            ops[0] = replace(ops[0], kept=tuple(f"{trip_facts._day_label(i.starts_at.astimezone(KST).date())} {_hm(i.starts_at)} {i.title}"
-                                                 f"({'고정' if i.locked else '예약' if i.booking_id else '이미 시작'})" for i in kept))
+            ops[0] = replace(ops[0], kept=tuple(_kept_label(i) for i in kept))
         what = (f"{targets[0].title} 시각 옮기기" if len(targets) == 1 else f"일정 {len(targets)}개 시각 옮기기")
         return ops, what
     if action == "remove_item":

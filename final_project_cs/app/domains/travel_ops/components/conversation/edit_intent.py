@@ -353,22 +353,12 @@ def time_ops(decision, *, items, now: datetime):
             targets = [stop for stop in targets if (_hm(stop.starts_at) < clock if relation == "before" else _hm(stop.starts_at) >= clock)]
         elif anchor_kind != "none" or relation != "at":
             raise EditRefused("need_target", "옮길 일정의 범위를 알려 주세요.")
-        if not targets:
-            raise EditRefused("need_target", "말씀하신 범위에 옮길 일정이 없어요.")
-        ops = []
-        for stop in targets:
-            if stop.kind not in {"activity", "dining"} or stop.booking_id or stop.locked:
-                raise EditRefused("locked_item", "범위에 예약·고정된 항목이 있어 바꾸지 않았어요.")
-            if (stop.ends_at or stop.starts_at) <= now:
-                raise EditRefused("item_in_past", "범위에 이미 끝난 일정이 있어 바꾸지 않았어요.")
-            day, begin, until = shifted(stop, decision.minutes)
-            if day != stop.starts_at.astimezone(KST).date().isoformat():
-                raise EditRefused("crosses_midnight", "일정이 자정을 넘게 돼 바꾸지 않았어요.")
-            _same_day(day, begin, until, stop.title)
-            if datetime.fromisoformat(f"{day}T{begin}").replace(tzinfo=KST) < now:
-                raise EditRefused("time_in_past", "이미 지난 시각으로 옮길 수 없어 바꾸지 않았어요.")
-            ops.append(EditOp("time", item_id=stop.item_id, date=day, starts_at=begin, ends_at=until, reflow=True))
-        return ops, f"일정 {len(ops)}개 시각 옮기기"
+        # ★`[2026-10-26 integ-rm9 · Codex 결정]` 범위 정책은 `chat_edit.shift_range` 한 곳이다(기준 없는 following → query 경로와 같다):
+        #   끝난 일정 · 숙소 · 이동은 빼고, 고정 · 예약 · 이미 시작한 일정은 그대로 두고 답에 보이며 나머지를 옮긴다.
+        #   하나라도 자정을 넘거나 지난 시각이 되면 전부 그대로 둔다. 바뀐 시각 밖은 맞추지 않는다(reflow 없음)
+        from .chat_edit import shift_range
+
+        return shift_range(targets, decision.minutes, now)
     if boundary == "none" or (boundary == "shift" and spec.get("scope") != "following"):
         return None
     if decision.raw.get("stale_edit_goal"):
