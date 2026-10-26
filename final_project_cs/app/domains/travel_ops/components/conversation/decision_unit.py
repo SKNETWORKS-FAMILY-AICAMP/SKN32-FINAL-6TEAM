@@ -477,7 +477,11 @@ def _schema(stops: list[Stop], changes: list[Change], *, message: str | None = N
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
     if plain:
         # 유료 넘김 경로용 — 생성 문법(갈래 · 문장 인용 enum) 없이 칸 모양만(`_api_schema_kwargs`)
-        return schema
+        # ★`[2026-10-26 x600 40231a56]` 단 `time_edit` 은 실행할 수 있는 경계 · 범위 조합만(칸 안의 anyOf — 엄격 모드가 받는다).
+        #   두 칸을 따로 두면 유료 답이 `inconsistent temporal scope` 로 거절됐다(Case 72e29b8c). 로컬 문법(아래)은 바뀌지 않는다
+        from .edit_intent import paid_time_edit
+
+        return {**schema, "properties": {**schema["properties"], "time_edit": paid_time_edit(items)}}
     # Generate action before edit details. A read cannot activate a time mutation;
     # keep both full branches so Ollama's grammar need not implement if/then.
     from copy import deepcopy
@@ -640,6 +644,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         except ValueError as error:
             reason = str(error)
             evidence_failure = reason.replace(" ", "_") if reason in known else "unspecified"
+            # ★`[2026-10-26 x600 40231a56]` 넘김 장치가 이 코드(정해 둔 이름만)를 `llm_failover … failed` 로그 줄에 싣는다
+            error.log_code = evidence_failure
             raise
 
     try:

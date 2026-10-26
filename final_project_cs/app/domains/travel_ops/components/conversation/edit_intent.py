@@ -35,6 +35,37 @@ def schemas(aliases: list[str]) -> dict[str, Any]:
 SETTINGS = ("any", "indoor", "outdoor")
 
 
+def paid_time_edit(aliases: list[str]) -> dict[str, Any]:
+    """유료 넘김 경로(`decision_unit._schema(plain=True)`)의 `time_edit` — 실행할 수 있는 경계 · 범위 조합만 갈래로 싣는다. `[2026-10-26 x600 40231a56]`
+
+    ★로컬 생성 문법은 갈래(`generation_variants`)로 맞는 조합만 생성하게 한다. 유료 스키마는 두 칸을 따로 둬 `start` + `following` 같은
+      실행할 수 없는 조합을 낼 수 있었고, 그 답은 `validate` 가 `inconsistent temporal scope` 로 거절했다(x600 Case 72e29b8c
+      「오후 5시 30분으로 옮겨줘」 — `ollama=timeout, openai=content`). OpenAI 엄격 모드는 최상위가 아닌 칸 안의 anyOf 를 받는다.
+    갈래 규칙은 `_inconsistent` 와 `validate` 의 range 조건 중 이 칸 안에서 정해지는 것과 같다(다른 칸과 묶인 조건은 `validate` 가 그대로 본다).
+    문장 · 일정 이름은 싣지 않는다."""
+    from copy import deepcopy
+
+    base = schemas(aliases)["time_edit"]
+
+    def variant(boundary: list[str], scope: list[str], **fixed: Any) -> dict[str, Any]:
+        shape = deepcopy(base)
+        shape["properties"]["boundary"] = {"type": "string", "enum": boundary}
+        shape["properties"]["scope"] = {"type": "string", "enum": scope}
+        for key, value in fixed.items():
+            kind = "boolean" if type(value) is bool else "integer" if type(value) is int else "string"
+            shape["properties"][key] = {"type": kind, "enum": [value]}
+        return shape
+
+    return {"anyOf": [
+        variant(["none"], ["item"]),
+        variant(["start", "end", "duration"], ["item"], continue_previous=False),
+        variant(["shift"], ["item", "following"], continue_previous=False),
+        variant(["shift"], ["range"], time="", duration_minutes=0, cascade=False, continue_previous=False),
+        variant(["reflow"], ["following"]),
+    ], "description": "시간 수정. boundary 와 scope 의 맞는 조합만 — start · end · duration 은 scope=item, reflow 는 scope=following, "
+                      "range 는 shift 만(target_item=none, query 필수). 시간 변경이 없으면 boundary=none, scope=item"}
+
+
 def requested_setting(raw: dict[str, Any] | None) -> str | None:
     """검증을 지난 해석의 실내·야외 조건 — indoor/outdoor 이거나 None(조건 없음 · 옛 해석)."""
     want = ((raw or {}).get("place_setting") or {}).get("want")

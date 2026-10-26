@@ -29,6 +29,8 @@ from app.infrastructure.model_stream import StreamStalled
 KST = ZoneInfo("Asia/Seoul")
 STREAM = {"first_token_seconds": 8, "stall_seconds": 5, "max_seconds": 12}
 MESSAGE = "합성박물관 일정을 한 시간 뒤로 미뤄줘"
+#: 이 고정 일정 · 문장으로 만든 로컬 생성 문법의 sha256 — 기준 922d628df 에서 잰 값(유료 갈래 추가 전)
+GRAMMAR_SHA256 = "681483c6787688f514548152dd07054a19f99482fcea4fbada2885e77947948a"
 
 
 @pytest.fixture(autouse=True)
@@ -170,3 +172,67 @@ def test_range_day_quotes_use_digit_boundaries(monkeypatch, message, quoted):
                         lambda *a, **kw: seen.update(kw) or real(*a, **kw))
     du._schema(STOPS, [], message=message)
     assert [d for d in seen["quoted_days"] if d.startswith("d")] == quoted
+
+
+# ── `[2026-10-26 x600 40231a56]` 유료 스키마의 시간 수정 조합 ──
+#   x600 Case 72e29b8c: 로컬 timeout 뒤 유료 답이 `evidence_validation:inconsistent_temporal_scope` 로 떨어졌다. 로컬 생성 문법은 갈래로
+#   경계(boundary)와 범위(scope)의 맞는 조합만 생성하게 하는데, 유료 스키마는 두 칸을 따로 둬 실행할 수 없는 조합(start + following 등)을 낼 수 있었다.
+#   최상위가 아닌 `time_edit` 칸 안의 anyOf 는 엄격 모드가 받는다 — 같은 조합 규칙을 유료 스키마에도 싣는다(문장 · 이름 없음).
+def _edit(boundary, scope, **over):
+    return {"boundary": boundary, "scope": scope, "time": "", "duration_minutes": 0, "cascade": False,
+            "continue_previous": False, "evidence": "", **over}
+
+
+@pytest.mark.parametrize("edit,ok", [
+    (_edit("none", "item"), True),
+    (_edit("start", "item", time="17:30"), True),
+    (_edit("end", "item", time="17:30", cascade=True), True),
+    (_edit("duration", "item", duration_minutes=90), True),
+    (_edit("shift", "item"), True),
+    (_edit("shift", "following"), True),
+    (_edit("shift", "range"), True),
+    (_edit("reflow", "following"), True),
+    (_edit("reflow", "following", continue_previous=True), True),
+    (_edit("start", "following", time="17:30"), False),
+    (_edit("start", "range", time="17:30"), False),
+    (_edit("end", "following", time="17:30"), False),
+    (_edit("duration", "range", duration_minutes=60), False),
+    (_edit("reflow", "item"), False),
+    (_edit("reflow", "range"), False),
+    (_edit("shift", "item", continue_previous=True), False),
+    (_edit("start", "item", time="17:30", continue_previous=True), False),
+    (_edit("shift", "range", time="17:30"), False),
+    (_edit("shift", "range", cascade=True), False),
+], ids=lambda v: v if isinstance(v, bool) else f"{v['boundary']}-{v['scope']}-{v['continue_previous']}-{v['time'] or '_'}-{v['cascade']}")
+def test_the_paid_schema_only_admits_executable_time_edit_combinations(edit, ok):
+    from jsonschema import Draft202012Validator
+
+    from app.domains.travel_ops.components.conversation.edit_intent import _inconsistent
+
+    plain = du._schema(STOPS, [], plain=True)
+    for shape in (plain, llm_failover.strict_schema(plain)):   # 우리 스키마 · 엄격 변환 모두
+        valid = Draft202012Validator(shape["properties"]["time_edit"]).is_valid(edit)
+        assert valid is ok, (edit, shape is plain)
+    # 받는 조합은 서버 검증(`_inconsistent`)도 받는다 — 유료 스키마가 서버보다 넓지 않다
+    if ok:
+        assert not _inconsistent(edit)
+
+
+def test_the_paid_time_edit_variants_stay_free_of_the_message_and_the_root_stays_an_object():
+    plain = du._schema(STOPS, [], plain=True)
+    strict = llm_failover.strict_schema(plain)
+    assert "anyOf" not in plain and "anyOf" not in strict and strict["type"] == "object"
+    assert "anyOf" in strict["properties"]["time_edit"]
+    for variant in strict["properties"]["time_edit"]["anyOf"]:
+        assert variant["additionalProperties"] is False and sorted(variant["required"]) == sorted(variant["properties"])
+    assert MESSAGE not in _text(plain) and all(s.item.title not in _text(plain) for s in STOPS)
+
+
+def test_the_local_grammar_is_unchanged_by_the_paid_variants():
+    """로컬 생성 문법(`message=…`)의 바이트는 그대로다 — 유료 갈래는 `plain=True` 에만 붙는다."""
+    import hashlib
+
+    grammar = json.dumps(du._schema(STOPS, [], message=MESSAGE), ensure_ascii=False, sort_keys=True)
+    plain_edit = du._schema(STOPS, [], plain=True)["properties"]["time_edit"]
+    assert json.dumps(plain_edit, ensure_ascii=False) not in grammar
+    assert hashlib.sha256(grammar.encode()).hexdigest() == GRAMMAR_SHA256

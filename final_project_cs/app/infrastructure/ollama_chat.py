@@ -25,7 +25,13 @@ class OllamaError(RuntimeError):
 
 class OllamaContentError(OllamaError):
     """서버는 답했는데 **답의 모양이 틀렸다**(JSON 이 아님 · 객체가 아님). `[2026-10-07]` 서버 문제(연결 · 시간 초과 · 5xx · 빈 답)와 구분한다 —
-    모델 서버 넘김 장치(`llm_failover.py`)가 이 한 번만 다음 경로로 넘기고 서킷에는 세지 않는다. 부르는 쪽에는 `OllamaError` 와 같다."""
+    모델 서버 넘김 장치(`llm_failover.py`)가 이 한 번만 다음 경로로 넘기고 서킷에는 세지 않는다. 부르는 쪽에는 `OllamaError` 와 같다.
+    `log_code` `[2026-10-26 x600 40231a56]` — 로그에 적을 수 있는 정해 둔 이름(예: `not_json` · `length` · `schema:enum` ·
+    `evidence_validation:inconsistent_temporal_scope`). 답 · 고객 문장을 담지 않는다."""
+
+    def __init__(self, message: str = "", *, log_code: str | None = None) -> None:
+        super().__init__(message)
+        self.log_code = log_code
 
 
 def validate_structured(value: Any, schema: dict[str, Any]) -> dict[str, Any]:
@@ -38,18 +44,22 @@ def validate_structured(value: Any, schema: dict[str, Any]) -> dict[str, Any]:
     except ValidationError as exc:
         # Values and model output may include personal data; report only the path and rule.
         location = ".".join(str(part) for part in exc.absolute_path) or "$"
-        raise OllamaContentError(f"구조화 답의 스키마가 다르다: {location} ({exc.validator})") from None
+        raise OllamaContentError(f"구조화 답의 스키마가 다르다: {location} ({exc.validator})",
+                                 log_code=f"schema:{exc.validator}") from None
     if not isinstance(value, dict):
-        raise OllamaContentError("구조화 답이 JSON 객체가 아니다")
+        raise OllamaContentError("구조화 답이 JSON 객체가 아니다", log_code="not_object")
     return value
 
 
 def validate_content(value: dict[str, Any], validator: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
-    """Run caller evidence checks before a backend result becomes successful."""
+    """Run caller evidence checks before a backend result becomes successful.
+    ★`[2026-10-26 x600 40231a56]` 부르는 쪽이 예외에 붙인 코드(`log_code`)를 넘김 장치 로그 줄까지 들고 간다(모양 검사는 `llm_failover._log_code`)."""
     try:
         validator(value)
     except ValueError as exc:
-        raise OllamaContentError(f"구조화 답의 근거 검증 실패: {type(exc).__name__}") from None
+        code = getattr(exc, "log_code", None)
+        raise OllamaContentError(f"구조화 답의 근거 검증 실패: {type(exc).__name__}",
+                                 log_code=f"evidence_validation:{code}" if code else "evidence_validation") from None
     return value
 
 

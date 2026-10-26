@@ -28,6 +28,7 @@ import base64
 import contextvars
 import json
 import logging
+import re
 import threading
 import time
 from dataclasses import dataclass, field
@@ -214,6 +215,21 @@ def classify(exc: BaseException) -> Failure:
     return Failure("error")
 
 
+_LOG_CODE = re.compile(r"[a-z0-9_]{1,40}(?::[a-z0-9_]{1,48})?")
+
+
+def _log_code(exc: BaseException) -> str:
+    """로그에 적을 실패 코드 — 예외가 든 `log_code` 가 정해 둔 모양(소문자 · 숫자 · `_`, 콜론 하나)일 때만. 아니면 `-` · `…:unspecified`.
+    ★예외 글(`str(exc)`)은 적지 않는다 — 받다 만 답 · 고객 문장이 들 수 있다. `[2026-10-26 x600 40231a56]`"""
+    code = getattr(exc, "log_code", None)
+    if not isinstance(code, str) or not code:
+        return "-"
+    if _LOG_CODE.fullmatch(code):
+        return code
+    head = code.split(":", 1)[0]
+    return f"{head}:unspecified" if ":" in code and _LOG_CODE.fullmatch(head) else "unspecified"
+
+
 # ─────────────────────────── OpenAI 쪽 ───────────────────────────
 def _api_error(exc: BaseException) -> ModelCallError:
     """OpenAI SDK 예외 → `ModelCallError`. ★`str(exc)` 를 싣지 않는다(잘못된 키 오류에는 키 앞뒤가 들어 있다)."""
@@ -348,9 +364,9 @@ class OpenAIChat:
             # ★`[2026-10-15]` 문자열 안의 줄바꿈 · 탭(제어 문자)을 받는다 — gpt-4o-mini 엄격 모드가 「text」 칸에 넣어 「JSON 이 아니다」로 실패했다
             value = json.loads(text, strict=False)
         except ValueError:
-            raise OllamaContentError(f"JSON 이 아니다: {text[:80]}") from None
+            raise OllamaContentError(f"JSON 이 아니다: {text[:80]}", log_code="not_json") from None
         if not isinstance(value, dict):
-            raise OllamaContentError("JSON 객체가 아니다")
+            raise OllamaContentError("JSON 객체가 아니다", log_code="not_object")
         return value
 
     def json(self, system: str, user: str) -> dict[str, Any]:
@@ -448,7 +464,7 @@ class OpenAIChat:
 
         text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, lifetime=lifetime).strip()
         if held.get("length"):
-            raise OllamaContentError(f"답이 상한({max_tokens}토큰)에 걸려 잘렸다")
+            raise OllamaContentError(f"답이 상한({max_tokens}토큰)에 걸려 잘렸다", log_code="length")
         if not text:
             raise ModelCallError("OpenAI 가 빈 답을 냈다", reason="empty")
         return text
@@ -598,6 +614,11 @@ class FailoverChat:
                 except OllamaError as exc:
                     failure = classify(exc)
                     _count(f"fail:{backend.name}:{failure.reason}")
+                    if backend.is_api:
+                        # ★`[2026-10-26 x600 40231a56]` 유료 시도의 실패는 그때마다 한 줄 — 이유 · 정해 둔 코드 · 예외 이름만(답 · 고객 문장 · 키 없음).
+                        #   ☆전에는 넘김이 **성공**할 때만 로그(`_record`)가 있어 「ollama=timeout, openai=content」가 Case 기록에만 남았다
+                        log.warning("llm_failover op=%s backend=%s failed reason=%s detail=%s error=%s attempt=%d", op, backend.name,
+                                    failure.reason, _log_code(exc), type(exc).__name__, attempt + 1)
                     elapsed = self._clock() - started
                     tail = max((b.timeout for b in self._backends[index + 1:]), default=0.0) if later_api else 0.0
                     time_left = deadline - started if deadline is not None else self.total_seconds
@@ -611,15 +632,20 @@ class FailoverChat:
                         backend.breaker.success()            # 서버는 답했다 — 모양만 틀렸다
                     reasons.append((backend.name, failure.reason))
                     break
-                except BaseException:                                # 우리가 모르는 예외 — 시험(반쪽) 자리가 잠겨 서버가 영영 안 불리지 않게 돌려주고 그대로 올린다
+                except BaseException as exc:                         # 우리가 모르는 예외 — 시험(반쪽) 자리가 잠겨 서버가 영영 안 불리지 않게 돌려주고 그대로 올린다
                     backend.breaker.release()
+                    if backend.is_api:
+                        log.warning("llm_failover op=%s backend=%s failed reason=unexpected error=%s", op, backend.name, type(exc).__name__)
                     raise
                 finally:
                     _reader_attempt.reset(token)
                 backend.breaker.success()
                 self._record(op, backend, reasons, self._clock() - started)
                 return result
-        _path_var.set({"path": None, "backend": None, "op": op, "reasons": reasons, "seconds": round(self._clock() - started, 2)})
+        seconds = round(self._clock() - started, 2)
+        _path_var.set({"path": None, "backend": None, "op": op, "reasons": reasons, "seconds": seconds})
+        # ★`[2026-10-26 x600 40231a56]` 모든 경로가 실패해도 한 줄 남긴다(성공한 넘김 줄 `_record` 와 같은 모양, path=none)
+        log.warning("llm_failover op=%s path=none reasons=%s seconds=%.2f", op, ",".join(f"{b}:{r}" for b, r in reasons), seconds)
         raise OllamaError("모든 모델 경로가 실패했다: " + ", ".join(f"{b}={r}" for b, r in reasons))
 
     def _record(self, op: str, backend: _Backend, reasons: list[tuple[str, str]], seconds: float) -> None:
