@@ -54,6 +54,9 @@ def make(rec: Recorder, *, local_up: bool = True, local_fails: bool = True, paid
         def json(self, system, user):
             return self._go("json", user)
 
+        def text(self, system, user):
+            return self._go("text", user)
+
     class Paid:
         model = "paid-model"
 
@@ -80,6 +83,9 @@ def make(rec: Recorder, *, local_up: bool = True, local_fails: bool = True, paid
 
         def json(self, system, user):
             return self._go("json", user)
+
+        def text(self, system, user):
+            return self._go("text", user)
 
     def global_gate():
         rec.events["global"].append(True)
@@ -382,7 +388,7 @@ def test_complete_stream_is_not_turned_into_a_stall_by_blocking_close():
 BARE = "01012345678 · 0212345678 · +82 2 1234 5678 · 2026-10-26 10:30"
 
 
-@pytest.mark.parametrize("op", ["structured", "structured_validated", "json", "structured_stream", "json_stream",
+@pytest.mark.parametrize("op", ["structured", "structured_validated", "json", "text", "structured_stream", "json_stream",
                                 "structured_stream_validated", "reader_json", "reader_json_stream", "reader_structured_stream"])
 def test_every_paid_send_hides_phones_without_separator(op):
     """`[2026-10-26 integ-rm9]` 모든 유료 전송 입구가 `redaction.masked_outbound` 를 쓴다 — 구분자 없는 휴대폰 · 지역번호 · +82 지역전화.
@@ -396,6 +402,8 @@ def test_every_paid_send_hides_phones_without_separator(op):
         chat.structured_validated("s", BARE, {}, validator=lambda value: None)
     elif op == "json":
         chat.json("s", BARE)
+    elif op == "text":
+        chat.text("s", BARE)
     elif op == "structured_stream":
         chat.structured_stream("s", BARE, {}, **stream)
     elif op == "json_stream":
@@ -412,3 +420,10 @@ def test_every_paid_send_hides_phones_without_separator(op):
     sent = rec.events["paid"][0][1]
     assert "12345678" not in sent and "1234 5678" not in sent and "2026-10-26 10:30" in sent, sent
     assert any(user == BARE for _, user in rec.events["local"])                   # 로컬에는 원문 그대로
+
+
+def test_paid_embedding_input_uses_outbound_mask():
+    """규정 검색 질문 임베딩(유료)도 같은 가림을 쓴다 — 소스 안 전송 지점이 `masked_outbound` 를 부르는지 본다(외부 호출 없이)."""
+    import inspect as _inspect
+    src = _inspect.getsource(llm_failover)
+    assert "input=masked_outbound(text)" in src and "masked(" not in src.replace("masked_outbound(", "")
