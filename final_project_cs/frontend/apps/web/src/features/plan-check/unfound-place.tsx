@@ -32,14 +32,15 @@ export function UnfoundPlace({ item, prefix, candidates, why, explain, on }: {
 }) {
   const t = useT();
   const [found, setFound] = useState<{ state: "loading" | "ready" | "failed"; list: PlanCandidate[]; message?: string }>(
-    () => candidates ? { state: "loading", list: [] } : { state: "ready", list: [] });
+    // `[2026-10-26 12:52 사용자 보고]` The candidates the server put on the question show at once; the stop's own list (same calculation) replaces them when it comes.
+    () => item.unfound.candidates?.length ? { state: "ready", list: item.unfound.candidates.slice(0, SHOWN) } : candidates ? { state: "loading", list: [] } : { state: "ready", list: [] });
   useEffect(() => {
     if (!candidates) return;
     let live = true;
     // Asked a moment later: the page's own effects (which hand the calls the plan on screen) run after this card's, so asked at once the stop is not known yet.
     const timer = setTimeout(() => {
-      candidates(item.id).then((list) => { if (live) setFound({ state: "ready", list: list.slice(0, SHOWN) }); },
-        (error: unknown) => { if (live) setFound({ state: "failed", list: [], message: reason(error) }); });
+      candidates(item.id).then((list) => { if (live) setFound((now) => ({ state: "ready", list: list.length || !now.list.length ? list.slice(0, SHOWN) : now.list })); },
+        (error: unknown) => { if (live) setFound((now) => now.list.length ? now : { state: "failed", list: [], message: reason(error) }); });
     }, 0);
     return () => { live = false; clearTimeout(timer); };
   }, [candidates, item.id]);

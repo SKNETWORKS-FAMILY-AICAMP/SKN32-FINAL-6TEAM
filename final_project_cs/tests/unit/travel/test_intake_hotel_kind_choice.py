@@ -223,3 +223,32 @@ def test_the_nameless_hotel_gap_is_the_customers_to_answer():
     from app.domains.travel_ops.components.intake import gaps
 
     assert gaps.ROUTES["lodging_place"] == "ask_customer"
+
+
+# ── 후보 목록을 질문에 같이 싣는다 `[2026-10-26 12:52 사용자 보고 — 후보 3개 목록이 바로 안 나온다]` ──────────────
+def _cand(name, source="places", rank=1):
+    return {"rank": rank, "place": {"name": name, "latitude": 37.56, "longitude": 126.98, "source": source, "kind": "activity",
+                                    "content_type_id": "32"}, "basis": "lodging", "reason": "숙소 후보예요", "fits": True, "status": "ok"}
+
+
+@pytest.mark.parametrize("pool, names", [
+    ([_cand("A 호텔"), _cand("B 호텔", rank=2), _cand("C 호텔", rank=3), _cand("D 호텔", rank=4)], ["A 호텔", "B 호텔", "C 호텔"]),
+    ([_cand("단 하나의 호텔")], ["단 하나의 호텔"]),
+    ([], []),
+    ([_cand("지도 호텔", source="kakao"), _cand("목록 호텔", rank=2)], ["목록 호텔"]),
+])
+def test_the_hotel_question_carries_up_to_three_candidates_and_never_stores_map_values(monkeypatch, pool, names):
+    from app.domains.travel_ops.components.intake import candidates as candidates_module
+
+    asked = []
+
+    def alternatives(conn, *, tenant_id, review, item, kakao=None, chat=None, **kwargs):
+        asked.append((item["id"], kakao, chat))
+        return {"candidates": pool, "notes": []}
+
+    monkeypatch.setattr(candidates_module, "alternatives", alternatives)
+    result, edits_seen = _prefill_with_one_hotel_candidate(monkeypatch, ["안 쓰는 첫 후보"])
+    assert edits_seen == [] and result["revision"] == 1, "후보를 실어도 판에 넣지 않는다"
+    [question] = [q for q in result["questions"] if q["kind"] == "lodging_place"]
+    assert [c["place"]["name"] for c in question["candidates"]] == names
+    assert asked == [("0-0", None, None)], "카카오 값(약관상 저장 금지)과 모델 이유 문장 없이 한 번만 계산한다"

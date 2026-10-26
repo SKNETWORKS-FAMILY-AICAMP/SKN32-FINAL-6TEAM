@@ -1,4 +1,5 @@
 import type { TripSurvey } from "@/features/onboarding/payload";
+import type { Candidate } from "./intake-review";
 import type { Language } from "../i18n";
 import { api } from "./client";
 import type { ReviewedIntakeView } from "./intake-review";
@@ -75,6 +76,12 @@ export interface IntakePrefillQuestion {
   mode?: string;
   actions?: string[];
   blocked?: boolean;
+  /**
+   * `[2026-10-26 12:52 사용자 보고 — 후보 3개 목록이 바로 안 나온다]` `kind: "lodging_place"` (a nameless hotel the customer picks a stay for): up to three candidates in the shape of
+   * `GET …/candidates` (`candidates[]`), so the card shows them at once. `null` (with `candidates_error`) when the server could not work them out — the card asks as before.
+   */
+  candidates?: Candidate[] | null;
+  candidates_error?: string;
 }
 
 /**

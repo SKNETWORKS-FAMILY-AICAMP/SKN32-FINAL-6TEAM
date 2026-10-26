@@ -1268,10 +1268,12 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       return () => { live = false; clearTimeout(timer); };
     }
     if (!actions.candidates) { setStopList({ id, state: "ready", list: [] }); return; }
-    setStopList({ id, state: "loading", list: [] });
-    const timer = setTimeout(() => actions.candidates!(id, (cards) => { if (live) setStopList({ id, state: "loading", list: cards }); })
-      .then((list) => { if (live) setStopList({ id, state: "ready", list }); },
-        (error: unknown) => { if (live) setStopList({ id, state: "failed", list: [], message: reason(error) }); }), 0);
+    // `[2026-10-26 12:52 사용자 보고 — 후보 3개 목록이 바로 안 나온다]` The candidates the server put on the question (a nameless hotel) are the options at once; the stop's own list replaces them.
+    const carried = stopItem.unfound?.candidates ?? [];
+    setStopList({ id, state: carried.length ? "ready" : "loading", list: carried });
+    const timer = setTimeout(() => actions.candidates!(id, (cards) => { if (live && cards.length) setStopList({ id, state: "loading", list: cards }); })
+      .then((list) => { if (live) setStopList({ id, state: "ready", list: list.length || !carried.length ? list : carried }); },
+        (error: unknown) => { if (live) setStopList(carried.length ? { id, state: "ready", list: carried } : { id, state: "failed", list: [], message: reason(error) }); }), 0);
     return () => { live = false; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- asked again each time the card stops (a pick changes its alternatives)
   }, [asking, stopItem?.id, stopMove?.id]);

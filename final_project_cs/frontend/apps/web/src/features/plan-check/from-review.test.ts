@@ -308,6 +308,20 @@ describe("[2026-10-19] 못 찾은 장소 — the question rides on the stop's ca
     expect(view.items.find((entry) => entry.id === "0-1")!.unfound).toEqual({ question: ask.question, blocked: false });
     expect(view.prefill).toBeNull();
   });
+
+  // `[2026-10-26 12:52 사용자 보고 — 후보 3개 목록이 바로 안 나온다]` 서버가 질문에 실은 후보(최대 3곳)를 카드가 따로 묻기 전에 바로 그린다
+  it("carries the server's candidates on the hotel card so the list shows at once", () => {
+    const hotel = item({ id: "0-1", title: "호텔", status: "review", place_state: "needs_choice", place: null });
+    const cand = (name: string, rank: number) => ({ rank, place: { name, latitude: 37.56, longitude: 126.98, source: "places", kind: "activity", content_type_id: "32" },
+      basis: "lodging", reason: "숙소 후보예요", rows: [], fits: true, status: "ok", distance_m: 800, reference: "경복궁" });
+    const ask = question({ kind: "lodging_place", question: "「호텔」 — 묵을 숙소를 후보에서 골라 주세요", quote: "호텔",
+      candidates: [cand("A 호텔", 1), cand("B 호텔", 2), cand("C 호텔", 3)] });
+    const next = withQuestions([ask], [item({ id: "0-0" }), hotel]);
+    const unfound = reviewResultOf(next, readingOf(next))!.items.find((entry) => entry.id === "0-1")!.unfound!;
+    expect(unfound.candidates!.map((c) => [c.name, c.basis, c.rank])).toEqual([["A 호텔", "lodging", 1], ["B 호텔", "lodging", 2], ["C 호텔", "lodging", 3]]);
+    const none = withQuestions([question({ kind: "lodging_place", question: "q", quote: "호텔", candidates: null })], [item({ id: "0-0" }), hotel]);
+    expect(reviewResultOf(none, readingOf(none))!.items.find((entry) => entry.id === "0-1")!.unfound!.candidates).toBeUndefined();
+  });
 });
 
 describe("`[2026-10-21 사용자 결정 — P6]` the interpretation questions the first check stops to ask", () => {

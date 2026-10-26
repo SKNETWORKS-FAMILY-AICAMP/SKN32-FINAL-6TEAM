@@ -1,4 +1,4 @@
-"""식당 확정으로 동선이 바뀐 뒤 최초 숙소 추천을 다시 보는 HTTP 회귀 시험."""
+"""먼저 채우기의 식당 · 숙소 HTTP 회귀 시험. `[2026-10-26 사용자 지시]` 숙소는 먼저 채우지 않고 묻는다(전: 식당 확정 뒤 숙소를 다시 추천해 채움)."""
 from app.domains.travel_ops.components.intake import candidates, lodging_context, pipeline
 from app.infrastructure.db.session import get_connection
 from psycopg.types.json import Jsonb
@@ -31,7 +31,8 @@ def meal_place(around):
     with get_connection() as conn, conn.transaction():
         conn.execute('DELETE FROM places WHERE tenant_id=%s AND place_id=%s', (around['tenant'], identity))
 
-def test_first_read_revisits_a_common_hotel_after_filling_a_meal_place(around, meal_place, monkeypatch):
+def test_first_read_fills_the_meal_place_but_asks_both_hotel_breakfasts(around, meal_place, monkeypatch):
+    # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 먼저 채우기는 이름 없는 호텔을 채우지 않는다(후보가 하나여도) — 그 일정 카드가 후보에서 고르게 묻는다
     config, alternatives = pipeline.agent_reader_config, candidates.alternatives
     monkeypatch.setattr(pipeline, "agent_reader_config", lambda tenant: {**config(tenant), "mode": "on", "prefill": "on"})
     searched = []
@@ -56,17 +57,15 @@ def test_first_read_revisits_a_common_hotel_after_filling_a_meal_place(around, m
     assert any(f["owner"] == "dining_team" for f in view["prefill"]["filled"]), view["prefill"]
     assert any(i["kind"] == "dining" and not i.get("lodging_group") and i.get("place")
                and i["place_state"] == "customer" for i in view["review"]["items"]), view["review"]["items"]
-    assert searched[0] is False and True in searched, {"revision": view["revision"], "items": [{k:i.get(k) for k in ("title","kind","place_state","place")} for i in view["review"]["items"]], "prefill": view["prefill"]}
-    hotels = [item for item in view["review"]["items"] if item.get("lodging_group")]
-    assert len(hotels) == 2 and all(item["place"] and item["kind"] == "dining" for item in hotels)
-    assert len({(item["place"]["name"], item["place"]["latitude"], item["place"]["longitude"]) for item in hotels}) == 1
-    assert all(item["starts_at"] == "09:00" and item["ends_at"] < "10:00" for item in hotels)
+    hotels = [item for item in view["review"]["items"] if item["title"] == "호텔 조식"]
+    assert len(hotels) == 2 and all(item["place"] is None and item["place_state"] == "needs_choice" for item in hotels), hotels
+    asked = [q for q in view["prefill"]["questions"] if q["kind"] == "lodging_place"]
+    assert sorted(q["item"] for q in asked) == sorted(i["id"] for i in hotels), view["prefill"]
     assert not any(item["kind"] == "lodging_place" for item in view["prefill"]["kept"])
     assert "rounds" not in view["prefill"] and "proposals" not in view["prefill"], "운영용 시도 원본은 고객 응답에 싣지 않는다"
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s AND field='reading.prefill'",
                     (around["tenant"], view["intake_id"], view["revision"]))
         record = cur.fetchone()[0]
-    assert len(record["rounds"]) == 2 and len(record["rounds"][0]["retried_gaps"]) == 2
     attempts = [p for p in record["proposals"] if p["gap"]["kind"] == "lodging_place"]
-    assert len(attempts) == 4 and not attempts[0]["candidates"] and attempts[-1]["candidates"]
+    assert attempts and all(p["owner"] == "ask_customer" for p in attempts), attempts

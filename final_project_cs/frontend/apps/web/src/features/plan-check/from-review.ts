@@ -152,18 +152,21 @@ export function asksOf(intake: Pick<IntakeView, "interpretations" | "sources">, 
 /** `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` The questions the stop's own card carries: a place not found, and a nameless hotel whose stay the customer picks from the candidates (never filled first). */
 const CARD_QUESTION_KINDS: ReadonlySet<string | undefined> = new Set(["place_not_found", "lodging_place"]);
 
-export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean }> {
+export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean; candidates?: PlanCandidate[] }> {
   const ids = new Set((intake.review?.items ?? []).map((item) => item.id));
-  const out = new Map<string, { question: string; blocked: boolean }>();
+  const out = new Map<string, { question: string; blocked: boolean; candidates?: PlanCandidate[] }>();
   for (const entry of intake.prefill?.questions ?? []) {
     if (!CARD_QUESTION_KINDS.has(entry?.kind) || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
-    if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true });
+    // `[2026-10-26 12:52]` The candidates the server put on the question (a nameless hotel): drawn at once; only those it named fully (a place with a name).
+    const carried = Array.isArray(entry.candidates) ? entry.candidates.filter((candidate) => candidate?.place && typeof candidate.place.name === "string" && candidate.place.name)
+      .map((candidate) => planCandidate({ ...candidate, rows: Array.isArray(candidate.rows) ? candidate.rows : [] }, entry.item as string, "candidate", null)) : null;
+    if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true, ...(carried?.length ? { candidates: carried } : {}) });
   }
   return out;
 }
 
 /** A stop that has a place now (picked, or 「장소 없음」) is not asked about any more, whatever the record of the first fill still says. */
-function withUnfound(item: PlanItem, unfound: { question: string; blocked: boolean } | undefined): PlanItem {
+function withUnfound(item: PlanItem, unfound: { question: string; blocked: boolean; candidates?: PlanCandidate[] } | undefined): PlanItem {
   return unfound && !item.coordinates && !item.noPlace ? { ...item, unfound } : item;
 }
 

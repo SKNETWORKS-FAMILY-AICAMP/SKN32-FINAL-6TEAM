@@ -140,7 +140,8 @@ def test_a_bare_hotel_line_without_breakfast_gets_the_same_two_kinds_of_candidat
     headers = _key(client)
     view = _send(client, headers, "2026-10-15\n09:00 호텔\n11:00 경복궁")
     hotel = _item(view, "호텔")
-    assert hotel["place_state"] == "customer" and hotel["place"], hotel  # 최초 채움 뒤에도 숙소·식사 짝을 보존한다
+    # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 먼저 채우기는 이름 없는 호텔을 채우지 않는다(후보가 하나여도) — 그 일정 카드가 후보에서 고르게 묻는다
+    assert hotel["place_state"] == "needs_choice" and hotel["place"] is None, hotel
     assert hotel["kind"] == "activity", hotel                                   # 「조식」이 없는데 식사로 읽지 않는다
     got = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/candidates?source_id={hotel['source_id']}&index={hotel['index']}"
                      f"&revision={view['revision']}", headers=headers).json()

@@ -350,6 +350,9 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
     filled = refound + [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
     items_now = {i.get("id"): i for i in (state["review"].get("items") or [])}
     questions = [_question(p, items_now, still_blocked) for p in latest.values() if p.owner == "ask_customer"]
+    for question in questions:
+        if question["kind"] == "lodging_place" and items_now.get(question.get("item")) is not None:
+            question.update(_stay_choices(conn, tenant_id=tenant_id, review=state["review"], item=items_now[question["item"]]))
     kept = [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": p.reason}
             for p in latest.values() if p.owner != "ask_customer" and not p.candidates]
     record = {"filled": [f for f in filled if f], "questions": _unique(questions), "kept": kept, "rounds": rounds,
@@ -459,6 +462,21 @@ def _change_reason(change: Mapping[str, Any], gap: Gap) -> str:
 def _kept_reason(code: Any) -> str:
     return {"locked": "고정한 일정이라 그대로 두었어요", "booked": "예약한 일정이라 그대로 두었어요", "no_time": "시각이 없어 맞춰 보지 못했어요",
             "no_candidates": "맞는 후보가 없어 그대로 두었어요", "nothing_to_change": "바꿀 것이 없었어요"}.get(str(code), "맞는 안이 없어 그대로 두었어요")
+
+
+def _stay_choices(conn, *, tenant_id: str, review: Mapping[str, Any], item: Mapping[str, Any]) -> dict[str, Any]:
+    """`[2026-10-26 12:52 사용자 보고 — 「후보 3개 목록이 바로 안 나온다」]` 이름 없는 호텔 질문에 **후보(최대 3곳)를 같이 싣는다** — 화면이 따로 묻기 전에 바로 보인다.
+    `GET …/candidates` 와 같은 계산(`candidates.alternatives`)이고, 카카오를 부르지 않는다(카카오 값은 약관상 저장하지 않는다 — 이 질문은 `reading.prefill` 에 남는다).
+    모델 이유 문장도 쓰지 않는다(틀 문장). 계산이 실패하면 숨기지 않고 `candidates: None` + `candidates_error` — 화면은 그때 지금처럼 `GET …/candidates` 로 묻는다."""
+    from . import candidates as candidates_module
+
+    try:
+        got = candidates_module.alternatives(conn, tenant_id=tenant_id, review=review, item=item, kakao=None, chat=None)
+    except Exception as exc:                                  # noqa: BLE001 — 후보 계산 실패는 질문을 막지 않고 이유를 남긴다
+        log.warning("prefill stay choices failed item=%s", item.get("id"), exc_info=True)
+        return {"candidates": None, "candidates_error": type(exc).__name__}
+    picks = [c for c in got.get("candidates") or [] if (c.get("place") or {}).get("source") != "kakao"]
+    return {"candidates": picks[:gaps_module.MAX_CANDIDATES]}
 
 
 def _unique(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
