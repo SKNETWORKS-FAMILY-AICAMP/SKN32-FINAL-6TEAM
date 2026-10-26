@@ -560,12 +560,17 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
     name = str(raw.get("destination_text") or "").strip()[:80]
 
     if action == "change_time":
-        from .edit_intent import time_ops
+        from .edit_intent import range_boundary, time_ops
 
         semantic = time_ops(decision, items=items, now=now)
         if semantic is not None:
             return semantic
         targets = [item] if item is not None else []
+        if item is not None and range_boundary(raw):
+            # ★`[2026-10-26 fix5 · 수용 T04 · Codex G2]` before/after 의 기준 시각은 범위 경계다 — 한 일정의 새 시작이나 그 일정만의 이동으로
+            #   실행하지 않는다(전에는 「오후 2시 이전 일정 전부 한 시간 당겨」가 인사동 → 14:00). 되묻기는 `edit_intent.ask_on_range_anchor`, 여기는 방어
+            raise EditRefused("need_target", f"{anchor_time} {'이전' if raw.get('relation') == 'before' else '이후'} 일정 전부를 옮길지, "
+                                             f"「{item.title}」 하나만 옮길지 알려 주세요. 일정은 바꾸지 않았어요.")
         query = decision.query if item is None else None
         if item is None and query is None and decision.minutes:
             query = _range_from_sentence(message, raw.get("at_day"), stops, now)

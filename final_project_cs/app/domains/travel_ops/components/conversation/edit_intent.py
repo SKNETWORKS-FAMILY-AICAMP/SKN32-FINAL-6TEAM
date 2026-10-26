@@ -353,6 +353,44 @@ def ask_on_clock_ambiguity(decision):
                    raw={**(decision.raw or {}), "clock_ambiguity": found})
 
 
+def range_boundary(raw: dict[str, Any] | None) -> bool:
+    """`[2026-10-26 fix5 · 수용 T04]` 해석의 기준 시각이 **범위 경계**인가 — anchor_kind=time · relation before/after · 유효한 HH:MM.
+
+    change_time 의 새 시작 시각은 relation=at 의 anchor_time 이다(`decision_unit.SYSTEM`). before/after 의 기준 시각은 범위 경계이며
+    「옮길 새 시작이나 종료가 아니다」(위 `SYSTEM`). 칸 구조만 본다 — 문장을 읽지 않는다."""
+    raw = raw or {}
+    return (raw.get("anchor_kind") == "time" and raw.get("relation") in ("before", "after")
+            and bool(TIME.fullmatch(str(raw.get("anchor_time") or ""))))
+
+
+def range_anchor_conflict(decision) -> dict[str, Any] | None:
+    """실행될 시간 변경이 범위(scope=range)가 아닌데 기준 시각이 범위 경계다 — 한 일정만인지 경계 전후 전부인지 해석이 정하지 못했다.
+
+    ☆실 E4B J 2차 T04 「1월 2일 오후 2시 이전 일정들을 전부 한 시간 당겨줘」 → change_time · target i2 · time_edit start/item ·
+      anchor_time 14:00 · relation before → `chat_edit.ops_for` 가 인사동을 14:00 으로 옮기려 했다. 범위로 고쳐 실행하지 않는다(Codex fix5 G2)."""
+    raw = decision.raw or {}
+    spec = raw.get("time_edit") or {}
+    # 한 일정(scope=item)만 본다 — following 은 기준 일정(anchor_item) 경로, range 는 경계 시각을 쓰는 경로다(Codex fix5 q2: 조건을 좁힌다)
+    if (spec.get("scope") != "item" or spec.get("boundary", "none") == "none"
+            or not _executes_time_edit({**raw, "action": decision.action}) or not range_boundary(raw)):
+        return None
+    return {"reason": "range_boundary_on_one_item", "anchor_time": raw["anchor_time"], "relation": raw["relation"],
+            "scope": spec.get("scope"), "boundary": spec.get("boundary")}
+
+
+def ask_on_range_anchor(decision):
+    """`range_anchor_conflict` 이면 바꾸지 않고 한 일정인지 기준 시각 전후 전부인지 되묻는 clarify 로 바꾼다(선택지 없음 — 고객이 말한다)."""
+    found = range_anchor_conflict(decision)
+    if found is None:
+        return decision
+    side = "이전" if found["relation"] == "before" else "이후"
+    name = f"「{decision.item.title}」 하나만 옮길지, " if decision.item is not None else ""
+    return replace(decision, action="clarify", choices=[],
+                   question=(f"{name}{found['anchor_time']} {side} 일정 전부를 옮길지 확실하지 않아 일정은 바꾸지 않았어요. "
+                             f"어느 쪽인지 말씀해 주세요."),
+                   raw={**(decision.raw or {}), "range_anchor_conflict": found})
+
+
 def resume(decision, *, items, turns, version: int, now: datetime, ttl_seconds: int):
     spec = (decision.raw or {}).get("time_edit") or {}
     if decision.action != "change_time" or not spec.get("continue_previous"):
