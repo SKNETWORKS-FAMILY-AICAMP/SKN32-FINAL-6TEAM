@@ -75,7 +75,7 @@ def test_read_source_enabled_restarts_on_paid_through_reader_entry_only():
     reader 입구로만, 매 유료 시도마다 reader 예산 예약, 일반 예산 0회, 유료로 가는 글은 가린 글."""
     from app.infrastructure import llm_failover
     chat, events = counterexample_chat(strict_ok=True)
-    # 구분자 있는 전화는 `redaction.masked` 가 가린다. 구분자 없는 전화 · 이름 · 예약번호는 못 가린다(llm-failover.md 7-1, 켜 둔 결정의 알려진 한계).
+    # 전화는 `redaction.masked_outbound` 가 가린다(구분자 없는 모양은 아래 시험). 이름 · 예약번호는 못 가린다(llm-failover.md 7-1, 켜 둔 결정의 알려진 한계).
     source = '김여행 010-1234-5678'
     try:
         pipeline.read_source(source, agent=chat, agent_mode='on', today=date(2026, 10, 24), external_fallback_enabled=True)
@@ -86,6 +86,21 @@ def test_read_source_enabled_restarts_on_paid_through_reader_entry_only():
     assert all('010-1234-5678' not in user for _, user in events['paid'])
     assert llm_failover.current_path()['op'] in ('reader_structured_stream', 'reader_json_stream')
 
+
+
+@pytest.mark.parametrize('phone,hidden', [('01012345678', '12345678'), ('010 1234 5678', '1234 5678'), ('0212345678', '12345678'),
+                                          ('+82 10-1234-5678', '1234-5678')])
+def test_read_source_paid_restart_hides_phone_without_separator(phone, hidden):
+    """`[2026-10-26 integ-rm9]` L03 유료 대체를 다시 켠 뒤 `masked` 가 구분자 없는 휴대폰을 그대로 넘겼다 — 유료로 가는 계획 원문에서 가린다.
+    같은 글의 날짜 · 시각은 그대로 간다(계획 읽기가 틀리지 않게)."""
+    chat, events = counterexample_chat(strict_ok=True)
+    source = f'김여행 {phone} 2026-10-26 10:30 경복궁'
+    try:
+        pipeline.read_source(source, agent=chat, agent_mode='on', today=date(2026, 10, 24), external_fallback_enabled=True)
+    except pipeline.IntakeRejected:
+        pass
+    assert len(events['paid']) >= 1, repr(events)
+    assert all(hidden not in user and '2026-10-26 10:30 경복궁' in user for _, user in events['paid']), events['paid']
 
 @pytest.mark.parametrize('mode', ['on', 'shadow'])
 def test_missing_policy_never_reaches_paid_even_with_legacy_reader_available(mode):

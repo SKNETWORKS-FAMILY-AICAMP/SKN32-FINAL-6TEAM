@@ -377,3 +377,38 @@ def test_complete_stream_is_not_turned_into_a_stall_by_blocking_close():
     finally:
         release.set()
     assert closing.wait(1)
+
+
+BARE = "01012345678 · 0212345678 · +82 2 1234 5678 · 2026-10-26 10:30"
+
+
+@pytest.mark.parametrize("op", ["structured", "structured_validated", "json", "structured_stream", "json_stream",
+                                "structured_stream_validated", "reader_json", "reader_json_stream", "reader_structured_stream"])
+def test_every_paid_send_hides_phones_without_separator(op):
+    """`[2026-10-26 integ-rm9]` 모든 유료 전송 입구가 `redaction.masked_outbound` 를 쓴다 — 구분자 없는 휴대폰 · 지역번호 · +82 지역전화.
+    같은 글의 날짜 · 시각은 그대로 간다."""
+    rec = Recorder()
+    chat = make(rec)
+    stream = dict(first_wait=1, stall=1, max_seconds=2)
+    if op == "structured":
+        chat.structured("s", BARE, {})
+    elif op == "structured_validated":
+        chat.structured_validated("s", BARE, {}, validator=lambda value: None)
+    elif op == "json":
+        chat.json("s", BARE)
+    elif op == "structured_stream":
+        chat.structured_stream("s", BARE, {}, **stream)
+    elif op == "json_stream":
+        chat.json_stream("s", BARE, **stream)
+    elif op == "structured_stream_validated":
+        chat.structured_stream_validated("s", BARE, {}, validator=lambda value: None, **stream)
+    elif op == "reader_json":
+        chat.reader_json("s", BARE, external_fallback_enabled=True)
+    elif op == "reader_json_stream":
+        chat.reader_json_stream("s", BARE, external_fallback_enabled=True, **stream)
+    else:
+        chat.reader_structured_stream("s", BARE, {}, external_fallback_enabled=True, **stream)
+    assert len(rec.events["paid"]) == 1, rec.events
+    sent = rec.events["paid"][0][1]
+    assert "12345678" not in sent and "1234 5678" not in sent and "2026-10-26 10:30" in sent, sent
+    assert any(user == BARE for _, user in rec.events["local"])                   # 로컬에는 원문 그대로

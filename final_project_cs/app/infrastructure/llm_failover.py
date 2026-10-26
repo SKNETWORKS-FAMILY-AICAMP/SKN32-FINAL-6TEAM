@@ -11,7 +11,7 @@
 ★회로 차단기: 한 서버가 연속 `llm_failover_failures` 번 서버 문제로 실패하면 `llm_failover_open_seconds` 동안 **건너뛴다**(바로 다음 경로로). 시간이 지나면
   한 호출만 시험(반쯤 열림)해서 성공하면 닫는다. 서킷은 프로세스 안 전역이다(`from_settings` 를 요청마다 불러도 상태가 이어진다).
 ★넘긴 답도 부르는 쪽의 검증을 그대로 거친다(`decision_unit.decide` 의 목록 밖 값 거부 · 분류기의 라벨 검사 · 번역 숫자 · 단위 대조) — 이 모듈은 모양만 맞춰 준다.
-★개인정보: API 로 보내는 글은 `redaction.masked` 로 한 번 더 가린다(전화 · 이메일 같은 것). 호출부가 이미 가린 글이라 보통 달라지지 않는다.
+★개인정보: API 로 보내는 글은 `redaction.masked_outbound` 로 한 번 더 가린다(전화 · 이메일 같은 것 — `[2026-10-26]` 구분자 없는 휴대폰 · 지역번호 · +82 도). 호출부가 이미 가린 글이라 보통 달라지지 않는다.
   ★이미지(`see`)는 **가릴 수 없다** — 이름 · 예약번호가 그대로 있어 `llm_failover_vision` 을 따로 켰을 때만 넘긴다(기본 꺼짐).
 ★비용 방어: API 로 넘긴 호출은 `external_call_budget` 의 `openai_failover` 줄(일 · 월 상한)로 센다. 넘으면 더 부르지 않고 실패로 올린다.
 ★기록: 어느 경로로 답했는지(`local` · `api`)와 넘긴 이유를 로그(`app.llm_failover`)와 프로세스 안 지표(`snapshot()`)에 남긴다. 호출 직후 `current_path()` 로 읽을 수 있다.
@@ -35,7 +35,7 @@ from typing import Any, Callable
 
 import httpx
 
-from app.core.redaction import masked
+from app.core.redaction import masked_outbound
 from app.infrastructure.ollama_chat import OllamaChat, OllamaContentError, OllamaError, validate_content, validate_structured
 
 log = logging.getLogger("app.llm_failover")
@@ -633,13 +633,13 @@ class FailoverChat:
                         ",".join(f"{b}:{r}" for b, r in reasons), seconds)
 
     def json(self, system: str, user: str) -> dict[str, Any]:
-        return self._run("json", lambda chat, api: chat.json(system, masked(user) if api else user))
+        return self._run("json", lambda chat, api: chat.json(system, masked_outbound(user) if api else user))
 
     def reader_json(self, system: str, user: str, *, external_fallback_enabled: bool = False,
                     max_seconds: float | None = None) -> dict[str, Any]:
         """Reader compatibility path; existing blocking transport timeout still applies."""
         deadline = self._clock() + min(self.total_seconds, max_seconds if max_seconds is not None else self.total_seconds)
-        return self._run("reader_json", lambda chat, api: chat.json(system, masked(user) if api else user),
+        return self._run("reader_json", lambda chat, api: chat.json(system, masked_outbound(user) if api else user),
                          deadline=deadline, reader=True, reader_external=external_fallback_enabled)
 
     def json_stream(self, system: str, user: str, *, on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
@@ -707,7 +707,7 @@ class FailoverChat:
         로컬 모델이 안 올라와 있으면 곧바로 다음 경로로 간다. 고정 대기 호출(`structured`)로 다시 부르지 않는다.
         ☆이 메서드가 없으면 `__getattr__` 이 첫 Ollama 의 것을 돌려 넘김 없이 로컬로만 갔다.
         ★`[2026-10-26 L05 이식]` `api_schema` 가 있으면 유료 경로는 그 스키마로 답한다 — 로컬 생성 문법(`schema`)은 고객 문장 인용을
-        enum 으로 싣는다. 그 문법을 밖으로 보내지 않는다(`masked(user)` 는 스키마를 거치지 않는다). 근거 검사(`validator`)는 두 경로 같다."""
+        enum 으로 싣는다. 그 문법을 밖으로 보내지 않는다(`masked_outbound(user)` 는 스키마를 거치지 않는다). 근거 검사(`validator`)는 두 경로 같다."""
         def with_schema(shape: dict[str, Any]) -> Callable[[Any, bool], Any]:
             return self._streaming(
                 lambda chat, text, relay: chat.structured_stream_validated(system, text, shape, validator=validator, num_predict=num_predict,
@@ -729,14 +729,14 @@ class FailoverChat:
                 raise ModelNotLoaded(f"모델이 올라와 있지 않다: {getattr(chat, 'model', '')}")
             path = "api" if api else "local"
             relay = (lambda text: on_piece(text, path)) if on_piece is not None else None
-            return call(chat, masked(user) if api else user, relay)
+            return call(chat, masked_outbound(user) if api else user, relay)
         return run
 
     def text(self, system: str, user: str) -> str:
-        return self._run("text", lambda chat, api: chat.text(system, masked(user) if api else user))
+        return self._run("text", lambda chat, api: chat.text(system, masked_outbound(user) if api else user))
 
     def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
-        return self._run("structured", lambda chat, api: chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict))
+        return self._run("structured", lambda chat, api: chat.structured(system, masked_outbound(user) if api else user, schema, num_predict=num_predict))
 
     def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
                              validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
@@ -744,7 +744,7 @@ class FailoverChat:
         """`api_schema` 는 `structured_stream_validated` 와 같다 — 유료 경로에는 문장 없는 스키마만 보낸다. `[2026-10-26 L05 이식]`"""
         def call(chat: Any, api: bool) -> dict[str, Any]:
             shape = api_schema if api and api_schema is not None else schema
-            result = chat.structured(system, masked(user) if api else user, shape, num_predict=num_predict)
+            result = chat.structured(system, masked_outbound(user) if api else user, shape, num_predict=num_predict)
             return validate_content(result, validator)
 
         return self._run("structured", call)
@@ -902,7 +902,7 @@ def embed_with_api(settings: Any, text: str, *, client: Any = None, budget: Call
             from openai import OpenAI
 
             client = OpenAI(api_key=settings.openai_api_key_server.strip(), timeout=float(settings.llm_failover_api_timeout_seconds), max_retries=0)
-        vector = client.embeddings.create(model=settings.embedding_model, input=masked(text)).data[0].embedding
+        vector = client.embeddings.create(model=settings.embedding_model, input=masked_outbound(text)).data[0].embedding
     except ModelCallError:
         raise
     except Exception as exc:                                      # noqa: BLE001
