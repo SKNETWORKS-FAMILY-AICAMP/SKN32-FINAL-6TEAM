@@ -123,3 +123,28 @@ def test_generated_range_cannot_invent_unquoted_date_or_visit_or_extra_filter(wr
     elif wrong=='period':q['period']='morning'
     else:q['position']='last'
     assert not jsonschema.Draft202012Validator(schema(message)).is_valid(r)
+
+def test_relative_range_refuses_all_when_one_moved_stop_would_start_in_the_past():
+    source=items();now=datetime(2030,1,2,10,30,tzinfo=KST)   # 북촌 10:00 already started (kept); 인사동 12:00 -2h → 10:00 < now
+    q=dict(day='d1',period='all',kind='all',position='all');r=raw(scope='range',target='none',query=q,minutes=-120)
+    with pytest.raises(EditRefused) as e:
+        ops_for(du.Decision('change_time',None,None,'none',-120,'',raw=r,query=q),items=source,now=now)
+    assert e.value.code=='time_in_past'
+
+def test_relative_range_with_only_protected_stops_answers_range_kept_with_the_list():
+    source=items()
+    for stop in source[:3]:
+        stop.locked=True
+    q=dict(day='d1',period='all',kind='all',position='all');r=raw(scope='range',target='none',query=q,minutes=60)
+    with pytest.raises(EditRefused) as e:
+        ops_for(du.Decision('change_time',None,None,'none',60,'',raw=r,query=q),items=source,now=NOW)
+    assert e.value.code=='range_kept'
+    assert '· 그대로 둔 일정: 1월 2일(수) 10:00 북촌한옥마을(고정)' in e.value.message and 'N서울타워(고정)' in e.value.message
+
+def test_relative_range_skips_lodging_and_mobility_without_listing_them():
+    from dataclasses import replace as _replace
+    source=items();source[1]=_replace(source[1],kind='lodging')
+    q=dict(day='d1',period='all',kind='all',position='all');r=raw(scope='range',target='none',query=q,minutes=60)
+    ops,_=ops_for(du.Decision('change_time',None,None,'none',60,'',raw=r,query=q),items=source,now=NOW)
+    assert source[1].item_id not in [o.item_id for o in ops] and not [k for o in ops for k in o.kept]
+    assert [o.item_id for o in ops]==[source[0].item_id,source[2].item_id]
