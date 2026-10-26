@@ -324,7 +324,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
         #   「일정은 바꾸지 않았어요」라고 답하려면 **새 연결로 다시 읽어 판이 그대로임을 확인**해야 한다(COMMIT 도중 끊기면
         #   저장 여부를 모른다). 이미 저장됐거나 · 다시 읽지 못했거나 · 판이 바뀌었으면 원래 예외를 그대로 올린다(숨기지 않는다).
         #   코드 결함 계열(IntegrityError · ProgrammingError …)은 여기서 잡지 않는다.
-        if saved or not _unchanged_after_failure(store, connect, trip_id, base_version):
+        if saved or not _unchanged_after_failure(connect, tenant, trip_id, base_version):
             raise
         log.error("chat edit storage write failed trip=%s error=%s (version unchanged)", trip_id, type(exc).__name__)
         raise EditStorageFailed(type(exc).__name__) from None
@@ -340,15 +340,25 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
     return {"version": version, "changed": changed, "plan": plan, "intake_id": str(intake_id)}
 
 
-def _unchanged_after_failure(store: Any, connect: Callable[[], Any], trip_id: UUID, base_version: int) -> bool:
-    """저장 실패 뒤 새 연결로 여행의 지금 판을 다시 읽는다 — 기준 판 그대로면 True. 다시 읽기도 실패하면 False(모른다)."""
+#: 저장 실패 뒤 다시 읽기가 끝나지 않은 저장(끊긴 연결의 COMMIT)을 기다리는 한도 — 넘으면 「모른다」(원래 예외를 올린다)
+SETTLE_LOCK_TIMEOUT = "5s"
+
+
+def _unchanged_after_failure(connect: Callable[[], Any], tenant: str, trip_id: UUID, base_version: int) -> bool:
+    """저장 실패 뒤 새 연결로 여행의 지금 판을 다시 읽는다 — 기준 판 그대로면 True. 다시 읽기도 실패하면 False(모른다).
+
+    ★`[2026-10-26 묶음 L · Codex q3]` 판 번호만 읽으면, 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않았을 때 그 앞을 읽을 수 있다.
+      새 판 저장(`append_version`)은 `trips` 행을 UPDATE 하므로 그 행에 `FOR SHARE` 를 걸어 **앞 트랜잭션이 끝날 때까지(저장 또는 되돌림)
+      기다린 뒤** 읽는다. 한도(`SETTLE_LOCK_TIMEOUT`) 안에 끝나지 않으면 모른다로 본다."""
     try:
-        with connect() as conn:
-            trip, _ = store.latest(conn, trip_id)
-    except Exception:                                            # noqa: BLE001 — 모르면 「안 바꿨다」고 말하지 않는다(부르는 쪽이 원래 예외를 올린다)
-        log.warning("chat edit storage failure readback failed trip=%s", trip_id, exc_info=True)
+        with connect() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute(f"SET LOCAL lock_timeout = '{SETTLE_LOCK_TIMEOUT}'")
+            cur.execute("SELECT latest_version FROM trips WHERE tenant_id=%s AND trip_id=%s FOR SHARE", (tenant, trip_id))
+            row = cur.fetchone()
+    except Exception as exc:                                     # noqa: BLE001 — 모르면 「안 바꿨다」고 말하지 않는다(부르는 쪽이 원래 예외를 올린다)
+        log.warning("chat edit storage failure readback failed trip=%s error=%s", trip_id, type(exc).__name__)   # 메시지 · SQL 인자는 남기지 않는다
         return False
-    return int(trip["version"]) == int(base_version)
+    return row is not None and int(row[0]) == int(base_version)
 
 
 def _no_room_text(ops: list[EditOp], items: list[Any], now: datetime) -> str:

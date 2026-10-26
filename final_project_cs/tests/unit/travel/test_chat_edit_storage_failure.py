@@ -30,17 +30,40 @@ def _connect():
     yield None
 
 
-def _world(monkeypatch, *, commit_error=None, confirm_error=None, latest_after=None):
+class _ReadbackConn:
+    """저장 실패 뒤 다시 읽기용 새 연결 — 실행한 SQL 을 적고, `trips.latest_version` 으로 `version` 을 돌려준다(None 이면 끊김)."""
+
+    def __init__(self, version, sqls):
+        self.version, self.sqls = version, sqls
+
+    @contextmanager
+    def transaction(self):
+        yield
+
+    @contextmanager
+    def cursor(self):
+        yield self
+
+    def execute(self, sql, params=None):
+        self.sqls.append(sql)
+        if self.version is None:
+            raise psycopg.OperationalError("connection lost " + PRIVATE)
+
+    def fetchone(self):
+        return (self.version,)
+
+
+def _world(monkeypatch, *, commit_error=None, confirm_error=None, readback_version=1, sqls=None):
     item, intake_id, steps = _item(), uuid4(), []
-    reads = []
+    sqls = [] if sqls is None else sqls
+    store = SimpleNamespace(latest=lambda conn, trip_id: ({"version": 1}, [item]))
+    connections = {"n": 0}
 
-    def latest(conn, trip_id):
-        reads.append(trip_id)
-        if len(reads) > 1 and latest_after is not None:      # 저장 실패 뒤 새 연결로 다시 읽기
-            return latest_after(conn, trip_id)
-        return {"version": 1}, [item]
-
-    store = SimpleNamespace(latest=latest)
+    @contextmanager
+    def connect():
+        # 저장(commit) 단계 뒤에 여는 연결은 다시 읽기 연결이다
+        connections["n"] += 1
+        yield _ReadbackConn(readback_version, sqls) if "commit" in steps else None
     monkeypatch.setattr(reopen, "open_for_trip", lambda conn, **kw: (intake_id, False))
     monkeypatch.setattr(chat_edit, "_revision", lambda conn, tenant, intake: 1)
     monkeypatch.setattr(pipeline, "_claims", lambda conn, tenant, intake, revision: [])
@@ -67,7 +90,7 @@ def _world(monkeypatch, *, commit_error=None, confirm_error=None, latest_after=N
     monkeypatch.setattr(reopen_commit, "commit", commit)
     monkeypatch.setattr(pipeline, "mark_confirmed", mark_confirmed)
     monkeypatch.setattr(reopen, "cancel", lambda conn, **kw: steps.append("cancel"))
-    run = lambda: chat_edit._run_locked(store=store, connect=_connect, tenant="unit", customer_id=uuid4(),  # noqa: E731
+    run = lambda: chat_edit._run_locked(store=store, connect=connect, tenant="unit", customer_id=uuid4(),  # noqa: E731
                                         trip_id=uuid4(), base_version=1, ops=[chat_edit.EditOp("remove", item_id=item.item_id)],
                                         lookups=lambda: (None, None, None), now=NOW, cause_extra=None)
     return run, steps
@@ -91,18 +114,26 @@ def test_a_storage_failure_after_the_version_was_saved_is_not_relabelled_as_unch
     assert steps[:2] == ["commit", "confirm"]
 
 
-@pytest.mark.parametrize("readback", ["moved", "broken"])
-def test_an_unconfirmed_rollback_is_not_answered_as_unchanged(monkeypatch, readback):
+@pytest.mark.parametrize("readback_version", [2, None], ids=["moved", "broken"])
+def test_an_unconfirmed_rollback_is_not_answered_as_unchanged(monkeypatch, caplog, readback_version):
     # ★Codex E1: COMMIT 도중 끊기면 저장 여부를 모른다 — 새 연결로 다시 읽어 판이 그대로일 때만 「안 바꿨다」고 답한다
-    def latest_after(conn, trip_id):
-        if readback == "broken":
-            raise psycopg.OperationalError("connection lost")
-        return {"version": 2}, []
-
-    run, steps = _world(monkeypatch, commit_error=psycopg.OperationalError(PRIVATE), latest_after=latest_after)
+    run, steps = _world(monkeypatch, commit_error=psycopg.OperationalError(PRIVATE), readback_version=readback_version)
     with pytest.raises(psycopg.OperationalError):
         run()
     assert "commit" in steps
+    # ★Codex q3: 다시 읽기 실패 기록에는 예외 종류만 — 메시지 · SQL 인자(고객 값)는 남기지 않는다
+    assert "010-1234-5678" not in caplog.text and "CONTROLLED_PRIVATE" not in caplog.text
+
+
+def test_the_readback_waits_for_an_unfinished_save_on_the_trip_row(monkeypatch):
+    # ★Codex q3: 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않았으면 그 앞을 읽을 수 있다 — 새 판 저장이 UPDATE 하는 trips 행에
+    #   FOR SHARE 를 걸어(한도 있음) 앞 트랜잭션이 끝난 뒤 읽는다
+    sqls = []
+    run, _ = _world(monkeypatch, commit_error=psycopg.OperationalError(PRIVATE), sqls=sqls)
+    with pytest.raises(chat_edit.EditStorageFailed):
+        run()
+    assert sqls[0] == f"SET LOCAL lock_timeout = '{chat_edit.SETTLE_LOCK_TIMEOUT}'"
+    assert "FROM trips" in sqls[1] and sqls[1].rstrip().endswith("FOR SHARE")
 
 
 @pytest.mark.parametrize("error", [psycopg.IntegrityError("dup"), psycopg.ProgrammingError("bad sql")])
