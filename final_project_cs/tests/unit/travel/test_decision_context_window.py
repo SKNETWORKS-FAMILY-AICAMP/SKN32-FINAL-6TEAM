@@ -40,11 +40,16 @@ def _items(n: int):
                             title=f"{titles[k % 4]} {k + 1}", place={"name": f"장소 {k + 1}"}, detail={}) for k in range(n)]
 
 
-def test_the_interpreter_request_carries_the_context_and_full_output_reserve_with_every_stop_and_turn():
+def test_the_interpreter_request_carries_the_context_and_full_output_reserve_with_every_stop_and_turn(monkeypatch):
     from app.core.settings import get_guardrails
     from app.domains.travel_ops.components.conversation import decision_unit
+    from app.infrastructure import ollama_chat
     from app.infrastructure.ollama_chat import from_settings
 
+    # ★`[2026-10-26 묶음 J — CI (main) 729a3ed3 gw2 실패]` 같은 일꾼에서 앞 시험(앱 조립)이 콘솔 경로 읽기를 꽂아 두면
+    #   `from_settings` 가 `RoutedChat` 을 돌려주고, 아래 `_post` 가짜가 실제 `OllamaChat` 에 닿지 않아 요청 0건이 된다.
+    #   이 시험은 「직접 만든 클라이언트가 보내는 요청」을 보므로 꽂힌 경로 읽기를 이 시험 동안만 뺀다(단언은 그대로).
+    monkeypatch.setattr(ollama_chat, "_route_provider", None)
     sent = []
 
     def transport(url, payload):
