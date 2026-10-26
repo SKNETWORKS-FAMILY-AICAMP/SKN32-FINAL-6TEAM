@@ -92,8 +92,11 @@ def alternate_offers(outcome: dict[str, Any]) -> list[tuple[dict[str, str], str]
     if not outcome.get("to") or not isinstance(more, list):
         return []
     kind = "식당 " if outcome.get("kind") == "dining" else ""
-    return [({"label": f"{kind}{(o['note'] + ' ') if o.get('note') else ''}{o.get('option_label') or o['name']}",
-              "message": f"{outcome['to']} 대신 {o.get('option_label') or o['name']}(으)로 바꿔 줘"}, str(o["key"]))
+    # ★`[2026-10-26 x600 40231a56]` label 은 장소 이름만 — 후보의 조건 설명(`note`, 예: 「12:30으로 늦추면」)을 앞에 붙여
+    #   「식당 12:30으로 늦추면 인사동 옥정」이 장소처럼 보였다. 설명은 따로(`note`, 있을 때만) 싣는다. 답 문장은 그대로 설명을 함께 적는다
+    return [({"label": f"{kind}{o.get('option_label') or o['name']}",
+              "message": f"{outcome['to']} 대신 {o.get('option_label') or o['name']}(으)로 바꿔 줘",
+              **({"note": str(o["note"])} if o.get("note") else {})}, str(o["key"]))
             for o in more if isinstance(o, dict) and o.get("name") and o.get("key")]
 
 
@@ -101,8 +104,8 @@ def offered_alternates(state: dict[str, Any]) -> list[tuple[dict[str, str], str]
     """그 Case 의 답이 실제로 보인 「다른 안」 선택지와 후보 key — 팀 경로(`response` 와 같은 계산)와 팀 밖 경로(`trip_outcome.offered`) 모두."""
     kept = (state.get("trip_outcome") or {}).get("offered")
     if isinstance(kept, list):
-        return [({"label": o["label"], "message": o["message"]}, str(o["choice"])) for o in kept
-                if isinstance(o, dict) and o.get("message") and o.get("choice")]
+        return [({"label": o["label"], "message": o["message"], **({"note": o["note"]} if o.get("note") else {})}, str(o["choice"]))
+                for o in kept if isinstance(o, dict) and o.get("message") and o.get("choice")]
     applied = state.get("applied_actions") or []
     if not applied or ":proposal:" in str(applied[-1].get("result_ref") or ""):
         return []
