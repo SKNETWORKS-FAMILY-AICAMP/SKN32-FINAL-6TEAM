@@ -272,7 +272,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
                         position=int(source["position"]), agent_num_predict=reader["num_predict"],
                         agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect,
-                        external_fallback_enabled=reader.get("external_fallback_enabled", False), activity_web=activity_web)
+                        external_fallback_enabled=reader.get("external_fallback_enabled", False), activity_web=activity_web,
+                        agent_missed_line_passes=int(reader.get("missed_line_passes") or 0))
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -385,13 +386,15 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
     못 읽으면 `off`(규칙으로 읽는다). ★기다리는 시간은 여기서 정하지 않는다 — 채팅과 같은 넘김 장치(`llm_failover_primary_timeout_seconds`)를 따른다."""
     from app.core.settings import get_guardrails
 
-    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off", "external_fallback_enabled": False}
+    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off", "external_fallback_enabled": False,
+               "missed_line_passes": 0}
     try:
         guard = get_guardrails()
         mode = str(guard.get("travel.intake_reader.mode"))
         num_predict = int(guard.get("travel.intake_reader.num_predict"))
         chunk_chars = int(guard.get("travel.intake_reader.chunk_chars"))
         prefill = str(guard.get("travel.intake_reader.prefill"))
+        missed_passes = max(0, int(guard.get("travel.intake_reader.missed_line_passes")))
     except Exception:                                  # noqa: BLE001 — 설정이 없으면 규칙으로
         return default
     try:
@@ -406,7 +409,7 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
         mode = console
     return {"mode": mode if mode in ("on", "shadow", "off") else "off", "num_predict": num_predict,
             "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off",
-            "external_fallback_enabled": external}
+            "external_fallback_enabled": external, "missed_line_passes": missed_passes}
 
 
 def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
@@ -1499,7 +1502,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
                 reading_stream: dict[str, Any] | None = None, external_fallback_enabled: bool = False,
                 on_reading: Callable[[dict[str, Any]], None] | None = None,
-                connect: Callable[[], Any] | None = None, activity_web: Any = None) -> list[dict[str, Any]]:
+                connect: Callable[[], Any] | None = None, activity_web: Any = None,
+                agent_missed_line_passes: int = 0) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
     `agent` · `agent_mode` `[2026-10-16 사용자 지시]` — 읽기 에이전트(`agent_read.py`, 가르친 모델 한 번 호출). `on` 이면 에이전트가 먼저 읽고
@@ -1540,7 +1544,13 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
                                           chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS,
                                           stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None,
-                                          now=now, external_fallback_enabled=external_fallback_enabled)
+                                          now=now, external_fallback_enabled=external_fallback_enabled,
+                                          # ★`[2026-10-26 x600 74b2b232]` 에이전트가 빠뜨린 시각 있는 줄(규칙 읽기 기준)은 같은 모델이 한 번 더 읽는다
+                                          #   (`travel.intake_reader.missed_line_passes`) — 그 줄의 고정 요청 · 끼니 · 시각을 모델이 읽게(규칙 항목은 고정을 읽지 않는다)
+                                          expected_lines={item.title.line for item in read.items if item.title is not None and item.start},
+                                          anchor_lines={claim.span.line for claim in read.claims
+                                                        if claim.field.startswith("days[") and claim.field.endswith(".heading")},
+                                          missed_line_passes=agent_missed_line_passes)
         except Exception as exc:                      # noqa: BLE001 — 갈래를 나눈다(아래)
             agent_error = f"{type(exc).__name__}: {exc}"[:200]
             # ★`[2026-10-16 2회차 합의 ②]` 버리는 줄 없음 — 실패 이유로 갈래를 나눈다
