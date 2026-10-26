@@ -219,7 +219,7 @@ class TripWatchCaseOpener:
                 record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
                              report=skipped)
                 continue
-            if item.detail.get("customer_pinned"):
+            if item.detail.get("customer_pinned") or item.detail.get("rollback_hold"):
                 # ★`[2026-10-03 사용자 결정 — D-020]` 고정(「변경 안 할 일정」)은 **자동으로 바꾸지 않는다**는 뜻이지 점검에서 빼라는 뜻이 아니다 — 사용자 말:
                 #   「안 바꿔도 알림은 받게 해야 함. 바꾸지 않는 것과 알림을 끄는 것은 별개.」 전에는 여기서 `continue` 해 고정한 일정에는 재난문자 · 휴무 같은 위험 알림이
                 #   안 나갔다(시나리오 버전 `trip_watch` 는 이미 점검하고 물었다 — 두 감시가 갈려 있었다). 이제 **점검하고 Case 를 연다** — 일정은 적용기가 「변경 안 할 일정이면

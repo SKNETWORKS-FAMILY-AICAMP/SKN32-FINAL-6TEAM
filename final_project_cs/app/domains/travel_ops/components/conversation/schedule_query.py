@@ -72,6 +72,9 @@ def reply(fact: str, query: dict[str, str], *, items: list[Any], now: Any) -> tu
             lines.append(label)
             continue
         protection = protected_reason(item)
+        if protection == "rollback_hold":
+            # `[2026-10-26 x600 40231a56]` 되돌린 일정의 감시용 표시 — 감시만 자동으로 바꾸지 않는다. 고객이 직접 바꾸는 데는 막는 것이 없다
+            protection = None
         booked = booking_fact(item)[0] == "있음"
         if protection == "customer_pinned":
             state, note = "pinned", "고정한 일정 — 고정 해제 의사를 먼저 확인해야 해요."

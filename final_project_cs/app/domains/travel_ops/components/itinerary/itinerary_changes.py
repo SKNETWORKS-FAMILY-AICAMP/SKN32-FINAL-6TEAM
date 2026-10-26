@@ -1728,8 +1728,10 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
                   request_id: str | None, redo: bool = False) -> Plan:
     """옛 버전의 항목을 **새 버전으로 다시 쓴다**(append-only — 옛 버전을 지우지 않는다).
 
-    ★되살린 항목은 `customer_pinned` 로 표시한다. 감시 루프가 다음 틱에 같은 원인으로
-      다시 바꾸면 되돌림이 무의미해진다 — 고객이 알고 고른 것이다.
+    ★되살린 항목은 감시용 표시 `rollback_hold` 를 붙인다. 감시 루프가 다음 틱에 같은 원인으로
+      다시 바꾸면 되돌림이 무의미해진다 — 고객이 알고 고른 것이다(`pending.protected_reason` → `rollback_hold`).
+    ★`[2026-10-26 x600 40231a56 · Codex 결정]` 고객 고정(`customer_pinned`)은 **옛 판의 값 그대로** 되살린다 — 전에는 감시용 표시를
+      같은 칸에 붙여 17곳을 되돌리면 고친 적 없는 16곳도 「고정」이 되고, 다음 「전부 미뤄줘」가 그 일정을 다 그대로 뒀다.
     """
     if trip_version != base_version:
         return NoChange("stale", {"version": trip_version})
@@ -1739,7 +1741,7 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
     restored = []
     for item in old_items:
         if item.item_id not in current_ids:
-            item.detail = {**item.detail, "customer_pinned": True}
+            item.detail = {**item.detail, "rollback_hold": True}
             restored.append(item.title)
     cause = with_request({"category": "customer_request", "type": "rollback",
                           "to_version": to_version, "message": message}, request_id)

@@ -62,6 +62,9 @@ def protected_reason(item: Item) -> str | None:
         return "customer_pinned"
     if item.locked:
         return "locked"
+    if item.detail.get("rollback_hold"):
+        # `[2026-10-26 x600 40231a56]` 고객이 되돌린 일정 — 감시가 자동으로 다시 바꾸지 않는다(고객 고정과 다른 이유 이름)
+        return "rollback_hold"
     return None
 
 

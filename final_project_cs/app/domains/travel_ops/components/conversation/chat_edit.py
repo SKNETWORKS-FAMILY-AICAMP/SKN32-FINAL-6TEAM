@@ -470,16 +470,23 @@ def split_range(candidates: list[Any], now: datetime) -> tuple[list[Any], list[A
     """범위 옮기기의 대상 정책 **한 곳**(`edit_intent.time_ops` scope=range 와 `ops_for` query 경로가 함께 쓴다) → (옮길 일정, 그대로 둔 일정).
 
     ★`[2026-10-26 integ-rm9 · Codex 결정]` 끝난 일정과 활동 · 식사가 아닌 항목(숙소 · 이동)은 범위에서 뺀다(표시하지 않는다).
-      고객 고정 · 예약 · 이미 시작한 활동 · 식사는 옮기지 않고 「그대로 둔 일정」이다. 나머지를 옮긴다."""
+      고객 고정 · 예약 · 이미 시작한 활동 · 식사는 옮기지 않고 「그대로 둔 일정」이다. 나머지를 옮긴다.
+    ★`[2026-10-26 x600 40231a56]` 고객 고정은 `detail.customer_pinned` 도 본다(등록한 여행의 고객 고정은 이 칸이다) — 전에는 `locked` 만 봐서
+      「이 일정은 고정해 주세요」로 고정한 국립중앙박물관이 「전부 1시간씩 미뤄줘」에 같이 옮겨지고 고정이 풀렸다.
+      되돌리기의 감시용 표시(`detail.rollback_hold`)는 고객 고정이 아니다 — 범위 옮기기 대상이다."""
     ranged = [i for i in candidates if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now]
-    targets = [i for i in ranged if not i.booking_id and not i.locked and i.starts_at > now]
+    targets = [i for i in ranged if not i.booking_id and not _customer_pinned(i) and i.starts_at > now]
     return targets, [i for i in ranged if i not in targets]
+
+
+def _customer_pinned(item: Any) -> bool:
+    return bool(item.locked or (item.detail or {}).get("customer_pinned"))
 
 
 def _kept_label(item: Any) -> str:
     from app.domains.travel_ops.components.conversation import trip_facts
 
-    why = "고정" if item.locked else "예약" if item.booking_id else "이미 시작"
+    why = "고정" if _customer_pinned(item) else "예약" if item.booking_id else "이미 시작"
     return f"{trip_facts._day_label(item.starts_at.astimezone(KST).date())} {_hm(item.starts_at)} {item.title}({why})"
 
 

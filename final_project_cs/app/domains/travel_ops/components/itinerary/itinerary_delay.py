@@ -50,7 +50,7 @@ class Knock:
 
 def _fixed(item: Item) -> bool:
     """시각을 우리가 못 바꾸는 일정 — 고객이 고정했거나 · 잠긴 예약이거나 · 예약번호가 있다(`pending.protected_reason` 과 같은 표시)."""
-    return bool(item.detail.get("customer_pinned") or item.locked or item.detail.get("booking"))
+    return bool(item.detail.get("customer_pinned") or item.detail.get("rollback_hold") or item.locked or item.detail.get("booking"))
 
 
 def delay_knock_on(items: list[Item], delayed: Item, minutes: int) -> list[Knock]:
