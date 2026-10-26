@@ -49,13 +49,10 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
         status = "ask_rollback"
         outcome["status"] = status
     choices = last.get("choices") or request.get("choices") or []
-    if not choices and status == "adjusted" and outcome.get("more_options") and outcome.get("to"):
+    if not choices and status == "adjusted":
         # ★`[2026-10-26 x600 a465c602]` 바꾼 뒤 「다른 안: 1) … 고르세요」라고 답하면서 고를 선택지가 비어 있었다(식당 · 활동 「다른 곳으로」).
-        #   답에 적은 다른 안을 그대로 선택지로 싣는다 — 누르면 「바꾼 곳 대신 그 곳으로」 문장이 같은 채팅 입구로 간다. 식당이면 종류를 붙인다
-        kind = "식당 " if outcome.get("kind") == "dining" else ""
-        choices = [{"label": f"{kind}{(o['note'] + ' ') if o.get('note') else ''}{o.get('option_label') or o['name']}",
-                    "message": f"{outcome['to']} 대신 {o.get('option_label') or o['name']}(으)로 바꿔 줘"}
-                   for o in outcome["more_options"] if isinstance(o, dict) and o.get("name")]
+        #   답에 적은 다른 안을 그대로 선택지로 싣는다 — 누르면 「바꾼 곳 대신 그 곳으로」 문장이 같은 채팅 입구로 간다(`offered_choice` 가 모델 없이 받는다)
+        choices = [choice for choice, _ in alternate_offers(outcome)]
     result = {"case_id": str(case_id), "case_status": str(case["status"]), "version": case["version"],
               "classification": {"intent": case.get("intent"), "issue_code": case.get("issue_code")},
               "status": status, "reason": "team_conversation", "outcome": outcome,
@@ -84,6 +81,36 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
         outcome["text"] = result["answer"]
         result["report"] = {"type": "stock_out", "products": request["products"]}
     return result
+
+
+def alternate_offers(outcome: dict[str, Any]) -> list[tuple[dict[str, str], str]]:
+    """바꾼 결과(`to` · `more_options`)가 답에 적은 「다른 안」 → [(공개 선택지 {label, message}, 그 안의 후보 key)].
+
+    ★`[2026-10-26 x600 74b2b232]` 선택지 문장 「바꾼 곳 대신 그 곳으로 바꿔 줘」가 모델을 다시 타서 고른 곳(조선옥)이 아니라 다른 곳(한일옥)으로 바뀌었다 —
+      key 는 공개하지 않고(공개 선택지 모양은 그대로), 다음 턴에 서버가 같은 기록에서 다시 만들어 고른 안을 확정한다(`offered_choice`). 식당이면 종류를 붙인다."""
+    more = outcome.get("more_options") or []
+    if not outcome.get("to") or not isinstance(more, list):
+        return []
+    kind = "식당 " if outcome.get("kind") == "dining" else ""
+    return [({"label": f"{kind}{(o['note'] + ' ') if o.get('note') else ''}{o.get('option_label') or o['name']}",
+              "message": f"{outcome['to']} 대신 {o.get('option_label') or o['name']}(으)로 바꿔 줘"}, str(o["key"]))
+            for o in more if isinstance(o, dict) and o.get("name") and o.get("key")]
+
+
+def offered_alternates(state: dict[str, Any]) -> list[tuple[dict[str, str], str]]:
+    """그 Case 의 답이 실제로 보인 「다른 안」 선택지와 후보 key — 팀 경로(`response` 와 같은 계산)와 팀 밖 경로(`trip_outcome.offered`) 모두."""
+    kept = (state.get("trip_outcome") or {}).get("offered")
+    if isinstance(kept, list):
+        return [({"label": o["label"], "message": o["message"]}, str(o["choice"])) for o in kept
+                if isinstance(o, dict) and o.get("message") and o.get("choice")]
+    applied = state.get("applied_actions") or []
+    if not applied or ":proposal:" in str(applied[-1].get("result_ref") or ""):
+        return []
+    last = next((d for d in reversed(state.get("decisions") or []) if d.get("itinerary")), {})
+    request = (state.get("subject_ref") or {}).get("request") or {}
+    if last.get("choices") or request.get("choices"):
+        return []
+    return alternate_offers(last)
 
 
 def execute(conn, *, controller: Any, tenant: str, trip: dict[str, Any], case_id: UUID,

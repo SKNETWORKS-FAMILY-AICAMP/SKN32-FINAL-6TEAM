@@ -423,8 +423,15 @@ def _handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message
             elif fresh_decision is not None:
                 decision, failure = fresh_decision
             else:
-                decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
-                                                message=message, selected=selected_item_id, chat=chat, now=at)
+                # ★`[2026-10-26 x600 74b2b232]` 바로 앞 답의 「다른 안」 선택지를 누른 문장이면 모델 없이 그 안으로(`offered_choice`) —
+                #   선택지 문장이 해석을 다시 타서 고른 곳이 아닌 다른 곳으로 바뀌었다
+                from .offered_choice import decide as offered_decision
+
+                offered = offered_decision(conn, tenant=tenant, trip_id=trip_id, items=items, message=message,
+                                           selected=selected_item_id) if mode == "on" else None
+                decision, failure = ((offered, None) if offered is not None else
+                                     _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
+                                                 message=message, selected=selected_item_id, chat=chat, now=at))
             record = decision.record() if decision is not None else {"failed": failure}
             record = {**record, **_model_path()}               # ★`[2026-10-07]` 어느 경로(로컬 · API)로 답했나 — 넘김 장치가 켜져 있을 때만 들어간다
             if mode == "on" or summary_decision is not None:
@@ -1119,6 +1126,15 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     else:
         outcome = {"status": f"unhandled_{action}"}
 
+    offers = []
+    if outcome.get("status") == "adjusted" and not outcome.get("choices"):
+        # ★`[2026-10-26 x600 74b2b232]` 팀 밖에서 바꾼 결과(예: 이름 말한 곳 · 근처 식당)도 답에 「다른 안」을 적으면 선택지로 싣는다 —
+        #   x600 은 「다른 안: 1) 조선옥 …」이라고 답하면서 `choices` 가 [] 였다. 고른 안은 Case 기록(`offered`)에 남겨 다음 턴이 모델 없이 받는다
+        from .case_dispatch import alternate_offers
+
+        offers = alternate_offers({"to": outcome.get("to"), "kind": outcome.get("kind"), "more_options": outcome.get("more_options")})
+        if offers:
+            outcome = {**outcome, "choices": [c for c, _ in offers], "choices_title": "다른 안"}
     answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
     status = outcome.get("status")
     if action in EDIT_ACTIONS and "response" not in basis:
@@ -1143,6 +1159,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
             chat_reply["edit_goal"] = goal
     kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version", "proposal_id",
                                     "choices") if k in outcome}
+    if offers:
+        kept["offered"] = [{**c, "choice": key} for c, key in offers]
     if basis.get("suspect_wrong_change"):
         kept["suspect_wrong_change"] = basis["suspect_wrong_change"]
     if basis:
@@ -1189,6 +1207,9 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
         request["setting"] = setting
     if decision.minutes is not None:
         request["minutes"] = decision.minutes
+    if (getattr(decision, "raw", None) or {}).get("source") == "offered_choice" and action == "apply_change":
+        # 바로 앞 답의 「다른 안」 선택지를 누른 것 — 그 안(후보 key)을 팀에 넘긴다(`plan_swap(choice=…)`, `offered_choice`)
+        request["choice"] = decision.raw["choice"]
     if decision.question:
         request["question"] = decision.question
     if action == "clarify":
