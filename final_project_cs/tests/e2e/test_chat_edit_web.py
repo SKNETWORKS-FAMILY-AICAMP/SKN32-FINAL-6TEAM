@@ -301,6 +301,43 @@ def test_a_range_shift_that_runs_into_a_kept_stop_is_refused_as_a_whole(chat):
     assert (body.get("outcome") or {}).get("reason") == "itinerary_infeasible", body      # 겹침 판정으로 거절(다른 까닭이 아니다)
 
 
+@pytest.mark.parametrize("finish", ["commit", "rollback"])
+def test_the_failure_readback_waits_for_an_unfinished_save_and_reports_what_it_became(chat, finish):
+    """`[2026-10-26 묶음 L · Codex q3·q4]` 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않은 장면 — 다른 연결이 `trips` 행을 UPDATE 하고
+    트랜잭션을 연 채 둔다. 저장 실패 뒤 다시 읽기(`_unchanged_after_failure`)는 그 트랜잭션이 끝날 때까지 기다린 뒤 결과대로 답한다:
+    저장됐으면 False(「안 바꿨다」고 말하지 않는다) · 되돌려졌으면 True. 판 번호만 읽었다면 commit 장면에서 거짓 True 였다."""
+    import threading
+    import time as _time
+    from app.domains.travel_ops.components.conversation import chat_edit
+
+    trip_id, tenant = str(chat["trip"]["trip_id"]), chat["tenant"]
+    base, _ = _latest(chat)
+    result, started = {}, threading.Event()
+    with get_connection() as other:
+        with other.cursor() as cur:
+            cur.execute("UPDATE trips SET latest_version=latest_version+1 WHERE tenant_id=%s AND trip_id=%s", (tenant, trip_id))
+            assert cur.rowcount == 1
+
+        def readback():
+            started.set()
+            result["unchanged"] = chat_edit._unchanged_after_failure(get_connection, tenant, trip_id, base)
+            result["at"] = _time.monotonic()
+
+        worker = threading.Thread(target=readback)
+        worker.start()
+        started.wait(5)
+        _time.sleep(1.0)
+        assert "unchanged" not in result, "다시 읽기가 끝나지 않은 저장을 기다리지 않았다"
+        ended = _time.monotonic()
+        other.commit() if finish == "commit" else other.rollback()
+        worker.join(10)
+    assert result["at"] >= ended
+    assert result["unchanged"] is (finish == "rollback")
+    if finish == "commit":                                                    # 시험이 올린 판 번호를 되돌린다(다른 시험에 영향 없게)
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("UPDATE trips SET latest_version=%s WHERE tenant_id=%s AND trip_id=%s", (base, tenant, trip_id))
+
+
 def test_an_empty_edit_screen_left_open_is_not_shared_and_is_closed(chat):
     """`[2026-10-15 Codex 검토]` 웹 「일정 수정」을 열어만 두고(고친 값 없음) 채팅으로 고치면 — 그 접수를 같이 쓰지 않고 닫은 뒤 채팅 몫을 새로 연다."""
     from .test_trip_reopen import _reopen

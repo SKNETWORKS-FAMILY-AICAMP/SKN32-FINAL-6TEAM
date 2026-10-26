@@ -127,3 +127,20 @@ def test_place_actions_whose_time_edit_is_not_executed_are_not_checked():
     items = plan()
     got = Decision(action="apply_change", item=items[1], change=None, fact="none", minutes=None, question="", raw=raw)
     assert edit_intent.clock_ambiguity(got) is None
+
+
+def test_an_absolute_range_move_is_not_checked_here_because_its_quote_names_the_range_bounds():
+    # ★Codex q4: 절대 시각 + scope range(「오후 2시 이후 일정을 4시부터로」)의 인용에는 범위 경계 시각이 반드시 들어 있다 — 여기서 시각 둘을
+    #   되물으면 모든 범위 절대 옮기기가 막힌다. 범위 경계는 범위 질의(`query`) 검증이, 시작 시각은 `validate` 의 첫 시각 대조가 맡는다
+    #   (이 검사의 범위 밖임을 고정한다 — 바꾸려면 계약 trip-chat-context.md 「수용 X02」 단락부터 고친다)
+    raw = x02_raw(minutes=0)
+    raw["time_edit"] = {**raw["time_edit"], "scope": "range", "boundary": "start", "time": "16:00",
+                        "evidence": "오후 2시 이후 일정을 4시부터로"}
+    from app.domains.travel_ops.components.conversation.decision_unit import Decision
+
+    items = plan()
+    got = Decision(action="change_time", item=items[1], change=None, fact="none", minutes=None, question="", raw=raw)
+    assert edit_intent.clock_ambiguity(got) is None
+    item_scope = Decision(action="change_time", item=items[1], change=None, fact="none", minutes=None, question="",
+                          raw={**raw, "time_edit": {**raw["time_edit"], "scope": "item"}})
+    assert edit_intent.clock_ambiguity(item_scope)["clocks"] == ["14:00", "16:00"]   # 같은 인용이 한 일정 바꾸기라면 되묻는다(대조)
