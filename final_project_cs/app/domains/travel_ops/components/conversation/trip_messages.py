@@ -698,6 +698,15 @@ def _model_path() -> dict[str, Any]:
     return {"model_path": {"path": path["path"], "backend": path["backend"], "reasons": [list(r) for r in path["reasons"]]}}
 
 
+def _with_stored_model_path(conn, tenant: str, case_id: UUID, record: dict[str, Any]) -> dict[str, Any]:
+    """★`[2026-10-26 x600 74b2b232]` 팀 밖 결정(trip_desk · 시각 옮기기 등)은 ROUTED 때 `decision` 을 다시 쓰면서 Case 를 열 때 남긴
+    `decision.model_path`(어느 경로로 해석했나)를 지웠다 — 유료 넘김이 있어도 DB 에 남지 않았다. 다른 Case(팀 경로)와 같은 자리에 그대로 둔다."""
+    from app.infrastructure.db import repository
+
+    stored = ((repository.get_case(conn, tenant_id=tenant, case_id=case_id) or {}).get("state_json") or {}).get("decision") or {}
+    return {**record, "model_path": stored["model_path"]} if isinstance(stored, dict) and stored.get("model_path") else record
+
+
 def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: list[Any], message: str,
                 selected: UUID | None, chat: Any, now: datetime | None = None):
     from app.core.settings import get_guardrails
@@ -907,10 +916,11 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         read_snapshot = {**read_snapshot, "item_id": str(decision.item.item_id) if decision.item else None}
     read_patch = {"fact_read_snapshot": read_snapshot} if read_snapshot else {}
     if not safe_read or read_case["status"] != "running":
+        routed = _with_stored_model_path(conn, tenant, case_id, decision.record())
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{action}", "routed_by": "decision_unit",
                                 **({"owner_basis": "unresolved"} if unresolved else {}),
-                                "decision": decision.record(),
-                                "state_patch": {**read_patch, "decision": decision.record()}})
+                                "decision": routed,
+                                "state_patch": {**read_patch, "decision": routed}})
     with get_connection() as fresh:
         current, now_items = store.latest(fresh, trip_id)
         history = store.versions(fresh, trip_id)
