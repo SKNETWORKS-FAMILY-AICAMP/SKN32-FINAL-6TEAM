@@ -298,6 +298,16 @@ describe("[2026-10-19] 못 찾은 장소 — the question rides on the stop's ca
     expect(reviewResultOf(elsewhere, readingOf(elsewhere))!.items.some((entry) => entry.unfound)).toBe(false);
     expect(reviewResultOf(elsewhere, readingOf(elsewhere))!.prefill?.questions).toEqual([question().question]);
   });
+
+  // `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 이름 없는 호텔 줄은 먼저 채우지 않고(후보가 하나여도) 그 일정 카드에서 후보를 고르게 묻는다
+  it("puts the nameless hotel's pick-a-stay question on its card, not in the note", () => {
+    const hotel = item({ id: "0-1", title: "호텔", status: "review", place_state: "needs_choice", place: null });
+    const ask = question({ kind: "lodging_place", question: "「호텔」 — 묵을 숙소를 후보에서 골라 주세요(후보가 하나여도 고르신 뒤에 넣어요)", quote: "호텔" });
+    const next = withQuestions([ask], [item({ id: "0-0" }), hotel]);
+    const view = reviewResultOf(next, readingOf(next))!;
+    expect(view.items.find((entry) => entry.id === "0-1")!.unfound).toEqual({ question: ask.question, blocked: false });
+    expect(view.prefill).toBeNull();
+  });
 });
 
 describe("`[2026-10-21 사용자 결정 — P6]` the interpretation questions the first check stops to ask", () => {
@@ -324,5 +334,19 @@ describe("`[2026-10-21 사용자 결정 — P6]` the interpretation questions th
     expect(asksOf(intake([question({ options: [] })]), days)).toEqual([]);
     expect(asksOf(intake([question({ kind: "other" })]), days)).toEqual([]);
     expect(asksOf({ sources: [] } as unknown as Pick<IntakeView, "interpretations" | "sources">, days)).toEqual([]);
+  });
+
+  // `[2026-10-26 사용자 지시 — 호텔 종류 확인]` 호텔 줄의 종류(숙박 · 활동 · 식사) 질문도 같은 화면 길로 묻는다 — 서버 문구 · 선택지 그대로, 답한 뒤에는 그리지 않는다
+  it("asks the hotel's kind with the server's three options, the reading on top, and not once answered", () => {
+    const kind = question({ id: "k-0-1", type: "kind", question: "「롯데호텔 서울」을 어떤 일정으로 볼까요? — 숙박 · 활동 · 식사 중에 골라 주세요", quote: "15:00 롯데호텔 서울",
+      applied: "reading", options: [
+        { id: "reading", label: "숙박", recommended: true, action: null, query: null, reason: "읽기 AI 가 숙박으로 읽었어요", effect: "숙박으로 둬요" },
+        { id: "activity", label: "활동", recommended: false, action: null, query: null, reason: null, effect: "활동 일정으로 둬요" },
+        { id: "dining", label: "식사", recommended: false, action: null, query: null, reason: null, effect: "식사 일정으로 둬요" }] });
+    const [ask] = asksOf(intake([kind]), days);
+    expect(ask.question).toBe(kind.question);
+    expect(ask.options.map((option) => [option.id, option.label, option.recommended, option.pickMyself])).toEqual([
+      ["reading", "숙박", true, false], ["activity", "활동", false, false], ["dining", "식사", false, false]]);
+    expect(asksOf(intake([{ ...kind, answer: "activity", applied: "activity" }]), days)).toEqual([]);
   });
 });

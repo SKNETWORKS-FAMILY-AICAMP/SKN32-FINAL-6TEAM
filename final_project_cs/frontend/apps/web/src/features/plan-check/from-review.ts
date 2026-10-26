@@ -149,11 +149,14 @@ export function asksOf(intake: Pick<IntakeView, "interpretations" | "sources">, 
  * `[2026-10-19 사용자 결정 — 못 찾은 장소는 후보 보이고 묻기]` The questions about a stop whose place was not found (`prefill.questions[]` `kind: "place_not_found"`), by the check's stop id.
  * Only those that name a stop of the check — the card of that stop carries the question; one that names none stays in the note above the list.
  */
+/** `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` The questions the stop's own card carries: a place not found, and a nameless hotel whose stay the customer picks from the candidates (never filled first). */
+const CARD_QUESTION_KINDS: ReadonlySet<string | undefined> = new Set(["place_not_found", "lodging_place"]);
+
 export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean }> {
   const ids = new Set((intake.review?.items ?? []).map((item) => item.id));
   const out = new Map<string, { question: string; blocked: boolean }>();
   for (const entry of intake.prefill?.questions ?? []) {
-    if (entry?.kind !== "place_not_found" || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
+    if (!CARD_QUESTION_KINDS.has(entry?.kind) || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
     if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true });
   }
   return out;
@@ -183,7 +186,7 @@ export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> &
   // `[2026-10-19]` A question about a stop's place not found is asked on that stop's card, not here.
   const onCards = new Set(unfoundQuestions(intake).keys());
   const questions = [...new Set((intake.prefill?.questions ?? [])
-    .filter((entry) => !(entry?.kind === "place_not_found" && typeof entry.item === "string" && onCards.has(entry.item)))
+    .filter((entry) => !(CARD_QUESTION_KINDS.has(entry?.kind) && typeof entry.item === "string" && onCards.has(entry.item)))
     .map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
   const understood = [...new Set(intake.sources.flatMap((source) => {
     const read = source.understanding;

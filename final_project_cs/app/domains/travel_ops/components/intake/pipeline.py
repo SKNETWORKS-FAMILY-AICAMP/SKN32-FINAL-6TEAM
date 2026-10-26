@@ -1335,8 +1335,9 @@ def _checked(field_name: str, value: Any) -> tuple[Any, dict[str, Any], str | No
     elif name == "date":
         _iso_date(field_name, value)
     elif name == "kind":
-        if value not in ("activity", "dining"):
-            raise IntakeRejected("invalid_value", f"{field_name}: 종류는 activity · dining 입니다")
+        # `[2026-10-26 사용자 지시 — 호텔 종류 확인]` 숙박(lodging)도 고를 수 있다 — 종류 확인 질문의 답 · 확인 화면 고치기
+        if value not in ("activity", "dining", "lodging"):
+            raise IntakeRejected("invalid_value", f"{field_name}: 종류는 activity · dining · lodging 입니다")
     elif name == "removed":
         if value is not True and value is not False:
             raise IntakeRejected("invalid_value", f"{field_name}: 빼려면 true, 되돌리려면 false 를 보냅니다")
@@ -1721,8 +1722,63 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         new = _move_segments(move_lines, items, dated, position)
         rows.extend(new)
         send(new)
+    new = _kind_questions(items, rows, resolved=resolved, skip=set(move_lines), lines=text.splitlines(), position=position)
+    rows.extend(new)
+    send(new)
     flush()
     return rows
+
+
+#: 원문 조각이 일정 종류를 정하는 말 — 숙박(체크인 · 체크아웃 · 퇴실 — `assemble._stays` 와 같은 말) · 식사(끼니 말 `places.MEAL_WORDS`) ·
+#:   활동(`_place_kind_hint` 와 같은 말). 이 말이 **하나의 종류만** 가리킬 때만 묻지 않는다
+_ACTIVITY_WORDS = re.compile(r"산책|걷|관람|둘러보|구경|견학|탐방|관광|나들이")
+
+
+def _said_kinds(text: str) -> set[str]:
+    from .assemble import _CHECK_IN, _CHECK_OUT
+    from .places import MEAL_WORDS
+
+    said = set()
+    if _CHECK_IN.search(text) or _CHECK_OUT.search(text):
+        said.add("lodging")
+    if any(word in text for word in MEAL_WORDS):
+        said.add("dining")
+    if _ACTIVITY_WORDS.search(text):
+        said.add("activity")
+    return said
+
+
+def _kind_questions(items: list[dict[str, Any]], rows: list[dict[str, Any]], *, resolved: dict[int, Any], skip: set[int],
+                    lines: list[str], position: int) -> list[dict[str, Any]]:
+    """`[2026-10-26 사용자 지시 — 호텔 종류 확인]` 장소가 숙소인 줄(숙소 말 · 숙박 분류로 찾음 · 에이전트가 숙박으로 읽음)인데 원문 조각이
+    종류(숙박 · 활동 · 식사)를 하나로 정하지 않으면 종류 확인 질문을 붙인다(`interpretations.kind_question_rows`).
+    ☆사용자: 「호텔이 나오면 숙박인지 · 액티비티인지 · 식사인지를 어느 장소인지와 함께 확인하는 단계가 필요하다」."""
+    from . import interpretations
+    from .landmarks import is_lodging_text
+
+    out: list[dict[str, Any]] = []
+    for index, item in enumerate(items):
+        title = item.get("title")
+        if not title or index in skip:
+            continue
+        found = resolved.get(index)
+        stay_place = bool(found is not None and found.status == "resolved" and str(found.content_type_id or "") == "32")
+        if not (item.get("lodging") or is_lodging_text(title) or stay_place):
+            continue
+        text = f"{title} {(item.get('segment') or {}).get('text') or ''}"
+        if len(_said_kinds(text)) == 1:
+            continue
+        line = item.get("line")
+        quote = lines[line - 1] if isinstance(line, int) and 0 < line <= len(lines) else title
+        if "lodging" in item:
+            # 에이전트가 읽은 항목(`_agent_rows` 가 `lodging` 칸을 단다) — 에이전트의 종류가 1안이다
+            reading_kind, by_agent = ("lodging" if item["lodging"] else "dining" if item.get("meal") else "activity"), True
+        else:
+            kind_rows = [r for r in rows if r["field"] == f"items[{index}].kind"]
+            reading_kind, by_agent = (kind_rows[-1]["value"] if kind_rows else None), False
+        out += interpretations.kind_question_rows(index=index, position=position, line=line, quote=quote, title=title,
+                                                  reading_kind=reading_kind, by_agent=by_agent)
+    return out
 
 
 def flag_differing(rows: list[dict[str, Any]], differs: dict[int, dict[str, Any]] | None) -> None:
@@ -2121,6 +2177,11 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
         if it.kind == "dining":
             rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_agent",
                          "evidence": {"source": "text", "line": it.title.line}, "needs_review": False, "note": "읽기 에이전트 — 식사"})
+        elif it.kind == "lodging":
+            # ★`[2026-10-26 사용자 지시 — 호텔 종류 확인]` 에이전트의 숙박 읽기를 버리지 않는다 — 전에는 식사만 넘겨 체크인 말이 없는 숙박이 활동이 됐다.
+            #   숙박 항목은 조립(`assemble._stays`)이 체크인 줄과 같게 만든다. 원문이 종류를 정하지 않았으면 종류 확인 질문이 따로 붙는다
+            rows.append({"field": f"items[{index}].kind", "value": "lodging", "method": "llm_agent",
+                         "evidence": {"source": "text", "line": it.title.line}, "needs_review": False, "note": "읽기 에이전트 — 숙박"})
         if it.role == "origin":
             rows.append({"field": f"items[{index}].role", "value": "origin", "method": "llm_agent",
                          "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})

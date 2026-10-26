@@ -38,6 +38,9 @@ MISSING_QUESTION = {"first_day_date": "여행 첫날이 언제인가요?", "lodg
 PLACE_NOT_FOUND_QUESTION = "「{title}」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
 PLACE_NOT_FOUND_BLOCKED_QUESTION = "「{title}」은 장소 조회가 막혀 다시 찾아봤지만 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
 PLACE_NOT_FOUND_ACTIONS = ("pick_candidate", "pick_myself", "no_place")
+#: `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 이름 없는 호텔 줄의 질문 카드 — 못 찾은 줄과 같은 모양(그 일정 · 후보 · 직접 고르기).
+#:   후보는 싣지 않는다 — 화면이 `GET …/candidates` 로 받는다(최대 3곳 + 숙소 안 식사 짝). 후보가 하나여도 먼저 채우지 않는다
+LODGING_PICK_QUESTION = "「{title}」 — 묵을 숙소를 후보에서 골라 주세요(후보가 하나여도 고르신 뒤에 넣어요)"
 
 
 def _open_stay(item: Mapping[str, Any]) -> bool:
@@ -395,13 +398,17 @@ def retry_blocked(gaps: list[Gap], *, claims: list[Mapping[str, Any]], items: li
 def _question(p: Proposal, items: Mapping[Any, Mapping[str, Any]], blocked: set[Any]) -> dict[str, Any]:
     """질문 하나 — 다른 질문(첫날 · 숙소 이름 · 범위)과 같은 목록에 모은다. 못 찾은 줄은 그 일정을 가리키는 칸과 단추를 싣는다."""
     row = {"kind": p.gap.kind, "question": (p.candidates[0] or {}).get("question") or p.gap.reason, "quote": p.gap.quote}
-    if p.gap.kind != "place_not_found":
+    if p.gap.kind not in ("place_not_found", "lodging_place"):
         return row
     item_id = p.gap.where.get("item")
     item = items.get(item_id) or {}
     title = item.get("title") or p.gap.quote or "이름 없는 일정"
     was_blocked = item_id in blocked
-    return {**row, "question": (PLACE_NOT_FOUND_BLOCKED_QUESTION if was_blocked else PLACE_NOT_FOUND_QUESTION).format(title=title),
+    if p.gap.kind == "lodging_place":
+        text = LODGING_PICK_QUESTION.format(title=title)
+    else:
+        text = (PLACE_NOT_FOUND_BLOCKED_QUESTION if was_blocked else PLACE_NOT_FOUND_QUESTION).format(title=title)
+    return {**row, "question": text,
             "item": item_id, "source_id": item.get("source_id"), "index": item.get("index"), "mode": "change",
             "actions": list(PLACE_NOT_FOUND_ACTIONS), "blocked": was_blocked}
 
@@ -455,9 +462,10 @@ def _kept_reason(code: Any) -> str:
 
 
 def _unique(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    # 같은 문장이라도 다른 일정을 가리키는 카드 질문(「호텔」 이틀)은 둘 다 남긴다 — 일정마다 그 카드가 묻는다
     out: list[dict[str, Any]] = []
     for row in rows:
-        if row["question"] not in {r["question"] for r in out}:
+        if (row["question"], row.get("item")) not in {(r["question"], r.get("item")) for r in out}:
             out.append(row)
     return out
 

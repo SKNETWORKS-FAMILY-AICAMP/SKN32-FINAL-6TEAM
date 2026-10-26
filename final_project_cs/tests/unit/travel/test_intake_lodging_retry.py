@@ -1,22 +1,23 @@
-"""다른 장소 확정 뒤 바뀐 동선으로 숙소를 다시 본다. DB·모델·네트워크를 쓰지 않는다."""
+"""먼저 채우기의 숙소 줄 · 다시 보기 규칙. DB·모델·네트워크를 쓰지 않는다.
+
+`[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 이름 없는 호텔 · 호텔 조식은 먼저 채우기가 숙소 추천의 첫 후보로 채우지 않고 고객에게 묻는다
+(그 일정 카드의 후보에서 고른다). ☆전에는 식당이 정해진 뒤 바뀐 동선으로 숙소를 다시 추천해 바로 넣었다(10-17). `gaps.settle` 의 다시 보기 규칙은 그대로다."""
 from copy import deepcopy
 
 from app.domains.travel_ops.components.intake import autofix, gaps, pipeline, prefill
 from app.domains.travel_ops.components.intake.gaps import Gap, Proposal
 
 
-def test_prefill_retries_both_hotel_breakfasts_after_a_meal_changes_the_route(monkeypatch):
+def test_prefill_fills_the_meal_but_asks_both_hotel_breakfasts_instead_of_filling_them(monkeypatch):
     result, records, calls = _prefill(monkeypatch, resolve_meal=True)
-    assert calls == [False, True], "식당 장소 확정 전·후의 동선으로 각각 추천한다"
-    assert result["revision"] == 3
-    assert {x["item"] for x in result["filled"]} == {"0-0", "0-1", "0-2"}
-    hotels = [x for x in result["filled"] if x["gap"] == "lodging_place"]
-    assert len(hotels) == 2 and {x["title"] for x in hotels} == {"공통 호텔"}
-    assert result["kept"] == [] and result["questions"] == []
-    assert len(result["rounds"]) == 2 and len(result["rounds"][0]["retried_gaps"]) == 2
-    assert result["rounds"][0]["new_gaps"] == []
-    assert len(records[0]["proposals"]) == 5, "첫 숙소 실패도 전체 시도 기록에 남는다"
-    assert [p["candidates"] for p in records[0]["proposals"][:2]] == [[], []]
+    assert calls == [False], "숙소 추천을 먼저 채우기에 쓰지 않는다 — 식당 자리만 한 번 계산한다"
+    assert result["revision"] == 2
+    assert {x["item"] for x in result["filled"]} == {"0-2"}
+    assert not any(x["gap"] == "lodging_place" for x in result["filled"]), "후보가 있어도 숙소는 먼저 넣지 않는다"
+    hotels = [q for q in result["questions"] if q["kind"] == "lodging_place"]
+    assert {q["item"] for q in hotels} == {"0-0", "0-1"} and all("후보에서 골라" in q["question"] for q in hotels)
+    assert all(q["actions"] == ["pick_candidate", "pick_myself", "no_place"] for q in hotels)
+    assert len(records[0]["proposals"]) == 3
 
 
 def test_prefill_reports_each_gap_the_recheck_and_the_end(monkeypatch):
@@ -32,11 +33,12 @@ def test_prefill_reports_each_gap_the_recheck_and_the_end(monkeypatch):
     assert dones == sorted(dones)                                    # 줄지 않는다
 
 
-def test_prefill_does_not_repeat_a_hotel_search_when_no_place_changed(monkeypatch):
+def test_prefill_does_not_repeat_a_search_when_no_place_changed(monkeypatch):
     result, _records, calls = _prefill(monkeypatch, resolve_meal=False)
     assert calls == [False] and result["revision"] == 1
     assert len(result["rounds"]) == 1 and "retried_gaps" not in result["rounds"][0]
-    assert {x["item"] for x in result["kept"]} == {"0-0", "0-1", "0-2"}
+    assert {x["item"] for x in result["kept"]} == {"0-2"}
+    assert {q["item"] for q in result["questions"] if q["kind"] == "lodging_place"} == {"0-0", "0-1"}
 
 
 def test_default_settle_keeps_the_existing_no_repeat_contract():
@@ -49,7 +51,7 @@ def test_default_settle_keeps_the_existing_no_repeat_contract():
         return Proposal(gap, gap.owner, [] if gap is hotel else [{"title": "식당"}])
 
     result, _used, rounds = gaps.settle({"revision": 1}, [hotel, meal],
-                                      {"lodging_team": owner, "dining_team": owner},
+                                      {hotel.owner: owner, "dining_team": owner},
                                       lambda draft, proposals: {"revision": 2}, lambda draft: [hotel])
     assert result["revision"] == 2 and called.count("lodging_place") == 1
     assert len(rounds) == 1
@@ -65,7 +67,7 @@ def test_usable_proposal_without_a_new_revision_does_not_trigger_retry():
         return Proposal(gap, gap.owner, [] if gap is hotel else [{"title": "기존 식당"}])
 
     _draft, _used, rounds = gaps.settle({"revision": 1}, [hotel, meal],
-                                      {"lodging_team": owner, "dining_team": owner},
+                                      {hotel.owner: owner, "dining_team": owner},
                                       lambda draft, proposals: draft, lambda draft: [hotel],
                                       retry_unfilled=lambda p: p.gap.kind == "lodging_place")
     assert called.count("lodging_place") == 1 and len(rounds) == 1
@@ -82,7 +84,7 @@ def test_lodging_retry_does_not_extend_the_two_round_limit():
         return Proposal(gap, gap.owner, [{"title": "식당"}])
 
     draft, used, rounds = gaps.settle({"revision": 1}, [hotel, Gap("meal_place", {"item": "m1"}, "식사")],
-                                     {"lodging_team": owner, "dining_team": owner},
+                                     {hotel.owner: owner, "dining_team": owner},
                                      lambda draft, proposals: {"revision": draft["revision"] + 1},
                                      lambda draft: [hotel, Gap("meal_place", {"item": f"m{draft['revision']}"}, "새 식사")],
                                      retry_unfilled=lambda p: p.gap.kind == "lodging_place")
