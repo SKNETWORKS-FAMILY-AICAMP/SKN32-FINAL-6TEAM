@@ -274,6 +274,54 @@ def ask_on_conflict(decision):
                    raw={**(decision.raw or {}), "temporal_conflict": conflict})
 
 
+def _quoted_clocks(clock: str, quote: str) -> list[str]:
+    """인용 안의 시각 언급마다 `validate` 와 같은 재계산(`fact_check.recompute_time`)을 돌린 값들(언급 순서).
+
+    「N시간」(길이)은 시각 언급이 아니다 — 같은 파서(`_KO_CLOCK`)가 「1시간」의 「1시」를 잡으므로 바로 뒤가 「간」이면 뺀다(파서 경계 보정)."""
+    from ..intake.fact_check import _FULL_CLOCK, _KO_CLOCK, recompute_time
+
+    found: list[tuple[int, str]] = []
+    for match in _FULL_CLOCK.finditer(quote):
+        found.append((match.start(), recompute_time(clock, match.group(0))[0]))
+    for match in _KO_CLOCK.finditer(quote):
+        if quote[match.end():match.end() + 1] == "간" and not match.group(2) and not match.group(3):
+            continue
+        found.append((match.start(), recompute_time(clock, match.group(0))[0]))
+    return [value for _, value in sorted(found)]
+
+
+def clock_ambiguity(decision) -> dict[str, Any] | None:
+    """`[2026-10-26 묶음 L · 수용 X02]` 실행될 절대 시각 바꾸기의 인용이 **값을 하나로 정하는가**(근거 검사 — 뜻을 고르지 않는다).
+
+    인용 안의 시각 언급을 하나씩 재계산해 서로 다른 값이 둘 이상이면 인용이 모델 값을 정하지 못한 것이다. 기준 시각 · 기간 끝 같은
+    역할은 인용으로 입증되지 않으므로 빼 주지 않는다(Codex E2 — 보수적). 인용의 첫 시각이 모델 값과 다르면 `validate` 가 이미
+    해석 실패로 막는다. ☆실 E4B J 2차 X02 「인사동을 오후 1시로 바꾸면서 동시에 낮 12시로 해줘」 → 인용 = 문장 전체, time 13:00 → 저장됐다."""
+    raw = decision.raw or {}
+    spec = raw.get("time_edit") or {}
+    clock = spec.get("time") or ""
+    if (not clock or spec.get("boundary", "none") == "none" or spec.get("scope") == "range"
+            or not _executes_time_edit({**raw, "action": decision.action})):
+        return None
+    quote = str(spec.get("evidence") or "")
+    clocks = sorted(set(_quoted_clocks(clock, quote)))
+    if len(clocks) < 2:
+        return None
+    return {"reason": "multiple_clocks", "clocks": clocks, "time": clock, "evidence": quote}
+
+
+def ask_on_clock_ambiguity(decision):
+    """`clock_ambiguity` 이면 바꾸지 않고 어느 시각인지 되묻는 clarify 로 바꾼다(선택지 없음 — 고객이 시각 하나를 말한다)."""
+    found = clock_ambiguity(decision)
+    if found is None:
+        return decision
+    name = f"「{decision.item.title}」을(를) " if decision.item is not None else ""
+    shown = " · ".join(found["clocks"])
+    return replace(decision, action="clarify", choices=[],
+                   question=(f"말씀에 시각이 여러 개({shown}) 있어 {name}몇 시로 바꿀지 확실하지 않아 일정은 바꾸지 않았어요. "
+                             f"「{found['clocks'][0]}로 옮겨 줘」처럼 시각 하나만 말씀해 주세요."),
+                   raw={**(decision.raw or {}), "clock_ambiguity": found})
+
+
 def resume(decision, *, items, turns, version: int, now: datetime, ttl_seconds: int):
     spec = (decision.raw or {}).get("time_edit") or {}
     if decision.action != "change_time" or not spec.get("continue_previous"):

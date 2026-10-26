@@ -238,6 +238,23 @@ def _save_failed_text():
     return SAVE_FAILED_TEXT
 
 
+def test_two_different_times_in_one_time_change_are_asked_back_and_nothing_is_saved(chat):
+    """`[2026-10-26 묶음 L · 수용 X02]` 실 E4B 가 「인사동을 오후 1시로 바꾸면서 동시에 낮 12시로 해줘」를 time 13:00 · 인용 = 문장 전체로 읽어
+    13:00 으로 저장했다. 인용에 서로 다른 시각이 둘이면 고르지 않고 되묻는다 — 일정 그대로 · 다른 일정 목록 없음 · 대화 기록에 같은 답."""
+    message = "인사동을 오후 1시로 바꾸면서 동시에 낮 12시로 해줘"
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="인사동", anchor_kind="time", anchor_time="13:00", at_day="none",
+            time_edit={"time": "13:00", "scope": "item", "cascade": False, "boundary": "start", "evidence": message,
+                       "duration_minutes": 0, "continue_previous": False})
+    body = _say(chat, message, "edit-two-clocks")
+    after, items = _latest(chat)
+    assert after == before and _hm(items["인사동"].starts_at) == "12:00", body
+    assert body["status"] == "clarify" and not body.get("choices"), body
+    assert "12:00" in body["answer"] and "13:00" in body["answer"] and "일정은 바꾸지 않았어요" in body["answer"], body
+    turns = chat["client"].get(f"/v1/web/trips/{chat['trip']['trip_id']}/chat", headers=_h(chat["key"])).json()["turns"]
+    assert turns[-1]["role"] == "assistant" and turns[-1]["text"] == body["answer"]
+
+
 def test_an_open_edit_screen_with_unsaved_changes_is_not_overwritten(chat):
     from .test_trip_reopen import _edit, _index, _reopen
 
@@ -261,6 +278,27 @@ def test_several_stops_in_a_range_shift_together(chat):
     assert body["status"] == "adjusted" and after == before + 1, body
     assert (_hm(items["인사동"].starts_at), _hm(items["N서울타워"].starts_at)) == ("13:00", "16:00"), body
     assert _hm(items["북촌한옥마을"].starts_at) == "10:00", body                 # 오전 일정은 그대로
+
+
+def test_a_range_shift_that_runs_into_a_kept_stop_is_refused_as_a_whole(chat):
+    """`[2026-10-26 묶음 L · rm9 Codex 남은 지적 2]` 범위 옮기기는 고정 일정을 그대로 두고(`split_range`) 뒤 일정을 맞추지 않는다(reflow 없음).
+    옮긴 일정이 그대로 둔 일정과 겹치면 중앙 저장기가 **전부** 거절한다 — 일부만 옮겨 겹친 일정표를 쓰지 않는다(DB 재현)."""
+    trip_id = str(chat["trip"]["trip_id"])
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        # 고객 고정(locked)은 웹 「일정 수정」의 잠금으로 생긴다 — 이 시험은 그 상태만 필요하므로 지금 판의 N서울타워를 잠근다(시험 준비)
+        cur.execute("UPDATE itinerary_items i SET locked=true FROM trips t WHERE t.trip_id=i.trip_id AND t.tenant_id=i.tenant_id "
+                    "AND i.version=t.latest_version AND i.trip_id=%s AND i.title=%s", (trip_id, "N서울타워"))
+        assert cur.rowcount == 1
+    before, items = _latest(chat)
+    assert items["N서울타워"].locked
+    starts = {name: _hm(items[name].starts_at) for name in ("북촌한옥마을", "인사동", "N서울타워")}
+    _answer(chat, "change_time", minutes=120, query={"day": "tomorrow", "period": "all", "kind": "all", "position": "all"})
+    body = _say(chat, "내일 일정 전부 두 시간씩 밀어줘", "edit-range-kept-overlap")   # 인사동 14:00~15:30 이 고정된 N서울타워 15:00 과 겹친다
+    after, items = _latest(chat)
+    assert after == before, body
+    assert {name: _hm(items[name].starts_at) for name in starts} == starts, body
+    assert body["status"] == "edit_refused" and "바꾸지 않았어요" in body["answer"], body   # 중앙 저장기 거절까지 갔다(되묻기 아님)
+    assert (body.get("outcome") or {}).get("reason") == "itinerary_infeasible", body      # 겹침 판정으로 거절(다른 까닭이 아니다)
 
 
 def test_an_empty_edit_screen_left_open_is_not_shared_and_is_closed(chat):
