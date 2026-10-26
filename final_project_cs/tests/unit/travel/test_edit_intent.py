@@ -252,13 +252,13 @@ def test_explicit_start_uses_new_time_instead_of_conflicting_legacy_anchor():
 
 
 def test_explicit_other_day_is_not_ignored_by_end_change():
+    """`[2026-10-26]` 다른 날을 함께 말한 종료 변경은 거절 대신 그 날로 옮겨 같은 시작 시각에서 종료를 맞춘다(무시하지 않는다)."""
     stop=item()
     later=item("다음 날 활동",start=12,end=14,seq=2)
     later=replace(later,starts_at=later.starts_at+timedelta(days=1),ends_at=later.ends_at+timedelta(days=1))
     got=decision(stop,at_day="d2")
-    with pytest.raises(EditRefused) as caught:
-        ops_for(got,items=[stop,later],now=NOW)
-    assert caught.value.code=="combined_date_boundary"
+    ops,_=ops_for(got,items=[stop,later],now=NOW)
+    assert [(o.item_id,o.date,o.starts_at,o.ends_at) for o in ops]==[(stop.item_id,"2030-01-02","10:00","17:00")]
     assert edit_intent.pending_goal(got,version=1,now=NOW) is None
 
 

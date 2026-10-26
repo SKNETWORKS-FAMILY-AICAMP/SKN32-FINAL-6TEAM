@@ -143,11 +143,11 @@ def forecast_attention(conn, *, store: TripStore, trip_id: UUID, item: Item,
             "「예보에 맞게 일정 변경」을 누르면 다른 곳을 찾아 보여 드려요. "
             "답이 없으면 원래 일정을 그대로 둡니다.")
     store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
-                          payload={"type": "proposal_request", "kind": FORECAST_REASON,
+                          payload=_response_payload(conn, store=store, trip_id=trip_id, status='awaiting_choice', payload={"type": "proposal_request", "kind": FORECAST_REASON,
                                    "reason": FORECAST_REASON, "text": text, "language": "ko",
                                    "causes": causes, "proposal_id": str(proposal_id),
                                    "item_id": str(current.item_id), "consent": True,
-                                   "consent_key": CONSENT_KEY, "options": [], "replay": False})
+                                   "consent_key": CONSENT_KEY, "options": [], "replay": False}))
     return {"trip_id": str(trip_id), "item": current.title, "proposal_id": str(proposal_id),
             "reason": FORECAST_REASON, "safety": False}
 
@@ -196,6 +196,31 @@ def consent_notice(*, item: Item, causes: list[dict[str, Any]], proposal_id: UUI
             "replay": False}
 
 
+def _response_payload(conn, *, store: TripStore, trip_id: UUID, payload: dict[str, Any],
+                      status: str, saved_version: int | None = None) -> dict[str, Any]:
+    """기존 outbox만 장식한다. 작성 실패가 저장·승인 결과를 되돌리지 않는다."""
+    from copy import deepcopy
+    from app.domains.travel_ops.components.response.monitoring import monitoring_payload
+
+    snapshot = deepcopy(payload)
+    for key in ('response', 'response_status', 'question_status', 'writing_status', 'writing_error'):
+        snapshot.pop(key, None)
+    try:
+        trip, _ = store.latest(conn, trip_id)
+        workflow = {k: snapshot[k] for k in ('proposal_id', 'options', 'protected_by', 'consent', 'consent_key',
+                    'safety', 'reason', 'approval_status', 'approval_required', 'required_input_schema',
+                    'resume_token', 'action_proposals') if k in snapshot}
+        if status == 'awaiting_choice':
+            workflow.setdefault('approval_status', 'awaiting_choice')
+        return monitoring_payload(snapshot, status=status, version=trip['version'], saved_version=saved_version,
+            scope={'tenant_id': str(store.tenant_id), 'customer_id': str(trip['customer_id']),
+                   'trip_id': str(trip_id)}, workflow=workflow)
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error('monitoring_notice_writing_failed error=%s', type(exc).__name__)
+        return {**snapshot, 'writing_status': 'failed', 'writing_error': type(exc).__name__}
+
+
 def ask_consent(conn, *, store: TripStore, trip_id: UUID, item: Item, base_version: int,
                 causes: list[dict[str, Any]], indoor_unknown: bool = True) -> dict[str, Any]:
     """「바꿀까요?」 보류 제안을 연다(안 없이). 이미 물었으면 다시 알리지 않는다. 부르는 쪽이 트랜잭션을 연다."""
@@ -206,8 +231,8 @@ def ask_consent(conn, *, store: TripStore, trip_id: UUID, item: Item, base_versi
     if proposal_id is None:
         return {"status": "asked", "already": True, "reason": CONSENT_REASON, "item": item.title}
     store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
-                          payload=consent_notice(item=item, causes=causes, proposal_id=proposal_id,
-                                                 indoor_unknown=indoor_unknown))
+                          payload=_response_payload(conn, store=store, trip_id=trip_id, status='awaiting_choice', payload=consent_notice(item=item, causes=causes, proposal_id=proposal_id,
+                                                 indoor_unknown=indoor_unknown)))
     return {"status": "asked", "already": False, "proposal_id": str(proposal_id), "reason": CONSENT_REASON,
             "safety": False, "item": item.title}
 
@@ -546,8 +571,8 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
         notice["text"] = str(notice.get("text") or "") + price_note(price_check)
         notice["price_check"] = price_check
     store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                         payload={**notice, "type": "change_notice", "version": version,
-                                  "proposal_id": str(proposal_id)})
+                         payload=_response_payload(conn, store=store, trip_id=trip_id, status='applied', saved_version=version, payload={**({**notice, "type": "change_notice", "version": version,
+                                  "proposal_id": str(proposal_id)}), 'causes': plan.causes, 'item_id': str(proposal['item_id'])}))
     pending.close(conn, proposal_id, status="chosen", key=key, by=by, version=version)
     return {"status": "chosen", "version": version, "summary": plan.summary,
             **({"price_check": price_check} if price_check else {})}
@@ -601,8 +626,8 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
     pending.set_options(conn, proposal["proposal_id"], options=options, reason=option_reason)
     decision = Decision("ask", option_reason, proposal.get("protected_by"), False)
     store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal['proposal_id']}:options",
-                          payload=proposal_notice(item=current, decision=decision, causes=causes,
-                                                  options=options, proposal_id=proposal["proposal_id"]))
+                          payload=_response_payload(conn, store=store, trip_id=trip_id, status='awaiting_choice', payload=proposal_notice(item=current, decision=decision, causes=causes,
+                                                  options=options, proposal_id=proposal["proposal_id"])))
     return {"status": "options", "proposal_id": str(proposal["proposal_id"]),
             "options": [{"key": o["key"], "rank": o["rank"], "name": o.get("option_label") or o["name"],
                          "starts_at": o.get("starts_at")} for o in options[:3]]}
@@ -639,8 +664,8 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
         if proposal_id is None:
             return {"status": "asked", "already": True, "reason": decision.reason, "item": current.title}
         store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
-                              payload=proposal_notice(item=current, decision=decision, causes=plan.causes,
-                                                      options=options, proposal_id=proposal_id))
+                              payload=_response_payload(conn, store=store, trip_id=trip_id, status='awaiting_choice', payload=proposal_notice(item=current, decision=decision, causes=plan.causes,
+                                                      options=options, proposal_id=proposal_id)))
         return {"status": "asked", "already": False, "proposal_id": str(proposal_id),
                 "reason": decision.reason, "safety": decision.safety, "item": current.title}
     # 순환 import 를 피해 여기서 부른다(`itinerary_fit` → `itinerary_actions` → 이 파일)
@@ -666,7 +691,7 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
         # ★다 걸렸다 — 쓰지 않는다. 고객이 모르면 닫힌 곳이 그대로 일정에 남으니 Case 버전과 같은 알림을 싣는다(같은 사건 · 같은 판은 한 번만 — 감시가 몇 분마다 다시 와도)
         store.enqueue_message(
             conn, trip_id=trip_id, key=f"recheck:{item_id}:v{trip['version']}:{cause_fingerprint(plan.causes)}",
-            payload=unresolved_notice(item=current, causes=plan.causes, recheck_failed=True))
+            payload=_response_payload(conn, store=store, trip_id=trip_id, status='failed', payload=unresolved_notice(item=current, causes=plan.causes, recheck_failed=True)))
         return {"status": "rechecked", "item": current.title,
                 "skipped": [{"rank": s.rank, "name": s.name, "reasons": s.reasons, "why": s.why} for s in fit.skipped]}
     plan = fit.change                      # 몇 순위 안인지 · 왜 앞 순위를 건너뛰었는지가 알림 문구에 이미 붙어 있다
@@ -678,9 +703,9 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
     # ★`[2026-09-29]` 자동으로 바꿨으면 **되돌리기**를 싣는다 — 화면이 버튼을 띄우고 `POST /v1/web/trips/{id}/rollback`
     #   (base_version = 이 판, to_version = 바꾸기 전 판)으로 돌린다. 사용자 지시: 자동이면 안내 + 되돌리기 버튼
     store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                         payload={**plan.notice, "version": version,
+                         payload=_response_payload(conn, store=store, trip_id=trip_id, status='applied', saved_version=version, payload={**({**plan.notice, "version": version,
                                   "type": "change_notice", "safety": decision.safety,
-                                  "rollback": rollback_offer(version=version, previous=trip["version"])})
+                                  "rollback": rollback_offer(version=version, previous=trip["version"])}), 'causes': plan.causes, 'item_id': str(item_id)}))
     # ★쓴 안의 요약 · 알림을 같이 돌려준다 — 다음 순위 안을 썼으면 부르는 쪽이 들고 있는 옛 `plan` 과 다르다
     return {"status": "adjusted", "version": version, "safety": decision.safety,
             "summary": plan.summary, "notice": plan.notice}

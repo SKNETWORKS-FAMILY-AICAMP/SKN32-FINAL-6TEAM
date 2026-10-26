@@ -156,7 +156,10 @@ class Settings(BaseSettings):
     ollama_keep_alive: str = ""
     #: ★`[2026-10-14]` Ollama 문맥 길이(`num_ctx`). 요청 해석 입력이 약 4,600 토큰이라 Ollama 기본(12~16GB GPU 에서 4,096)이면 앞이 잘린다
     #:  (`ollama_chat.OllamaChat.num_ctx`). 0 이면 Ollama 기본을 쓴다
-    ollama_num_ctx: int = 8192
+    #:  ★`[2026-10-26]` 8192 → 12288. 지시문이 6,771 토큰으로 자라 16항목 · 대화 4턴 해석 입력이 약 8,110 토큰 — 답 상한(1200)까지 8,192 에
+    #:  못 들어갔다(x600 실측 7,842 + 400 → 유료 넘김). 같은 모델을 부르는 해석 · 일정 짚기 · 끼니 고르기 · 공지 판정이 모두 이 값을 보낸다
+    #:  (다르면 Ollama 가 호출마다 모델을 다시 올린다). 모델 서버 Modelfile 의 `num_ctx` 도 같은 값으로 둔다
+    ollama_num_ctx: int = 12288
     #: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **가르친 모델**(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 낱말 규칙만 쓴다.
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
@@ -209,6 +212,7 @@ class Settings(BaseSettings):
     model_route_chat: Literal["local", "ssh", "api"] = "local"
     model_route_pointer: Literal["local", "ssh"] = "local"
     model_route_notice: Literal["local", "ssh"] = "local"
+    #: ★`[2026-10-26]` 일정 짚기 모델이 `ollama_model` 과 같으면 이 값은 무시되고 `ollama_keep_alive` 를 함께 쓴다(같은 모델의 만료는 하나 — `item_pointer.register_from_settings`)
     ollama_pointer_keep_alive: str = ""
     #: 일정이 바뀐 첫 문장은 고객을 기다리게 하지 않고 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다(`item_pointer.py` 머리). 끄면 첫 문장도 모델을 기다린다.
     ollama_pointer_background_warm: bool = True

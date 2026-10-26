@@ -24,6 +24,7 @@ domain: travel
 - [운영 앱 화면 API](admin-screen-api.md) — 운영 앱 검토 자료 · API 계약 협의 · 백엔드/프론트/통합 상태
 - [사용자 표시 이름 — 변경 계획 2판](user-display-name-plan.md) — 게스트 · 회원에게 겹치지 않는 닉네임을 자동으로 주고 운영 앱은 UUID 옆에 닉네임 칸을 더하는 계획(1판 2026-10-16 · 2판 2026-10-22, 구현 보류)
 - [개발자 콘솔 API](dev-console-api.md) — 관리 앱 오류 검색 · 발생 상세의 표시 요구와 API 협의 · 연결 상태
+- [Activity 공개 웹 보조조회](activity-public-web.md) — 카카오 미일치·장애 뒤 공개 검색(SearXNG 또는 ddgs)은 URL 발견만, 사실은 공식 페이지 JSON-LD만(기본 꺼짐) · [접수 bridge](activity-public-web-intake.md)
 - [모델 경로](llm-model-route.md) — 관리 콘솔에서 로컬 모델 · SSH(런팟) · API 고르기, SSH 터널을 앱 밖에서 여는 설치 순서
 
 

@@ -25,7 +25,7 @@ import { tripGateway, tripKey, tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
-import { clearIntakeArrival, forgetIntakeSubmission, intakeArrival, rememberEmptyIntake } from "@/lib/live/intake-start";
+import { clearIntakeArrival, entryReturnOf, forgetIntakeSubmission, intakeArrival, rememberEmptyIntake } from "@/lib/live/intake-start";
 import { answerDiningQuestion, type DiningAnswer, type ReviewedIntakeView } from "@/lib/live/intake-review";
 import { DiningQuestions, diningAnswer, canApplyDiningAnswer } from "./dining-questions";
 import { currentDiningJudge, diningPending, diningRegistrationReason, diningStatusText, intakeRefetchInterval, intakeRegistrationReady } from "@/features/plan-check/dining-status";
@@ -196,7 +196,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
   const readingCaughtUp = useCallback(() => setReadingDrawn(true), []);
   // A temporary zero while reading is not an empty result. Removed stops stay in sources and do not trigger this return.
-  const emptyIntake = query.data?.status === "review" && query.data.sources.every((source) => source.items.length === 0);
+  // ★`[2026-10-26 사용자 지시]` Back to 「계획 담기」 with its sentence instead of the plan check: no stops read, or every stop before today
+  //   (server `fatal` · `all_dates_in_past` — the plan never reaches the cards to pick from). `entryReturnOf` says which.
+  const entryReturn = entryReturnOf(query.data, t);
+  const emptyIntake = entryReturn !== null;
   const emptyReturned = useRef(false);
   useEffect(() => {
     const view = query.data;
@@ -205,11 +208,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     if (emptyReturned.current) return;
     emptyReturned.current = true;
     const text = view.sources.filter((source) => source.kind === "text").flatMap((source) => source.lines.map((line) => line.text)).join("\n");
-    rememberEmptyIntake(intakeId, t("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.", "No stops were found. Check the dates, times and places, then edit your plan or upload a file."), text);
+    rememberEmptyIntake(intakeId, entryReturn ?? "", text);
     // A corrected intake must be read again instead of reusing the completed empty snapshot.
     queryClient.removeQueries({ queryKey: ["intake", intakeId, language], exact: true });
     router.replace(routes.newTrip);
-  }, [emptyIntake, intakeId, language, query.data, queryClient, router, t]);
+  }, [emptyIntake, entryReturn, intakeId, language, query.data, queryClient, router]);
   const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
 
   // Returning takes priority over survey holds and replay of the completed read.

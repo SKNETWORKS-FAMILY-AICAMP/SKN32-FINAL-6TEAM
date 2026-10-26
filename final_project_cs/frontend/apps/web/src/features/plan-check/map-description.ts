@@ -1,6 +1,7 @@
 import type { Translate } from "@/lib/i18n";
 import type { BusToast } from "@/lib/toast-bus";
 import type { RouteShape } from "@/lib/live/route-shapes";
+import { checkLineText } from "@/lib/live/error-text";
 import { rideLines } from "@/features/map/route-lines";
 import type { PlanItem, PlanMove } from "./model";
 
@@ -16,9 +17,9 @@ function verdictChip(verdict: PlanItem["verdict"], t: Translate): BusToast["chip
 }
 
 /** The first thing the check found that is not fine, as one line 「이름이 여러 곳이라…」. */
-function firstIssue(checks: PlanItem["checks"]): string | undefined {
+function firstIssue(checks: PlanItem["checks"], t: Translate): string | undefined {
   const bad = checks.find((check) => check.result !== "ok" && check.text.trim());
-  return bad ? bad.text.trim() : undefined;
+  return bad ? checkLineText(bad, t).trim() : undefined;
 }
 
 /**
@@ -33,7 +34,7 @@ export function stopToast(stop: { order: number; item: PlanItem }, t: Translate,
     text: item.title,
     chip: verdictChip(item.verdict, t),
     sub: [when, item.info?.address].filter(Boolean).join("\n"),
-    note: firstIssue(item.checks),
+    note: firstIssue(item.checks, t),
     action: { label: t("목록에서 보기", "Show in list"), run: onList },
     ms: READ_MS,
   };
@@ -50,7 +51,7 @@ export function moveToast(leg: { move: PlanMove; from: string; to: string; shape
     chip: verdictChip(move.verdict, t),
     // ★`[2026-10-05 사용자 지시]` Tapped, a subway line also says what it rides (the line, the stations) - only what the server sent.
     sub: [how, times, ...(leg.shape ? rideLines(leg.shape, t) : [])].filter(Boolean).join("\n"),
-    note: firstIssue(move.checks),
+    note: firstIssue(move.checks, t),
     action: { label: t("목록에서 보기", "Show in list"), run: onList },
     ms: READ_MS,
   };

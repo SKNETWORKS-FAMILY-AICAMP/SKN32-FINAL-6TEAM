@@ -25,7 +25,7 @@ KST = ZoneInfo("Asia/Seoul")
 
 ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy", "answer_service",
            "report_delay", "report_closed", "change_time", "add_item", "remove_item", "swap_order", "lock_item", "unlock_item",
-           "replace_named", "edit_trip", "arrive_item", "complete_item", "advance_trip", "finish_day", "clarify", "other")
+           "replace_named", "edit_trip", "booking_transaction", "arrive_item", "complete_item", "advance_trip", "finish_day", "clarify", "other")
 #: ★`[2026-10-15]` 서버만 쓰는 할 일 — 모델은 고르지 않는다(답 양식에 없다). 고객이 바꿀 곳 이름을 말한 장소 바꾸기(`apply_change` + `destination_text`)를 서버가 이것으로 옮긴다
 SERVER_ACTIONS = ("replace_named",)
 #: ★`[2026-10-15]` 채팅이 웹 「일정 수정」과 같은 길(`chat_edit`)로 실행하는 고치기 — 바꾸는 할 일이라 대상 근거 검사(`guard_target`)를 똑같이 지난다
@@ -41,6 +41,11 @@ EDIT_ACTIONS = ("change_time", "add_item", "remove_item", "swap_order", "lock_it
 #:  「여행 이름을 …로」를 모델이 장소 바꾸기로 끼워 「어느 일정을 바꿀까요?」로 되물었다(엉뚱한 되묻기). 이것만 정직한 안내로 막는다.
 UNSUPPORTED: dict[str, str] = {
     "edit_trip": "여행 인원·이름·기간 같은 여행 설정을 바꾸는 일은 아직 채팅에서 하지 못해 일정은 바꾸지 않았어요.",
+    #: ★`[2026-10-26 사용자 지시 · U01]` 업체에 한 예약의 취소·변경 · 환불 · 결제는 우리가 처리하지 않는다(Booking Handoff 는 MVP 밖).
+    #:  전에는 모델이 규정 질문(ask_policy)으로 읽어 「규정 자료에서 맞는 내용을 찾지 못했다」로 끝났다. 공개 상태 · 계약은 그대로 두고
+    #:  답 문장만 「지원하지 않는 요청」 안내로 닫는다 — 판별은 모델이 고른 할 일이다(문장 낱말 규칙 없음).
+    "booking_transaction": ("업체 예약 취소·변경이나 환불·결제는 지원하지 않는 요청이라 처리하지 않았어요. "
+                            "예약한 업체에 직접 문의해 주세요. 일정은 바꾸지 않았어요."),
 }
 FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
          "route_here", "nearby_dining", "nearby_activity", "dining_near", "schedule", "changeability",
@@ -106,6 +111,7 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
 - swap_order: 두 일정의 순서를 바꿔 달라. target_item=한 일정, anchor_kind=item · anchor_item=다른 일정.
 - lock_item: 일정을 고정해 달라(「절대 바꾸지 마」). unlock_item: 고정을 풀어 달라. target_item=그 일정.
 - edit_trip: 인원 수·여행 이름·기간 같은 여행 설정을 바꿔 달라(「인원 4명으로 바꿔줘」). 일정의 장소를 바꾸라는 말이 아니다.
+- booking_transaction: 업체에 한 예약을 취소·변경하거나 환불·결제·카드 청구를 실제로 처리해 달라는 실행 요청이다. 위약금·환불 규정을 묻는 말은 ask_policy, 그런 일을 대신 해 주는지 기능을 묻는 말은 answer_service, 일정에서 항목을 빼 달라는 말은 remove_item이다. target_item=none.
 - clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**
   1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나
   직전 대화로 정할 수 없으면 clarify.
@@ -365,10 +371,42 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
             + f"\n\n직전 대화:\n{talk}{goal_line}\n구조화된 직전 답변 대상: {focus_alias}\n\n화면에서 고른 일정: {selected}\n\n고객 문장: {message}")
 
 
-def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
+#: 목록 읽기 — 범위(`query`)로 서버가 일정을 고르는 사실. 대상 · 변경 대상은 비우고 범위는 반드시 낸다(SYSTEM 의 목록 조회 규칙)
+LIST_READ_FACTS = ("schedule", "changeability", "day")
+
+
+def quoted_calendar_days(stops: list[Stop], message: str | None) -> list[str]:
+    """문장에 **일정의 달력 날짜**(「1월 2일」·「1월2일」·`2030-01-02`)가 그대로 적힌 날의 `dN` — 문장 근거로 생성만 제한한다.
+
+    `[2026-10-26 수용 C02]` 「1월 2일 일정을 전부 보여줘」에 모델이 범위의 날을 「오늘」로 골랐다(지금은 여행 하루 전).
+    숫자 경계를 지킨다 — 「11월 2일」·「1월 22일」은 「1월 2일」이 아니다. 적힌 날이 없으면 빈 목록이다(날을 추측하지 않는다)."""
+    if not stops or not message:
+        return []
+    first_day = min(_local(stop.item.starts_at).date() for stop in stops)
+    out = []
+    for day in sorted({_local(stop.item.starts_at).date() for stop in stops}):
+        labels = (rf"(?<!\d){day.month}월 ?{day.day}일", rf"(?<!\d){re.escape(day.isoformat())}(?!\d)")
+        if any(re.search(label, message) for label in labels):
+            out.append(f"d{(day - first_day).days + 1}")
+    return out
+
+
+def _schema(stops: list[Stop], changes: list[Change], *, message: str | None = None, plain: bool = False) -> dict[str, Any]:
     from .schedule_query import query_days, query_schema
     items = [s.alias for s in stops] + ["none"]
     change_ids = sorted({c.alias for c in changes}) + ["none"]
+    # ★`[2026-10-26 수용 C02]` 문장에 일정의 달력 날짜가 적혔으면 조회 범위의 날은 그 날(과 문장에 적힌 오늘 · 내일)만 낼 수 있다.
+    #   생성 문법만 좁힌다 — 모델 답을 서버가 고쳐 쓰지 않는다(아래 시각 범위 옮기기의 `day_quotes` 와 같은 근거).
+    calendar_days = quoted_calendar_days(stops, message)
+    spoken_days = [token for token, label in (("today", "오늘"), ("tomorrow", "내일")) if message and label in message]
+    scope_days = [*calendar_days, *(d for d in spoken_days if d not in calendar_days)] if calendar_days else None
+
+    def scope_schema() -> dict[str, Any]:
+        scope = query_schema(stops)
+        if scope_days:
+            scope["properties"]["day"]["enum"] = list(scope_days)
+        return scope
+
     choice = {"type": "object", "properties": {
         "action": {"type": "string", "enum": [a for a in ACTIONS if a != "clarify" and a not in UNSUPPORTED
                                                and a not in SERVER_ACTIONS]},
@@ -394,9 +432,21 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "steps": {"type": "integer"}},
         "required": ["fact", "target_item", "origin_item", "origin_text", "transport_mode", "reference", "query", "text", "advice",
                      "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"], "additionalProperties": False}
+    # 목록 읽기(schedule · changeability · day)는 대상 · 변경 대상 none 과 범위를 반드시 낸다(SYSTEM 의 목록 조회 규칙) —
+    #   읽기 항목 안에서 `fact` 가 `target_item` 보다 먼저 생성되므로 문법이 둘을 묶을 수 있다. 범위의 날은 문장에 적힌 달력 날짜로 좁힌다.
+    from copy import deepcopy as _copy
+    other_read = _copy(read)
+    other_read["properties"]["fact"]["enum"] = [f for f in read["properties"]["fact"]["enum"] if f not in LIST_READ_FACTS]
+    other_read["properties"]["query"] = {"anyOf": [scope_schema(), {"type": "null"}]}
+    list_read = _copy(read)
+    list_read["properties"].update(
+        target_change={"type": "string", "enum": ["none"]},
+        fact={"type": "string", "enum": list(LIST_READ_FACTS)},
+        target_item={"type": "string", "enum": ["none"]},
+        query=scope_schema())
     from .edit_intent import schemas
 
-    return {"type": "object", "properties": {
+    schema = {"type": "object", "properties": {
         **schemas(items),
         "action": {"type": "string", "enum": [a for a in ACTIONS if a not in SERVER_ACTIONS]},   # 서버 전용 할 일은 모델이 고르지 않는다
         "target_item": {"type": "string", "enum": items},
@@ -423,8 +473,101 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "choices": {"type": "array", "items": choice, "maxItems": 3}},
         # ★되묻는 문장은 모델이 쓰지 않는다 — 서버가 후보로 만든다(답이 길어져 p95 가 7초였다, 재생 시험 2026-09-29)
         # ★`[2026-10-14]` 목적지 · 조건 칸은 **반드시 낸다**(없으면 빈 문자열) — 선택 칸이면 학습 E4B 가 아예 내지 않았다(재생 434건 중 목적지 0/43)
-        "required": ["time_edit", "place_search", "action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
+        "required": ["time_edit", "place_search", "place_setting", "action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
+    if plain:
+        # 유료 넘김 경로용 — 생성 문법(갈래 · 문장 인용 enum) 없이 칸 모양만(`_api_schema_kwargs`)
+        return schema
+    # Generate action before edit details. A read cannot activate a time mutation;
+    # keep both full branches so Ollama's grammar need not implement if/then.
+    from copy import deepcopy
+    variants = []
+    temporal = {"change_time", "apply_change", "add_item"}
+    for editing in (False, True):
+        branch = deepcopy(schema)
+        props = branch["properties"]
+        props["action"]["enum"] = [a for a in props["action"]["enum"] if (a in temporal) == editing]
+        if not editing:
+            props["time_edit"]["properties"]["boundary"]["enum"] = ["none"]
+        branch["properties"] = {"action": props["action"], **props}
+        if message is not None:
+            # Constrain generation, not the completed answer: active edit objects
+            # must quote this request. Whole-message evidence is an exact quote,
+            # including multilingual requests, with no keyword inference.
+            for field, selector in (("time_edit", "boundary"), ("place_search", "relation")):
+                inactive = deepcopy(props[field])
+                inactive["properties"][selector]["enum"] = ["none"]
+                inactive["properties"]["evidence"] = {"type": "string", "enum": [""]}
+                active = deepcopy(props[field])
+                active["properties"][selector]["enum"] = [
+                    value for value in active["properties"][selector]["enum"] if value != "none"]
+                active["properties"]["evidence"] = {"type": "string", "enum": [message]}
+                branch["properties"][field] = {"anyOf": [inactive, active]} if (
+                    message.strip() and active["properties"][selector]["enum"]) else inactive
+        if message is not None:
+            # 목록 읽기 항목은 아래 목록 읽기 갈래에서만 낸다(바꾸는 할 일의 읽기 항목은 어차피 쓰지 않거나 거부된다)
+            branch["properties"]["reads"] = {"type": "array", "items": other_read}
+        if message is not None and not editing:
+            # ★`[2026-10-26 수용 C02]` 목록 읽기는 따로 낸 갈래에서만 생성한다 — 그 갈래는 대상 none · 범위 필수(`list_read`)이고
+            #   후보(choices)를 내지 않는다(SYSTEM: reads 가 있으면 choices=[]). 다른 갈래의 읽기 항목은 한 일정 사실만 낸다.
+            #   ☆실제 E4B 가 「1월 2일 일정을 전부 보여줘」에 schedule 읽기 + 대상 i2 + 범위 today + 같은 후보(i2)를 내
+            #   서버가 계약대로 해석 실패로 끝냈다. 답을 고쳐 쓰지 않고 이런 조합을 생성하지 못하게 한다.
+            branch["properties"]["query"] = scope_schema()
+            listed = deepcopy(branch)
+            listed["properties"]["action"] = {"type": "string", "enum": ["answer_fact"]}
+            listed["properties"]["reads"] = {"type": "array", "minItems": 1, "items": {"anyOf": [list_read, other_read]}}
+            listed["properties"]["choices"] = {"type": "array", "items": choice, "maxItems": 0}
+            variants.append(listed)
+        if message is not None and editing:
+            temporal_schema = branch["properties"]["time_edit"]
+            if "anyOf" in temporal_schema:
+                inactive, active = temporal_schema["anyOf"]
+                item_edit = deepcopy(active)
+                item_edit["properties"]["scope"]["enum"] = ["item"]
+                item_edit["properties"]["boundary"]["enum"] = [
+                    value for value in item_edit["properties"]["boundary"]["enum"] if value != "reflow"]
+                branch["properties"]["time_edit"] = {"anyOf": [inactive, item_edit]}
+                # Bind an unambiguous verbatim named reference before generation.
+                # Equal target/anchor aliases alone can still name the first
+                # follower (and silently exclude it). Do not reinterpret scope,
+                # repair model output, or choose among multiple/implicit names.
+                named = [s.alias for s in stops if any(
+                    len(name) >= 2 and name in message
+                    for name in (str(getattr(s.item, "title", "") or ""),
+                                 str((getattr(s.item, "place", None) or {}).get("name") or "")))]
+                anchors = named if len(named) == 1 else items
+                for alias in anchors:
+                    if alias == "none":
+                        continue
+                    following = deepcopy(branch)
+                    fields = following["properties"]
+                    fields["action"]["enum"] = ["change_time"]
+                    fields["target_item"]["enum"] = [alias]
+                    fields["anchor_item"]["enum"] = [alias]
+                    fields["time_edit"] = deepcopy(active)
+                    fields["time_edit"]["properties"]["scope"]["enum"] = ["following"]
+                    fields["time_edit"]["properties"]["boundary"]["enum"] = ["shift", "reflow"]
+                    variants.append(following)
+        variants.append(branch)
+    # Do not combine a permissive properties object with anyOf: the local
+    # grammar converter can choose that object and skip the alternatives.
+    if message is not None:
+        from .edit_intent import generation_variants
+        # Lexical evidence admission only: enumerate existing calendar labels and
+        # visit names, exactly as following-anchor binding above. Never parse or
+        # rewrite the model answer, or guess a date when no label is quoted.
+        # ★`[2026-10-26 L05 이식 · Codex]` 목록 읽기와 같은 숫자 경계 판정(`quoted_calendar_days`) — 부분 문자열이면 「11월 2일」이 「1월 2일」 근거가 됐다
+        day_quotes = quoted_calendar_days(stops, message)
+        for token, label in (("today", "오늘"), ("tomorrow", "내일")):
+            if label in message:
+                day_quotes.append(token)
+        named_quotes = [s.alias for s in stops if any(len(name) >= 2 and name in message for name in (
+            str(getattr(s.item, "title", "") or ""),
+            str((getattr(s.item, "place", None) or {}).get("name") or "")))]
+        return {"anyOf": generation_variants(variants, items, query_schema(stops), message,
+                                             quoted_days=day_quotes, quoted_items=named_quotes)}
+    schema["anyOf"] = variants
+    return schema
 
 
 def default_query(raw: dict[str, Any], stops: list[Stop]) -> dict[str, str]:
@@ -435,27 +578,92 @@ def default_query(raw: dict[str, Any], stops: list[Stop]) -> dict[str, str]:
     return {"day": day if day in query_days(stops) and day != "none" else "all", "period": "all", "kind": "all", "position": "all"}
 
 
+def _quotes_overlap(first: str, second: str, message: str) -> bool:
+    """두 인용이 같은 말이거나, 고객 원문에서 어느 한 자리끼리라도 구간이 겹치는가(단어를 보지 않고 위치만 본다)."""
+    if first == second:
+        return True
+
+    def spans(quote: str) -> list[tuple[int, int]]:
+        found, start = [], message.find(quote)
+        while start >= 0:
+            found.append((start, start + len(quote)))
+            start = message.find(quote, start + 1)
+        return found
+
+    return any(a < d and c < b for a, b in spans(first) for c, d in spans(second))
+
+
+def _api_schema_kwargs(chat: Any, stops: list[Stop], changes: list[Change]):
+    """넘김 장치(`FailoverChat`)가 유료 경로용 스키마(`api_schema`)를 받으면 **문장 없는** 스키마를 준다. `[2026-10-26 L05 이식]`
+
+    생성 문법은 고객 문장(인용)과 일정 이름을 enum 으로 싣는다. 로컬 모델 문법에만 쓰고, 유료 경로는 문장이 없는 같은 칸의 스키마로 답한다
+    (인용 검사는 `validate` 가 두 경로 모두 한다). 받는 칸이 없는 모델(로컬만 · 시험 대역)에는 아무것도 더하지 않는다."""
+    import inspect
+
+    def kwargs(method: Any) -> dict[str, Any]:
+        try:
+            accepted = "api_schema" in inspect.signature(method).parameters
+        except (TypeError, ValueError):
+            accepted = False
+        return {"api_schema": _schema(stops, changes, plain=True)} if accepted else {}
+
+    return kwargs
+
+
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
-           selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None) -> Decision:
-    """모델 한 번. 스키마 밖 · 목록 밖 값이면 `DecisionFailed`."""
+           selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None,
+           stream: dict[str, Any] | None = None) -> Decision:
+    """모델 한 번. 스키마 밖 · 목록 밖 값이면 `DecisionFailed`.
+
+    ★`[2026-10-26 사용자 승인]` `stream`(가드레일 `travel.chat_decision_stream` 값 — `trip_messages._try_decide` 가 읽는다)이 있고 모델이
+      `structured_stream_validated` 를 가지면 고정 대기 대신 답을 **조금씩 받으며** 첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(계획 읽기와 같은 장치).
+      끊기면 넘김 장치가 유료로 처음부터 다시 답하고, 끝내 못 답하면 `DecisionFailed` — 고정 대기 호출로 다시 부르지 않는다."""
     from app.domains.travel_ops.components.core_hooks.feedback import masked
 
     selected = next((s.alias for s in stops if selected_item_id and s.item.item_id == selected_item_id), "none")
     started = time.monotonic()
+    evidence_failure = None
+
+    def validate_response(value):
+        nonlocal evidence_failure
+        # Keep a bounded diagnostic before the provider hides ValueError details.
+        # Never retain model values, quoted customer text or arbitrary exception text.
+        known = {
+            "invalid time_edit", "invalid place_search", "unquoted time_edit", "unquoted place_search",
+            "invalid spatial relation", "unquoted spatial origin", "invalid temporal relation",
+            "inconsistent temporal scope", "invalid temporal clock", "unquoted temporal clock",
+            "temporal clock contradicts quoted meridian", "temporal clock disagrees with evidence",
+            "invalid stay duration", "invalid temporal flags",
+        }
+        try:
+            validate(value, message or "", {s.alias for s in stops} | {"none"})
+        except ValueError as error:
+            reason = str(error)
+            evidence_failure = reason.replace(" ", "_") if reason in known else "unspecified"
+            raise
+
     try:
         from .edit_intent import SYSTEM as EDIT_SYSTEM, validate
 
+        # ★`[2026-10-26 L05 이식]` 생성 문법(`_schema(message=…)`)은 로컬 모델 전용이다 — 문장 인용을 enum 으로 실어
+        #   유료 넘김 경로로는 보내지 않는다(`api_schema`: 문장이 없는 같은 모양의 스키마). 인용 검사는 두 경로 모두 `validate` 가 한다.
         arguments = (SYSTEM + EDIT_SYSTEM, _prompt(stops, changes, history, selected, masked(message), now),
-                     _schema(stops, changes))
+                     _schema(stops, changes, message=masked(message or "")))
+        split = _api_schema_kwargs(chat, stops, changes)
         validated = getattr(chat, "structured_validated", None)
-        if callable(validated):
-            raw = validated(*arguments, num_predict=num_predict,
-                            validator=lambda value: validate(value, message or "", {s.alias for s in stops} | {"none"}))
+        streamer = getattr(chat, "structured_stream_validated", None) if stream else None
+        if callable(streamer):
+            raw = streamer(*arguments, num_predict=num_predict, validator=validate_response,
+                           first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
+                           max_seconds=float(stream["max_seconds"]), **split(streamer))
+        elif callable(validated):
+            raw = validated(*arguments, num_predict=num_predict, validator=validate_response, **split(validated))
         else:
             # Existing in-process callers/test doubles remain compatible; checks below still apply.
             raw = chat.structured(*arguments, num_predict=num_predict)
     except Exception as exc:                          # noqa: BLE001 — 모델 장애는 부르는 쪽이 「바꾸지 않고 묻기」로 답한다
-        raise DecisionFailed(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
+        detail = f" [evidence_validation:{evidence_failure}]" if evidence_failure else ""
+        raise DecisionFailed(f"{type(exc).__name__}: {str(exc)[:160]}{detail}") from exc
     seconds = time.monotonic() - started
     from .edit_intent import validate
     try:
@@ -491,6 +699,13 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     #   「조건이 붙은 변경은 미리 걸어 둘 수 없다」는 엉뚱한 답이 됐다(x600 서버 웹 채팅 재시험 2026-10-14). 다른 안 보여 주기는
     #   일정을 바꾸지 않으므로 진짜 조건부 요청도 미리 바뀌지 않는다.
     condition = str(raw.get("condition_text") or "").strip()[:200]
+    from .edit_intent import requested_setting
+    setting_quote = str((raw.get("place_setting") or {}).get("evidence") or "")
+    if condition and requested_setting(raw) and condition in setting_quote:
+        # ★`[2026-10-25 QA]` 인용 확인을 지난 실내·야외 조건 원문(「야외로」)을 조건 칸에도 옮겨 적었다 — 「~하면」 같은 조건부 요청이 아니다.
+        #   ☆실 E4B(tripilot-pointer:e4b-ft) 「실내를 야외로 바꿔줘」: condition_text=「야외로」 → 바로 바꾸지 않고 다른 안 묻기로 돌았다
+        raw = {**raw, "condition_is_setting": {"text": condition, "evidence": setting_quote}}
+        condition = ""
     if action in {"apply_change", "report_closed"} and condition:
         raw = {**raw, "condition_guard": {"condition": condition, "blocked_action": action}}
         action = "propose_alternatives"
@@ -509,9 +724,22 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     #   ★`[2026-10-15 사용자 지시]` 후보만 보여 주지 않고 **말한 곳을 찾아 그곳으로 바꾼다** — 웹 「일정 수정」의 장소 이름 고치기와 같은 길
     #   (`chat_edit` → `pipeline.edit` 의 이름 찾기: 우리 장소 표 → 관광공사 → 요식 원장 → 카카오). 하나로 못 찾으면 바꾸지 않고 그렇게 답한다.
     destination = str(raw.get("destination_text") or "").strip()[:200]
+    if action == "apply_change" and destination and requested_setting(raw) and destination in setting_quote:
+        # ★`[2026-10-25 QA]` 인용 확인을 지난 실내·야외 조건 원문을 목적지 칸에도 옮겨 적었다 — 장소 이름이 아니다(「야외」라는 곳을 찾지 않는다)
+        raw = {**raw, "destination_is_setting": {"text": destination, "evidence": setting_quote}}
+        destination = ""
     if action == "apply_change" and destination:
         raw = {**raw, "named_destination": {"text": destination, "from_action": action}}
         action = "replace_named"
+    near_search = raw.get("place_search") or {}
+    near_quote = str(near_search.get("evidence") or "")
+    if (near_search.get("relation") == "near" and requested_setting(raw) and near_quote and setting_quote
+            and _quotes_overlap(near_quote, setting_quote, message or "")):
+        # ★`[2026-10-26 QA]` 인용 확인을 지난 실내·야외 조건 원문(또는 그 구간에 걸친 원문)을 근처 검색 근거로도 옮겨 적었다 — 근처 기준이 아니다.
+        #   ☆실 E4B(live-8 · live-9) 「(실내를) 야외로 바꿔줘」: place_search=near · anchor_item=i1 · evidence=조건 원문 → 아래 근처 기준 확인이
+        #   되묻기 선택지를 지워 식사 일정까지 끼운 대체 목록이 나갔고, 대상이 다른 활동이면 「근처로 찾아 바꾸지 못해요」로 막혔다
+        raw = {**raw, "place_search": {**near_search, "relation": "none", "anchor_item": "none", "place_text": ""},
+               "near_is_setting": {"was": near_search, "evidence": setting_quote}}
     by_alias = {s.alias: s.item for s in stops}
     target = raw.get("target_item") or "none"
     if target != "none" and target not in by_alias:
@@ -729,8 +957,14 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     # 검색 기준과 변경 대상을 각각 검증한다. 근처 조건을 상호명 조회로 넘기지 않는다.
     search = raw.get("place_search") or {}
     temporal = raw.get("time_edit") or {}
+    # ★`[2026-10-26 x600 QA]` 시각을 바꾸지 않는 해석(boundary=none — 검증·실행 모두 무시하는 칸)의 scope=following 은 기준이 아니다.
+    #   근처 기준이 바꿀 일정 자신이면 그 일정은 바로 위에서 확인했다 — 다시 확인하면 그 되묻기(활동 후보)를 선택지 없는 되묻기로 덮어
+    #   「말씀을 정확히 알아듣지 못했어요」 대체 목록(식사 포함)이 나갔다(test12 「실내를 야외로 바꿔줘」). 근처 조건은 `settle_near_search` 가 뗀다.
     anchor_alias = (search.get("anchor_item") if search.get("relation") == "near" else
-                    raw.get("anchor_item") if temporal.get("scope") == "following" else None)
+                    raw.get("anchor_item") if temporal.get("scope") == "following"
+                    and temporal.get("boundary", "none") != "none" else None)
+    if search.get("relation") == "near" and action in _NEAR_CHANGING and anchor_alias == (raw.get("target_item") or "none"):
+        anchor_alias = None
     anchor = by_alias.get(anchor_alias)
     if anchor is not None:
         checked = guard_target(replace(decision, action="change_time", item=anchor), stops=stops, changes=changes,
@@ -749,7 +983,36 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                 and _local(target.starts_at).date() == _local(now).date()):
             decision = replace(decision,action="advance_trip",item=previous,minutes=None,
                 raw={**raw,"now_progress":{"requested_item_id":str(target.item_id),"current_item_id":str(previous.item_id)}})
-    return _current_route_read(decision, stops=stops, message=message or "", now=now)
+    return guard_setting_target(_current_route_read(decision, stops=stops, message=message or "", now=now))
+
+
+def guard_setting_target(decision: Decision) -> Decision:
+    """★`[2026-10-26 x600 재시험 da4ccd97]` 실내·야외 조건이 붙은 장소 바꾸기의 대상이 **장소 기록상 이미 그 조건**이면 바로 바꾸지 않는다.
+
+    ☆박물관 → 용산가족공원(야외)으로 바꾼 뒤 「야외로 바꿔줘」 — 모델이 대상으로 용산가족공원을 냈고(직전 대화에 그 이름) 팀이 이촌한강공원으로 또 바꿨다.
+    조건 = 검증을 지난 `place_setting`(인용 확인) · 장소 바꾸기 할 일 · 시각/날짜 바꾸기가 아님 · 대상 장소의 `place_setting()` 이 요청과 같음(모름은 아님).
+    대상 되묻기로 돌리고 무엇을 막았는지 `setting_guard` 에 남긴다 — 되묻기(`trip_messages._clarify_with_choices`)가 「이미 야외 장소예요」와
+    야외로 바꿀 다른 활동, 그리고 그 일정을 다른 야외 장소로 바꾸기(마지막)를 묻는다. 칸과 장소 기록만 본다(낱말을 보지 않는다)."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS, place_setting
+
+    from .edit_intent import requested_setting
+
+    raw = decision.raw or {}
+    item = decision.item
+    setting = requested_setting(raw)
+    if (setting is not None and decision.action in ("apply_change", "propose_alternatives") and item is None
+            and raw.get("change_scope") not in ("time", "date") and (raw.get("time_edit") or {}).get("boundary", "none") == "none"):
+        # ★`[2026-10-26 x600 c34bd376]` 조건은 있는데 바꿀 일정이 없다 — 팀이 조건 없이 모든 활동을 묻지 않게 대상 되묻기로 돌린다
+        #   (`trip_messages._setting_swap_choices` 가 활동 · 조건으로 거른다. 모델 후보는 그대로 넘긴다)
+        return replace(decision, action="clarify", change=None, raw={**raw, "setting_untargeted": {"action": decision.action}})
+    if (setting is None or decision.action not in ("apply_change", "propose_alternatives") or item is None
+            or raw.get("change_scope") in ("time", "date") or (raw.get("time_edit") or {}).get("boundary", "none") != "none"
+            or place_setting(getattr(item, "place", None)) != setting):
+        return decision
+    note = f"{item.title}은(는) 이미 {SETTING_LABELS[setting]} 장소예요."
+    return replace(decision, action="clarify", item=None, change=None, choices=[], question=note,
+                   raw={**raw, "setting_guard": {"item_id": str(item.item_id), "action": decision.action,
+                                                 "setting": setting, "note": note}})
 
 
 def _current_route_read(decision, *, stops, message, now):
@@ -1120,7 +1383,8 @@ def spoken_minutes(message: str) -> int | None:
     if re.search(r"반\s*시간", message) and not found:
         total += 30
         found = True
-    for number in re.findall(r"(\d+)\s*분", message):
+    # A clock's minute part ("11시 30분") is an absolute boundary, not a shift size.
+    for number in re.findall(r"(\d+)\s*분", re.sub(r"\d+\s*시(?!간)\s*\d+\s*분", " ", message)):
         total += int(number)
         found = True
     if not found:

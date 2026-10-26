@@ -192,6 +192,69 @@ def test_an_edit_can_be_rolled_back_like_any_other_change(chat):
     assert _hm(items["N서울타워"].starts_at) == "15:00", body
 
 
+def test_a_storage_failure_while_saving_is_an_explicit_failure_not_a_500(chat, monkeypatch):
+    """`[2026-10-26 묶음 L · 수용 F03]` 새 판을 쓰는 중 저장소가 실패하면(통제 주입 — 이 여행의 `itinerary_versions` INSERT 만)
+    일반 500 이 아니라 명시적 실패 답이다: 일정 그대로 · Case escalated · 답과 대화 기록 · 문의함 안내 · 내부 오류 글 없음.
+    주입을 걷으면 같은 요청이 다시 된다(잠금 · 수정 접수가 남지 않았다)."""
+    import psycopg
+
+    trip_id = str(chat["trip"]["trip_id"])
+    raw_execute = psycopg.Cursor.execute
+    seen = []
+
+    def failing(cursor, query, params=None, **kw):
+        if "INSERT INTO ITINERARY_VERSIONS" in str(query).upper() and trip_id in str(params):
+            seen.append(True)
+            raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
+        return raw_execute(cursor, query, params, **kw)
+
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="N서울타워", minutes=60)
+    with monkeypatch.context() as patched:
+        patched.setattr(psycopg.Cursor, "execute", failing)
+        body = _say(chat, "N서울타워를 한 시간 미뤄줘", "edit-storage-fail")        # `_say` 가 HTTP 200 을 단언한다
+    after, items = _latest(chat)
+    assert seen, "주입이 실제 저장 경로에 닿지 않았다"
+    assert after == before and _hm(items["N서울타워"].starts_at) == "15:00", body
+    assert body["status"] == "escalated" and body["case_status"] == "escalated", body
+    assert body["outcome"]["reason"] == "save_failed", body
+    assert body["answer"].startswith(_save_failed_text()) and "문의함" in body["answer"], body
+    public = str(body)
+    assert "OperationalError" not in public and "CONTROLLED" not in public and "010-1234" not in public
+    turns = chat["client"].get(f"/v1/web/trips/{trip_id}/chat", headers=_h(chat["key"])).json()["turns"]
+    assert turns[-1]["role"] == "assistant" and turns[-1]["text"] == body["answer"]
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT status, state_json->'trip_outcome'->>'reason' FROM customer_cases WHERE case_id=%s",
+                    (body["case_id"],))
+        assert cur.fetchone() == ("escalated", "save_failed")
+    again = _say(chat, "N서울타워를 한 시간 미뤄줘", "edit-storage-retry")
+    assert again["status"] == "adjusted", again
+    assert _latest(chat)[0] == before + 1
+
+
+def _save_failed_text():
+    from app.domains.travel_ops.components.conversation.chat_edit import SAVE_FAILED_TEXT
+
+    return SAVE_FAILED_TEXT
+
+
+def test_two_different_times_in_one_time_change_are_asked_back_and_nothing_is_saved(chat):
+    """`[2026-10-26 묶음 L · 수용 X02]` 실 E4B 가 「인사동을 오후 1시로 바꾸면서 동시에 낮 12시로 해줘」를 time 13:00 · 인용 = 문장 전체로 읽어
+    13:00 으로 저장했다. 인용에 서로 다른 시각이 둘이면 고르지 않고 되묻는다 — 일정 그대로 · 다른 일정 목록 없음 · 대화 기록에 같은 답."""
+    message = "인사동을 오후 1시로 바꾸면서 동시에 낮 12시로 해줘"
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="인사동", anchor_kind="time", anchor_time="13:00", at_day="none",
+            time_edit={"time": "13:00", "scope": "item", "cascade": False, "boundary": "start", "evidence": message,
+                       "duration_minutes": 0, "continue_previous": False})
+    body = _say(chat, message, "edit-two-clocks")
+    after, items = _latest(chat)
+    assert after == before and _hm(items["인사동"].starts_at) == "12:00", body
+    assert body["status"] == "clarify" and not body.get("choices"), body
+    assert "12:00" in body["answer"] and "13:00" in body["answer"] and "일정은 바꾸지 않았어요" in body["answer"], body
+    turns = chat["client"].get(f"/v1/web/trips/{chat['trip']['trip_id']}/chat", headers=_h(chat["key"])).json()["turns"]
+    assert turns[-1]["role"] == "assistant" and turns[-1]["text"] == body["answer"]
+
+
 def test_an_open_edit_screen_with_unsaved_changes_is_not_overwritten(chat):
     from .test_trip_reopen import _edit, _index, _reopen
 
@@ -215,6 +278,64 @@ def test_several_stops_in_a_range_shift_together(chat):
     assert body["status"] == "adjusted" and after == before + 1, body
     assert (_hm(items["인사동"].starts_at), _hm(items["N서울타워"].starts_at)) == ("13:00", "16:00"), body
     assert _hm(items["북촌한옥마을"].starts_at) == "10:00", body                 # 오전 일정은 그대로
+
+
+def test_a_range_shift_that_runs_into_a_kept_stop_is_refused_as_a_whole(chat):
+    """`[2026-10-26 묶음 L · rm9 Codex 남은 지적 2]` 범위 옮기기는 고정 일정을 그대로 두고(`split_range`) 뒤 일정을 맞추지 않는다(reflow 없음).
+    옮긴 일정이 그대로 둔 일정과 겹치면 중앙 저장기가 **전부** 거절한다 — 일부만 옮겨 겹친 일정표를 쓰지 않는다(DB 재현)."""
+    trip_id = str(chat["trip"]["trip_id"])
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        # 고객 고정(locked)은 웹 「일정 수정」의 잠금으로 생긴다 — 이 시험은 그 상태만 필요하므로 지금 판의 N서울타워를 잠근다(시험 준비)
+        cur.execute("UPDATE itinerary_items i SET locked=true FROM trips t WHERE t.trip_id=i.trip_id AND t.tenant_id=i.tenant_id "
+                    "AND i.version=t.latest_version AND i.trip_id=%s AND i.title=%s", (trip_id, "N서울타워"))
+        assert cur.rowcount == 1
+    before, items = _latest(chat)
+    assert items["N서울타워"].locked
+    starts = {name: _hm(items[name].starts_at) for name in ("북촌한옥마을", "인사동", "N서울타워")}
+    _answer(chat, "change_time", minutes=120, query={"day": "tomorrow", "period": "all", "kind": "all", "position": "all"})
+    body = _say(chat, "내일 일정 전부 두 시간씩 밀어줘", "edit-range-kept-overlap")   # 인사동 14:00~15:30 이 고정된 N서울타워 15:00 과 겹친다
+    after, items = _latest(chat)
+    assert after == before, body
+    assert {name: _hm(items[name].starts_at) for name in starts} == starts, body
+    assert body["status"] == "edit_refused" and "바꾸지 않았어요" in body["answer"], body   # 중앙 저장기 거절까지 갔다(되묻기 아님)
+    assert (body.get("outcome") or {}).get("reason") == "itinerary_infeasible", body      # 겹침 판정으로 거절(다른 까닭이 아니다)
+
+
+@pytest.mark.parametrize("finish", ["commit", "rollback"])
+def test_the_failure_readback_waits_for_an_unfinished_save_and_reports_what_it_became(chat, finish):
+    """`[2026-10-26 묶음 L · Codex q3·q4]` 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않은 장면 — 다른 연결이 `trips` 행을 UPDATE 하고
+    트랜잭션을 연 채 둔다. 저장 실패 뒤 다시 읽기(`_unchanged_after_failure`)는 그 트랜잭션이 끝날 때까지 기다린 뒤 결과대로 답한다:
+    저장됐으면 False(「안 바꿨다」고 말하지 않는다) · 되돌려졌으면 True. 판 번호만 읽었다면 commit 장면에서 거짓 True 였다."""
+    import threading
+    import time as _time
+    from app.domains.travel_ops.components.conversation import chat_edit
+
+    trip_id, tenant = str(chat["trip"]["trip_id"]), chat["tenant"]
+    base, _ = _latest(chat)
+    result, started = {}, threading.Event()
+    with get_connection() as other:
+        with other.cursor() as cur:
+            cur.execute("UPDATE trips SET latest_version=latest_version+1 WHERE tenant_id=%s AND trip_id=%s", (tenant, trip_id))
+            assert cur.rowcount == 1
+
+        def readback():
+            started.set()
+            result["unchanged"] = chat_edit._unchanged_after_failure(get_connection, tenant, trip_id, base)
+            result["at"] = _time.monotonic()
+
+        worker = threading.Thread(target=readback)
+        worker.start()
+        started.wait(5)
+        _time.sleep(1.0)
+        assert "unchanged" not in result, "다시 읽기가 끝나지 않은 저장을 기다리지 않았다"
+        ended = _time.monotonic()
+        other.commit() if finish == "commit" else other.rollback()
+        worker.join(10)
+    assert result["at"] >= ended
+    assert result["unchanged"] is (finish == "rollback")
+    if finish == "commit":                                                    # 시험이 올린 판 번호를 되돌린다(다른 시험에 영향 없게)
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("UPDATE trips SET latest_version=%s WHERE tenant_id=%s AND trip_id=%s", (base, tenant, trip_id))
 
 
 def test_an_empty_edit_screen_left_open_is_not_shared_and_is_closed(chat):

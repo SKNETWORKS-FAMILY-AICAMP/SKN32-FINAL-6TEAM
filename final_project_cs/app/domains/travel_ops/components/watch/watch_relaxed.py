@@ -189,12 +189,19 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
                                                      decision=Decision("ask", REASON, None, safety), causes=causes, options=options)
     if proposal_id is None:
         return {"status": "asked", "already": True, "text": text, "safety": safety, "options": options}
-    store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}", payload={
+    from app.domains.travel_ops.components.response.monitoring import action_notice
+
+    payload = {
         "type": "safety_alert" if safety else "proposal_request", "text": text, "language": "ko", "causes": causes,
         "proposal_id": str(proposal_id), "item_id": str(item_id), "reason": REASON, "protected_by": None,
         "options": [{"key": o["key"], "rank": o["rank"], "name": o.get("option_label") or o["name"],
                      "starts_at": o.get("starts_at"), "note": o.get("note")} for o in options],
-        "replay": False})
+        "replay": False}
+    payload = action_notice(payload, tenant_id=store.tenant_id, trip=trip, trip_id=trip_id,
+                            version=trip["version"], status="awaiting_choice",
+                            execution={"outcome": {"status": "asked", "already": False,
+                                                   "proposal_id": str(proposal_id)}})
+    store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}", payload=payload)
     return {"status": "asked", "already": False, "proposal_id": str(proposal_id), "text": text, "safety": safety, "options": options}
 
 

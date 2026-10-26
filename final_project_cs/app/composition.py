@@ -31,7 +31,7 @@ from app.core.redaction import masked
 from app.tools.read_tools import ReadToolbox
 
 
-def _llm_failover_budget(settings: Any):
+def _llm_failover_budget(settings: Any, *, fail_closed: bool = False):
     """모델 서버 넘김 장치(`llm_failover.py`)가 **API 로 넘긴 호출**을 세는 장치 — `external_call_budget` 의 `openai_failover` 줄(일 · 월 상한).
     ★인프라는 도메인의 `CallBudget` 을 모르므로(계층 규칙) 조립 루트가 만들어 꽂는다. 한도 표를 못 읽으면 **부른다**(서비스를 살리는 쪽) — 경고를 남긴다.
     한도를 넘으면 `False` — 넘김 장치가 더 부르지 않고 실패로 올린다."""
@@ -47,15 +47,49 @@ def _llm_failover_budget(settings: Any):
         try:
             return bool(budget.try_reserve(METER))
         except Exception as exc:                                  # noqa: BLE001 — 세는 일이 서비스를 막지 않게
+            if fail_closed:
+                logging.getLogger("app.llm_failover").warning("reader call budget unreadable (%s) — API denied", type(exc).__name__)
+                return False
             logging.getLogger("app.llm_failover").warning("call budget unreadable (%s) — calling the API anyway", type(exc).__name__)
             return True
     return allowed
 
 
+def _llm_reader_budget(settings: Any):
+    """Reader reserve is fail-closed; preserve the general fail-open gate.
+
+    The gate is built when a reader API attempt asks, not when the failover chat is assembled: unreadable
+    cap settings must deny the reader's API call, never break building the (local-first) model chain."""
+    import logging
+
+    def allowed() -> bool:
+        try:
+            gate = _llm_failover_budget(settings, fail_closed=True)
+        except Exception as exc:                                  # noqa: BLE001 — 상한을 못 읽으면 reader API 를 막는다
+            logging.getLogger("app.llm_failover").warning("reader call budget unavailable (%s) — API denied",
+                                                          type(exc).__name__)
+            return False
+        return gate()
+    return allowed
+
+
+def _llm_failover_warm(chat: Any) -> Any:
+    """`[2026-10-26]` 넘김 장치가 식은 첫 Ollama 를 만났을 때 뒤에서 부른다 — 화면 예열(`/v1/web/warmup`)과 같은 장치 · 같은 중복 억제 상태.
+    이미 올라가 있으면 아무것도 안 한다. 고객 남용 방어(`web_guard`)는 고객 요청을 세는 것이라 여기서는 세지 않는다(채팅 한 마디가 이미 세어진다).
+    이미 뒤 스레드에서 불리므로 예열은 그 자리에서 한다."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.modules.live_progress import model_warmup
+
+    return model_warmup.warmup(chat, count=lambda: None, defer=lambda job: job(),
+                               dedupe_seconds=float(get_guardrails().get("web_guard.warmup.dedupe_seconds")))
+
+
 def _register_llm_failover() -> None:
-    from app.infrastructure.llm_failover import register_budget_provider
+    from app.infrastructure.llm_failover import register_budget_provider, register_reader_budget_provider, register_warm_starter
 
     register_budget_provider(_llm_failover_budget)
+    register_reader_budget_provider(_llm_reader_budget)
+    register_warm_starter(_llm_failover_warm)
 
 
 _register_llm_failover()           # import 때 한 번 — 꽂기만 한다(I/O 없음, 부를 때 일한다)
@@ -800,7 +834,10 @@ def _dining_meal_picker():
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
         from app.infrastructure.ollama_chat import OllamaChat
 
-        chat = OllamaChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, timeout=60.0)
+        # 해석과 같은 모델이면 같은 문맥 길이를 보낸다 — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다
+        shared = (model or settings.ollama_model) == settings.ollama_model
+        chat = OllamaChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, timeout=60.0,
+                          num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0) if shared else 0)
     else:
         logging.getLogger(__name__).warning("dining meal_pick enabled but model %s has no key/address — rule pick only",
                                             pick_settings["model"])

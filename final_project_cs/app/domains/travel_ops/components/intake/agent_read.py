@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+import hashlib
 import json
 import re
 import time
@@ -61,9 +62,11 @@ SCHEMA: dict[str, Any] = {
         "pieces": {"type": "array", "items": {"type": "object", "required": ["kind", "quote"],
                    "properties": {"kind": {"enum": list(PIECES)}, "quote": _S}}},
         "items": {"type": "array", "items": {"type": "object",
-                  "required": ["place_quote", "day", "date", "date_quote", "start", "end", "time_quote", "kind"],
+                  "required": ["place_quote", "day", "date", "date_quote", "start", "end", "time_quote", "kind", "locked", "locked_quote"],
                   "properties": {"place_quote": _S, "day": _NI, "date": _NS, "date_quote": _NS, "start": _NS, "end": _NS,
-                                 "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]}}}},
+                                 "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]},
+                                 # I06: 고객이 이 항목을 고정/고정 안 함이라고 **명시**했을 때만 true/false — 아니면 null. 근거 인용 없으면 버린다(`ground`)
+                                 "locked": {"type": ["boolean", "null"]}, "locked_quote": _NS}}},
         "moves": {"type": "array", "items": {"type": "object", "required": ["mode", "scope", "day", "from_quote", "to_quote", "quote"],
                   "properties": {"mode": {"enum": list(MODES)}, "scope": {"enum": ["segment", "day", "all"]}, "day": _NI,
                                  "from_quote": _NS, "to_quote": _NS, "quote": _S}}},
@@ -90,6 +93,7 @@ Rules
 - day: 1-based day number. date: YYYY-MM-DD or null. date_quote: the exact text that states that date (a header line is fine) or null.
 - start/end: 24h HH:MM or null. Use PM when the context means it (점심 1시 → 13:00, 저녁 6시 → 18:00, 3시 체크인 → 15:00, afternoon 2~6시 → 14:00~18:00). time_quote: the exact clock text, e.g. "1시쯤". 오전/점심/저녁 without a clock time → null.
 - kind: dining for meals, cafes, food, drinks; lodging for hotel stay/check-in/check-out; otherwise activity.
+- locked: true only when the traveller explicitly asks to keep this stop fixed/unchanged (이 일정은 고정해 주세요, 이건 꼭 그대로); false only when they explicitly say not to fix it (고정하지 마세요); otherwise null. Being booked (예약 완료, 예약번호) alone is NOT locked: a booking is a fact about the stop, not a request to keep it, so never use booking words as locked_quote. locked_quote = the exact words that say it, or null.
 - moves: transport the traveller states. scope "all" requires explicit whole-trip words (다 지하철로, 웬만하면 택시), "day" = one stated day (set day), "segment" = between two stops (from_quote/to_quote = their place_quote, null if unknown). 우리 지금 택시로 이동 between stops means only that segment; never infer a whole-trip preference from it. quote = exact transport words including scope words.
 - conditions: code if_rain_indoor (비 오면 실내), if_rain_skip (비 오면 빼기), finish_by:HH:MM (몇 시까지 끝/돌아가기), start_after:HH:MM; quote = exact words.
 - preferences: how the traveller likes to travel, with the exact words. kid_friendly (아이·어린이·애들과 함께), elderly_friendly (부모님·어르신과 함께), avoid_walking (많이 걷기 싫음·다리 아픔), prefer_walking (걷는 것 좋아함), avoid_stairs (계단 힘듦), prefer_taxi / avoid_taxi, prefer_transit (대중교통 위주), late_start (늦게 시작·아침 늦잠), slow_pace (여유롭게·빡빡하지 않게), food_focus (먹는 게 중요·맛집 위주), night_view (야경), nice_restaurants (좋은 식당·분위기 있는 곳).
@@ -98,8 +102,12 @@ Rules
 - trip: party_size, days, nights only if stated.
 
 Example
-Message: 모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심, 비 오면 공원은 빼 줘. 부모님 모시고 가니까 천천히요. 저녁은 알아서 추천해 줘
-Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date":"{ex_date}","date_quote":"모레","start":"11:00","end":null,"time_quote":"11시","kind":"activity"}},{{"place_quote":"샤로수길","day":1,"date":"{ex_date}","date_quote":"모레","start":"13:00","end":null,"time_quote":"1시","kind":"dining"}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
+Message: 모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심(예약 완료), 비 오면 공원은 빼 줘. 부모님 모시고 가니까 천천히요. 저녁은 알아서 추천해 줘
+Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date":"{ex_date}","date_quote":"모레","start":"11:00","end":null,"time_quote":"11시","kind":"activity","locked":null,"locked_quote":null}},{{"place_quote":"샤로수길","day":1,"date":"{ex_date}","date_quote":"모레","start":"13:00","end":null,"time_quote":"1시","kind":"dining","locked":null,"locked_quote":null}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
+
+
+PROMPT_VERSION = "intake.agent_read.v3-booked-not-locked"   # v2: 명시 고정 locked/locked_quote · v3: 예약만 있는 항목 예시(locked null) · 예약 말 인용 금지
+PROMPT_HASH = hashlib.sha256(SYSTEM.encode()).hexdigest()
 
 
 def system_for(today: date, state: str = "") -> str:
@@ -135,6 +143,8 @@ class AgentItem:
     time_fixed: bool = False                 # 인용에서 다시 계산해 바꿨다(`fact_check.recompute_time`)
     role: str = "visit"
     time_from_rule: bool = False             # 같은 줄의 규칙 시각으로 맞췄다(`pipeline._agent_rows`)
+    locked: bool | None = None               # I06 — 고객이 명시한 고정(true) · 고정 안 함(false) · 말 없음/근거 없음(None)
+    locked_quote: Quote | None = None        # 그 말의 원문 인용 — locked 가 bool 일 때만 있다
 
 
 @dataclass
@@ -199,7 +209,7 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
     """모델 답 → 원문에 근거가 있는 값만. 버린 수를 `report.dropped` 에 센다.
 
     `allowed` — 이 묶음에서 새로 읽을 줄(겹친 줄에서 나온 항목은 앞 묶음이 이미 셌다). `taken` — 앞 묶음까지 쓴 자리(같은 조각이 날마다 나올 때 다음 자리를 쓴다)."""
-    dropped = {"item": 0, "time": 0, "date": 0, "move": 0, "move_end": 0, "condition": 0, "preference": 0, "piece": 0, "gap": 0}
+    dropped = {"item": 0, "time": 0, "date": 0, "move": 0, "move_end": 0, "condition": 0, "preference": 0, "piece": 0, "gap": 0, "locked": 0}
     out = AgentRead()
     seen: list[tuple[int, int]] = taken if taken is not None else []
     for it in raw.get("items") or []:
@@ -230,12 +240,21 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
         if when and dq is None:
             dropped["date"] += 1
             when = None
+        # I06 — 모델이 명시 고정을 bool 로 판단하고 그 말이 원문에 글자 그대로 있을 때만 받는다. 인용 없음 · 원문에 없음 · bool 아님 → 모름(None)
+        locked, lq = it.get("locked"), None
+        if isinstance(locked, bool):
+            lq = _find(lines, it.get("locked_quote"), near=title.line)
+            if lq is None:
+                dropped["locked"] += 1
+                locked = None
+        else:
+            locked = None
         out.items.append(AgentItem(
             title=title, day=it.get("day") if isinstance(it.get("day"), int) else None, date=when, date_quote=dq if when else None,
             date_guessed=bool(when and dq and not re.search(r"\d", dq.text)), start=start, end=end, time_quote=tq if start else None,
             time_guessed=bool(start and tq and _guessed_pm(start, tq.text)), time_fixed=fixed,
             kind=it.get("kind") if it.get("kind") in ("activity", "dining", "lodging") else "activity",
-            role="origin" if it.get("role") == "origin" else "visit"))
+            role="origin" if it.get("role") == "origin" else "visit", locked=locked, locked_quote=lq))
     for m in raw.get("moves") or []:
         if not isinstance(m, dict) or m.get("mode") not in MODES or _find(lines, m.get("quote")) is None:
             dropped["move"] += 1
@@ -394,9 +413,26 @@ def _clear_path() -> None:
     clear_path()
 
 
+class ReaderPolicyError(RuntimeError):
+    """Reader admission failure: never retry through a general-purpose caller."""
+
+
+#: 이해 에이전트를 부르는 자리 — `intake`(계획서 읽기, 기본 · reader 정책) · `chat_add`(채팅 「넣기」 메시지, 채팅 해석 계약).
+READ_PURPOSES = ("intake", "chat_add")
+
+
+def validate_reader(chat: Any, *, stream: Any = None, agent: bool = False) -> None:
+    from app.infrastructure.llm_failover import OpenAIChat
+    if isinstance(chat, OpenAIChat):
+        raise ReaderPolicyError("reader_unbudgeted_external")
+    if agent and callable(getattr(chat, "reader_json", None)) and not stream:
+        raise ReaderPolicyError("reader_stream_required")
+
+
 def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: int = 3072,
          chunk_chars: int = fragments_module.CHUNK_CHARS, stream: dict[str, Any] | None = None,
-         on_progress: Any = None, clock: Any = time.monotonic, now=None) -> AgentRead:
+         on_progress: Any = None, clock: Any = time.monotonic, now=None,
+         external_fallback_enabled: bool = False, purpose: str = "intake") -> AgentRead:
     """묶음마다 한 번씩 부른다(짧은 글은 한 번). 모델 · 모양 오류는 그대로 올린다 — 부르는 쪽(`pipeline.read_source`)이 규칙 미리보기로 읽는다.
 
     `lines` 는 규칙 읽기와 같은 줄(`text.splitlines()`) — 줄 번호가 규칙 · 확인 화면 · 이 읽기에서 같다.
@@ -405,11 +441,23 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
       첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(`app/infrastructure/model_stream.py`). 로컬이 멈추면 넘김 장치가 그 묶음을 유료로 처음부터 읽는다.
       ★한 계획은 한 모델이 읽는다 — 어느 묶음이 유료로 답하면 그 뒤 묶음도 유료만 쓰고(`api_only`), 앞 묶음을 로컬이 읽었으면 **첫 묶음부터 유료로 다시** 읽는다.
       `on_progress({phase: reading|reading_api, done, total, final?})` — 원문에 글자 그대로 있는 인용이 나온 서로 다른 줄 수 / 보낸 줄 수(`progress_seconds` 마다)."""
+    if purpose not in READ_PURPOSES:
+        raise ValueError(f"unknown reader purpose: {purpose!r}")
+    if purpose == "intake":
+        # ★`[2026-10-26]` 계획서(접수 원문)만 reader 정책을 탄다 — 외부(유료) 대체 기본 차단 · reader 예산 fail-closed.
+        #   채팅 「넣기」(`chat_add`, `trip_desk._read_plan`)는 채팅 해석 계약 그대로다(가린 글로 일반 넘김 · 일반 예산, `llm-failover.md`).
+        validate_reader(chat, stream=stream, agent=True)
     started = time.perf_counter()
     frags = fragments_module.explode([(text, {"source": 0})])
     chunks = fragments_module.chunk(frags, limit=chunk_chars) or [fragments_module.Chunk([])]
     many = len(chunks) > 1
-    streamer = getattr(chat, "structured_stream", None) if stream else None
+    # ★`[2026-10-26 L03]` reader 정책 wrapper(`reader_json` 을 가진 넘김 장치)는 reader 전용 입구로만 부른다 — 일반 `structured_stream` 은
+    #   감시 분류 계획 · 다른 업무의 기존 넘김이라 계획서 원문이 그 길로 유료에 닿으면 안 된다. 순수 로컬(`OllamaChat`) · 시험 대역은 그대로.
+    policy_wrapper = purpose == "intake" and callable(getattr(chat, "reader_json", None))
+    if policy_wrapper and stream and not callable(getattr(chat, "reader_structured_stream", None)):
+        raise ReaderPolicyError("reader_stream_entry_missing")
+    streamer = (getattr(chat, "reader_structured_stream" if policy_wrapper else "structured_stream", None)
+                if stream else None)
     progress = _Progress(lines, on_progress, every=float(stream["progress_seconds"]), clock=clock) if callable(streamer) else None
     if progress is not None:
         progress.emit()
@@ -419,6 +467,7 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
         state = fragments_module.ReadState()
         taken: list[tuple[int, int]] = []
         paths: list[Any] = []
+        prompt_hashes: list[str] = []
         restart = False
         for index, part in enumerate(chunks):
             context = state.note() if many else ""
@@ -427,10 +476,13 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
                             "For an immediate plan, resolve an ambiguous hour to the next occurrence today; "
                             "do not add a visit or dwell at the starting location. Keep explicit relative offsets inclusive of travel.")
             system, user = system_for(today, context), (part.text if many else text)
+            prompt_hashes.append(hashlib.sha256(system.encode()).hexdigest())
             _clear_path()
             if callable(streamer):
                 progress.start(list(part.new_numbers) if many else list(range(1, len(lines) + 1)))
                 extra = {"api_only": True} if api_only else {}
+                if policy_wrapper:
+                    extra["external_fallback_enabled"] = external_fallback_enabled
                 raw = streamer(system, user, SCHEMA, num_predict=num_predict, on_piece=progress.piece,
                                first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
                                max_seconds=float(stream["max_seconds"]), **extra)
@@ -465,8 +517,10 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
     if progress is not None:
         progress.emit(final=True)
     total.requests = requests_from(total)
-    total.report.update({"seconds": round(time.perf_counter() - started, 2), "model": getattr(chat, "model", None),
-                         "items": len(total.items), "chunks": len(chunks), "paths": paths})
+    total.report.update({"seconds": round(time.perf_counter() - started, 2), "model": (paths[-1] or {}).get("model") or getattr(chat, "model", None),
+                         "items": len(total.items), "chunks": len(chunks), "paths": paths,
+                         "prompt_version": PROMPT_VERSION, "prompt_template_hash": PROMPT_HASH,
+                         "prompt_hashes": prompt_hashes})
     if restarted:
         total.report["restarted_on_api"] = True
     return total
@@ -488,7 +542,7 @@ def _path() -> Any:
     except Exception:                                  # noqa: BLE001 — 기록용이다
         return None
     found = current_path()
-    return {"path": found.get("path"), "seconds": found.get("seconds")} if isinstance(found, dict) else None
+    return {key: found.get(key) for key in ("path", "seconds", "backend", "model")} if isinstance(found, dict) else None
 
 
 def report_value(read_out: AgentRead) -> dict[str, Any]:

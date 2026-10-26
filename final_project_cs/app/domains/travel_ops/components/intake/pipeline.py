@@ -199,7 +199,7 @@ def _area_keys(conn, tenant_id: str) -> set[str]:
 
 def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blobs: dict[int, bytes],
             see: Callable[[str, bytes], str] | None, chat: Any = None, tour: Any = None, kakao: Any = None,
-            today: date | None = None, dining: Any = None) -> str:
+            today: date | None = None, dining: Any = None, activity_web: Any = None) -> str:
     """뒤에서 한 건을 읽는다. 돌려주는 값은 마지막 상태(review · fatal). `blobs` = {position: 바이트}.
 
     ★2주차(2026-09-27): 규칙 → 남은 줄은 모델이 **가리키기만**(`chat`) → 날짜 해석 → 장소 찾기(`tour` 관광공사 ·
@@ -271,7 +271,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
                         differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
                         position=int(source["position"]), agent_num_predict=reader["num_predict"],
-                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect)
+                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect,
+                        external_fallback_enabled=reader.get("external_fallback_enabled", False), activity_web=activity_web)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -281,6 +282,12 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                                      claims=_claims(conn, tenant_id, intake_id, 1), force=True, on_event=push)
         except Exception:                                  # noqa: BLE001 — 검사 장애가 읽기를 지우지 않는다
             log.warning("intake review failed intake=%s", intake_id, exc_info=True)
+        # ★`[2026-10-26 사용자 지시]` 「전부 과거면 계획 고르는 화면으로 넘어가면 안되고 그 전에 있는 계획담기 페이지의 가드레일에 걸려서 통과 안되게」 —
+        #   확인 화면 상태(`review`)로 넘기기 **전에** 첫 검사의 날짜를 등록 가드와 같은 판정으로 본다. 모두 오늘 이전이면 계획 담기에서 끝낸다(`fatal`, 등록 거절과 같은 코드).
+        #   일부만 과거 · 오늘 · 미래 · 날짜 미확정 · 오늘 끝나는 밤 일정은 지금처럼 확인 화면으로 간다. 검사가 실패했으면(저장본 없음) 판정하지 않는다
+        if _wholly_past(connect, tenant_id, intake_id):
+            _fatal(connect, tenant_id, intake_id, ALL_PAST_CODE, review_module.ALL_PAST_MESSAGE)
+            return "fatal"
         filling = reader["prefill"] == "on" and reader["mode"] == "on"
         # ★`[2026-10-20 사용자 지시]` 해석 확인 질문(`interpretations.py`)이 있으면 그 답을 반영할 때까지 고객에게는 「읽는 중」(첫 기다림)으로 둔다
         asking = _has_questions(connect, tenant_id, intake_id)
@@ -314,8 +321,11 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         code = getattr(exc, "code", "unsupported_format")
         _fatal(connect, tenant_id, intake_id, code, str(exc))
         return "fatal"
-    except Exception as exc:                         # ★받아쓰기 모델 장애 등 — 숨기지 않고 남긴다
-        _fatal(connect, tenant_id, intake_id, "reading_failed", f"{type(exc).__name__}: {exc}"[:300])
+    except Exception:                                # ★받아쓰기 모델 장애 등 — 숨기지 않고 남긴다
+        # ★`[2026-10-26 라우팅 감사 1번]` 실패 내용(`fatal.detail`)은 고객 화면에 그대로 보인다 — 내부 예외 글 대신 고객 문장을 남기고
+        #   예외 종류 · 내용은 서버 로그에만 둔다(☆전에는 `PermissionError: unapproved_egress` 같은 글이 그대로 저장됐다)
+        log.warning("intake reading outcome=failed by=unexpected intake=%s", intake_id, exc_info=True)
+        _fatal(connect, tenant_id, intake_id, "reading_failed", READING_ERROR_TEXT)
         return "fatal"
     finally:
         if "beat" in locals():
@@ -375,7 +385,7 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
     못 읽으면 `off`(규칙으로 읽는다). ★기다리는 시간은 여기서 정하지 않는다 — 채팅과 같은 넘김 장치(`llm_failover_primary_timeout_seconds`)를 따른다."""
     from app.core.settings import get_guardrails
 
-    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off"}
+    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off", "external_fallback_enabled": False}
     try:
         guard = get_guardrails()
         mode = str(guard.get("travel.intake_reader.mode"))
@@ -384,11 +394,19 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
         prefill = str(guard.get("travel.intake_reader.prefill"))
     except Exception:                                  # noqa: BLE001 — 설정이 없으면 규칙으로
         return default
+    try:
+        external = guard.get("travel.intake_reader.external_fallback_enabled") is True
+    except Exception:
+        external = False
+    configured_external = settings_hook.operator_setting(tenant_id, "travel.intake_reader.external_fallback_enabled")
+    if isinstance(configured_external, bool):
+        external = configured_external
     console = settings_hook.operator_setting(tenant_id, "travel.intake_reader.mode")
     if console in ("on", "shadow", "off"):
         mode = console
     return {"mode": mode if mode in ("on", "shadow", "off") else "off", "num_predict": num_predict,
-            "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off"}
+            "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off",
+            "external_fallback_enabled": external}
 
 
 def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
@@ -1435,6 +1453,8 @@ READING_STREAM_KEYS = ("first_token_seconds", "stall_seconds", "max_seconds", "p
 
 #: 남은 줄 모델이 끝내 답하지 못했을 때 고객에게 보이는 말(접수 `fatal_detail`) — 무엇이 안 됐고 무엇을 하면 되는지. 기술 사유는 로그에 남긴다
 READING_FAILED_TEXT = "계획을 읽는 모델이 지금 답하지 않아 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."
+#: 예상하지 못한 읽기 장애(`reading_failed`)의 고객 문장 — 내부 예외 글은 서버 로그에만 남긴다
+READING_ERROR_TEXT = "계획을 읽는 중에 문제가 생겨 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."
 
 
 def _model_side_failure(exc: BaseException) -> bool:
@@ -1476,9 +1496,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
                 differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
-                reading_stream: dict[str, Any] | None = None,
+                reading_stream: dict[str, Any] | None = None, external_fallback_enabled: bool = False,
                 on_reading: Callable[[dict[str, Any]], None] | None = None,
-                connect: Callable[[], Any] | None = None) -> list[dict[str, Any]]:
+                connect: Callable[[], Any] | None = None, activity_web: Any = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
     `agent` · `agent_mode` `[2026-10-16 사용자 지시]` — 읽기 에이전트(`agent_read.py`, 가르친 모델 한 번 호출). `on` 이면 에이전트가 먼저 읽고
@@ -1519,14 +1539,14 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
                                           chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS,
                                           stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None,
-                                          now=now)
+                                          now=now, external_fallback_enabled=external_fallback_enabled)
         except Exception as exc:                      # noqa: BLE001 — 갈래를 나눈다(아래)
             agent_error = f"{type(exc).__name__}: {exc}"[:200]
             # ★`[2026-10-16 2회차 합의 ②]` 버리는 줄 없음 — 실패 이유로 갈래를 나눈다
             #   · 모델 쪽(로컬 · 유료 모두 답 못 함 — 연결 · 시간 초과 · 멈춤): 같은 모델을 또 부르지 않고 곧바로 「읽기 실패」(유료를 두 번 태우지 않는다)
             #   · 답 내용 쪽(스키마 · 모양 · 인용 검사 — 모델은 답했다): 아래에서 줄 읽기(`label_lines`)로 한 번 더 읽고, 그것도 실패하면 「읽기 실패」
             #   ☆전에는(D-025 첫 판) 어느 쪽이든 「규칙 미리보기 + 못 읽은 줄」로 끝냈다 — 못 읽은 줄이 조용히 남았다
-            if agent_mode == "on" and _model_side_failure(exc):
+            if isinstance(exc, agent_module.ReaderPolicyError) or (agent_mode == "on" and _model_side_failure(exc)):
                 log.warning("intake reading outcome=failed by=agent_model error=%s", agent_error)
                 raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
             log.warning("intake agent read failed (answer side — reading lines instead): %s", agent_error)
@@ -1568,7 +1588,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         if chat is not None and read.unread_lines:
             try:
                 _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now,
-                                                    stream=_reading_stream(reading_stream), on_progress=on_reading)
+                                                    stream=_reading_stream(reading_stream), on_progress=on_reading,
+                                                    external_fallback_enabled=external_fallback_enabled)
             except ReadingFailed as exc:
                 log.warning("intake reading outcome=failed by=lines after=%s lines=%d: %s", outcome, len(read.unread_lines), exc)
                 raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
@@ -1667,7 +1688,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
                                       near=_near_hint(index, items, resolved, dated), at=_visit_at(index, rows, dated),
-                                      conn=connect)       # 공용 별칭의 DB 표 — 연결을 잡지 않고 여는 함수로(`place_by_name.alias_target`)
+                                      conn=connect, activity_web=activity_web)       # 공용 별칭의 DB 표 — 연결을 잡지 않고 여는 함수로(`place_by_name.alias_target`)
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,
@@ -2055,6 +2076,15 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
             it.start, it.end, it.time_quote, it.time_guessed = same[0].start, it.end or same[0].end, None, False
             it.time_from_rule = True                                          # 근거 표시용 — 아래 값 줄의 방법이 규칙이 된다
 
+    # I06 — 규칙이 예약 사실(booked · booking_no)의 근거로 쓴 원문 조각. D-020 오전 정정 A: 예약은 고정이 아니다 —
+    #   같은 조각은 고객의 고정 · 고정 안 함 요청의 독립 근거가 될 수 없다(뜻 재판정이 아니라 근거 중복 검사)
+    booking_spans = [(c.span.line, c.span.start, c.span.end) for c in read.claims
+                     if c.field.endswith((".booked", ".booking_no")) and getattr(c, "span", None) is not None]
+
+    def booking_quote(quote: Any) -> bool:
+        return any(line == quote.line and max(start, quote.start) < min(end, quote.end)
+                   for line, start, end in booking_spans)
+
     for it in out.items:
         index = len(items)
         booking_rows = _agent_booking_rows(read, it, index)
@@ -2064,6 +2094,16 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
         rows.append({"field": f"items[{index}].title", "value": it.title.text, "method": "llm_agent",
                      "evidence": {"source": "text", **it.title.as_dict(), "segment": segment(it)}, "needs_review": False,
                      "note": "읽기 에이전트가 가리킨 원문 조각"})
+        if (isinstance(getattr(it, "locked", None), bool) and getattr(it, "locked_quote", None) is not None
+                and booking_quote(it.locked_quote)):
+            # 예약 사실 조각을 고정 근거로 인용했다 — 값 줄을 만들지 않고 버린 수를 `reading.agent.dropped` 에 남긴다
+            dropped = out.report.setdefault("dropped", {})
+            dropped["locked_booking"] = dropped.get("locked_booking", 0) + 1
+        elif isinstance(getattr(it, "locked", None), bool) and getattr(it, "locked_quote", None) is not None:
+            # I06 — 고객이 명시한 고정 · 고정 안 함(모델 판단 + `ground` 가 확인한 원문 인용)만 값 줄이 된다. 예약은 고정이 아니다
+            rows.append({"field": f"items[{index}].locked", "value": it.locked, "method": "llm_agent",
+                         "evidence": {"source": "text", **it.locked_quote.as_dict()}, "needs_review": False,
+                         "note": "읽기 에이전트가 읽은 고객의 고정 요청" if it.locked else "읽기 에이전트가 읽은 고객의 「고정 안 함」"})
         if getattr(it, "time_from_rule", False):
             card = cards_by_line.get(it.title.line)
             rows.append({"field": f"items[{index}].starts_at", "value": it.start, "method": "rule",
@@ -2369,6 +2409,17 @@ def _stage(connect, tenant_id: str, intake_id: UUID, stage: str) -> None:
                     (stage, tenant_id, intake_id))
         if cur.rowcount == 0:
             raise _Abandoned()
+
+
+#: 읽은 일정이 모두 오늘 이전인 접수의 `fatal_code` — 등록 거절(`itinerary_infeasible`)의 `violations[].code` 와 같다
+ALL_PAST_CODE = "all_dates_in_past"
+
+
+def _wholly_past(connect, tenant_id: str, intake_id: UUID) -> bool:
+    """읽기가 끝난 첫 판 검사의 일정이 모두 오늘 이전인가(`review.wholly_past`). 검사 저장본이 없으면 모른다(False)."""
+    with connect() as conn:
+        payload = review_module.load(conn, tenant_id, intake_id, 1)
+    return payload is not None and review_module.wholly_past(payload)
 
 
 def _fatal(connect, tenant_id: str, intake_id: UUID, code: str, detail: str) -> None:

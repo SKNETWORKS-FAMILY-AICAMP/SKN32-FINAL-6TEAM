@@ -473,6 +473,37 @@ def other_sites(places: list[dict[str, Any]], original: dict[str, Any] | None,
             or not (same_site(original, p) or any(same_site(o, p) for o in others))]
 
 
+#: 쇼핑 분류 — 관광공사 종류 번호 38 · 분류체계 대분류 SH. 브랜드 매장 출처(`itinerary.BRAND_SOURCES`)도 상점이다
+SHOPPING_TYPE, SHOPPING_CLASS = "38", "SH"
+
+
+def is_shopping(place: dict[str, Any] | None) -> bool | None:
+    """장소 기록의 분류 코드로 본 쇼핑 여부 — True · False · None(분류 모름). 이름 낱말은 보지 않는다."""
+    from app.domains.travel_ops.components.itinerary.itinerary import BRAND_SOURCES
+
+    if not place:
+        return None
+    attributes = place.get("attributes") or {}
+    content_type = str(attributes.get("source_content_type_id") or place.get("content_type_id") or "")
+    top_class = str((place.get("catalog_class") or {}).get("lcls1") or "")
+    if (content_type == SHOPPING_TYPE or top_class == SHOPPING_CLASS
+            or attributes.get("catalog_source") in BRAND_SOURCES or attributes.get("source") in BRAND_SOURCES):
+        return True
+    return False if content_type or top_class else None
+
+
+def same_family(places: list[dict[str, Any]], original: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """★`[2026-10-26 x600 c34bd376 · Codex 결정]` 활동 대체 후보에서 원래 장소가 쇼핑이 아니면(분류 모름 포함) 쇼핑 분류 후보를 뺀다.
+
+    ☆국립중앙박물관 「다른 곳으로 바꿔줘」의 다른 안 셋이 CU 편의점 · 올리브영 · 정관장(관광공사 종류 38)이었다. 계획 읽기 후보 계산
+      (`intake.candidates._catalog_places` — 분류 모름이면 쇼핑 38 제외)과 같은 규칙이다. 모자라도 쇼핑으로 채우지 않는다.
+    원래 장소 자신과 활동이 아닌 행은 남긴다(각 계산이 뺀다)."""
+    if is_shopping(original) is True:
+        return places
+    keep = str((original or {}).get("place_id"))
+    return [p for p in places if str(p.get("place_id")) == keep or p.get("kind") != "activity" or is_shopping(p) is not True]
+
+
 def same_restaurant(a: dict[str, Any], b: dict[str, Any]) -> bool:
     """두 식당 장소가 **같은 가게**인가 — 카카오 「하동관 명동본점」 ↔ 요식 원장 「하동관」(4.6m).
 
@@ -1182,6 +1213,13 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
         warnings.append(f"{name}: {unchecked_text(unchecked)}")
     if warnings:
         text += " " + " ".join(warnings)
+    # ★`[2026-10-26 x600 a465c602]` 「다른 곳으로 바꿔줘」가 들고 있던 첫 안으로 바꿨을 때(고른 안 없음) 다른 안을 말하지 않았다 —
+    #   남은 다른 안(원래 곳은 되돌리기 몫이라 빼고)을 셋까지 보이고, 고를 수 있게 `more_options` 로 넘긴다(`case_dispatch.response` 가 선택지로 싣는다)
+    more = [a for a in remaining if a is not applied][:RELAX_WANT] if choice is None and current.kind in ("activity", "dining") else []
+    if more:
+        text += (" 다른 안: " + " · ".join(f"{n}) {(a.get('note') + ' ') if a.get('note') else ''}{a.get('option_label') or a['name']}"
+                                          for n, a in enumerate(more, start=1))
+                 + " — 다른 곳이 좋으면 고르세요. 답이 없으면 지금대로 둡니다.")
     # ★`[2026-10-13]` 숙소 · 항공 후보(외부 소스 — 예약 전)는 고른 안을 그대로 남기고 예약 링크를 알린다(숙소 · 항공 팀의 `_choose` 와 같은 칸)
     outside = current.kind in ("lodging", "flight")
     if outside:
@@ -1205,7 +1243,8 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
         replacement = replace(replacement, ends_at=None)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement, **shifted},
-                           summary={"to": name, "rechecked": rechecked, **({"unchecked": unchecked} if unchecked else {})})
+                           summary={"to": name, "rechecked": rechecked, **({"unchecked": unchecked} if unchecked else {}),
+                                    **({"more_options": more, "kind": current.kind} if more else {})})
 
 
 #: ★`[2026-10-20]` 고객이 고른 교체라도 **못 읽으면 바꾸지 않는** 자료 — 몸이 다칠 수 있는 사건의 소스(`pending.SAFETY_CATEGORIES`)와 기상특보.
@@ -1256,7 +1295,8 @@ def swap_refusal(name: str, starts: datetime, report: dict[str, Any] | None) -> 
         f"{name}의 {at} {what}를 지금 확인하지 못해 바꾸지 않았어요. 일정은 그대로예요. 잠시 뒤 다시 말씀해 주세요.")})
 
 
-def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: datetime,
+                      setting: str | None = None) -> list[dict[str, Any]]:
     """이 항목이 들고 있는 「다른 안」 가운데 **지금 고를 수 있는 것** — 채팅 「다른 데로 바꿔 줘」 · 「후보 알아봐 줘」가 새로 찾기 전에 먼저 쓴다.
 
     빼는 것(낡음): 지금 적용된 곳과 같은 곳 · 장소 행이 이 여행에 없는 곳(place_id 가 있는데 목록에 없다) · 시작 시각이 이미 지난 안.
@@ -1271,8 +1311,29 @@ def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: 
         starts = datetime.fromisoformat(record["starts_at"]) if record.get("starts_at") else item.starts_at
         if starts is not None and starts <= now:
             continue
+        if setting is not None and place_setting(places_by_id.get(place_id)) != setting:
+            continue                      # ★`[2026-10-25 QA]` 고객이 실내·야외를 지정했다 — 장소 기록이 그와 같은 안만
         usable.append(record)
     return usable
+
+
+#: 고객에게 보이는 실내·야외 이름
+SETTING_LABELS = {"indoor": "실내", "outdoor": "야외"}
+
+
+def place_setting(place: dict[str, Any] | None) -> str | None:
+    """장소 기록의 실내·야외 — 출처가 적은 `attributes.indoor` 가 먼저, 없으면 `weather_sensitive`(True 야외 · False 실내). 모르면 None.
+
+    ★`[2026-10-25 QA]` 「실내를 야외로 바꿔줘」의 후보 거르기. 모름은 어느 쪽으로도 치지 않는다(날씨 대체의 「모름은 실내 아님」과 같은 원칙)."""
+    if not place:
+        return None
+    indoor = (place.get("attributes") or {}).get("indoor")
+    if isinstance(indoor, bool):
+        return "indoor" if indoor else "outdoor"
+    sensitive = place.get("weather_sensitive")
+    if isinstance(sensitive, bool):
+        return "outdoor" if sensitive else "indoor"
+    return None
 
 
 def shift_moves_after(items: list[Item], current: Item, ends: datetime | None) -> tuple[dict[UUID, Item], Item | None]:
@@ -1499,7 +1560,8 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
                          price_lookup: PriceLookup | None = None, reported_closed: bool = False,
-                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None) -> Plan:
+                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None,
+                         setting: str | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-10-16]` `reported_closed` — 「○○ 문 닫았대」(지금 식사가 아닌 항목의 휴무 신고)도 같은 계산을 쓴다. 다만 **신고**다:
@@ -1525,8 +1587,12 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     places = unused_places(places, items, current)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
     if current.kind == "activity":
         places = other_sites(places, current.place, items)  # 원래 곳 · 일정의 다른 활동과 같은 곳도 아니다
+        places = same_family(places, current.place)         # 쇼핑이 아닌 활동을 상점(편의점 · 화장품 매장)으로 바꾸지 않는다
     else:
         places = other_restaurants(places, current.place)  # 원래 식당의 다른 이름 행도 아니다(`[2026-10-16]` 하동관 명동본점 → 하동관)
+    if setting is not None:
+        # ★`[2026-10-25 QA]` 「실내를 야외로 바꿔줘」 — 장소 기록의 실내·야외가 요청과 같은 곳만 후보다(원래 곳은 각 계산이 뺀다). 모름은 고르지 않는다
+        places = [p for p in places if str(p["place_id"]) == str(current.place["place_id"]) or place_setting(p) == setting]
     cause = with_request(({"category": "customer_report", "type": "closed", "from": current.place["name"],
                            "summary": "문을 닫았다고 알려 주셨어요",          # 묻는 알림의 원인 문장(`pending._cause_text`)
                            "message": message, "evidence": "고객 신고"} if reported_closed else
@@ -1591,6 +1657,12 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
             ask = (f"{radius / 1000:g}km 안에서 {seoul(current.starts_at):%H:%M}에 갈 수 있는 {kind}이 없어요{detail}. "
                    f"대신 이런 곳이 있어요 — {listed}. 고르시면 바꿀게요. 답이 없으면 원래 일정을 그대로 둡니다.")
             return NoChange("relaxed", {"text": ask, "reason": text, "options": options, "causes": [cause], **facts})
+        if setting is not None:
+            # 맞는 곳이 없으면 다른 종류로 조용히 바꾸지 않는다 — 그렇게 답하고 일정은 그대로(`ItineraryWork.settle` 이 `message` 를 싣는다)
+            label = SETTING_LABELS[setting]
+            facts["setting"] = setting
+            facts["message"] = (f"{label}로 확인된 다른 {kind}을 {radius / 1000:g}km 안에서 찾지 못해 일정은 바꾸지 않았어요. "
+                                f"실내·야외가 장소 정보로 확인된 곳만 골라요 — 가고 싶은 곳 이름을 알려 주시면 그곳으로 바꿔 드릴게요.")
         return NoChange("no_alternate", {"reason": text, "text": text, **facts})
     name = best.place["name"] if best.place else best.name
     starts = best.starts_at or current.starts_at
@@ -1633,7 +1705,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     #   `seen` = 떨어진 곳 + 통과한 곳(통과한 곳은 셋까지만 센다 — `choose` 가 셋만 돌려준다)
     return ItineraryChange(reason="customer_report" if reported_closed else "customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement},
-                           summary={"from": current.place["name"], "to": name,
+                           summary={"from": current.place["name"], "to": name, "kind": current.kind,
                                     "more_options": more, "radius_m": radius,
                                     "seen": len(rejected) + 1 + len(alternates),
                                     "rejected": {c.name: c.rejected for c in rejected[:20]}})
@@ -1676,19 +1748,28 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
     old_ids = {i.item_id for i in old_items}
     leaving = {i.seq: i for i in current_items if i.item_id not in old_ids and i.kind != "mobility" and i.place}
     first_day = min((seoul(i.starts_at) for i in [*current_items, *old_items]), default=None)
-    pairs = []
+    pairs, clocks = [], []
     for item in old_items:
         if item.item_id in current_ids or item.kind == "mobility" or not item.place:
             continue
         now = leaving.get(item.seq)
-        if now is not None and first_day is not None:
-            pairs.append((_slot(item, first_day.date()), now.place["name"], item.place["name"]))
+        if now is None or first_day is None:
+            continue
+        # ★`[2026-10-26 x600 a465c602]` 같은 곳의 시각만 되돌린 것을 「남산서울타워에서 남산서울타워(으)로」라고 답했다 —
+        #   장소 기록이 같으면 시각 되돌리기로 말하고, 이름은 일정에 보이는 이름(`title`)을 쓴다
+        same_place = (str(now.place.get("place_id")) == str(item.place.get("place_id"))
+                      or now.place.get("name") == item.place.get("name"))
+        if not same_place:
+            pairs.append((_slot(item, first_day.date()), now.title or now.place["name"], item.title or item.place["name"]))
+        elif (now.starts_at, now.ends_at) != (item.starts_at, item.ends_at):
+            clocks.append((item.title or item.place["name"], seoul(now.starts_at), seoul(item.starts_at)))
     if redo:
-        text = ("요청하신 변경을 다시 적용했어요 — " + " · ".join(f"{slot} {a} → {b}" for slot, a, b in pairs) + "."
-                if pairs else "요청하신 변경을 다시 적용했어요.")
+        parts = [f"{slot} {a} → {b}" for slot, a, b in pairs] + [f"{title} 시각 {a:%H:%M} → {b:%H:%M}" for title, a, b in clocks]
+        text = ("요청하신 변경을 다시 적용했어요 — " + " · ".join(parts) + "." if parts else "요청하신 변경을 다시 적용했어요.")
     else:
-        text = (" · ".join(f"{slot}{object_particle(slot)} {a}에서 {b}(으)로" for slot, a, b in pairs) + " 되돌렸어요."
-                if pairs else "일정을 바꾸기 전 상태로 되돌렸어요.")
+        parts = ([f"{slot}{object_particle(slot)} {a}에서 {b}(으)로" for slot, a, b in pairs]
+                 + [f"{title} 시각을 {b:%H:%M} 시작으로" for title, _, b in clocks])
+        text = (" · ".join(parts) + " 되돌렸어요." if parts else "일정을 바꾸기 전 상태로 되돌렸어요.")
     notice = {"text": text, "language": "ko", "causes": [cause],
               "changed": {"rollback_to": to_version, "restored": restored},
               "other_options": [], "replay": False}

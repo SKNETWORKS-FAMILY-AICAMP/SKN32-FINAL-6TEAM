@@ -1,4 +1,4 @@
-import type { Language } from "../i18n";
+import type { Language, Translate } from "../i18n";
 
 /**
  * `[2026-10-17 사용자 승인 · ST4F-611 문구 대조표 113]` The sentence a customer sees when the server refuses.
@@ -17,6 +17,20 @@ const AGAIN = ["잠시 뒤 다시 해 주세요.", "Please try again shortly."] 
 const BROWSER = ["브라우저에서 로그인한 뒤 쓸 수 있어요.", "Sign in in your browser to use this."] as const;
 const REFRESH = ["화면을 새로 고친 뒤 다시 해 주세요.", "Refresh the page and try again."] as const;
 const number = (detail: Detail, key: string) => (typeof detail?.[key] === "number" ? detail[key] as number : null);
+
+/**
+ * `[2026-10-26]` Every stop of a new plan is before today (server d2ab93a65 「reject only wholly past calendar plans」): the registration refusal
+ * (`itinerary_infeasible` with a `violations[].code` of `all_dates_in_past`) and the review's `date` line carry this sentence. Korean is the
+ * server's own sentence, kept as it is; English is the web's.
+ */
+export const ALL_PAST_TEXT = ["모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요", "Every stop is before today. Please check the trip dates."] as const;
+/**
+ * `[2026-10-26 사용자 지시]` The same code names it everywhere: the registration refusal's `violations[].code`, and the `fatal.code` of an intake the server
+ * ended on the plan entry because every stop it read is before today (`wiki/external/rest-endpoints/web-intakes.md` 「전부 과거인 계획은 계획 담기에서 막는다」).
+ */
+export const ALL_PAST_CODE = "all_dates_in_past";
+const allDatesInPast = (detail: Detail) => Array.isArray(detail?.violations)
+  && detail.violations.some((violation) => (violation as { code?: unknown } | null)?.code === ALL_PAST_CODE);
 
 export const REFUSAL_TEXT: Record<string, Text> = {
   // 로그인 · 세션
@@ -92,6 +106,9 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   invalid_survey: ["저장하지 못했어요. 답을 다시 골라 주세요.", "Couldn't save. Please choose your answers again."],
   stalled: ["읽는 일이 멈춘 것 같아요. 다시 올려 주세요.", "Reading seems to have stopped. Please upload it again."],
   already_decided: ["이미 다른 곳에서 골랐어요. 이번 선택으로 바뀐 것은 없어요.", "It was already decided elsewhere. Nothing was changed."],
+  // `[2026-10-26]` The plan can't be carried out as it is — every stop before today has its own sentence (`ALL_PAST_TEXT`).
+  itinerary_infeasible: (detail) => allDatesInPast(detail) ? ALL_PAST_TEXT
+    : ["이 일정은 그대로 진행할 수 없어요. 문제가 된 일정을 고쳐 주세요.", "This plan can't go ahead as it is. Please fix the stops that don't work."],
   // 동의
   consent_required: ["이 기능을 쓰려면 동의가 필요해요.", "Consent is needed to use this."],
   terms_version_changed: ["약관이 바뀌었어요. 새 약관을 보고 다시 동의해 주세요.", "The terms have changed. Please read them and agree again."],
@@ -118,4 +135,16 @@ export function refusalSentence(code: string, serverMessage: string | undefined,
     return language === "ko" ? ko : en;
   }
   return language === "ko" ? `요청을 처리하지 못했어요. ${AGAIN[0]} (${code})` : `The request could not be completed. ${AGAIN[1]} (${code})`;
+}
+
+/** The same sentence, whatever spaces or closing full stop the server put in. */
+const sameSentence = (a: string, b: string) => a.replace(/[\s.]/g, "") === b.replace(/[\s.]/g, "");
+
+/**
+ * `[2026-10-26]` A check line of the plan check in the screen's language. The server writes them in Korean; the Korean screen shows them as
+ * they came, and on the English screen a line the web has words for is said in English — any other stays as the server wrote it.
+ */
+export function checkLineText(line: { kind: string; text: string }, t: Translate): string {
+  if (line.kind === "date" && sameSentence(line.text, ALL_PAST_TEXT[0])) return t(line.text, ALL_PAST_TEXT[1]);
+  return line.text;
 }

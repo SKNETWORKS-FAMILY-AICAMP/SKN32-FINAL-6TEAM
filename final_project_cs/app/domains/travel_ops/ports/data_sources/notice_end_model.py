@@ -79,8 +79,10 @@ class NoticeEndModel:
 
     def __init__(self, *, base_url: str, model: str, timeout: float = 90.0, keep_alive: str = "",
                  mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None,
-                 cache_size: int = 2048) -> None:
+                 cache_size: int = 2048, num_ctx: int = 0) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
+        #: 해석과 같은 모델이면 같은 문맥 길이(`ollama_num_ctx`) — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다. 0 이면 보내지 않는다
+        self.num_ctx = int(num_ctx or 0)
         #: ★`[2026-10-15]` 관리 콘솔 「모델 경로」를 따를 때 조립이 꽂는 주소 함수(부를 때마다 읽는다). 비면 `base_url` 고정
         self.base_url_for: Callable[[], str] | None = None
         self._mode = mode if callable(mode) else (lambda: str(mode))
@@ -109,7 +111,7 @@ class NoticeEndModel:
     def _ask(self, text: str) -> bool:
         """모델 한 번 — 끝남이면 True. 못 부르거나 형식이 틀리면 예외."""
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False, "format": "json",
-                                   "options": {"temperature": 0},
+                                   "options": {"temperature": 0, **({"num_ctx": self.num_ctx} if self.num_ctx > 0 else {})},
                                    "messages": [{"role": "system", "content": SYSTEM},
                                                 {"role": "user", "content": "재난 문자:\n" + text}]}
         if self.keep_alive:
@@ -212,8 +214,10 @@ class NoticeImpactModel:
 
     def __init__(self, *, base_url: str, model: str, timeout: float = 90.0, keep_alive: str = "",
                  mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None,
-                 cache_size: int = 2048) -> None:
+                 cache_size: int = 2048, num_ctx: int = 0) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
+        #: 해석과 같은 모델이면 같은 문맥 길이(`ollama_num_ctx`) — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다. 0 이면 보내지 않는다
+        self.num_ctx = int(num_ctx or 0)
         #: ★`[2026-10-15]` 관리 콘솔 「모델 경로」를 따를 때 조립이 꽂는 주소 함수(부를 때마다 읽는다). 비면 `base_url` 고정
         self.base_url_for: Callable[[], str] | None = None
         self._mode = mode if callable(mode) else (lambda: str(mode))
@@ -235,7 +239,7 @@ class NoticeImpactModel:
 
     def _ask(self, text: str) -> str:
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False, "format": "json",
-                                   "options": {"temperature": 0},
+                                   "options": {"temperature": 0, **({"num_ctx": self.num_ctx} if self.num_ctx > 0 else {})},
                                    "messages": [{"role": "system", "content": IMPACT_SYSTEM},
                                                 {"role": "user", "content": "재난 문자:\n" + text}]}
         if self.keep_alive:
@@ -304,7 +308,8 @@ def register_from_settings(settings: Any, *, base_url_for: Callable[[], str] | N
         value = {True: "on", False: "off"}.get(raw, str(raw or "off")) if isinstance(raw, bool) else str(raw or "off")      # ★따옴표 없는 on/off 는 YAML 이 참/거짓으로 읽는다
         return value if value in ("off", "shadow", "on") else "off"
 
-    judge = NoticeEndModel(base_url=base, model=model, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
+    shared = int(getattr(settings, "ollama_num_ctx", 0) or 0) if model == (getattr(settings, "ollama_model", "") or "").strip() else 0
+    judge = NoticeEndModel(base_url=base, model=model, num_ctx=shared, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
                            keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""), mode=mode)
     judge.base_url_for = base_url_for
     notice_status.set_second_opinion(judge)
@@ -318,7 +323,7 @@ def register_from_settings(settings: Any, *, base_url_for: Callable[[], str] | N
         value = {True: "on", False: "off"}.get(raw, str(raw or "off")) if isinstance(raw, bool) else str(raw or "off")
         return value if value in ("off", "shadow", "on") else "off"
 
-    impact = NoticeImpactModel(base_url=base, model=model, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
+    impact = NoticeImpactModel(base_url=base, model=model, num_ctx=shared, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
                                keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""), mode=impact_mode)
     impact.base_url_for = base_url_for
     notice_impact.set_second_opinion(impact)

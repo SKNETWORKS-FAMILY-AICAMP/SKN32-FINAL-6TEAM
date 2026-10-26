@@ -1,7 +1,8 @@
 import type { TripSurvey } from "@/features/onboarding/payload";
-import type { Language } from "../i18n";
-import { submitIntake } from "./intake";
+import type { Language, Translate } from "../i18n";
+import { submitIntake, type IntakeView } from "./intake";
 import { LiveError } from "./client";
+import { ALL_PAST_CODE, ALL_PAST_TEXT } from "./error-text";
 
 /**
  * 「계획 짜 주기」 — what the customer asked the server to plan (`[2026-10-03 사용자 지시]`, the registration page's third panel).
@@ -102,7 +103,21 @@ export function clearIntakeArrival(id: string): void { arrivals.delete(id); }
 
 export function forgetIntakeSubmission(id: string): void { if (submission?.intakeId === id) submission = null; }
 
-/** Reading finished without stops: return the submitted input, without sending it again. */
+/**
+ * A finished read that goes back to 「계획 담기」 instead of opening the plan check, and the sentence said there — or null (stay on the intake page).
+ * - No stops were read at all (`review` with no items in any source).
+ * - ★`[2026-10-26 사용자 지시]` 「전부 과거면 계획 고르는 화면으로 넘어가면 안되고 그 전에 있는 계획담기 페이지의 가드레일에 걸려서 통과 안되게」: the server ended the
+ *   intake because every stop it read is before today (`fatal`, `fatal.code` = `all_dates_in_past`). Korean is the server's sentence, English the web's.
+ * Any other failure stays on the intake page with its own panel; a plan with stops (some of them past included) goes on to the plan check.
+ */
+export function entryReturnOf(view: Pick<IntakeView, "status" | "fatal" | "sources"> | undefined, t: Translate): string | null {
+  if (!view) return null;
+  if (view.status === "fatal" && view.fatal?.code === ALL_PAST_CODE) return t(ALL_PAST_TEXT[0], ALL_PAST_TEXT[1]);
+  if (view.status === "review" && view.sources.every((source) => source.items.length === 0)) return t("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.", "No stops were found. Check the dates, times and places, then edit your plan or upload a file.");
+  return null;
+}
+
+/** Reading finished without stops (or with every stop before today — `entryReturnOf`): return the submitted input, without sending it again. */
 export function rememberEmptyIntake(id: string, message: string, originalText: string): void {
   const sent = submission?.intakeId === id ? submission : null;
   failure = { message, text: sent?.text || originalText || undefined, files: sent?.files ?? [], plan: null };

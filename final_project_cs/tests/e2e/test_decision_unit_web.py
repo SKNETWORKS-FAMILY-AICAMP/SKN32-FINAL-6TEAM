@@ -170,12 +170,15 @@ def test_a_model_failure_or_an_id_outside_the_list_changes_nothing_and_does_not_
     assert down["status"] == "escalated" and down["reason"] == "decision_failed", down
     assert "일정은 바꾸지 않았어요" in down["answer"]
     outside = _say(decided, "없는 번호 바꿔", "du-e2")
-    assert outside["status"] == "escalated" and "목록 밖" in outside["failure"], outside
+    # contract_correction 2026-10-26 integ-rm9: L06(b4ff97477) 이후 해석 실패 내부 사유는 공개 응답에 없다 — 같은 사유를 Case 기록에서 본다
+    assert outside["status"] == "escalated" and "failure" not in outside and "목록 밖" not in str(outside), outside
     view = decided["client"].get(f"/v1/web/trips/{decided['trip']['trip_id']}", headers=_h(decided["key"])).json()
     assert view["version"] == 1
     with get_connection() as conn, conn.cursor() as cur:        # 실패도 기록에 남는다(오류 리포트)
         cur.execute("SELECT state_json->'decision' FROM customer_cases WHERE case_id=%s", (down["case_id"],))
         assert "failed" in cur.fetchone()[0]
+        cur.execute("SELECT state_json::text FROM customer_cases WHERE case_id=%s", (outside["case_id"],))
+        assert "목록 밖" in cur.fetchone()[0]
 
 
 def test_the_configured_mode_is_really_on_and_a_bare_yaml_on_is_not_read_as_off():

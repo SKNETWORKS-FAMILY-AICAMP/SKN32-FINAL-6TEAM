@@ -1,6 +1,7 @@
 import { distanceM } from "@/features/map/map-geometry";
 import type { Language, Translate } from "@/lib/i18n";
 import { eun, ro } from "@/lib/josa";
+import { checkLineText } from "@/lib/live/error-text";
 import type { IntakeEdit } from "@/lib/live/intake";
 import { MODE_WORDS, type MoveOptionMode, type MoveOptions } from "@/lib/live/move-options";
 import type { PlanAsk, PlanCandidate, PlanCheckView, PlanItem, PlanMove } from "./model";
@@ -171,7 +172,8 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
   // ★`[2026-10-21 사용자 지적 · ST4F-708]` The server found a place but asks whether it is the one (a warning on its place row, nothing that must change — 「… 부분을 우리 장소 목록 정보로
   //   찾았어요 · 맞는지 확인해 주세요」): the question is 「맞는지 확인」, so its first option ends it there (mockup `tripilot-plan-check-stop-ask.html`), then the alternatives.
   const confirm = Boolean(item.place) && !item.checks.some((row) => row.result === "bad") && item.checks.some((row) => row.kind === "place" && row.result === "warn");
-  const why = item.checks.find((row) => row.result === "bad")?.text ?? item.checks.find((row) => row.result === "warn")?.text ?? null;
+  const wrong = item.checks.find((row) => row.result === "bad") ?? item.checks.find((row) => row.result === "warn");
+  const why = wrong ? checkLineText(wrong, t) : null;
   return { need: confirm ? "confirm" : "fix", options: confirm ? [...keepOption(item, plan, item.place!, t), ...picks] : picks, question: why
     ? t(`${quotedEun(item.title)} 확인이 필요해요 — ${why}. 어떻게 할까요?`, `“${item.title}” needs a look — ${why}. What should we do?`)
     : t(`${quotedEun(item.title)} 확인이 필요해요. 어떻게 할까요?`, `“${item.title}” needs a look. What should we do?`) };

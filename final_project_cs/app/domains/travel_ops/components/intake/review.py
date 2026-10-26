@@ -134,6 +134,47 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
     return "found", value
 
 
+_WEB_DAY = dict(zip(("mon", "tue", "wed", "thu", "fri", "sat", "sun"), "월화수목금토일"))
+# Source kinds a public-web fact may carry (wiki external/activity-public-web.md 출처 우선순위).
+_WEB_SOURCE_KIND = {"official_homepage": "공식 홈페이지", "google_places": "구글 지도"}
+
+
+def public_web_hours_text(web: dict[str, Any] | None) -> str | None:
+    """「공식 홈페이지 기준 …(확인 시각 …)」 for a verified public-web hours fact, else None.
+
+    Only values the provider already verified (quote on page, official host) are shown; the visit
+    day itself stays unconfirmed, so callers keep the question open.
+    """
+    fact = ((web or {}).get("facts") or {}).get("business_hours")
+    if not isinstance(fact, dict) or not fact.get("source_url") or not fact.get("checked_at"):
+        return None
+    value = fact.get("value")
+    if isinstance(value, dict):
+        parts = [("".join(_WEB_DAY[d] for d in h["days"]) + " " if h.get("days") else "")
+                 + f"{h['open']}~{h['close']}" for h in value.get("hours") or []]
+        hours = ", ".join(parts)
+        if value.get("closed"):
+            hours += " · 휴무 매주 " + "·".join(_WEB_DAY[d] for d in value["closed"])
+        elif value.get("open_all_year"):
+            hours += " · 연중무휴"
+    else:
+        hours = str(value)
+    try:
+        seen = datetime.fromisoformat(str(fact["checked_at"])).astimezone(ZoneInfo("Asia/Seoul"))
+        checked = seen.strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        checked = str(fact["checked_at"])
+    kind = _WEB_SOURCE_KIND.get(str(fact.get("source_kind") or "official_homepage"), "공식 홈페이지")
+    return f"{kind} 기준 운영시간 {hours} (확인 시각 {checked}, 출처 {fact['source_url']})"
+
+
+def kakao_unverified_text(web: dict[str, Any] | None) -> str:
+    """Kakao state that sent the lookup to public web: 「카카오에서 확인되지 않음」 (or blocked)."""
+    if (web or {}).get("upstream_blocked") or (web or {}).get("upstream_status") == "unknown":
+        return "카카오 조회가 막혀 확인되지 않음"
+    return "카카오에서 확인되지 않음"
+
+
 def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -> dict[str, str]:
     claim = (row["claims"] or {}).get("place") or {}
     evidence = claim.get("evidence") or {}
@@ -157,6 +198,19 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
             return _line("place", "bad", f"예약하신 {what}의 이름이 적혀 있지 않아요 — 이름을 알려 주세요")
         return _line("place", "bad", f"{area + ' 지역 ' if area else ''}{what}의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요")
     if state == "unresolved":
+        web = evidence.get("public_web")
+        if isinstance(web, dict):
+            facts = web.get("facts") or {}
+            sources = sorted({str(f["source_url"]) for f in facts.values()
+                              if isinstance(f, dict) and f.get("source_url")})
+            official = public_web_hours_text(web)
+            if official:
+                return _line("place", "bad", kakao_unverified_text(web) + " · 장소는 아직 확정하지 않았어요 · " + official
+                             + " · 방문일 운영 여부는 확정하지 않았어요 — 장소를 확인해 주세요")
+            return _line("place", "bad", "공개 웹 보조조회도 미확인이에요 · 없는 곳이라는 뜻이 아니에요"
+                         + f" · 사유: {web.get('reason') or 'unknown'} · 확인: {web.get('checked_at') or '미확인'}"
+                         + (" · 공식 출처: " + ", ".join(sources) if sources else " · 공식 본문 근거 미확인")
+                         + " · 운영시간·휴무·방문일은 확정하지 않았어요 — 장소를 확인해 주세요")
         blocked = evidence.get("blocked") or []
         why = " · 장소 조회가 막혀 있어서 못 찾은 것일 수 있어요" if blocked else ""
         return _line("place", "bad", f"장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요{why}")
@@ -580,7 +634,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
           previous: dict[str, Any] | None = None, now: datetime | None = None,
           on_event: Callable[[str, dict[str, Any]], None] | None = None,
           engine_for_mode: Callable[[str], Any] | None = None, estimate_needs_review: bool = False,
-          engine_wide: Callable[[], Any] | None = None) -> dict[str, Any]:
+          engine_wide: Callable[[], Any] | None = None, new_registration: bool = True) -> dict[str, Any]:
     """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`).
 
     `engine_for_mode(수단)` `[2026-10-07 이동수단 고르기]` — 고객이 구간 수단을 골랐을 때 그 수단만으로 계산하는 계산기. 안 주고 기본 계산기를 쓰면 기본 팩토리를 쓴다.
@@ -895,13 +949,42 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     if estimate_codes:
         _LOG.info("검사 이동 어림 %d/%d구간 · 이유 %s · 남은 한도 %.1f초", sum(estimate_codes.values()), len(moves),
                   dict(sorted(estimate_codes.items())), budgeted.left if budgeted is not None else 0.0)
-    return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
+    payload = {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
             "party_size": party,          # `[2026-10-16]` 숙소 후보(숙소 팀 숙소 비교)가 인원을 읽는다 — 모르면 `None`
             "items": items, "moves": moves, "taxi_pricing": (pricing if pricing is not None else taxi_pricing.default()) if taxi_pick_on else None,
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
+    return admission_dates(payload, now=now) if new_registration else payload
+
+
+#: 모든 일정이 오늘 이전일 때 고객에게 보이는 문장 — 검사 줄 · 접수 `fatal_detail`(`pipeline.process`) · 등록 422 가 같은 문장을 쓴다
+ALL_PAST_MESSAGE = "모든 일정이 오늘 이전이에요. 여행 날짜를 확인해주세요"
+
+
+def wholly_past(payload: dict[str, Any], *, now: datetime | None = None) -> bool:
+    """검사의 일정이 하나 이상이고 **모두** 서울 기준 오늘보다 앞인가 — 등록 가드와 같은 판정(`all_dates_before_today`).
+    날짜를 모르는 일정이 하나라도 있거나 밤을 넘겨 오늘 끝나면 아니다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import all_dates_before_today
+
+    items = payload.get("items") or []
+    spans = [(_dt(it.get("date"), "00:00"), _dt(it.get("end_date") or it.get("date"), "00:00")) for it in items]
+    return all_dates_before_today(spans, now=now)
+
+
+def admission_dates(payload: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
+    """검사 캐시도 매 요청의 오늘 날짜로 검사한다. 원본 날짜/일정은 바꾸지 않는다."""
+    if not wholly_past(payload, now=now):
+        return payload
+    items = payload.get("items") or []
+    message = ALL_PAST_MESSAGE
+    items = [{**it, "status": "review", "can_lock": False,
+              "rows": [*[row for row in it.get("rows", []) if not (row.get("row") == "date" and row.get("text") == message)],
+                       _line("date", "bad", message)]} for it in items]
+    moves = int((payload.get("needs") or {}).get("moves") or 0)
+    return {**payload, "items": items, "ready": False,
+            "needs": {"items": len(items), "moves": moves, "total": len(items) + moves}}
 
 
 def public_place(place: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -1156,6 +1239,15 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `quick` = 이동 계산기를 부르지 않는 **미룬 검사**: 바뀐 구간은 직선 어림값,
     안 바뀐 구간은 앞 판의 시간표 값(`sig`)을 그대로 쓴다. 위험(날씨 · 재난)은 저장해 둔 값만 읽는다. 저장본에 `checked: false` · `ready: false` 를 남긴다 — 등록(`confirm`)은 이 판을 받지 않고
     재검증(`revalidate`, `force`)이 계산기로 다시 잰다(어림 구간은 `basis` 가 시간표가 아니라 재사용되지 않는다). 옛 저장본에는 `checked` 가 없다 — 검사된 것으로 읽는다."""
+    def guard_dates(payload):
+        candidate = admission_dates(payload, now=options.get("now"))
+        if candidate is payload:
+            return payload
+        with conn.cursor() as cur:
+            cur.execute("SELECT status, reopen_trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s",
+                        (tenant_id, intake_id))
+            admission = cur.fetchone()
+        return candidate if admission is not None and admission[0] != "confirmed" and admission[1] is None else payload
     if not force:
         cached = load(conn, tenant_id, intake_id, revision)
         if cached is not None:
@@ -1166,14 +1258,15 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             if mode == "fresh":
                 _store_read(conn, tenant_id, intake_id, revision, payload, base=cached)
             from . import dining_review
-            return dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
+            payload = dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
+            return guard_dates(payload)
     answered_review = load(conn, tenant_id, intake_id, revision) if force else None
     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
-                    previous=previous, **options)
+                    previous=previous, new_registration=False, **options)
     from .dining_questions import merge_questions, answers
     saved_answers = answers(answered_review or previous or {})
     if saved_answers:
@@ -1200,7 +1293,7 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
                                         enabled=dining_ledger.agent_judge_runner() is not None,
                                         deadline_s=(dining_agent_judge() or {}).get("deadline_s", dining_review.DEFAULT_DEADLINE_S),
                                         notes="\n".join(source.get("transcript") or "" for source in sources))
-    return payload
+    return guard_dates(payload)
 
 
 def unchecked(payload: dict[str, Any] | None) -> bool:

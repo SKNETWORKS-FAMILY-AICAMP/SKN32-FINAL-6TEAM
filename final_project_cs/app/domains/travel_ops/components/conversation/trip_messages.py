@@ -28,7 +28,22 @@ from app.domains.travel_ops.components.conversation.trip_intake import extract
 
 logger = logging.getLogger(__name__)
 
-REGISTERED_TEAMS = frozenset({"activity", "dining", "mobility", "booking", "lodging", "flight"})
+#: 분류 접두(`case_type`) → 그 종류를 받는 **등록 팀 id**(`config/project.yaml`). ★`[2026-10-26 라우팅 감사 P3]` 종류 `booking` 을 받는 팀의
+#: id 는 `booking_handoff` 다 — 전에는 종류 이름(`booking`)을 담당으로 기록했다. 표에 없는 종류는 기록 라벨 `trip_desk`
+CASE_TYPE_TEAMS = {"activity": "activity", "dining": "dining", "mobility": "mobility", "booking": "booking_handoff",
+                   "lodging": "lodging", "flight": "flight"}
+#: 이관하지 않은 옛 기록의 담당 값 → 팀 id(읽기 호환)
+LEGACY_TEAM_IDS = {"booking": "booking_handoff"}
+
+
+def team_for_case_type(case_type: str) -> str:
+    """규칙 경로가 담당으로 남길 팀 id. 받는 팀이 없는 종류는 `trip_desk`(기록 라벨 — 팀 실행 없음)."""
+    return CASE_TYPE_TEAMS.get(case_type, "trip_desk")
+
+
+def canonical_team_id(owner: str | None) -> str | None:
+    """저장된 담당 값을 팀 id 로 읽는다 — 옛 기록의 `booking` 은 `booking_handoff`. 데이터는 바꾸지 않는다."""
+    return LEGACY_TEAM_IDS.get(owner, owner) if owner is not None else None
 
 
 def _stage(progress: Callable[[str], None] | None, name: str) -> None:
@@ -173,6 +188,17 @@ def _rule_named(stays: list[Any], text: str):
     return scored[0][1] if scored and scored[0][0] > 0 and (len(scored) == 1 or scored[0][0] > scored[1][0]) else None
 
 
+class NothingToUndo(str):
+    """`_rollback_target`의 「되돌릴 변경이 없음」 — 되묻는 말이 아니라 끝난 답이다. 입력 대기(`ask_rollback`)로 남기지 않는다."""
+
+
+def _undo_outcome(ask: str) -> dict[str, Any]:
+    """되돌릴 것이 없으면 일정은 그대로라는 답(`answered`), 그 밖의 되묻기는 기존 `ask_rollback`."""
+    if isinstance(ask, NothingToUndo):
+        return {"status": "answered", "text": str(ask), "reason": "nothing_to_undo"}
+    return {"status": "ask_rollback", "text": ask}
+
+
 def _rollback_target(store: TripStore, trip_id: UUID, items: list[Any], message: str,
                      selected: UUID | None, at: datetime, target: Any = None,
                      use_rules: bool = True) -> tuple[int | None, str | None]:
@@ -191,14 +217,14 @@ def _rollback_target(store: TripStore, trip_id: UUID, items: list[Any], message:
         history = store.versions(conn, trip_id)
         latest = history[-1]["version"] if history else 1
         if latest <= 1:
-            return None, "되돌릴 변경이 없어요 — 이 여행은 처음 만든 일정 그대로예요."
+            return None, NothingToUndo("되돌릴 변경이 없어요 — 이 여행은 처음 만든 일정 그대로라 일정은 바꾸지 않았어요.")
         if target is None:
             return latest - 1, None
         introduced = latest
         while introduced > 1 and target.item_id in {i.item_id for i in store.items(conn, trip_id, introduced - 1)}:
             introduced -= 1
     if introduced <= 1:
-        return None, f"「{target.title}」은(는) 처음 일정 그대로라 되돌릴 변경이 없어요."
+        return None, NothingToUndo(f"「{target.title}」은(는) 처음 일정 그대로라 되돌릴 변경이 없어요. 일정은 바꾸지 않았어요.")
     if introduced != latest:
         return None, (f"「{target.title}」은(는) {introduced}번 일정에서 바뀌었고, 그 뒤에 다른 변경이 "
                       f"{latest - introduced}번 더 있었어요. 되돌리면 그 변경도 함께 되돌아가요 — 괜찮으시면 "
@@ -271,8 +297,7 @@ def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str
             basis: dict[str, Any] = {}
             if items is not None and at is not None:
                 team, basis = owner_team(team, items=items, message=message, selected=selected, at=at)
-            if team not in REGISTERED_TEAMS:
-                team = "trip_desk"
+            team = team_for_case_type(team)
             for event_type, payload in ((EventType.ROUTED, {"owner_team_id": team, "capability": "trip_desk.fact",
                                                              **basis}),
                                         (EventType.COMPLETED, {"answer_ref": f"trip:{trip_id}:fact:{fact}",
@@ -287,7 +312,7 @@ def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str
         return False
 
 
-def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message: str,
+def _handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message: str,
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
                         actor_id: str, policy_search: Any = None, place_source: Any = None,
                         kakao_source: Any = None,
@@ -498,8 +523,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         team = case_type_of(case.get("issue_code") or "", fallback="trip_desk") or "trip_desk"
         # ★담당은 가리키는 일정의 실제 종류로(`owner_team`) — 분류기 딱지가 일정 종류와 다르면 일정이 이긴다
         team, routed_basis = owner_team(team, items=items, message=message, selected=selected_item_id, at=at)
-        if team not in REGISTERED_TEAMS:
-            team = "trip_desk"
+        team = team_for_case_type(team)
         if report is None:
             answer = trip_replies.not_understood_reply(why)
             # ★답은 실패 전이에도 Case 에 남긴다(`state_patch`) — 같은 요청이 다시 오면 그 답을 그대로 싣는다
@@ -557,7 +581,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             current, latest_items = store.latest(conn, trip_id)
         to_version, ask = ((int(report["to_version"]), None) if report.get("to_version")
                            else _rollback_target(store, trip_id, latest_items, message, selected_item_id, at))
-        outcome = ({"status": "ask_rollback", "text": ask} if to_version is None else
+        outcome = (_undo_outcome(ask) if to_version is None else
                    desk.rollback(trip_id=trip_id, base_version=current["version"], to_version=to_version,
                                  message=message, request_id=request_id))
     elif report["type"] == "change":                 # 재요청 — 다른 안으로
@@ -628,6 +652,16 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                 "status": outcome.get("status"), "report": report, "outcome": outcome, "answer": answer}
 
 
+def handle_trip_message(**kwargs: Any) -> dict[str, Any]:
+    """고객 자유 문장 한 통의 공개 처리기 — 인자 · 처리는 `_handle_trip_message` 와 같다.
+
+    ★`[2026-10-26 D-024 채팅 적용]` 해결 못 하고 끝난 결과(Case `escalated` · `failed`, 답 아님)는 답 끝에 문의함 안내를 붙인다
+    (`trip_replies.with_inquiry_guide` · 계약 `wiki/external/chat-inquiry-guide.md`). 재시도 · 재개 · 중복 답이 모두 이 한 곳을 지난다."""
+    from app.domains.travel_ops.components.conversation import trip_replies
+
+    return trip_replies.with_inquiry_guide(_handle_trip_message(**kwargs))
+
+
 # ── 결정 단위 (2026-09-29) ───────────────────────────────────────
 def _decision_mode(chat: Any, tenant: str | None = None) -> str:
     """off · shadow · on. ★운영 설정 `chat.decision_mode`(재기동 없이 바꾼다, 기본은 가드레일 `travel.decision_unit.mode`).
@@ -671,11 +705,14 @@ def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: li
     from app.domains.travel_ops.components.conversation import chat_log
     from app.domains.travel_ops.components.conversation import decision_unit
 
+    guard = get_guardrails()
+    # ★`[2026-10-26 사용자 승인]` 고정 9초 대신 답 조각 감시 — 값과 근거는 가드레일 `travel.chat_decision_stream` 주석(없는 키는 그대로 오류)
+    stream = {key: guard.get(f"travel.chat_decision_stream.{key}") for key in ("first_token_seconds", "stall_seconds", "max_seconds")}
     try:
         decision = decision_unit.decide(
             chat, stops=decision_unit.stops_of(items), changes=decision_unit.changes_of(store, conn, trip_id, items),
             history=chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id), selected_item_id=selected,
-            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160), now=now)
+            message=message, num_predict=int(guard.get("travel.decision_unit.num_predict") or 160), now=now, stream=stream)
         return decision, None
     except decision_unit.DecisionFailed as exc:
         return None, str(exc)
@@ -776,7 +813,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         classify_case(conn, tenant_id=tenant, case_id=case_id, text=message, classifier=broken, actor_id=actor_id,
                       diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
         answer = ("지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요.")
-        return view({"status": "escalated", "reason": "decision_failed", "failure": failure, "answer": answer})
+        return view({"status": "escalated", "reason": "decision_failed", "answer": answer})
 
     decision = fact_first(decision)      # 사실 질문이면 되묻지 않고 먼저 답한다(사용자 지시 2026-09-29)
     from app.domains.travel_ops.components.conversation import chat_log, fact_context
@@ -806,6 +843,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from . import edit_intent
     decision = edit_intent.resume(decision, items=context_items, turns=turns, version=current_context["version"],
                                   now=context_now, ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    # ★`[2026-10-26]` 장소 행동에 실행할 수 없는 시간 수정이 붙었으면(「제안 승인해요」에 shift + 이어 받기) 바꾸지 않고 되묻는다
+    decision = edit_intent.ask_on_conflict(decision)
+    # ★`[2026-10-26 묶음 L · 수용 X02]` 시각 바꾸기의 인용에 서로 다른 시각이 둘 이상이면(「1시로 … 동시에 12시로」) 하나를 골라 저장하지 않고 되묻는다
+    decision = edit_intent.ask_on_clock_ambiguity(decision)
     # ★`[2026-10-20 x600 실서버 확인]` 근처 찾기는 식사만 바꾼다 — 활동 「북촌한옥마을 다른 데로」가 식사 되물음으로 끝나지 않게 먼저 맞춘다
     from .decision_unit import settle_near_search
     decision = settle_near_search(decision, context_items)
@@ -835,11 +876,13 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                               message=message, at=at, store=store, items=items, decision=decision,
                               selected=selected, actor_id=actor_id, desk=desk, prepare_only=True)
             if decision.action in case_dispatch.BUSINESS_ACTIONS else None)
+    # ★`[2026-10-26]` 담당 근거가 없는 업무(`team_id` 없음)는 팀에 보내지 않고 되묻는다 — 재시도 실행 계획으로 남기지 않는다
+    unresolved = plan is not None and plan["team_id"] is None
     event = EventType.CLASSIFIED
     if not safe_read or read_case["status"] == "classifying":
         event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
                               classifier=lambda _text: labels(decision), actor_id=actor_id,
-                              state_patch={"conversation_dispatch": plan} if plan is not None else None,
+                              state_patch={"conversation_dispatch": plan} if plan is not None and not unresolved else None,
                               diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
     if not safe_read:
         conn.commit()
@@ -847,7 +890,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         return view({"status": "escalated", "reason": "classification_failed",
                      "answer": trip_replies.not_understood_reply("classification_failed")})
     item, action = decision.item, decision.action
-    if action in case_dispatch.BUSINESS_ACTIONS:
+    if action in case_dispatch.BUSINESS_ACTIONS and not unresolved:
         current, _ = store.latest(conn, trip_id)
         target = next((i for i in items if str(i.item_id) == str(plan["subject_ref"].get("part_id"))), None)
         return case_dispatch.execute(conn, controller=controller, tenant=tenant, trip=current, case_id=case_id,
@@ -855,6 +898,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                                      actor_id=actor_id, decision=decision, desk=desk, plan=plan)
     team = {"dining": "dining", "activity": "activity", "mobility": "mobility"}.get(getattr(item, "kind", None),
                                                                                     "trip_desk")
+    if unresolved:
+        team = "trip_desk"                       # 기록 라벨 — 등록 팀이 아니다(팀 실행 없음)
     # 읽기 재시도(fact_read_retry.retry_read)가 쓰는 스냅샷 — Case 를 열 때와 같은 이름으로 남긴다
     # ★`[2026-10-14]` 문맥으로 바로잡은 대상(`fact_context.resolve`)을 스냅샷에도 같이 적는다 — 전에는 해석 기록은 바로잡은 대상,
     #   스냅샷은 모델이 처음 고른 대상이라 중단 뒤 재전송이 엉뚱한 일정을 읽을 수 있었다(`test_context_corrected_target_and_snapshot_are_committed_together`)
@@ -863,6 +908,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     read_patch = {"fact_read_snapshot": read_snapshot} if read_snapshot else {}
     if not safe_read or read_case["status"] != "running":
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{action}", "routed_by": "decision_unit",
+                                **({"owner_basis": "unresolved"} if unresolved else {}),
                                 "decision": decision.record(),
                                 "state_patch": {**read_patch, "decision": decision.record()}})
     with get_connection() as fresh:
@@ -887,7 +933,9 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     basis: dict[str, Any] = {}
     outcome: dict[str, Any]
 
-    if action == "answer_fact" and decision.reads:
+    if unresolved:
+        outcome = dict(plan["outcome"])
+    elif action == "answer_fact" and decision.reads:
         from .read_requests import reply as read_reply
 
         outcome, basis, focus = read_reply(
@@ -896,11 +944,13 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                    if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id)),
             version=base, now=at, context_now=context_now,
             ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")), place_source=place_source,
-            weather_lookup=getattr(desk, "weather", None))
+            weather_lookup=getattr(desk, "weather", None),
+            response_scope={"tenant_id": tenant, "customer_id": str(current["customer_id"]), "trip_id": str(trip_id)})
     elif stale_selection:
         outcome = {"status": "clarify", "text": "가리키는 일정 하나를 현재 여행에서 확인하지 못했어요. 최신 일정에서 다시 선택해 주세요."}
     elif action == "clarify":
-        outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
+        lead = decision.question if (decision.raw or {}).get("temporal_conflict") else None
+        outcome = _clarify_with_choices(decision, items, at=at, selected=selected, lead=lead)
     elif action == "other":
         outcome = {"status": "answered", "text": decision.social or trip_replies.other_reply(items, at)}
     elif action == "answer_service":
@@ -997,7 +1047,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
             outcome = _clarify_with_choices(decision, items, at=at, selected=selected,
                                             lead="그 변경은 지금 일정에 이미 없어요(되돌렸거나 다시 바뀌었어요).")
         else:
-            outcome = ({"status": "ask_rollback", "text": ask} if to_version is None else
+            outcome = (_undo_outcome(ask) if to_version is None else
                        desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                      request_id=request_id))
     elif action == "redo":
@@ -1061,6 +1111,12 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
     status = outcome.get("status")
+    if action in EDIT_ACTIONS and "response" not in basis:
+        # L02a — 채팅 변경 답도 공통 writer 로 닫는다(문장 불변 · 내부 근거 `basis.response` 만 — 공개 필드 추가 없음, L02b 보류)
+        from app.domains.travel_ops.components.response.change import change_basis
+
+        basis = change_basis(basis, action=action, outcome=outcome, answer=answer, version=base,
+                             scope={"tenant_id": tenant, "customer_id": str(current["customer_id"]), "trip_id": str(trip_id)})
     chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more", "pick") if k in outcome}
     if outcome.get("text_web"):
         chat_reply["answer_web"] = outcome["text_web"]
@@ -1116,13 +1172,18 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
     item = decision.item
     action = decision.action
     request = {"type": "conversation", "action": action, "at": at.isoformat()}
+    from .edit_intent import requested_setting
+    setting = requested_setting(getattr(decision, "raw", None))
+    if setting and action in ("apply_change", "propose_alternatives", "clarify"):
+        # ★`[2026-10-25 QA]` 새 장소의 실내·야외 조건(인용 확인을 지난 해석)을 팀에 넘긴다 — 전에는 싣지 않아 「야외로」가 실내 다른 안으로 바뀌었다
+        request["setting"] = setting
     if decision.minutes is not None:
         request["minutes"] = decision.minutes
     if decision.question:
         request["question"] = decision.question
     if action == "clarify":
         # ★`[2026-10-20]` 근처 조건을 실행할 수 없어 되묻는 경우(`decision_unit.settle_near_search`)는 왜 묻는지 먼저 말한다
-        lead = decision.question if (decision.raw or {}).get("near_guard") else None
+        lead = decision.question if ((decision.raw or {}).get("near_guard") or (decision.raw or {}).get("temporal_conflict")) else None
         question = _clarify_with_choices(decision, current_items, lead=lead, at=at, selected=selected)
         request.update(question=question["text"], choices=question.get("choices") or [])
     if action == "rollback":
@@ -1143,7 +1204,8 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
         else:
             target, question = _rollback_target(store, trip_id, current_items, message, selected, at,
                                                 target=item, use_rules=False)
-            request.update(to_version=target, question=question, confirmed=question is None)
+            request.update(to_version=target, question=question, confirmed=question is None,
+                           **({"nothing_to_undo": True} if isinstance(question, NothingToUndo) else {}))
     elif action == "redo":
         change = decision.change
         undone = history[-1] if history and history[-1]["reason"] == "rollback" else None
@@ -1160,11 +1222,23 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
     owner = item.kind if item is not None and item.kind in ITEM_TEAMS else None
     if action in ("report_delay", "report_closed") and not request.get("ahead"):
         owner = "dining"
+    # ★`[2026-10-26 라우팅 감사 P2]` 담당은 **근거로만** 정한다 — 근거가 없을 때 활동 팀에 넣던 기본값(`"activity"`)을 없앴다
+    #   (D-CS-014 「모르는 것을 아무 팀에나 보내지 않는다」 · D-017 · 계약 `wiki/external/chat-inquiry-guide.md` §4).
     if owner is None:
-        typed_choices = request.get("choices") or []
-        chosen = next((i for i in current_items if typed_choices
-                       and str(i.item_id) == str(typed_choices[0].get("item_id"))), None)
-        owner = chosen.kind if chosen is not None else "activity"
+        owner = _choice_owner(request.get("choices") or [], current_items)
+    if owner is None and action in ("rollback", "redo") and request.get("to_version") is not None:
+        owner = _version_owner(store, conn, trip_id, current_items, int(request["to_version"]))
+    if owner is None and action in ("apply_change", "propose_alternatives"):
+        # 대상 없는 바꾸기 — 모든 종류의 후보로 되묻는다(전에는 활동 팀이 활동 일정만 후보로 보였다)
+        question = _clarify_with_choices(decision, current_items, at=at, selected=selected)
+        request.update(action="clarify", pending_action=action, question=question["text"],
+                       choices=question.get("choices") or [])
+        owner = _choice_owner(request["choices"], current_items)
+    if owner is None:
+        # 근거가 없다 — 어느 팀에도 보내지 않고 되묻는 답으로 끝낸다(`_run_decision` 이 처리한다)
+        plan = case_dispatch.descriptor(trip=trip, team=None, request=request, item=item)
+        plan["outcome"] = _unresolved_question(decision, current_items, request, at=at, selected=selected)
+        return plan
     if owner in ("lodging", "flight"):
         # ★`[2026-10-15]` 인원을 이미 받았으면 팀이 그것을 쓰게 요청에 싣는다(묻는 것은 어디에도 없을 때뿐) — 이번 문장에 적힌 인원, 아니면 이 여행 채팅에서 이미 답한 인원
         from app.domains.travel_ops.components.conversation import chat_log
@@ -1181,6 +1255,42 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
                                  decision=decision, desk=desk, plan=plan)
 
 
+def _choice_owner(choices: list[dict[str, Any]], items: list[Any]) -> str | None:
+    """되묻기 후보 중 일정을 가리키는 **첫** 후보의 일정 종류(맡는 팀 id). 없으면 None — 짐작하지 않는다."""
+    for choice in choices:
+        target = next((i for i in items if choice.get("item_id") and str(i.item_id) == str(choice["item_id"])), None)
+        if target is not None:
+            return target.kind if target.kind in ITEM_TEAMS else None
+    return None
+
+
+def _version_owner(store: TripStore, conn, trip_id: UUID, current: list[Any], to_version: int) -> str | None:
+    """판 되돌리기 · 다시 적용의 담당 — 지금 일정과 돌아갈 판에서 **바뀌는 일정(이동 제외)이 한 종류**면 그 종류. 아니면 None."""
+    target = store.items(conn, trip_id, to_version)
+
+    def shape(i: Any) -> tuple:
+        return (i.kind, i.title, str(getattr(i, "place_id", None)), str((i.place or {}).get("place_id")), i.starts_at, i.ends_at)
+
+    now_by_id, then_by_id = {i.item_id: shape(i) for i in current}, {i.item_id: shape(i) for i in target}
+    changed = [i for i in list(current) + list(target)
+               if now_by_id.get(i.item_id) != then_by_id.get(i.item_id) and i.kind != "mobility"]
+    kinds = {i.kind for i in changed}
+    return kinds.pop() if len(kinds) == 1 and next(iter(kinds)) in ITEM_TEAMS else None
+
+
+def _unresolved_question(decision: Any, items: list[Any], request: dict[str, Any], *, at: datetime,
+                         selected: UUID | None) -> dict[str, Any]:
+    """담당 근거가 없는 채팅 업무의 답 — 일정은 바꾸지 않고 되묻는다(계약 `wiki/external/chat-inquiry-guide.md` §4)."""
+    if request.get("nothing_to_undo"):
+        # 되돌릴 변경이 없다는 것은 끝난 답이다(`_undo_outcome`) — 담당이 없어도 그 답 그대로, 되묻지 않는다
+        return _undo_outcome(NothingToUndo(request.get("question") or ""))
+    if request.get("action") in ("rollback", "redo"):
+        return {"status": "clarify", "reason": "owner_unresolved",
+                "text": "되돌리면 바뀌는 일정을 한 종류(식사 · 활동 등)로 정하지 못해 일정은 바꾸지 않았어요. "
+                        "「경복궁 변경 되돌려 줘」처럼 바꾸려는 일정 하나를 함께 말씀해 주세요."}
+    return {**_clarify_with_choices(decision, items, at=at, selected=selected), "reason": "owner_unresolved"}
+
+
 def _report_dispatch_plan(*, report: dict[str, Any], team: str, trip: dict[str, Any], store: TripStore,
                           items: list[Any], message: str, selected: UUID | None, at: datetime):
     """규칙 해석 모드도 기존 대상·되돌림 규칙으로 재사용 가능한 입력을 만든다."""
@@ -1195,7 +1305,8 @@ def _report_dispatch_plan(*, report: dict[str, Any], team: str, trip: dict[str, 
     target = _change_target(items, message, selected, at) if action in ("apply_change", "report_closed") else None
     if action == "rollback" and request.get("to_version") is None:
         target_version, question = _rollback_target(store, UUID(str(trip["trip_id"])), items, message, selected, at)
-        request.update(to_version=target_version, question=question, confirmed=question is None)
+        request.update(to_version=target_version, question=question, confirmed=question is None,
+                       **({"nothing_to_undo": True} if isinstance(question, NothingToUndo) else {}))
     owner = target.kind if target is not None else ("activity" if action == "stock_out" else "dining" if action in ("report_delay", "report_closed")
                                                    else team if team in ("dining", "activity") else "activity")
     return case_dispatch.descriptor(trip=trip, team=owner, request=request, item=target), target
@@ -1210,21 +1321,102 @@ def _confirmed_rollback(conn, tenant: str, trip_id: UUID, change: Any) -> bool:
     return bool(last and last["text"].startswith(f"그 변경({change.line})") and "되돌릴까요" in last["text"])
 
 
+def _setting_swap(decision: Any) -> str | None:
+    """되묻기로 끝난 해석이 「실내·야외 조건이 붙은 장소 바꾸기」인가 — 그 조건(indoor/outdoor) 또는 None. 칸만 본다(낱말을 보지 않는다).
+    조건 = 검증을 지난 `place_setting`(인용 확인) · 할 일이 되묻기 · 시각/날짜 바꾸기가 아님(`change_scope` · `time_edit.boundary`)."""
+    from .edit_intent import requested_setting
+
+    raw = getattr(decision, "raw", None) or {}
+    setting = requested_setting(raw)
+    if (setting is None or getattr(decision, "action", None) != "clarify" or raw.get("change_scope") in ("time", "date")
+            or (raw.get("time_edit") or {}).get("boundary", "none") != "none"):
+        return None
+    return setting
+
+
+#: 장소를 바꾸는 할 일 — 실내·야외 조건이 붙을 수 있는 것
+_SETTING_SWAPS = ("apply_change", "propose_alternatives")
+
+
+def _setting_swap_choices(decision: Any, items: list[Any], setting: str, *, first: datetime | None,
+                          at: datetime | None, selected: UUID | None) -> list[dict[str, Any]]:
+    """실내·야외 조건이 붙은 장소 바꾸기의 대상 되묻기 선택지 — **어디서 온 후보든** 활동 일정만, 장소 기록이 이미 그 조건인 일정은 뺀다(모름은 남긴다).
+
+    ★`[2026-10-26 x600 재시험 da4ccd97]` 모델이 낸 되묻기 후보(북촌 · 광장시장 점심 · 박물관)가 비어 있지 않아 활동 목록으로 가지 않았고,
+      「이미 그 조건」만 걸러 식사가 남고 N서울타워가 빠졌다. 기준은 팀의 후보 거르기와 같다 — 일정 종류(`kind == "activity"`)와
+      장소 기록의 `place_setting()`. 낱말을 보지 않는다.
+    - 순서: 아직 맞는 모델 · 대상 확인 후보(그 할 일 그대로) → 화면에서 고른 일정 → 지금부터의 활동(없으면 앞에서부터) — 한 일정은 한 번, 셋까지
+    - 대상이 이미 그 조건이라 바꾸지 않았으면(`setting_guard`) 그 일정을 다른 같은 조건 장소로 바꾸기를 마지막 선택지로 남긴다(그 뜻일 수 있다)"""
+    from app.domains.travel_ops.components.conversation.decision_unit import choice_message
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import place_setting
+
+    raw = decision.raw or {}
+    guard = raw.get("setting_guard") or {}
+    held = next((i for i in items if guard and str(i.item_id) == guard.get("item_id")), None)
+    action = raw.get("action") if raw.get("action") in _SETTING_SWAPS else "apply_change"
+
+    def fits(item: Any) -> bool:
+        return (item is not None and item.kind == "activity" and item.place is not None
+                and place_setting(item.place) != setting and item is not held)
+
+    ranked: list[tuple[dict[str, Any], bool]] = [
+        (c, True) for c in decision.choices if c.get("action") in _SETTING_SWAPS and fits(c.get("item"))]
+    stops = sorted((i for i in items if fits(i)), key=lambda i: (i.starts_at, i.seq))
+    picked = [i for i in stops if selected is not None and i.item_id == selected]
+    ahead = [i for i in stops if at is None or i.starts_at >= at] or stops
+    ranked += [({"action": action, "item": i, "change": None, "fact": "none"}, False)
+               for i in picked + [i for i in ahead if i not in picked]]
+    room = 3 - (1 if held is not None else 0)
+    choices: list[dict[str, Any]] = []
+    for choice, from_decision in ranked:
+        if len(choices) >= room:
+            break
+        if any(c["item_id"] == str(choice["item"].item_id) for c in choices):
+            continue
+        text = choice_message(choice, first)
+        if text:
+            choices.append({"label": text, "message": text, "action": choice["action"], "item_id": str(choice["item"].item_id),
+                            # 결정 후보에서 온 것은 예전처럼 `fact` · `to_version` 칸을 싣는다(출처 구분)
+                            **({"fact": choice.get("fact"),
+                                "to_version": choice["change"].version - 1 if choice.get("change") else None}
+                               if from_decision else {})})
+    if held is not None:
+        kept = guard.get("action") if guard.get("action") in _SETTING_SWAPS else "apply_change"
+        text = choice_message({"action": kept, "item": held, "change": None, "fact": "none"}, first)
+        if text:
+            choices.append({"label": text, "message": text, "action": kept, "item_id": str(held.item_id)})
+    return choices
+
+
 def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = None, *,
                           at: datetime | None = None, selected: UUID | None = None) -> dict[str, Any]:
     """★`[2026-09-29 사용자 제안]` 이해하지 못했으면 **이해한 범위 안에서** 「다음 중 하나인가요?」 — 번호 목록과 버튼용 문장.
     고객이 「1번」이라고 답하면 결정 단위가 앞 대화(이 목록)로 푼다. 후보가 없으면 되묻는 한 문장."""
     from app.domains.travel_ops.components.conversation.decision_unit import choice_message
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS
 
+    if (decision.raw or {}).get("clock_ambiguity"):
+        # ★`[2026-10-26 묶음 L · 수용 X02]` 어느 시각인지 묻는 것이다 — 다른 일정 「다른 곳으로」 목록을 붙이지 않는다(고객이 시각 하나를 말한다)
+        return {"status": "clarify", "text": decision.question}
     first = min((i.starts_at for i in items if i.kind != "mobility"), default=None)
+    setting = _setting_swap(decision)
     choices = []
-    for choice in decision.choices:
-        text = choice_message(choice, first)
-        if text and all(text != c["message"] for c in choices):
-            choices.append({"label": text, "message": text, "action": choice["action"],
-                            "item_id": str(choice["item"].item_id) if choice.get("item") else None,
-                            "fact": choice.get("fact"),
-                            "to_version": choice["change"].version - 1 if choice.get("change") else None})
+    if setting:
+        choices = _setting_swap_choices(decision, items, setting, first=first, at=at, selected=selected)
+    else:
+        for choice in decision.choices:
+            text = choice_message(choice, first)
+            if text and all(text != c["message"] for c in choices):
+                choices.append({"label": text, "message": text, "action": choice["action"],
+                                "item_id": str(choice["item"].item_id) if choice.get("item") else None,
+                                "fact": choice.get("fact"),
+                                "to_version": choice["change"].version - 1 if choice.get("change") else None})
+    generic = not choices
+    if setting and not choices and not lead:
+        # ★`[2026-10-26 x600 c34bd376]` 조건이 붙은 바꾸기인데 바꿀 수 있는 활동이 없다 — 식사가 든 대체 목록(요청 종류를 모를 때의 것)을 내지 않는다
+        note = ((decision.raw or {}).get("setting_guard") or {}).get("note")
+        return {"status": "clarify", "text": " ".join(x for x in (
+            note, f"지금 일정에서 {SETTING_LABELS[setting]} 장소로 바꿀 수 있는 활동 일정을 찾지 못했어요. 바꿀 일정을 이름으로 알려 주세요.") if x)}
     if not choices:
         # ★`[2026-09-29 ui 세션 지적 · 사용자 제안]` 모델이 해석 후보를 못 냈어도 **고를 수 있는 것**을 보인다 —
         #   화면에서 고른 일정 → 지금부터 가까운 식사 · 활동(없으면 앞에서부터) 셋을 「다른 곳으로 바꿔 줘」로
@@ -1241,6 +1433,13 @@ def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = No
     if not choices:
         return {"status": "clarify", "text": " ".join(x for x in (lead, decision.question or _CLARIFY) if x)}
     listed = "\n".join(f"{n}) {c['label']}" for n, c in enumerate(choices, start=1))
+    if setting and not lead and not generic:
+        # 무엇을 원하는지(실내·야외 장소로 바꾸기)는 알아들었다 — 「알아듣지 못했어요」가 아니라 바꿀 일정만 묻는다.
+        #   대상이 이미 그 조건이라 바꾸지 않았으면(`decision_unit.guard_setting_target`) 그것을 먼저 말한다
+        note = ((decision.raw or {}).get("setting_guard") or {}).get("note")
+        ask = " ".join(x for x in (note, f"어느 일정을 {SETTING_LABELS[setting]} 장소로 바꿀까요?") if x)
+        return {"status": "clarify", "choices": choices, "text_web": ask,
+                "text": f"{ask}\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}
     head = lead or "말씀을 정확히 알아듣지 못했어요."
     return {"status": "clarify", "choices": choices, "text_web": f"{head} 다음 중 하나인가요?",
             "text":f"{head} 다음 중 하나인가요?\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}

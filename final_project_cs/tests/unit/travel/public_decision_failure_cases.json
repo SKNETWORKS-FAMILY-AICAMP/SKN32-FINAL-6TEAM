@@ -1,0 +1,53 @@
+[
+  {
+    "id": "T08",
+    "input_text": "인사동 이전 일정만 한 시간 당겨줘. 인사동은 그대로야",
+    "input_sha256": "0d1a46fc2813bdc624cf3bc2b60901adba64bdb7083a5eb2962af992df7aa3cf",
+    "old_public": {
+      "case_id": "70913883-a08c-461d-af94-eebca4edd28e",
+      "case_status": "escalated",
+      "classification": {
+        "intent": null,
+        "issue_code": null
+      },
+      "status": "escalated",
+      "reason": "decision_failed",
+      "failure": "OllamaContentError: 구조화 답의 근거 검증 실패: ValueError [evidence_validation:unquoted_temporal_clock]",
+      "answer": "지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요."
+    }
+  },
+  {
+    "id": "T11",
+    "input_text": "북촌한옥마을을 한 시간 당기고 머무는 시간은 유지해줘",
+    "input_sha256": "0670e083e907545cf19f1229384449178c43109545f12e21ba8afc57bb37bebb",
+    "old_public": {
+      "case_id": "4fdf0129-147f-4568-8851-5780a3989202",
+      "case_status": "escalated",
+      "classification": {
+        "intent": null,
+        "issue_code": null
+      },
+      "status": "escalated",
+      "reason": "decision_failed",
+      "failure": "OllamaContentError: 구조화 답의 근거 검증 실패: ValueError [evidence_validation:unquoted_temporal_clock]",
+      "answer": "지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요."
+    }
+  },
+  {
+    "id": "P03",
+    "input_text": "1월 2일 일정을 보여줘",
+    "input_sha256": "661ac59badcc76de7f004c3e4c9a9de26dd150ba864a811c0f41a83e49320e87",
+    "old_public": {
+      "case_id": "5c7cb2a2-0988-479e-8cae-ee443940d937",
+      "case_status": "escalated",
+      "classification": {
+        "intent": null,
+        "issue_code": null
+      },
+      "status": "escalated",
+      "reason": "decision_failed",
+      "failure": "목록 조회의 범위·행동이 유효하지 않습니다",
+      "answer": "지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요."
+    }
+  }
+]

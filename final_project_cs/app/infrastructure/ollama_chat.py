@@ -55,7 +55,8 @@ def validate_content(value: dict[str, Any], validator: Callable[[dict[str, Any]]
 
 class OllamaChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 60.0,
-                 transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "", num_ctx: int = 0) -> None:
+                 transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "", num_ctx: int = 0,
+                 wait_when_cold: bool = True) -> None:
         if not base_url:
             raise OllamaError("Ollama 주소가 비어 있다")
         self.base_url, self.model, self.timeout = base_url.rstrip("/"), model, timeout
@@ -68,9 +69,17 @@ class OllamaChat:
         #:  ★같은 모델에 호출마다 다른 값을 보내면 Ollama 가 모델을 다시 올린다 — 이 객체의 모든 호출(예열 포함)이 같은 값을 보낸다.
         self.num_ctx = int(num_ctx or 0)
         self._injected = transport is not None      # 시험이 넣은 가짜 — 받아쓰기도 이것을 쓴다
+        #: ★`[2026-10-26]` 식은 모델이면 조각 감시 대신 적재를 기다릴지(`structured_stream_validated`). 넘김 장치의 경로들은 끈다 — 넘김 장치가 이미 `loaded` 를 보고
+        #:  식은 로컬을 건너뛰므로(다음 경로가 있다) 두 번 묻지 않고, 그 사이 내려가도 짧은 제한시간의 고정 대기로 바뀌지 않는다
+        self.wait_when_cold = bool(wait_when_cold)
         #: ★`[2026-10-07]` 연결은 5초 안에 안 되면 끊는다 — 서버가 꺼졌을 때 읽기 제한(60초)만큼 기다리지 않게(넘김 장치가 빨리 알아야 한다)
         self._post = transport or (lambda url, payload: httpx.post(url, json=payload,
                                                                   timeout=httpx.Timeout(self.timeout, connect=min(5.0, self.timeout))))
+
+    @property
+    def reader_provenance(self) -> dict[str, str]:
+        """Identity of this configured local reader, without a provider call."""
+        return {"path": "local", "backend": "ollama", "model": self.model}
 
     def _options(self, base: dict[str, Any]) -> dict[str, Any]:
         return {**base, "num_ctx": self.num_ctx} if self.num_ctx > 0 else base
@@ -135,9 +144,32 @@ class OllamaChat:
         return self._stream(system, user, schema, num_predict, on_piece=on_piece, first_wait=first_wait, stall=stall,
                             max_seconds=max_seconds)
 
+    def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                                    validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
+                                    on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                                    max_seconds: float = 180.0) -> dict[str, Any]:
+        """`structured_validated` 를 **조금씩 받기 + 멈춤 감시**로 — 채팅 해석(`decision_unit.decide`)이 쓴다. `[2026-10-26 사용자 승인]`
+        스키마는 `format` 으로 그대로 보내고, 받은 답을 `structured` 와 같이 스키마로 검사한 뒤 부르는 쪽 근거 검사(`validator`)를 한다.
+        ★`[2026-10-26]` 모델이 안 올라와 있으면(`loaded`) 적재(수십 초) 동안 첫 조각 감시가 끊어 답을 못 한다 — 넘김이 꺼진 로컬 서빙은 다음 경로가 없으므로
+          그때는 적재를 기다리는 고정 대기 호출(`structured_validated`, 제한시간 `timeout`)로 답하고 `on_piece` 에 검사를 지난 최종 글을 한 번 준다.
+          넘김 장치의 경로들(`wait_when_cold=False`)은 이 갈래를 쓰지 않는다 — 넘김 장치가 이미 `loaded` 를 보고 식은 로컬을 건너뛴다. 상태를 못 물으면 그대로 조금씩 받는다."""
+        if self.wait_when_cold and not self._injected:
+            try:
+                cold = not self.loaded(timeout=2.0)
+            except OllamaError:
+                cold = False
+            if cold:
+                value = self.structured_validated(system, user, schema, validator=validator, num_predict=num_predict)
+                if on_piece is not None:
+                    on_piece(json.dumps(value, ensure_ascii=False))
+                return value
+        value = self.structured_stream(system, user, schema, num_predict=num_predict, on_piece=on_piece, first_wait=first_wait,
+                                       stall=stall, max_seconds=max_seconds)
+        return validate_content(validate_structured(value, schema), validator)
+
     def _stream(self, system: str, user: str, fmt: Any, max_tokens: int, *, on_piece: Callable[[str], None] | None,
                 first_wait: float, stall: float, max_seconds: float) -> dict[str, Any]:
-        from app.infrastructure.model_stream import collect
+        from app.infrastructure.model_stream import collect, StreamLifetime
 
         options: dict[str, Any] = {"temperature": 0}
         if max_tokens > 0:
@@ -147,16 +179,17 @@ class OllamaChat:
                                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
-        held: dict[str, Any] = {}
+        lifetime = StreamLifetime()
 
         def pieces():
             try:
                 with httpx.stream("POST", f"{self.base_url}/api/chat", json=payload,
                                   timeout=httpx.Timeout(max_seconds, connect=min(5.0, max_seconds))) as response:
-                    held["response"] = response
+                    if not lifetime.acquire(response):
+                        return
                     if response.status_code != 200:
                         raise OllamaError(f"Ollama HTTP {response.status_code}: {response.read()[:160]!r}")
-                    for line in response.iter_lines():
+                    for line in lifetime.iterate(response.iter_lines()):
                         if not line:
                             continue
                         part = json.loads(line)
@@ -166,12 +199,7 @@ class OllamaChat:
             except httpx.HTTPError as exc:
                 raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
 
-        def close() -> None:
-            response = held.get("response")
-            if response is not None:
-                response.close()
-
-        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, close=close).strip()
+        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, lifetime=lifetime).strip()
         if not text:
             raise OllamaError("Ollama 가 빈 답을 냈다")
         try:

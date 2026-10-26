@@ -188,6 +188,13 @@ class ItineraryApply:
                 missing = sorted(str(old) for old in replacements if old not in present)
                 if missing:
                     raise ActionRejected(f"items not in the current itinerary: {missing}")
+                if str(arguments.get("reason")) == "customer_request":
+                    # ★`[2026-10-26 T16 · D-020]` 고객 요청 교체도 **지금 판**의 고정 · 예약 항목은 바꾸지 않는다 — 판정 문을 건너뛰는 것은
+                    #   「고객이 고른 것」이라서지, 고정을 우회해도 된다는 뜻이 아니다(고른 보류 제안은 `customer_choice`). 마지막 안전망이다
+                    for item in current:
+                        if item.item_id in replacements and (item.locked or item.booking_id):
+                            raise ActionRejected(f"{'item_locked' if item.locked else 'item_booked'}: "
+                                                 f"customer_request cannot replace protected item {item.item_id}")
                 new_items = [replacements.get(item.item_id, item) for item in current]
                 # ☆`[2026-09-29 이동 계산기 문제목록 #44]` 여행 버전(ItineraryChange.new_items)과 같게 — 장소가 멀리 바뀐
                 #   항목의 바로 앞뒤 이동을 새 장소 기준으로 다시 만든다(두 경로의 결과가 갈리지 않게)
@@ -333,6 +340,11 @@ def _open_ask(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UU
             {"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
              **proposal_notice(item=item, decision=decision, causes=causes, options=options, proposal_id=proposal_id)},
             constraints=trip.get("constraints"), trip_id=trip_id)))]
+    if outbox:
+        from dataclasses import replace
+        from app.domains.travel_ops.components.response.monitoring import action_notice
+        outbox = [replace(message, payload=action_notice(message.payload, tenant_id=tenant_id,
+            trip=trip, trip_id=trip_id, version=base, status="awaiting_choice")) for message in outbox]
     return summary, outbox
 
 
@@ -350,6 +362,11 @@ def _version_notice(*, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, v
                       **dict(arguments.get("notice") or {}), "version": version, **offer})
     # ★`[2026-10-06]` 항로 지킴이가 켜져 있으면 「항로 지킴이가 바꿨어요」 표시를 싣는다(`planning/guardian.annotate` — 시나리오용 여행 버전과 같은 규칙)
     payload = _notice(trip, guardian.annotate(payload, constraints=trip.get("constraints"), trip_id=trip_id))
+    from app.domains.travel_ops.components.response.monitoring import action_notice
+    batch = dict(arguments.get("batch") or {})
+    payload = action_notice(payload, tenant_id=tenant_id, trip=trip, trip_id=trip_id, version=version,
+                            status="applied", saved_version=version,
+                            execution={"batch": batch, "reason": arguments["reason"]})
     return OutboxMessage(topic=NOTICE_TOPIC, payload=payload, dedupe_key=f"{trip_id}:v{version}")
 
 
@@ -441,7 +458,8 @@ def _apply_batch(conn: Any, *, store: TripStore, tenant_id: str, trip: Mapping[s
         summary=_plain({"trip_id": str(trip_id), "version": version if version is not None else base,
                         "reason": arguments["reason"], **dict(arguments.get("summary") or {}),
                         # ★`retry` — 다시 열 항목의 id. 감시가 이 Case 의 `applied_actions[].summary.batch.retry` 를 읽어 그 항목의 덮음을 푼다(`trip_watch_cases._attempt`)
-                        "batch": {"applied": [i.title for i in (by_id[k] for k in to_apply)], "asked": asked,
+                        "batch": {"outcomes": list(batch.get("outcomes") or []),
+                                  "applied": [i.title for i in (by_id[k] for k in to_apply)], "asked": asked,
                                   "retry": [str(x) for x in (batch.get("retry") or [])]}}),
         outbox=outbox)
 
@@ -499,6 +517,11 @@ def _open_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id
         payload=_notice(trip, {"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
                         **consent_notice(item=item, causes=causes, proposal_id=proposal_id,
                                          indoor_unknown=indoor_unknown)}))]
+    if outbox:
+        from dataclasses import replace
+        from app.domains.travel_ops.components.response.monitoring import action_notice
+        outbox = [replace(message, payload=action_notice(message.payload, tenant_id=tenant_id,
+            trip=trip, trip_id=trip_id, version=base, status="awaiting_choice")) for message in outbox]
     return summary, outbox
 
 

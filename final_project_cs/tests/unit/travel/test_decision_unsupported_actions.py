@@ -61,7 +61,9 @@ def test_a_conditional_change_is_still_not_applied_now():
 
 def test_edit_actions_are_offered_to_the_model_but_server_only_ones_are_not():
     _, schema = _decide({"action": "other"})
-    offered = set(schema["properties"]["action"]["enum"])
+    # contract_correction(L05 port): the generation grammar sends {"anyOf": branches} — every branch is offered to the model
+    offered = set().union(*(set(branch["properties"]["action"]["enum"])
+                            for branch in schema.get("anyOf", [schema])))
     assert {"change_time", "add_item", "remove_item", "swap_order", "lock_item", "unlock_item"} <= offered
     assert "replace_named" not in offered and not set(du.UNSUPPORTED) & set(du.EDIT_ACTIONS)   # `[2026-10-15 재측정]` 일정 고치기는 하나도 막지 않는다(여행 설정 edit_trip 만 안내)
     decision, _ = _decide({"action": "clarify", "choices": [{"action": "change_time", "target_item": "i1",
@@ -163,11 +165,13 @@ def test_one_bad_read_is_dropped_when_another_read_is_valid():
 
 def test_trip_settings_are_the_only_request_still_answered_as_unsupported():
     """`[2026-10-15 재측정]` 인원 · 여행 이름 · 기간은 일정 고치기(`chat_edit`)로 실행할 길이 없다 — 장소 바꾸기 되묻기로 끼우지 않고 정직한 안내로 답한다."""
-    assert set(du.UNSUPPORTED) == {"edit_trip"}
+    # `[2026-10-26 U01]` 업체 예약 취소·환불·결제(booking_transaction)도 같은 정직한 안내 갈래다 — 일정 고치기는 여전히 막지 않는다
+    assert set(du.UNSUPPORTED) == {"edit_trip", "booking_transaction"} and not set(du.UNSUPPORTED) & set(du.EDIT_ACTIONS)
     decision, schema = _decide({"action": "edit_trip", "target_item": "none"})
     assert decision.action == "other" and decision.raw["unsupported"] == "edit_trip"
     assert "일정은 바꾸지 않았어요" in decision.social and du.stands_alone(decision)
-    offered = schema["properties"]["choices"]["items"]["properties"]["action"]["enum"]
+    offered = set().union(*(set(branch["properties"]["choices"]["items"]["properties"]["action"]["enum"])
+                            for branch in schema.get("anyOf", [schema])))      # contract_correction(L05 port): grammar branches
     assert "edit_trip" not in offered                     # 실행할 수 없는 것을 되묻기 후보로 내지 않는다
 
 

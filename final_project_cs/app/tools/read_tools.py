@@ -726,7 +726,8 @@ class ReadToolbox:
             return None
         from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
 
-        return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao)
+        return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao,
+                            web=getattr(self.travel, 'activity_web', None))
 
     def place_hours(self, scope: ToolContext, *, place_id: str | None = None, at: Any = None,
                     **_: Any) -> dict[str, Any] | None:

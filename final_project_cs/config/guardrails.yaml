@@ -99,6 +99,9 @@ reliability:
   #   에이전트 실행은 원래 수십 초 걸리므로 짧으면 정상 실행을 되잡는다.
   routing_stuck_after_seconds: 600
   routing_sweep_limit: 50
+  # ★고객 입력 대기의 재개 토큰(`resume.token_ttl_hours`)이 만료된 `waiting_input` Case 를 escalate 하는 되잡기(2026-10-26,
+  #   `wait_expiry_sweeper`, INV-CS-RT-018). 한 회차에 읽는 후보 수 — 우리가 고른 값(routing 과 같게). 넘는 것은 다음 회차에 본다.
+  wait_expiry_sweep_limit: 50
 
 # ── 동시성 (v5 §6-1) ────────────────────────────────────────────────
 concurrency:
@@ -330,6 +333,10 @@ travel:
   intake_reader:
     mode: "on"
     num_predict: 3072
+    #   external_fallback_enabled: 계획서 원문 읽기의 유료 대체(`llm_failover.md` 7-1). `[2026-10-26 08:20 사용자 결정]` 켜 둔다 — D-025 원래 계약:
+    #       로컬이 답 조각 감시(5초 멈춤)로 멈추면 유료가 처음부터 읽는다. 켜져 있어도 매 유료 시도마다 reader 예산 예약(못 읽으면 거부, 다시 시도 없음) ·
+    #       한 절대 시한 · reader 전용 입구 · `redaction.masked` 가 그대로 돈다. 끄려면 관리 콘솔 같은 이름에 false(원문은 다 가린다는 보장이 없다).
+    external_fallback_enabled: true
     chunk_chars: 1800
     #   prefill: 읽은 직후 빈칸을 담당(식당 팀 · 활동 팀 · 이동 판정 · 계획 에이전트)에게 보내 맞춰 본 제안만 「우리가 채움」으로 싣는다(`intake/prefill.py`).
     #   고정 · 예약 일정은 건드리지 않는다. 고객만 아는 값은 질문으로 남긴다. mode 가 on 일 때만 돈다.
@@ -412,7 +419,23 @@ travel:
     plan_max_tool_calls: 72
     plan_priority_max: 10
     plan_max_input_chars: 24000
-    plan_timeout_seconds: 12
+    # 분류 에이전트 계획 호출(`classify_plan` → `feedback.ask_json`) — 고정 제한시간 대신 **답 조각 감시**(`model_stream.collect`, 계획 읽기 ·
+    # 채팅 해석과 같은 장치). `[2026-10-26 사용자 결정 · 라우팅 감사 12c]` 모델이 조각을 계속 보내는 동안은(맨 위 상한 max_seconds 안에서) 기다리고, 조각 사이 stall_seconds 동안
+    # 새 조각이 없으면 멈춘 것으로 보고 `plan_provider_failed` → Case `classification_failed`(남은 항목은 다음 회차 `retry`). 넘김(유료)도 같은 값이다.
+    # ☆예전 `plan_timeout_seconds`(12 → 50) 고정 대기를 대체한다 — 쓰는 중인 정상 답(v2 6항목 42.3초)도 고정 한도에 걸릴 수 있었다.
+    # ★출처: 실측 — 로컬 E4B(tripilot-pointer:e4b-ft · ctx 8192) v3 계획 2·4·6항목 조금씩 받기(2026-10-26 라우팅 감사 12c 보고서):
+    #   first_token_seconds 15 — 첫 조각 실측 1.02초(2항목) · 1.19초(4) · 1.38초(6). 감시 작업은 같은 Ollama 의 채팅 · 읽기 요청 뒤에 줄 설 수 있어
+    #     계획 읽기와 같은 값(그쪽 줄 선 실측 최대 10.2초)으로 넉넉히 둔다.
+    #   stall_seconds 5 — 사용자 결정 값(계획 읽기 · 채팅 해석과 같다). 조각 사이 최대 간격 실측 0.03초(2항목) · 0.14초(4) · 0.13초(6).
+    #   max_seconds 45 — 맨 위 상한. 묶음 시간(team_timeout_seconds 90 × batch_time_ratio 0.6 = 54초) 안이어야 첫 항목을 시작한다.
+    #     v3 조금씩 받기 실측 5.4초(2항목) · 9.3초(4) · 12.0초(6 = batch_max_items). 같은 날 앞선 측정(옛 v2 지시문 · 도구 목록까지 쓰던 답)의
+    #     6항목 42.3초 · 부하 중 2항목 27초도 끊지 않는 값 가운데 54초보다 짧게. 줄 선 시간 · 넘김 · 재시도를 포함한 호출 전체 상한이다.
+    #     ☆54초 미만이어도 첫 항목 시작을 보장하지는 않는다(계획 전 경과 시간 포함) — 늦으면 남은 항목은 다음 회차 `retry`.
+    #     모델이 안 올라와 있어도 고정 대기로 바꾸지 않는다 — 적재가 첫 조각 감시를 넘기면 이번 회차 실패, 다음 회차는 올라온 모델로 답한다.
+    plan_stream:
+      first_token_seconds: 15
+      stall_seconds: 5
+      max_seconds: 45
     # 묶음 계산이 Team 시간 제한의 이 비율을 넘기면 **새 항목을 시작하지 않고** 남은 것은 다음 회차로 넘긴다(`retry`). Team 코드가 동기라 시간 제한이 도중에 끊지 못하므로 스스로 본다.
     # ★출처: **우리가 고른 값**(측정 안 함) — 마지막 항목 하나가 남은 40%(36초) 안에 끝난다고 봤다. 외부 점검 한 번이 최대 8초(`source_timeout_seconds`)다.
     batch_time_ratio: 0.6
@@ -450,6 +473,32 @@ travel:
   # max_seconds — 채팅은 식은 모델 첫 호출 34초 + 모델 시간 제한 20초 여유로 90초, 일정 짜기는 생성기가 더 오래 걸려 240초, 접수 읽기는 사진·PDF 라 600초.
   # 한 사용자가 열 수 있는 실시간 작업 3개(채팅 · 일정 짜기 · 접수 읽기 동시). intake_stalled_seconds — 읽는 일꾼이 갱신 없이 이만큼 조용하면 죽은 것으로 본다.
   # 고객이 보낸 공개 SNS 맛집 링크. 수치는 첫 범위의 요청/조회 예산으로 고른 값이다.
+  # User-requested Activity lookup supplement. OFF until a reviewed zero-cost
+  # public search endpoint, public identity anchors and shared budgets are supplied.
+  # backend: searxng(search_endpoint JSON) | ddgs(키 없는 무료 검색 결과 수집 — Hermes 웹검색 backend 와 같은 패키지).
+  # ★ddgs 는 공식 API 가 아니라 검색 결과 수집이라 결과가 흔들린다 — URL 발견용일 뿐, 사실은 공식 페이지 JSON-LD 만(wiki/external/activity-public-web.md).
+  #   search_hosts 에 backends 가 실제로 부르는 host(ddgs 등록부 search_url)가 모두 있어야 켜진다. auto/all 은 host 가 정해지지 않아 거절.
+  #   ★출처: 우리가 고른 값 — duckduckgo 한 곳(요청 1회/검색), 한국 지역, 결과 5개(공식 page 는 max_pages 로 다시 자른다).
+  activity_public_web:
+    enabled: false
+    backend: searxng
+    paid: false
+    approved_public_queries: false
+    search_endpoint: ""
+    search_hosts: []
+    identities: []
+    daily_limits: {}
+    ddgs:
+      backends: [duckduckgo]
+      region: kr-kr
+      safesearch: moderate
+      max_results: 5
+    # 2026-10-26 사용자 결정 — 공식 본문 운영시간·휴무 문장(규칙 파서 official_hours_text, 모델 없음), http 전용 공식 사이트,
+    # 공식 host 안 redirect. 공식 페이지 읽기에만 적용(검색 요청은 그대로 HTTPS·redirect 거절). wiki/external/activity-public-web.md.
+    # ★켜는 기준: 20곳 표본 일치 ≥ 80% · 오답 ≤ 5% — 2026-10-26 실측 미달이라 꺼 둔다(records/reports/2026-10-26_activity-public-web-text-evidence.md).
+    official_text: false
+    official_http: false
+    official_max_redirects: 0
   social_dining:
     max_links: 10
     max_url_chars: 2048
@@ -504,6 +553,22 @@ travel:
     output_tokens_base: 1024
     output_tokens_per_line: 30
     output_tokens_per_char: 2
+  # -- 채팅 해석(`decision_unit.decide`) 모델 호출 — 계획 읽기처럼 답을 조금씩 받으며 멈춤을 본다 (2026-10-26 사용자 승인 — `trip_messages._try_decide` 가 읽는다) --
+  # 전에는 로컬 9초(`llm_failover_primary_timeout_seconds`) 고정 대기 뒤 유료 대체 1회였다 — 학습 E4B 해석 한 건이 5.1~7.3초(x600 실측,
+  #   wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md) · 8.9초(로컬 실측, 2026-10-26_chat-outdoor-setting-clarify-candidates.md)라
+  #   9초 경계에서 정상으로 답을 쓰던 호출도 끊겨 유료로 넘어갔다(x600 첫 턴 20초). 끊기면 넘김 장치가 유료로 **처음부터** 다시 답한다(`structured_stream_validated`).
+  # ★출처: 실측 — 로컬 실 E4B(tripilot-pointer:e4b-ft · 127.0.0.1:11434 · ctx 8192) 「실내를 야외로 바꿔줘」 3회(2026-10-26_chat-decision-stream.md):
+  #   조금씩 받기 12.02초(지시문 캐시 없음 · 첫 조각 3.5초) · 고정 대기 8.52초 · 조금씩 받기 8.64초(첫 조각 0.9초) — 세 번 모두 같은 원출력 · 같은 결정, 조각 220개 · 조각 사이 최대 0.22초.
+  #   ☆첫 번째(12.0초)는 예전 9초 고정 대기였다면 유료로 넘어갔을 정상 답이다.
+  #   first_token_seconds 8 — 첫 조각까지 실측 0.9~3.5초(지시문 읽기 · x600 약 2초). 두 배 넘게 두되 예전 9초보다 짧게 — 죽었거나 막힌 로컬을 예전보다 늦게 알지 않는다.
+  #   stall_seconds 5 — 사용자 승인 값(계획 읽기와 같다). 조각 사이 실측 최대 0.22초(계획 읽기 0.17~0.7초).
+  #   max_seconds 15 — 맨 위 상한(호출 하나) = 고객 응답 SLA `llm_failover_total_seconds`(15). 정상 답 실측 최대 12.0초를 끊지 않고, 그보다 길게 쓰는 답(되풀이)은 유료로 넘긴다.
+  #     ★SLA 와의 관계: 정상 답은 15초 안에 로컬로 끝난다. 로컬이 15초를 다 쓰고 넘어가는 최악은 15초 + 유료(실측 2~3초 · 한도 8초)라 SLA 를 넘는다 —
+  #       예전(9초 + 유료 8초 한도 = 17초)도 넘었다. 넘김 장치의 15초는 다시 시도(429 · 5xx) 판단에만 쓰는 목표값이고 강제로 끊지 않는다.
+  chat_decision_stream:
+    first_token_seconds: 8
+    stall_seconds: 5
+    max_seconds: 15
   # -- 고객 연락처 시험 발송 (2026-10-01 — `customer_profile.py`, `POST /v1/web/profile/discord/test`) --
   # 고객이 「시험 보내기」를 누를 때만 그 고객의 디스코드 웹훅으로 한 줄을 보낸다. ★출처: **우리가 고른 값** — 20초 간격이면 분당 최대 3회(ui 세션 요청),
   #  사람이 누르기에 충분하고 연타 · 남의 채널 도배(주소를 알면 누구나 쓸 수 있는 웹훅)를 막는다. 마지막 시도 시각은 DB 에서 센다(프로세스가 여럿이어도 맞다)

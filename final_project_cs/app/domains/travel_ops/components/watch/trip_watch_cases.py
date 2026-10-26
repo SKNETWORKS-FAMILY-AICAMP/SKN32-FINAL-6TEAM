@@ -93,6 +93,8 @@ class CaseTickResult:
     notified: list[dict[str, Any]] = field(default_factory=list)
     #: ★`[2026-10-03]` 대안을 못 찾아 **조건을 푼 안을 물어본** 건(`watch_relaxed`) — 「그대로 두었어요」 알림 대신 제안이 나갔다
     relaxed: list[dict[str, Any]] = field(default_factory=list)
+    #: 재조회한 결과만 작성한다. 기존 outbox는 추가하지 않는다.
+    responses: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -330,6 +332,8 @@ class TripWatchCaseOpener:
             fingerprint = _deferred_fingerprint(categories, code, confirmed)
             # 같은 장소 · 같은 날의 일정이 바뀌어 id 가 달라져도 같은 미룸 안내를 두 번 보내지 않는다.
             key = f"watch-deferred:{item.place_id or item.item_id}:{item.starts_at.date()}:{fingerprint}"
+            from app.domains.travel_ops.components.planning.pending import _response_payload
+            payload = _response_payload(conn, store=self.store, trip_id=trip_id, payload=payload, status='failed')
             added = self.store.enqueue_message(conn, trip_id=trip_id, key=key, payload=payload)
         diagnostic = {"event": "travel_execution_diagnostic", "plan_sha256": None,
                       "tenant_id": str(self.store.tenant_id), "customer_id": str(trip['customer_id']),
@@ -381,6 +385,8 @@ class TripWatchCaseOpener:
     def _after_run(self, case_id: UUID, outcome: dict[str, Any] | None, result: CaseTickResult) -> None:
         """Team 이 `itinerary_unresolved`(바꿀 곳 없음)로 끝났으면 **고객에게 알린다** — 일정은 그대로라는 것과 원인."""
         context = self._contexts.get(case_id)
+        if context is not None:
+            self._record_response(case_id, context, outcome, result)
         if context is None or (outcome or {}).get("status") != "escalated":
             return
         if "batch" in context:
@@ -404,10 +410,11 @@ class TripWatchCaseOpener:
         # ★`[2026-10-03 사용자 지적]` 못 찾았다고 곧바로 끝내지 않는다 — 조건을 풀어 **비슷한 안**이 있으면 그것을 묻는다(자동 적용 없음). 한 곳도 없을 때만 아래 옛 알림
         if self._offer_relaxed(context["trip_id"], item, causes, recheck_failed, result, case_id):
             return
+        from app.domains.travel_ops.components.planning.pending import _response_payload
         with self._connect() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=context["trip_id"],
                                        key=f"watch-unresolved:{item.item_id}:{_fingerprint(causes)}",
-                                       payload=unresolved_notice(item=item, causes=causes, recheck_failed=recheck_failed))
+                                       payload=_response_payload(conn, store=self.store, trip_id=context['trip_id'], status='failed', payload=unresolved_notice(item=item, causes=causes, recheck_failed=recheck_failed)))
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]), "item": item.title})
 
     def _unhandled_notice(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], guardrail: str | None,
@@ -419,11 +426,34 @@ class TripWatchCaseOpener:
         payload = digest([Outcome(item, "unhandled", causes=causes, reasons=[code], checked_at=self.clock().isoformat())],
                          kind="guidance")
         with self._connect() as conn, conn.transaction():
+            from app.domains.travel_ops.components.planning.pending import _response_payload
+            payload = _response_payload(conn, store=self.store, trip_id=trip_id, payload=payload, status='failed')
             added = self.store.enqueue_message(conn, trip_id=trip_id,
                                                key=f"watch-unhandled:{item.item_id}:{_fingerprint(causes)}:{code}",
                                                payload=payload)
         if added:
             result.notified.append({"case_id": str(case_id), "trip_id": str(trip_id), "item": item.title, "code": code})
+
+    def _record_response(self, case_id, context, outcome, result):
+        from app.domains.travel_ops.components.response.monitoring import case_payload
+
+        # 작성 실패는 실행 실패가 아니다. 이미 저장된 업무를 닫거나 다시 실행하지 않는다.
+        try:
+            with self._connect() as conn:
+                case = self.repository.get_case(conn, tenant_id=self.store.tenant_id, case_id=case_id)
+                trip, _ = self.store.latest(conn, context['trip_id'])
+            issues = context.get('batch') or []
+            items = [str(i.item.item_id) for i in issues] if issues else [str(context['item'].item_id)]
+            causes = [c for i in issues for c in i.causes] if issues else context['causes']
+            payload = case_payload(case=case, trip=trip, case_id=str(case_id), causes=causes, items=items,
+                checked_at=self.clock().isoformat(), outcome=outcome,
+                scope={'tenant_id': str(self.store.tenant_id), 'customer_id': str(trip['customer_id']),
+                       'trip_id': str(context['trip_id'])})
+            result.responses.append({'case_id': str(case_id), **payload})
+        except Exception as exc:
+            logger.exception('watch: response writing failed case=%s', case_id)
+            result.responses.append({'case_id': str(case_id), 'status': 'writing_failed', 'error': type(exc).__name__})
+
 
     def _offer_relaxed(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], recheck_failed: bool,
                        result: CaseTickResult, case_id: UUID) -> bool:
@@ -890,6 +920,8 @@ class TripWatchCaseOpener:
             return
         payload = digest(outcomes, kind="guidance")
         with self._connect() as conn, conn.transaction():
+            from app.domains.travel_ops.components.planning.pending import _response_payload
+            payload = _response_payload(conn, store=self.store, trip_id=context['trip_id'], payload=payload, status='failed')
             self.store.enqueue_message(conn, trip_id=context["trip_id"], key=f"watch-unresolved:batch:{guidance_key(payload)}", payload=payload)
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]),
                                 "item": ", ".join(o.item.title for o in outcomes)})

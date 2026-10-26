@@ -42,6 +42,10 @@ httpx==0.28.1
 PyJWT==2.13.0   # 소셜 로그인 토큰 확인 — app/infrastructure/oauth_providers.py 가 `import jwt` 로 직접 쓴다(mcp 가 끌고 오기도 하지만 직접 쓰므로 적는다 — 팀 저장소 develop 에서 가져옴 2026-10-05)
 cryptography==43.0.0   # 고객 디스코드 웹훅을 암호화해 저장 — customer_profile.py (설치만 돼 있고 목록에 없었다 — 도커 이미지에는 빠진다)
 socksio==1.0.0   # httpx SOCKS 프록시 — 고정 IP 서버 경유(ACOP_OUTBOUND_PROXY_URL)
+# Activity 공개 웹 보조조회 backend=ddgs (키 없는 무료 검색 결과 수집, MIT) — 기본 꺼짐(`travel.activity_public_web`). primp · lxml 은 ddgs 9.16.1 의 native 의존성.
+ddgs==9.16.1
+primp==2.0.1
+lxml==6.1.3
 
 # ── 고객 계획 읽기 — 올린 파일을 글자로 (app/domains/travel_ops/components/intake/sources.py) ──
 # ★2026-09-28 추가: 함수 안에서만 import 해서 로컬(따로 설치돼 있음)에서는 안 드러났고,

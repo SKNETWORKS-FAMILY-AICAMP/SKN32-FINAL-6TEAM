@@ -3,14 +3,17 @@ from __future__ import annotations
 
 import re
 from copy import copy
-from dataclasses import is_dataclass, replace
+from dataclasses import asdict, is_dataclass, replace
 
+from ..response import writing
 from . import fact_context, schedule_query, time_anchor, trip_facts
 
 #: ★`[2026-10-15]` 「지금 몇 시야?」 — 일정이 아니라 **지금 시각**을 묻는 말. 전에는 일정을 찾다 「어느 일정을 물으신 건지 찾지 못했어요」로 끝났다
 #:  (x600 서버 웹 채팅 재시험 2026-10-14 12:14 · 16:23). 서버 시계로 답한다 — 모델이 시각을 말하게 하지 않는다. 문장 전체가 이 모양일 때만 쓴다.
 _CLOCK_QUESTION = re.compile(r"^\s*(?:지금|현재)\s*(?:은\s*)?(?:몇\s*시|시각|시간)\s*(?:이야|야|예요|에요|인가요|입니까|니|죠|지|알려\s*줘|알려\s*줄래|알려\s*주세요)?\s*[?？]?\s*$")
 _WEEKDAYS = "월화수목금토일"
+#: 한 일정의 성질을 묻는 사실 — 앞뒤(next) · 시각(time) · 이동(move)처럼 앞뒤 관계가 답의 일부인 사실은 넣지 않는다
+_ONE_ITEM_FACTS = frozenset({"detail", "address", "hours", "phone", "description", "price", "entry_booking", "food"})
 
 
 def _clock_text(now) -> str:
@@ -65,19 +68,42 @@ def _route(origin, destination, mode):
             f"(시간표 기준, {trip_facts._hm(got['starts_at'])} 출발). 일정은 바꾸지 않았어요."), None
 
 
-def reply(decision, *, items, message, selected, turns, version, now, context_now, ttl_seconds, place_source, weather_lookup=None):
+def reply(decision, *, items, message, selected, turns, version, now, context_now, ttl_seconds, place_source,
+          weather_lookup=None, response_scope=None, change_lookup=None):
     by_alias = {f"i{n}": item for n, item in enumerate(trip_facts._stops(items), 1)}
-    answers, details, evidence = [], [], []
+    questions, evidence = [], []
     focus = None
-    for request in decision.reads:
+
+    def close(request, text, basis, status=None):
+        core, _, more = text.partition(trip_facts.MORE_MARK)
+        unresolved = basis.get("unresolved")
+        closure = ("needs_input" if unresolved in {"target", "place_identity", "origin_identity", "origin",
+                    "ambiguous_origin", "endpoints", "anchor", "weather_target"} else "failed") if unresolved else "answered"
+        questions.append(writing.QuestionResult(
+            question_id=f"q{len(questions) + 1}", request=request, text=core, more=more, status=status or closure,
+            evidence=basis, checked_at=context_now.isoformat(),
+            target={k: basis[k] for k in ("item_id", "item_ids", "origin_item_id", "version", "change_version") if k in basis}))
+        evidence.append(basis)
+
+    for original_request in decision.reads:
+        request = original_request
         fact = request["fact"]
+        if fact == "change_explanation":
+            if change_lookup is None:
+                text, basis, status, resolved = (
+                    "변경 기록을 읽을 수 없어 이유를 확인할 근거가 없어요. 일정은 바꾸지 않았어요.",
+                    {"kind": fact, "version": version, "unresolved": "change_reader_missing"}, "failed", None)
+            else:
+                text, basis, status, resolved = change_lookup(request, turns)
+            close(original_request, text, basis, status)
+            if resolved and status == "answered":
+                focus = resolved
+            continue
         item = by_alias.get(request["target_item"])
         if (fact == "time" and item is None and request.get("anchor_kind", "none") in ("none", "now")
                 and _CLOCK_QUESTION.match(request.get("text") or message or "")):
-            core = _clock_text(now)
-            if core not in answers:
-                answers.append(core)
-            evidence.append({"kind": "clock", "item_id": None, "version": version, "now": now.isoformat()})
+            close(original_request, _clock_text(now),
+                  {"kind": "clock", "item_id": None, "version": version, "now": now.isoformat()})
             continue
         # ★`[2026-10-14]` 앞뒤 · 시각 질문은 모델이 적은 **기준**(일정 · 끼니 · 시각 · 지금 · 앞 답)으로 서버가 답할 일정을 계산한다
         #   (`time_anchor.py`, Codex 와 합의한 D안) — 모델이 고른 일정보다 앞선다. 「다음」 사실은 그 자체로 「기준 바로 뒤」다.
@@ -90,6 +116,19 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
         anchor_read = ({**anchor_read, "anchor_kind": "none"}
                        if fact == "weather" and request.get("anchor_kind") == "now"
                        and request.get("relation", "at") == "at" else anchor_read)
+        # ★`[2026-10-25 QA]` 화면에서 고른 일정에 묻는 한 일정 사실(운영시간 · 자세히 · 요금 …) — 모델이 답 대상도 그 일정, 기준도 그 일정(또는 기준 없음)이라고
+        #   적고 앞뒤 칸만 before/after 로 채웠으면, 앞뒤를 따로 가리킬 일정이 없다(기준 = 답). 그 칸만 떼고(`relation_dropped` 로 남긴다) 고른 일정으로 답한다.
+        #   ☆학습 E4B 실측(같은 날 4문장 중 3): 「운영시간 알려줘」 「자세히 알려줘」 「거기 운영시간 알려줘」에 before 를 붙여 고른 국립중앙박물관 대신
+        #   바로 앞 식당을 답했다. 근처 조건을 떼는 `decision_unit.settle_near_search`(`near_dropped: anchor_is_target`)와 같은 규칙이다.
+        #   답 대상을 비운 진짜 앞뒤 질문(「그 전 일정 …」)과 앞뒤 그 자체를 묻는 사실(next · time …)은 그대로 계산한다.
+        picked = next((i for i in by_alias.values() if selected is not None and str(i.item_id) == str(selected)), None)
+        relation_dropped = None
+        if (fact in _ONE_ITEM_FACTS and picked is not None and item is not None and item.item_id == picked.item_id
+                and anchor_read.get("relation", "at") != "at" and anchor_read.get("anchor_kind", "none") in ("none", "item")
+                and by_alias.get(anchor_read.get("anchor_item") or "none") in (None, picked)):
+            relation_dropped = {"reason": "target_is_selected_stop",
+                                "was": {k: anchor_read.get(k) for k in ("anchor_kind", "anchor_item", "relation", "steps")}}
+            anchor_read = {**anchor_read, "anchor_kind": "none", "anchor_item": "none", "relation": "at"}
         previous = time_anchor.previous_item(turns, items, version=version, now=context_now, ttl_seconds=ttl_seconds)
         previous_required = (fact in {"weather", "outdoor"} and request.get("query") is None
                              and (request.get("reference") == "previous" or request.get("anchor_kind") == "previous"))
@@ -100,6 +139,19 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             target=(None if fact in {"weather", "outdoor"} and anchor_read.get("anchor_kind") == "previous"
                     and anchor_read.get("relation", "at") == "at" else item))
         anchor_conflict = bool(anchor_basis and anchor_basis.get("time_anchor") == "anchor_conflict")
+        named_subjects = fact_context.named_items(items, clause)
+        origin_quote = request.get("origin_text") or ""
+        if not named_subjects and origin_quote and origin_quote in message:
+            # Validate the existing read's source quote when extraction omitted its
+            # subject. Never borrow a name from another question or invent a target.
+            named_subjects = fact_context.named_items(items, origin_quote)
+        if (fact in _ONE_ITEM_FACTS
+                and request.get("reference") == "previous" and previous is None
+                and named_subjects and anchored is not None
+                and all(anchored.item_id != subject.item_id for subject in named_subjects)):
+            # ★`[2026-10-26 L05 이식 · 수용 F02]` A missing previous reference cannot turn a named factual subject into
+            # its neighbour. Preserve the conflict and ask; do not repair model intent.
+            anchor_conflict = True
         if anchored is not None:
             item, fact = anchored, ("time" if fact == "next" else fact)
             request = {**request, "fact": fact, "reference": "explicit",
@@ -116,6 +168,8 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
         basis = {"kind": fact, "item_id": str(item.item_id) if item else None, "version": version}
         if anchor_basis:
             basis["time_anchor"] = anchor_basis
+        if relation_dropped:
+            basis["relation_dropped"] = relation_dropped
         place = (item.place or {}) if item else {}
         provenance = (item.detail.get("provenance") or {}).get("place") or {} if item else {}
         note = ""
@@ -157,6 +211,8 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
                 basis["item_id"] = str(targets[0].item_id)
                 resolved = {"item_id": str(targets[0].item_id), "version": version,
                             "at": context_now.isoformat(), "source": "weather_target"}
+            if any(f.get("unresolved") for f in forecasts):
+                basis["unresolved"] = "weather_forecast_incomplete"
         elif fact == "outdoor" and request.get("query") is None:
             if item is None:
                 text = "어느 일정의 실내·야외 여부인지 확인할 수 있도록 일정 이름을 알려 주세요."
@@ -268,15 +324,13 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             basis.update(fact_basis)
         if note and not basis.get("unresolved"):
             text = f"{note}\n{text}"
-        core, _, more = text.partition(trip_facts.MORE_MARK)
-        if core not in answers:
-            answers.append(core)
-        if more:
-            details.append(more)
-        evidence.append(basis)
+        close(original_request, text, basis)
         if resolved and not basis.get("unresolved"):
             focus = resolved
-    if decision.social:
-        answers.insert(0, decision.social)
-    return {"status": "answered", "text": "\n\n".join(answers),
-            **({"more": "\n\n".join(details)} if details else {})}, {"kind": "multi_read", "questions": evidence}, focus
+    written = writing.write_response(writing.ResponseInput(
+        source="inquiry", scope=response_scope, version=version,
+        question_ids=tuple(f"q{n}" for n in range(1, len(decision.reads) + 1)), questions=tuple(questions),
+        execution={"status": "read_only"}, workflow={}, followup=focus, social=decision.social))
+    return {"status": "answered", "text": written.answer,
+            **({"more": written.more} if written.more else {})}, {
+                "kind": "multi_read", "questions": evidence, "response": asdict(written)}, focus

@@ -22,7 +22,8 @@ def test_the_settings_default_model_is_the_trained_e4b():
 
 
 def test_the_context_length_default_goes_with_it():
-    assert Settings.model_fields["ollama_num_ctx"].default == 8192
+    # `[2026-10-26]` 8192 → 12288 — 16항목 여행 해석 입력 + 답 상한(tests/unit/travel/test_decision_context_window.py)
+    assert Settings.model_fields["ollama_num_ctx"].default == 12288
 
 
 def test_the_local_wait_default_fits_the_trained_e4b_and_the_customer_deadline():

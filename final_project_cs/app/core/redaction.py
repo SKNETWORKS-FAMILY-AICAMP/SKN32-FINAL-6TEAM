@@ -35,6 +35,44 @@ def _mask(text: str) -> str:
     return text
 
 
+#: ★`[2026-10-26 integ-rm9]` 밖(유료 모델)으로 보내는 글에만 더 거는 전화 규칙 — `masked` 의 3-4-4 하이픈 규칙이 놓치는 모양.
+#:  휴대폰 01[016789] 는 구분자 없음 · 공백 · 점 · 가운데 3자리, 국가번호 +82(0 뺀 10 · 2 …), 지역번호 02 · 0[3-6][1-5] · 070 은 구분자 있거나 없거나.
+#:  숫자 앞뒤에 다른 숫자가 붙어 있으면(더 긴 번호 · 날짜 · 금액의 일부) 걸지 않는다. 날짜(2026-10-26 · 20261026) · 시각(10:30 · 1030) ·
+#:  0 으로 시작하지 않는 예약번호는 자리 수 · 첫 자리가 달라 걸리지 않는다. 앞 3자리(지역번호)와 끝 4자리만 남긴다.
+_SEP = r"[ .\-]?"
+_OUTBOUND_PHONES = (
+    re.compile(r"(?<![\d+])(01[016789])" + _SEP + r"(\d{3,4})" + _SEP + r"(\d{4})(?!\d)"),
+    re.compile(r"(?<![\d+])(\+?82)[ .\-]?(0?1[016789])" + _SEP + r"(\d{3,4})" + _SEP + r"(\d{4})(?!\d)"),
+    re.compile(r"(?<![\d+])(\+?82)[ .\-]?(0?2|0?[3-6][1-5]|0?70)" + _SEP + r"(\d{3,4})" + _SEP + r"(\d{4})(?!\d)"),
+    re.compile(r"(?<![\d+])(02|0[3-6][1-5]|070)" + _SEP + r"(\d{3,4})" + _SEP + r"(\d{4})(?!\d)"),
+)
+
+
+def _hide_middle(match: re.Match[str]) -> str:
+    middle = match.lastindex - 1                         # 끝에서 두 번째 묶음이 가운데 번호다(구분자 · 앞자리는 그대로 둔다)
+    whole = match.group(0)
+    begin, end = match.start(middle) - match.start(), match.end(middle) - match.start()
+    return whole[:begin] + "****" + whole[end:]
+
+
+def _mask_outbound(text: str) -> str:
+    for rule in _OUTBOUND_PHONES:
+        text = rule.sub(_hide_middle, text)
+    return text
+
+
+def masked_outbound(value: object) -> str:
+    """유료 모델로 보내는 글 — `masked` 에 구분자 없는 휴대폰 · 지역번호 · +82 모양을 더 가린다(UUID 는 그대로).
+    저장값(`mask_json`)은 바꾸지 않는다. 이름 · 예약번호는 여전히 가리지 못한다(wiki `llm-failover.md` 7-1)."""
+    text = masked(value)
+    ids = _UUID.findall(text)
+    pieces = [_mask_outbound(piece) for piece in _UUID.split(text)]
+    out = pieces[0]
+    for uuid_text, piece in zip(ids, pieces[1:]):
+        out += uuid_text + piece
+    return out
+
+
 def mask_json(value: object) -> object:
     """Recursively redact sensitive string values before persistence."""
     if isinstance(value, dict):

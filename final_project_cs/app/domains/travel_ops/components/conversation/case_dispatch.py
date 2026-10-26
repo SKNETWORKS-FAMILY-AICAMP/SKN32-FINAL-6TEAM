@@ -49,6 +49,13 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
         status = "ask_rollback"
         outcome["status"] = status
     choices = last.get("choices") or request.get("choices") or []
+    if not choices and status == "adjusted" and outcome.get("more_options") and outcome.get("to"):
+        # ★`[2026-10-26 x600 a465c602]` 바꾼 뒤 「다른 안: 1) … 고르세요」라고 답하면서 고를 선택지가 비어 있었다(식당 · 활동 「다른 곳으로」).
+        #   답에 적은 다른 안을 그대로 선택지로 싣는다 — 누르면 「바꾼 곳 대신 그 곳으로」 문장이 같은 채팅 입구로 간다. 식당이면 종류를 붙인다
+        kind = "식당 " if outcome.get("kind") == "dining" else ""
+        choices = [{"label": f"{kind}{(o['note'] + ' ') if o.get('note') else ''}{o.get('option_label') or o['name']}",
+                    "message": f"{outcome['to']} 대신 {o.get('option_label') or o['name']}(으)로 바꿔 줘"}
+                   for o in outcome["more_options"] if isinstance(o, dict) and o.get("name")]
     result = {"case_id": str(case_id), "case_status": str(case["status"]), "version": case["version"],
               "classification": {"intent": case.get("intent"), "issue_code": case.get("issue_code")},
               "status": status, "reason": "team_conversation", "outcome": outcome,
@@ -70,6 +77,8 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
             result["resume_token"] = execution["resume_token"]
         if choices:
             result["choices"] = choices
+    elif choices and status == "adjusted":
+        result.update(choices=choices, choices_title="다른 안")
     if request.get("type") == "stock_out" and status == "store_recommended":
         result["status"] = outcome["status"] = "answered"
         outcome["text"] = result["answer"]
@@ -232,9 +241,7 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
     conn.commit()
     patch = _interpret_reply(state, message, chat)
     def route(current, safe_message):
-        current_state = {**(current.get("state_json") or {}), **patch}
-        owner = _resume_route({**current, "state_json": current_state}, safe_message)
-        return {"owner_team_id": owner or current["owner_team_id"], "state_patch": patch} if patch else owner
+        return resume_owner(current, safe_message, patch)
 
     def prepare(current, safe_message):
         current_state = current.get("state_json") or {}
@@ -257,6 +264,17 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
         # Controller가 WAIT_EXPIRED를 기록했다. 명시 연결이 없는 새 메시지는 버리지 않는다.
         return None
     return response(tenant=tenant, case_id=case_id, execution=execution)
+
+
+def resume_owner(current: dict[str, Any], safe_message: str | None, patch: dict[str, Any]) -> Any:
+    """재개 담당 — 고른 일정의 팀, 없으면 저장된 담당. ★`[2026-10-26]` 옛 기록의 `booking` 은 팀 id(`booking_handoff`)로 읽는다(이관 없음)."""
+    from .trip_messages import canonical_team_id
+
+    current_state = {**(current.get("state_json") or {}), **patch}
+    stored = current.get("owner_team_id")
+    legacy = canonical_team_id(stored)
+    owner = _resume_route({**current, "state_json": current_state}, safe_message) or (legacy if legacy != stored else None)
+    return {"owner_team_id": owner or stored, "state_patch": patch} if patch else owner
 
 
 def _matches_implicit_reply(state: dict[str, Any], message: str) -> bool:
@@ -344,7 +362,10 @@ def _resume_route(case: dict[str, Any], message: str | None) -> str | None:
 
     with get_connection() as conn:
         _, items = TripStore(case["tenant_id"]).latest(conn, UUID(str(ref["id"])))
-    matches = [i for i in items if str(i.item_id) == str(target) or text in (i.title, str(i.item_id))]
+    # ★`[2026-10-26 라우팅 감사 6번]` 팀이 대상을 찾는 규칙(`conversation_work._target`: id · 제목 · 장소 이름)과 같게 —
+    #   ☆전에는 장소 이름 답이 자리 표시 담당(`activity`)에 남아 식당이면 `target_kind_mismatch` 로 넘어갔다
+    matches = [i for i in items if str(i.item_id) == str(target) or text in (i.title, str(i.item_id))
+               or (text and (i.place or {}).get("name") == text)]
     if len(matches) == 1 and matches[0].kind in ("dining", "activity", "mobility", "lodging", "flight"):    # ★`[2026-10-15 LB-02]` 숙소 · 항공도 자기 팀으로
         return matches[0].kind
     return None
@@ -383,8 +404,10 @@ def _prepare_candidates(desk: Any, *, tenant: str, trip_id: UUID, request: dict[
     if action in ("apply_change", "propose_alternatives") and request.get("at"):
         from app.domains.travel_ops.components.itinerary.itinerary_changes import stored_alternates
 
-        if stored_alternates(item, {str(p["place_id"]): p for p in places}, datetime.fromisoformat(str(request["at"]))):
+        if stored_alternates(item, {str(p["place_id"]): p for p in places}, datetime.fromisoformat(str(request["at"])),
+                             setting=request.get("setting") if request.get("setting") in ("indoor", "outdoor") else None):
             # ★`[2026-10-20]` 들고 있는 「다른 안」(낡지 않은 것)으로 바꾸거나 묻는다 — 새 후보 확보(관광 목록 넓히기 · 원장 근처)는 저장분을 못 쓸 때만
+            #   ★`[2026-10-25 QA]` 실내·야외를 지정했으면 그 조건에 맞는 저장분이 있을 때만 — 없으면 새 후보를 확보한다
             return
     if item.kind == "activity":
         desk._widen_activities(trip_id, item.item_id)
