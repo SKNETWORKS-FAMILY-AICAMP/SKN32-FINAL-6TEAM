@@ -192,6 +192,52 @@ def test_an_edit_can_be_rolled_back_like_any_other_change(chat):
     assert _hm(items["N서울타워"].starts_at) == "15:00", body
 
 
+def test_a_storage_failure_while_saving_is_an_explicit_failure_not_a_500(chat, monkeypatch):
+    """`[2026-10-26 묶음 L · 수용 F03]` 새 판을 쓰는 중 저장소가 실패하면(통제 주입 — 이 여행의 `itinerary_versions` INSERT 만)
+    일반 500 이 아니라 명시적 실패 답이다: 일정 그대로 · Case escalated · 답과 대화 기록 · 문의함 안내 · 내부 오류 글 없음.
+    주입을 걷으면 같은 요청이 다시 된다(잠금 · 수정 접수가 남지 않았다)."""
+    import psycopg
+
+    trip_id = str(chat["trip"]["trip_id"])
+    raw_execute = psycopg.Cursor.execute
+    seen = []
+
+    def failing(cursor, query, params=None, **kw):
+        if "INSERT INTO ITINERARY_VERSIONS" in str(query).upper() and trip_id in str(params):
+            seen.append(True)
+            raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
+        return raw_execute(cursor, query, params, **kw)
+
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="N서울타워", minutes=60)
+    with monkeypatch.context() as patched:
+        patched.setattr(psycopg.Cursor, "execute", failing)
+        body = _say(chat, "N서울타워를 한 시간 미뤄줘", "edit-storage-fail")        # `_say` 가 HTTP 200 을 단언한다
+    after, items = _latest(chat)
+    assert seen, "주입이 실제 저장 경로에 닿지 않았다"
+    assert after == before and _hm(items["N서울타워"].starts_at) == "15:00", body
+    assert body["status"] == "escalated" and body["case_status"] == "escalated", body
+    assert body["outcome"]["reason"] == "save_failed", body
+    assert body["answer"].startswith(_save_failed_text()) and "문의함" in body["answer"], body
+    public = str(body)
+    assert "OperationalError" not in public and "CONTROLLED" not in public and "010-1234" not in public
+    turns = chat["client"].get(f"/v1/web/trips/{trip_id}/chat", headers=_h(chat["key"])).json()["turns"]
+    assert turns[-1]["role"] == "assistant" and turns[-1]["text"] == body["answer"]
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT status, state_json->'trip_outcome'->>'reason' FROM customer_cases WHERE case_id=%s",
+                    (body["case_id"],))
+        assert cur.fetchone() == ("escalated", "save_failed")
+    again = _say(chat, "N서울타워를 한 시간 미뤄줘", "edit-storage-retry")
+    assert again["status"] == "adjusted", again
+    assert _latest(chat)[0] == before + 1
+
+
+def _save_failed_text():
+    from app.domains.travel_ops.components.conversation.chat_edit import SAVE_FAILED_TEXT
+
+    return SAVE_FAILED_TEXT
+
+
 def test_an_open_edit_screen_with_unsaved_changes_is_not_overwritten(chat):
     from .test_trip_reopen import _edit, _index, _reopen
 

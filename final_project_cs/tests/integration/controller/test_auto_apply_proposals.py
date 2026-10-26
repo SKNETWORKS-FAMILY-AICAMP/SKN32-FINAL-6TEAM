@@ -9,6 +9,7 @@ import asyncio
 from datetime import UTC, datetime
 from uuid import uuid4
 
+import psycopg
 import pytest
 
 from app.application.case_intake import open_case
@@ -56,19 +57,22 @@ class Handler:
     action_type = "demo.apply"
     auto_apply = True
 
-    def __init__(self, *, conflict=False):
-        self.calls, self.conflict = 0, conflict
+    def __init__(self, *, conflict=False, storage_failure=False):
+        self.calls, self.conflict, self.storage_failure = 0, conflict, storage_failure
 
     def subject(self, arguments):
         return str(arguments["target"])
 
     def apply(self, conn, *, tenant_id, customer_id, case_id, arguments):
         self.calls += 1
-        if self.conflict:
+        if self.conflict or self.storage_failure:
             # ★실패하기 전에 쓴 것이 되돌려지는지 본다
             with conn.cursor() as cur:
                 cur.execute("INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json) VALUES (%s,%s,%s,%s)",
                             (tenant_id, TOPIC, "written-before-conflict", "{}"))
+            if self.storage_failure:
+                # 수용 F03 과 같은 종류 — 저장소 운영 실패(값이 든 메시지는 기록에 남으면 안 된다)
+                raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
             raise ActionConflict("moved")
         return AppliedAction(result_ref=f"demo:{arguments['target']}:applied",
                              summary={"target": arguments["target"]},
@@ -138,6 +142,18 @@ def test_a_conflict_rolls_back_what_the_handler_wrote_and_escalates(tenant):
     case, events, actions, outbox = _run(tenant, ProposingTeam(), [handler])
     assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_target_changed"
     assert actions == [] and outbox == []        # ★실패 전에 쓴 바깥함 행도 남지 않는다
+
+
+def test_a_storage_write_failure_rolls_back_and_escalates_instead_of_raising(tenant):
+    """`[2026-10-26 묶음 L · 수용 F03]` 적용기 쓰기 중 저장소 운영 실패 — 예외(→ HTTP 500)가 아니라 escalated 로 닫고 아무것도 남기지 않는다."""
+    handler = Handler(storage_failure=True)
+    case, events, actions, outbox = _run(tenant, ProposingTeam(), [handler])
+    assert handler.calls == 1
+    assert str(case["status"]) == "escalated"
+    assert events[-1][0] == "guardrail_escalated"
+    assert events[-1][1]["guardrail"] == "action_storage_failed" and events[-1][1]["observed"] == ["OperationalError"]
+    assert "010-1234-5678" not in str(events) and "CONTROLLED_STORAGE" not in str(events)
+    assert actions == [] and outbox == []
 
 
 def test_the_same_target_is_not_applied_twice(tenant):

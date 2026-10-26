@@ -22,6 +22,8 @@ from typing import Any, Callable
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+import psycopg
+
 KST = ZoneInfo("Asia/Seoul")
 log = logging.getLogger(__name__)
 #: 넣을 일정의 끝을 말하지 않았을 때 머무는 시간 — ★우리가 고른 값(확인 화면의 끝 채우기와 같은 크기)
@@ -52,6 +54,20 @@ class EditRefused(Exception):
     def __init__(self, code: str, message: str, **detail: Any) -> None:
         super().__init__(message)
         self.code, self.message, self.detail = code, message, detail
+
+
+#: `[2026-10-26 묶음 L · 수용 F03]` 저장소 쓰기 실패로 새 판을 쓰지 못했을 때의 고객 말(해석 실패 답과 같은 모양 — 원인 갈래 · 무변경 · 다시 말하기)
+SAVE_FAILED_TEXT = "지금 일정을 저장하지 못했어요(저장 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요."
+
+
+class EditStorageFailed(Exception):
+    """`[2026-10-26 묶음 L · 수용 F03]` 저장소 운영 실패(psycopg `OperationalError` 계열)로 새 판을 쓰지 못했고,
+    **새 연결로 다시 읽어 판이 그대로임을 확인했다.** 거절(`EditRefused` — 고객 요청이 안 되는 경우)과 달리 시스템 실패라
+    부르는 쪽이 Case 를 해결로 닫지 않는다. `error` 는 예외 종류 이름뿐이다(메시지 · SQL 인자는 고객 값을 담을 수 있다)."""
+
+    def __init__(self, error: str) -> None:
+        super().__init__(f"storage_write_failed:{error}")
+        self.error = error
 
 
 def _hm(value: datetime) -> str:
@@ -154,6 +170,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             intake_id, _ = reopen.open_for_trip(conn, tenant_id=tenant, customer_id=customer_id, trip=trip, items=items, now=now)
             revision = _revision(conn, tenant, intake_id)
     committed = False
+    saved = False                    # commit() 이 돌아왔다 — 새 판이 저장됐다(그 뒤 실패는 「안 바꿨다」로 바꾸지 않는다)
     try:
         with connect() as conn:
             claims = pipeline._claims(conn, tenant, intake_id, revision)
@@ -289,6 +306,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
         version, changed, plan = commit(store=store, connect=connect, tenant=tenant, intake_id=intake_id, revision=revision,
                                         reopened=reopened, status=status, built=built, now=now,
                                         cause_extra={"via": "chat", **(cause_extra or {})})
+        saved = True
         if changed:
             with connect() as conn:
                 pipeline.mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=trip_id)
@@ -301,6 +319,15 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
         raise EditRefused(exc.code, _refusal(exc.code, exc.message)) from None
     except CommitRefused as exc:
         raise EditRefused(exc.code, _refusal(exc.code, exc.message), **exc.detail) from None
+    except psycopg.OperationalError as exc:
+        # ★`[2026-10-26 묶음 L · 수용 F03]` 저장소 운영 실패 — 전에는 그대로 올라가 일반 500(대화 기록 · 답 없음)이었다.
+        #   「일정은 바꾸지 않았어요」라고 답하려면 **새 연결로 다시 읽어 판이 그대로임을 확인**해야 한다(COMMIT 도중 끊기면
+        #   저장 여부를 모른다). 이미 저장됐거나 · 다시 읽지 못했거나 · 판이 바뀌었으면 원래 예외를 그대로 올린다(숨기지 않는다).
+        #   코드 결함 계열(IntegrityError · ProgrammingError …)은 여기서 잡지 않는다.
+        if saved or not _unchanged_after_failure(store, connect, trip_id, base_version):
+            raise
+        log.error("chat edit storage write failed trip=%s error=%s (version unchanged)", trip_id, type(exc).__name__)
+        raise EditStorageFailed(type(exc).__name__) from None
     finally:
         if not committed:
             # ★`[2026-10-15 Codex 검토]` 끝까지 쓰지 못했으면(거절 · 바뀐 것 없음 · 예상 밖 오류 모두) **이 요청이 연 수정 접수를 닫는다** —
@@ -311,6 +338,17 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             except Exception:                                    # noqa: BLE001
                 log.warning("chat edit intake close failed intake=%s", intake_id, exc_info=True)
     return {"version": version, "changed": changed, "plan": plan, "intake_id": str(intake_id)}
+
+
+def _unchanged_after_failure(store: Any, connect: Callable[[], Any], trip_id: UUID, base_version: int) -> bool:
+    """저장 실패 뒤 새 연결로 여행의 지금 판을 다시 읽는다 — 기준 판 그대로면 True. 다시 읽기도 실패하면 False(모른다)."""
+    try:
+        with connect() as conn:
+            trip, _ = store.latest(conn, trip_id)
+    except Exception:                                            # noqa: BLE001 — 모르면 「안 바꿨다」고 말하지 않는다(부르는 쪽이 원래 예외를 올린다)
+        log.warning("chat edit storage failure readback failed trip=%s", trip_id, exc_info=True)
+        return False
+    return int(trip["version"]) == int(base_version)
 
 
 def _no_room_text(ops: list[EditOp], items: list[Any], now: datetime) -> str:
@@ -683,4 +721,5 @@ def done_text(ops: list[EditOp], *, items_after: list[Any], plan: Any) -> str:
     return "\n".join([head, *lines, tail])
 
 
-__all__ = ["DEFAULT_STAY", "EditOp", "EditRefused", "done_text", "moved_to", "ops_for", "run", "shifted"]
+__all__ = ["DEFAULT_STAY", "EditOp", "EditRefused", "EditStorageFailed", "SAVE_FAILED_TEXT", "done_text", "moved_to", "ops_for",
+           "run", "shifted"]

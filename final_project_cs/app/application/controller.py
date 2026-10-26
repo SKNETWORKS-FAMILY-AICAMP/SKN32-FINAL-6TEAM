@@ -9,6 +9,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
+import psycopg
+
 from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
 from app.core.context import ContextBroker, ContextInputs
 from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
@@ -746,6 +748,15 @@ class Controller:
                         raise _Stop(self._escalation("action_target_changed", str(exc))) from exc
                     except ActionRejected as exc:
                         raise _Stop(self._escalation("action_rejected", str(exc))) from exc
+                    except psycopg.OperationalError as exc:
+                        # ★`[2026-10-26 묶음 L · 수용 F03]` 저장소 운영 실패(연결 · 잠금 · 디스크 등)로 적용기 쓰기가 실패했다 —
+                        #   savepoint 가 되돌린 뒤 **명시적으로** escalated 로 닫는다(전에는 그대로 올라가 일반 500, Case 는 running 에 남았다).
+                        #   기록에는 예외 종류 이름만 남긴다(메시지 · SQL 인자는 고객 값을 담을 수 있다). 코드 결함 계열
+                        #   (IntegrityError · ProgrammingError …)은 여기서 잡지 않는다 — 시끄럽게 올라간다. 커넥션 자체가 죽어
+                        #   되돌리기 · 전이도 실패하면 그 예외가 그대로 올라간다(숨기지 않는다).
+                        logger.error("auto proposal apply storage failure action_type=%s error=%s",
+                                     proposal.action_type, type(exc).__name__)
+                        raise _Stop(self._escalation("action_storage_failed", type(exc).__name__)) from exc
                     action_id = self.repository.create_action_request(
                         conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
                         action_type=proposal.action_type, arguments=proposal.arguments,

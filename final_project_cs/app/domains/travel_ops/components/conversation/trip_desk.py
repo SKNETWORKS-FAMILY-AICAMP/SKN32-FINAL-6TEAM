@@ -414,6 +414,11 @@ class TripDesk:
                                  cause_extra={"message": (message or "")[:200], "fit_time_changes": action == "swap_order"
                                      or str(raw.get("at_day")) == "tomorrow",
                                      **({"chat_request_id": request_id} if request_id else {})})
+        except chat_edit.EditStorageFailed:
+            # ★`[2026-10-26 묶음 L · 수용 F03]` 저장소 쓰기 실패 — 거절(`edit_refused`, Case 해결)이 아니라 시스템 실패다. 새 공개 상태를 만들지 않고
+            #   해석 실패와 같은 `escalated` 로 답한다(Case 는 `_run_decision` 이 escalated 로 닫고 문의함 안내가 붙는다). 판이 그대로인 것은
+            #   `chat_edit` 이 새 연결로 다시 읽어 확인했다. 예외 종류는 서버 로그에만 있다
+            return {"status": "escalated", "reason": "save_failed", "text": chat_edit.SAVE_FAILED_TEXT}
         except chat_edit.EditRefused as refused:
             if action == "replace_named" and refused.code == "place_not_found":
                 from .requested_destination import apply as preserve_destination
