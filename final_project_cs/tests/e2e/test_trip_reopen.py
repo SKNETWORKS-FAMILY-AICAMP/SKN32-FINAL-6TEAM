@@ -15,6 +15,8 @@ from datetime import datetime, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
@@ -662,3 +664,198 @@ def test_a_vendor_booked_stop_enters_locked_and_keeps_its_booking_after_a_time_c
                 cur.execute("UPDATE itinerary_items SET booking_id=NULL WHERE booking_id=%s", (booking,))
                 cur.execute("DELETE FROM bookings WHERE booking_id=%s", (booking,))
             conn.commit()
+
+
+def _inject(monkeypatch, match):
+    """`psycopg.Cursor.execute` 에 통제 주입 — `match(SQL 대문자, 인자)` 가 참인 문장만 OperationalError(값이 든 메시지)로 실패한다."""
+    import psycopg
+
+    raw_execute = psycopg.Cursor.execute
+    seen = []
+
+    def failing(cursor, query, params=None, **kw):
+        if match(str(query).upper(), str(params)):
+            seen.append(True)
+            raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
+        return raw_execute(cursor, query, params, **kw)
+
+    monkeypatch.setattr(psycopg.Cursor, "execute", failing)
+    return seen
+
+
+def test_a_storage_failure_while_saving_done_is_an_explicit_unchanged_failure_not_a_500(api, monkeypatch, caplog):
+    """`[2026-10-26 묶음 M · F03 같은 결함 — 남은 일 3]` 「완료」가 새 판을 쓰는 중 저장소 운영 실패(통제 주입 — 이 여행의
+    `itinerary_versions` INSERT 만)면 일반 500 이 아니라 명시적 실패다: 503 `save_failed` · 「일정은 바꾸지 않았어요」 · 판 그대로 ·
+    접수는 그대로 `review`(같은 「완료」를 다시 누를 수 있다) · 내부 오류 글 없음. 주입을 걷으면 같은 「완료」가 된다."""
+    key = _user(api)
+    trip = _trip(api, key)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, 'N서울타워')}].removed", "value": True})
+    with monkeypatch.context() as patched:
+        seen = _inject(patched, lambda sql, params: "INSERT INTO ITINERARY_VERSIONS" in sql and trip["trip_id"] in params)
+        failed = _confirm(api, key, view, status=503)
+    assert seen, "주입이 실제 저장 경로에 닿지 않았다"
+    assert failed["error"]["code"] == "save_failed", failed
+    assert "일정은 바꾸지 않았어요" in failed["error"]["message"] and failed["error"]["version"] == trip["version"], failed
+    public = str(failed)
+    assert "OperationalError" not in public and "CONTROLLED" not in public and "010-1234" not in public
+    assert "CONTROLLED" not in caplog.text and "010-1234" not in caplog.text      # 서버 로그엔 여행 id · 예외 종류 이름만
+    assert "OperationalError" in caplog.text                                      # 종류는 남는다(원인 분석용)
+    assert _stored(api, trip["trip_id"])[0]["version"] == trip["version"]          # 아무것도 쓰지 않았다
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT status FROM trip_intakes WHERE intake_id=%s", (view["intake_id"],))
+        assert cur.fetchone()[0] == "review"                                       # 접수 확정 표시도 함께 되돌려졌다
+    done = _confirm(api, key, view)
+    assert (done["changed"], done["version"]) == (True, trip["version"] + 1)
+    assert "N서울타워" not in {i.title for i in _stored(api, trip["trip_id"])[1]}
+
+
+def test_a_storage_failure_after_done_was_saved_is_not_answered_as_unchanged(api, monkeypatch):
+    """새 판이 이미 저장된 뒤(「완료」 트랜잭션 커밋 뒤의 확정 표시 다시 쓰기)의 실패는 「바꾸지 않았어요」로 바꾸지 않는다 —
+    원래 예외 그대로(숨기지 않는다 · 앱에서는 500). 판은 이미 하나 늘었다."""
+    import psycopg
+
+    key = _user(api)
+    trip = _trip(api, key)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, 'N서울타워')}].removed", "value": True})
+    hits = []
+
+    def second_mark(sql, params):
+        if "UPDATE TRIP_INTAKES SET STATUS='CONFIRMED'" in sql and view["intake_id"] in params:
+            hits.append(True)
+            return len(hits) == 2                       # 첫째는 「완료」 트랜잭션 안(저장과 함께) · 둘째는 커밋 뒤
+        return False
+
+    with monkeypatch.context() as patched:
+        _inject(patched, second_mark)
+        with pytest.raises(psycopg.OperationalError):
+            _confirm(api, key, view)
+    assert len(hits) == 2
+    assert _stored(api, trip["trip_id"])[0]["version"] == trip["version"] + 1
+
+
+def test_a_storage_failure_when_the_trip_moved_meanwhile_is_not_answered_as_unchanged(api, monkeypatch):
+    """저장이 실패했는데 다시 읽으니 판이 기준과 다르면(그 사이 다른 쓰기) 「바꾸지 않았어요」라고 말할 근거가 없다 — 원래 예외 그대로."""
+    import psycopg
+
+    key = _user(api)
+    trip = _trip(api, key)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, 'N서울타워')}].removed", "value": True})
+    store = TripStore(api["tenant"])
+    raw_execute = psycopg.Cursor.execute
+    seen = []
+
+    def failing(cursor, query, params=None, **kw):
+        # 이 연결이 trips 행을 잠그기 전(판 올리기 UPDATE 직전)에 다른 연결이 판을 하나 쓰고(감시 · 채팅), 이 연결의 쓰기는 실패한다
+        if not seen and "UPDATE TRIPS SET LATEST_VERSION" in str(query).upper() and trip["trip_id"] in str(params):
+            seen.append(True)
+            with get_connection() as conn, conn.transaction():
+                meta, items = store.latest(conn, UUID(trip["trip_id"]))
+                store.append_version(conn, trip_id=meta["trip_id"], base_version=meta["version"], items=items,
+                                     reason="auto_adjusted", causes=[])
+            raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
+        return raw_execute(cursor, query, params, **kw)
+
+    with monkeypatch.context() as patched:
+        patched.setattr(psycopg.Cursor, "execute", failing)
+        with pytest.raises(psycopg.OperationalError):
+            _confirm(api, key, view)
+    assert seen
+    assert _stored(api, trip["trip_id"])[0]["version"] == trip["version"] + 1
+
+
+def _removal_view(api):
+    key = _user(api)
+    trip = _trip(api, key)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, 'N서울타워')}].removed", "value": True})
+    return key, trip, view
+
+
+@pytest.mark.parametrize("error", ["readback", "integrity"])
+def test_a_save_failure_that_cannot_be_proven_harmless_or_is_a_code_defect_stays_an_error(api, monkeypatch, error):
+    """웹 완료 저장 실패라도 ① 다시 읽기가 실패하면(모른다) ② 코드 결함 계열(UniqueViolation)이면 503 으로 바꾸지 않는다 — 원래 예외 그대로."""
+    import psycopg
+
+    key, trip, view = _removal_view(api)
+    raw_execute = psycopg.Cursor.execute
+    seen = []
+
+    def failing(cursor, query, params=None, **kw):
+        sql = str(query).upper()
+        if "INSERT INTO ITINERARY_VERSIONS" in sql and trip["trip_id"] in str(params):
+            seen.append("write")
+            if error == "integrity":
+                raise psycopg.errors.UniqueViolation("CONTROLLED_DUPLICATE 010-1234-5678")
+            raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
+        if error == "readback" and "FOR SHARE" in sql and "FROM TRIPS" in sql:
+            seen.append("readback")
+            raise psycopg.OperationalError("CONTROLLED_READBACK_FAILURE")
+        return raw_execute(cursor, query, params, **kw)
+
+    with monkeypatch.context() as patched:
+        patched.setattr(psycopg.Cursor, "execute", failing)
+        with pytest.raises(psycopg.errors.UniqueViolation if error == "integrity" else psycopg.OperationalError):
+            _confirm(api, key, view)
+    assert seen == (["write", "readback"] if error == "readback" else ["write"])
+    assert _stored(api, trip["trip_id"])[0]["version"] == trip["version"]
+
+
+@pytest.mark.parametrize("finish", ["commit", "rollback"])
+def test_the_done_readback_waits_for_an_unfinished_save_of_this_done_and_reports_what_it_became(api, finish):
+    """`[2026-10-26 묶음 M · Codex M-q2]` 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않은 장면을 실제 두 연결로 — 다른 연결이 **이 「완료」의
+    요청 id 로** 새 판을 쓰고 트랜잭션을 연 채 둔다. 웹 완료의 다시 읽기(`version_unchanged_after_failure`, 요청 id 포함)는 그 트랜잭션이 끝날
+    때까지 기다린 뒤: 저장됐으면 False(503 「안 바꿨다」가 아니라 원래 예외) · 되돌려졌으면 True(503)."""
+    import threading
+    import time as _time
+
+    from app.domains.travel_ops.components.intake.reopen_commit import request_id_for, version_unchanged_after_failure
+
+    key, trip, view = _removal_view(api)
+    tenant, trip_id = api["tenant"], UUID(trip["trip_id"])
+    rid = request_id_for(UUID(view["intake_id"]), view["revision"])
+    store = TripStore(tenant)
+    result, started = {}, threading.Event()
+    with get_connection() as other:
+        meta, items = store.latest(other, trip_id)
+        store.append_version(other, trip_id=trip_id, base_version=meta["version"], items=items, reason="customer_request",
+                             causes=[{"category": "customer_request", "type": "edit", "request_id": rid}])
+
+        def readback():
+            started.set()
+            result["unchanged"] = version_unchanged_after_failure(get_connection, tenant, trip_id, trip["version"], request_id=rid)
+            result["at"] = _time.monotonic()
+
+        worker = threading.Thread(target=readback)
+        worker.start()
+        started.wait(5)
+        _time.sleep(1.0)
+        assert "unchanged" not in result, "다시 읽기가 끝나지 않은 저장을 기다리지 않았다"
+        ended = _time.monotonic()
+        other.commit() if finish == "commit" else other.rollback()
+        worker.join(10)
+    assert result["at"] >= ended
+    assert result["unchanged"] is (finish == "rollback")
+
+
+def test_the_done_readback_matches_only_this_done_on_this_trip(api):
+    """요청 id 판 찾기가 실제 JSONB 원인(`cause_json`)에서 **이 여행 · 이 「완료」의 것만** 맞추는지 — 판 번호가 같아도 그 요청의 판이 있으면
+    「안 바꿨다」가 아니다. 다른 요청 id · 다른 여행은 맞추지 않는다."""
+    from app.domains.travel_ops.components.intake.reopen_commit import request_id_for, version_unchanged_after_failure
+
+    key, trip, view = _removal_view(api)
+    rid = request_id_for(UUID(view["intake_id"]), view["revision"])
+    done = _confirm(api, key, view)
+    tenant, trip_id, now = api["tenant"], UUID(trip["trip_id"]), done["version"]
+    assert version_unchanged_after_failure(get_connection, tenant, trip_id, now, request_id=rid) is False
+    assert version_unchanged_after_failure(get_connection, tenant, trip_id, now,
+                                           request_id=request_id_for(UUID(view["intake_id"]), view["revision"] + 1)) is True
+    other = _trip(api, _user(api))
+    assert version_unchanged_after_failure(get_connection, tenant, UUID(other["trip_id"]), other["version"], request_id=rid) is True
+    assert version_unchanged_after_failure(get_connection, "another_" + tenant, trip_id, now) is False   # 다른 테넌트에선 여행이 없다

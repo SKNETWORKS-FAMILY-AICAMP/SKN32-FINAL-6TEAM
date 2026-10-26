@@ -512,6 +512,10 @@ def _planner_ledger(conn) -> Any:
 
 # ★`status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태
 #   `IntakeConflict(..., status=...)`) 같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다.
+#: `[2026-10-26 묶음 M]` 웹 「일정 수정」 완료가 저장소 쓰기 실패로 새 판을 쓰지 못했고, 다시 읽어 판이 그대로임을 확인했을 때의 말(채팅 `SAVE_FAILED_TEXT` 와 같은 모양)
+DONE_SAVE_FAILED_TEXT = "지금 일정을 저장하지 못했어요(저장 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 「완료」를 다시 눌러 주세요."
+
+
 def _error(status: int, code: str, message: str, /, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
@@ -2094,8 +2098,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         - `request_id` = `intake:{접수}:r{판}` — 두 번 눌러도 판은 하나. 바뀐 것이 없으면 판을 쓰지 않는다(`changed: false`)
         - 지난 일정(끝 ≤ 지금)을 바꾸거나 빼거나 지난 때에 더하면 422 `item_in_past`
         """
+        import psycopg
+
         from app.domains.travel_ops.components.intake.pipeline import mark_confirmed
-        from app.domains.travel_ops.components.intake.reopen_commit import CommitRefused, commit
+        from app.domains.travel_ops.components.intake.reopen_commit import (CommitRefused, commit, request_id_for,
+                                                                             version_unchanged_after_failure)
 
         if request.survey is not None:
             raise _error(422, "trip_field_locked", "등록한 여행의 설문은 여기서 바꾸지 않아요")
@@ -2109,6 +2116,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                          now=datetime.now(KST), before_write=lambda: _count("confirm", tenant, customer, http))
         except CommitRefused as refused:
             raise _error(refused.status, refused.code, refused.message, **refused.detail) from None
+        except psycopg.OperationalError as exc:
+            # ★`[2026-10-26 묶음 M · F03 같은 결함 — 남은 일 3]` 저장소 운영 실패 — 전에는 그대로 올라가 일반 500 이었다(화면은 저장됐는지 모른다).
+            #   `commit` 이 돌아오기 전의 실패이고, **새 연결로 다시 읽어** 판이 다시 연 판 그대로 · 이 「완료」의 판도 없음을 확인한 때만
+            #   503 `save_failed`(「일정은 바꾸지 않았어요」)로 답한다. 다시 읽지 못했거나 · 판이 바뀌었으면 원래 예외를 그대로 올린다(숨기지 않는다).
+            #   `commit` 이 돌아온 뒤(아래 확정 표시 · 조회)의 실패는 이미 저장됐으므로 여기서 잡지 않는다. 코드 결함 계열(IntegrityError …)도 잡지 않는다.
+            #   접수는 `review` 로 남는다(확정 표시가 같은 트랜잭션이라 함께 되돌려졌다) — 같은 「완료」를 다시 누를 수 있다. 응답엔 예외 종류도 메시지도 싣지 않고,
+            #   로그엔 여행 id 와 예외 종류 이름만 남긴다(메시지 · SQL 인자는 고객 값을 담을 수 있다).
+            base_version = int(reopened["version"])
+            if not version_unchanged_after_failure(get_connection, tenant, trip_id, base_version,
+                                                   request_id=request_id_for(intake_id, request.revision)):
+                raise
+            logger.error("web edit done storage write failed trip=%s error=%s (version unchanged)", trip_id, type(exc).__name__)
+            raise _error(503, "save_failed", DONE_SAVE_FAILED_TEXT, version=base_version) from None
         with get_connection() as conn:
             mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=trip_id)
             return {"intake_id": str(intake_id), "status": "confirmed", "trip": _trip_view(conn, store, trip_id),
