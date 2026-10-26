@@ -86,7 +86,9 @@ export interface QuestionFlow {
  * ★An answer is saved one question at a time (`POST …/trip-intakes/{id}/survey`) when its card is complete and 「다음」 is pressed (`[2026-10-20 ST4F-665]` the start survey's card and rule);
  *   the server keeps the last value of a question, so going back to correct it is just another answer. A save that fails keeps the card as it was, says so with 「다시 시도하기」 and does not move on.
  */
-export function useQuestionFlow({ intakeId, language, questions, loadingDone, fresh = false }: { intakeId: string; language: Language; questions: readonly SurveyQuestion[]; loadingDone: boolean; fresh?: boolean }): QuestionFlow {
+export function useQuestionFlow({ intakeId, language, questions, loadingDone, loadingFailed, fresh = false }: { intakeId: string; language: Language; questions: readonly SurveyQuestion[]; loadingDone: boolean;
+  /** ★`[2026-10-26 사용자 보고]` The reading ended in failure (`status: fatal`): it is not 「read」, so the screen is never held for it (no 「계획을 다 읽었어요」, no button to the check). */
+  loadingFailed: boolean; fresh?: boolean }): QuestionFlow {
   // ★`[2026-10-07 사용자 지적 — 뒤로 갔다가 다시 열면 읽는 화면이 5초 뜨고 확인이 처음부터 다시 그려진다]` A plan that is already read when the page opens (opened again with the back and forward arrows, or from the list) was
   //   read in front of nobody: there is nothing to hold the page for, so it opens on the check at once. Questions are held for only when this page watched the reading end.
   const [phase, setPhase] = useState<Phase>(loadingDone && !fresh ? "gone" : "read");
@@ -120,7 +122,11 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone, fr
 
   // Reading is done (the server has finished): decide ONCE what the screen does (mockup `finishLoading`).
   // ★`[2026-10-06 사용자 지적]` Untouched questions no longer send the customer straight on: the notice is shown and the screen waits `doneMs`, then goes (it used to jump at once).
-  if (loadingDone && phase === "read") {
+  // ★`[2026-10-26 사용자 보고 — 「이거 이렇게 완료가 안 되었는데 다음 화면 뜨는 버그」]` A reading that FAILED (x600 `reading_model_failed` at 8/9 lines) is not a reading that is done:
+  //   whatever the questions were doing (read · late after 「자동으로 넘어가지 않기」 · idle · done), the screen lets go so the failure is said (「이 계획을 읽지 못했어요」 · `fatal.detail`).
+  //   Answers already saved stay on the server (the next intake takes them over — web-intakes 「설문 질문」).
+  if (loadingFailed && phase !== "gone") setPhase("gone");
+  else if (loadingDone && phase === "read") {
     if (questions.length === 0) setPhase("gone");
     else if (allDone || !touched) setPhase("done");
     else if (open.length === 0) setPhase("gone");                      // some were answered, the rest skipped: nothing left to ask

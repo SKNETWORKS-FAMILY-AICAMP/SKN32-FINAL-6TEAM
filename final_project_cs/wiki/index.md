@@ -10,6 +10,8 @@ domain: travel
 
 # cs 프로젝트 구현 wiki
 
+[2026-10-26 수정] 계획 읽기가 실패(`fatal` · x600 `reading_model_failed`, 막대 8/9줄)인데 질문 붙잡기 때문에 「계획을 다 읽었어요」·「읽어 온 계획 확인하기」가 뜨던 결함 — 실패면 붙잡지 않고 실패 화면으로. vitest 1205/1205=100%(rebase 뒤), Playwright 36/36=100%(mock). [원인·근거·시험](records/reports/2026-10-26_계획읽기_실패인데_다읽었어요_수정.md).
+
 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
 
 2026-10-26 계획 접수 호텔 줄 — 후보 하나로 먼저 채우던 것 · 활동으로 잡히던 것 · 체크인 없으면 숙박이 안 되던 것을 고쳐 종류(숙박·활동·식사) 확인 질문과 후보 고르기로(로컬 관문 0 실패, role-manager 까지): [기록](records/reports/2026-10-26_호텔_종류확인_후보선택.md)
