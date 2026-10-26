@@ -252,3 +252,23 @@ def test_the_hotel_question_carries_up_to_three_candidates_and_never_stores_map_
     [question] = [q for q in result["questions"] if q["kind"] == "lodging_place"]
     assert [c["place"]["name"] for c in question["candidates"]] == names
     assert asked == [("0-0", None, None)], "카카오 값(약관상 저장 금지)과 모델 이유 문장 없이 한 번만 계산한다"
+
+
+def test_a_stay_whose_place_is_picked_from_candidates_is_registered_as_a_stay():
+    """`[2026-10-26 13:14 사용자 보고 — 등록 뒤 액티비티]` 숙소 후보를 고른 값(장소 값의 kind 는 activity · 분류 32)은 일정 종류를 바꾸지 않는다 — 등록 몸통도 숙박."""
+    from app.domains.travel_ops.components.intake.assemble import assemble
+
+    text = "2026-10-22\n10:00 경복궁\n2026-10-23\n09:00 경복궁\n2026-10-22\n호텔"
+    rows = _read(text, [_item("경복궁", "10:00"), _item("경복궁", "09:00", day=2, when="2026-10-23"), _item("호텔", None, kind="lodging")])
+    claims = _claims(rows) + [
+        {"source_id": SOURCE, "field": "items[2].place", "method": "customer", "needs_review": False, "note": None,
+         "evidence": {"source": "customer", "picked_from": "tour_api"},
+         "value": {"name": "소테츠 프레사 인 서울 명동", "latitude": 37.5636, "longitude": 126.9845, "kind": "activity",
+                   "source": "customer_pick", "origin": "tour_api"}},
+        {"source_id": SOURCE, "field": interpretations.ANSWER_FIELD + "k-0-2", "value": "reading", "method": "customer",
+         "evidence": {"source": "customer"}, "needs_review": False, "note": None}]
+    built = assemble(intake_id="i1", revision=3, sources=_sources(text), claims=claims)
+    stay = next(i for i in built.body["items"] if i["title"] in ("호텔", "소테츠 프레사 인 서울 명동"))
+    assert stay["kind"] == "lodging", stay
+    assert stay["ends_at"].startswith("2026-10-23T11:00"), stay
+    assert not any(p.code == "kind_unanswered" for p in built.problems)

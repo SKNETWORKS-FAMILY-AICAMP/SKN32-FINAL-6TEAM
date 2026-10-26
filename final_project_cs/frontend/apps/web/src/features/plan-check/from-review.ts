@@ -252,6 +252,17 @@ export function serverProgressOf(stream: Pick<StreamState, "progress" | "phases"
   return { serverProgress: of(stream.progress), serverPhases: Object.fromEntries(Object.entries(stream.phases).map(([phase, packet]) => [phase, of(packet)])) };
 }
 
+/**
+ * The stop kind a picked candidate brings with it, or null to leave the stop's kind alone. ★`[2026-10-26 13:14 사용자 보고 — 검증 화면은 숙박인데 등록 뒤 액티비티]` A stay
+ * (`basis: "lodging"`, or the lodging class `32` whose place kind the server writes as `activity`) never retypes the stop — whether it is a stay, an activity or a meal there is the
+ * kind question's (`interpretations[]` `type: "kind"`); ☆before, picking one sent `kind: "activity"` and a stay was saved as an activity. A meal at the stay and a meal-time place are meals.
+ */
+export function retypeOf(candidate: Pick<Candidate, "basis" | "place">): "dining" | "activity" | null {
+  if (candidate.basis === "meal_inferred" || candidate.basis === "lodging_meal") return "dining";
+  if (candidate.basis === "lodging" || String(candidate.place.content_type_id ?? "") === "32") return null;
+  return candidate.place.kind === "dining" || candidate.place.kind === "activity" ? candidate.place.kind : null;
+}
+
 /** Candidates → the change screen's cards. `distance.from` is the nearby stop the distance was measured from. */
 export function planCandidate(candidate: Candidate, itemId: string, source: PlanCandidate["source"], info: PlaceInfo | null): PlanCandidate {
   const risk = itemRiskOf(candidate.risk);
@@ -267,7 +278,7 @@ export function planCandidate(candidate: Candidate, itemId: string, source: Plan
     ...(proposedTime ? { proposedTime } : {}),
     ...(candidate.basis ? { basis: candidate.basis } : {}),
     ...(candidate.experience ? { experience: candidate.experience } : {}),
-    ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
+    ...(retypeOf(candidate) ? { placeKind: retypeOf(candidate)! } : {}),
     ...(reason ? { reason } : {}),
     ...(candidate.legs ? { legs: { before: legOf(candidate.legs.before), after: legOf(candidate.legs.after) } } : {}),
     ...(candidate.pending ? { pending: { before: candidate.pending.before === true, after: candidate.pending.after === true, reason: candidate.pending.reason === true } } : {}),

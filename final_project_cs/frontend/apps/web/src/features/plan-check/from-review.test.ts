@@ -364,3 +364,18 @@ describe("`[2026-10-21 사용자 결정 — P6]` the interpretation questions th
     expect(asksOf(intake([{ ...kind, answer: "activity", applied: "activity" }]), days)).toEqual([]);
   });
 });
+
+
+// `[2026-10-26 13:14 사용자 보고 — 검증 화면은 숙박인데 등록 뒤 액티비티]` x600 접수 05c2216c: 숙소 후보(place.kind "activity" · 분류 32)를 고르자 화면이
+// `items[0].kind = "activity"` 를 같이 보내 숙박이 활동으로 저장됐다. 숙소 후보는 일정 종류를 바꾸지 않는다(종류는 종류 확인 질문이 정한다) — 숙소 안 식사만 식사로 바꾼다.
+describe("[2026-10-26] a stay candidate never retypes the stop", () => {
+  const base = { rank: 1, rows: [], fits: true, status: "ok", reason: "숙소 후보예요" };
+  const place = (kind: string, content_type_id: string | null) => ({ name: "소테츠 프레사 인 서울 명동", latitude: 37.56, longitude: 126.98, source: "tour_api", kind, content_type_id });
+  it("leaves the kind alone for a stay, and makes a meal at the stay or a meal-time place a meal", () => {
+    expect(planCandidate({ ...base, basis: "lodging", place: place("activity", "32") } as never, "0-0", "candidate", null).placeKind).toBeUndefined();
+    expect(planCandidate({ ...base, basis: null, place: place("activity", "32") } as never, "0-0", "candidate", null).placeKind).toBeUndefined();
+    expect(planCandidate({ ...base, basis: "lodging_meal", place: place("dining", "32") } as never, "0-0", "candidate", null).placeKind).toBe("dining");
+    expect(planCandidate({ ...base, basis: "meal_inferred", place: place("dining", "39") } as never, "0-0", "candidate", null).placeKind).toBe("dining");
+    expect(planCandidate({ ...base, basis: "same_kind", place: place("activity", "12") } as never, "0-0", "candidate", null).placeKind).toBe("activity");
+  });
+});

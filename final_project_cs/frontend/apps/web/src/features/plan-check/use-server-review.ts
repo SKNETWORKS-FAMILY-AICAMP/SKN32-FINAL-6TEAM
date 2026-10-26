@@ -12,7 +12,7 @@ import {
   addSearch, autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
   type CandidateList, type CandidatePlace, type CandidateUpdate, type ReviewItem, type ReviewedIntakeView,
 } from "@/lib/live/intake-review";
-import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
+import { isLodgingReviewItem, planCandidate, retypeOf, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
 import type { AutoResult, EditHow, PlaceChoice, PlanCheckActions } from "./plan-check";
 import { retimeEdits } from "./retime-edits";
@@ -445,7 +445,7 @@ export function useServerReview({ intakeId, view, language, apply, reread, waitW
           const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
           const picked = best && pickedPlace(best.place);
           if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
-          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null, proposedTimeOf(best));
+          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), retypeOf(best), proposedTimeOf(best));
           return;
         }
         const before = plan();

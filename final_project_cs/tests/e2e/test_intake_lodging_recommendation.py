@@ -39,11 +39,11 @@ def test_fresh_example_asks_both_hotels_instead_of_prefilling_them(around, monke
     view = _send(client, _key(client), PLAN)
     assert pending == ["reading"]
     assert view["status"] == "review" and view["stage"] == "review"
-    hotels = [i for i in view["review"]["items"] if i["title"] == "호텔 조식"]
-    assert len(hotels) == 2 and all(i["place"] is None and i["place_state"] == "needs_choice" and i["kind"] == "dining" for i in hotels)
-    assert not any(f["owner"] == "lodging_team" for f in view["prefill"]["filled"]), view["prefill"]
     asked = [q for q in view["prefill"]["questions"] if q["kind"] == "lodging_place"]
-    assert sorted(q["item"] for q in asked) == sorted(i["id"] for i in hotels), view["prefill"]
+    by_id = {i["id"]: i for i in view["review"]["items"]}
+    hotels = [by_id[q["item"]] for q in asked]
+    assert len(hotels) == 2 and all(i["place"] is None and i["place_state"] == "needs_choice" and i["kind"] == "dining" for i in hotels), view["prefill"]
+    assert not any(f["owner"] == "lodging_team" for f in view["prefill"]["filled"]), view["prefill"]
     assert not any(q["kind"] == "lodging_name" for q in view["prefill"]["questions"])
 
 

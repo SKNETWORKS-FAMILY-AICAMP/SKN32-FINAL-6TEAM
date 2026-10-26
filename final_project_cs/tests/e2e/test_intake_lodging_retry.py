@@ -57,10 +57,10 @@ def test_first_read_fills_the_meal_place_but_asks_both_hotel_breakfasts(around, 
     assert any(f["owner"] == "dining_team" for f in view["prefill"]["filled"]), view["prefill"]
     assert any(i["kind"] == "dining" and not i.get("lodging_group") and i.get("place")
                and i["place_state"] == "customer" for i in view["review"]["items"]), view["review"]["items"]
-    hotels = [item for item in view["review"]["items"] if item["title"] == "호텔 조식"]
-    assert len(hotels) == 2 and all(item["place"] is None and item["place_state"] == "needs_choice" for item in hotels), hotels
     asked = [q for q in view["prefill"]["questions"] if q["kind"] == "lodging_place"]
-    assert sorted(q["item"] for q in asked) == sorted(i["id"] for i in hotels), view["prefill"]
+    by_id = {i["id"]: i for i in view["review"]["items"]}
+    hotels = [by_id[q["item"]] for q in asked]
+    assert len(hotels) == 2 and all(item["place"] is None and item["place_state"] == "needs_choice" for item in hotels), view["prefill"]
     assert not any(item["kind"] == "lodging_place" for item in view["prefill"]["kept"])
     assert "rounds" not in view["prefill"] and "proposals" not in view["prefill"], "운영용 시도 원본은 고객 응답에 싣지 않는다"
     with get_connection() as conn, conn.cursor() as cur:
