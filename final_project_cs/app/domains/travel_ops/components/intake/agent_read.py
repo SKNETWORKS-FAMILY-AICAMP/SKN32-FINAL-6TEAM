@@ -483,6 +483,9 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
                 extra = {"api_only": True} if api_only else {}
                 if policy_wrapper:
                     extra["external_fallback_enabled"] = external_fallback_enabled
+                    # ★`[2026-10-26 x600 74b2b232]` 유료 대체 몫(`travel.intake_reading.api_reserve_seconds`) — 로컬이 시한을 다 쓰지 않게
+                    if stream.get("api_reserve_seconds") is not None:
+                        extra["api_reserve_seconds"] = float(stream["api_reserve_seconds"])
                 raw = streamer(system, user, SCHEMA, num_predict=num_predict, on_piece=progress.piece,
                                first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
                                max_seconds=float(stream["max_seconds"]), **extra)

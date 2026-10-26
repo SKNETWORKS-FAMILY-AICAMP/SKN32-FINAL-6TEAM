@@ -1450,7 +1450,7 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
 READING_STREAM_KEYS = ("first_token_seconds", "stall_seconds", "max_seconds", "progress_seconds", "output_tokens_base",
-                       "output_tokens_per_line", "output_tokens_per_char")
+                       "output_tokens_per_line", "output_tokens_per_char", "api_reserve_seconds")
 
 #: 남은 줄 모델이 끝내 답하지 못했을 때 고객에게 보이는 말(접수 `fatal_detail`) — 무엇이 안 됐고 무엇을 하면 되는지. 기술 사유는 로그에 남긴다
 READING_FAILED_TEXT = "계획을 읽는 모델이 지금 답하지 않아 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."

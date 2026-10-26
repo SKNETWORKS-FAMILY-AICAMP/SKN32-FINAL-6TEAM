@@ -669,33 +669,52 @@ class FailoverChat:
     #   고객이 쓴 계획서 원문은 이름 · 예약번호 · 구분자 없는 전화번호를 다 가린다고 보장할 수 없다 → 외부(유료) 대체는 호출부가
     #   `external_fallback_enabled=True` 를 줄 때만(가드레일 `travel.intake_reader.external_fallback_enabled` — 2026-10-26 08:20 사용자 결정으로
     #   기본 true, 관리 콘솔 false 면 끔. 이 인자를 빼면 차단). 켜면 매 유료 시도마다 reader 예산(`reader_budget`, 못 읽으면 거부)을 예약하고,
-    #   넘김 · 다시 시도 모두 한 절대 시한(`min(max_seconds, total_seconds)`) 안에서 남은 시간만 쓴다.
+    #   넘김 · 다시 시도 모두 한 절대 시한 안에서 남은 시간만 쓴다.
+    #   ★`[2026-10-26 x600 74b2b232]` 그 시한은 reader 자신의 상한(`max_seconds` = 가드레일 `travel.intake_reading.max_seconds`)이다 —
+    #     채팅 SLA `llm_failover_total_seconds`(15)로 자르지 않는다. ☆예전 `min(max_seconds, total_seconds)` 은 15초를 로컬에 다 줘
+    #     계획 담기 16건 중 3건이 「ollama=timeout, openai=deadline_exhausted」로 실패했다(접수 → 실패 15.3 · 16.7 · 16.4초).
+    #   ★뒤에 쓸 수 있는 유료 경로가 있으면(외부 대체 켜짐 · 서킷 열림 아님) 로컬 시도는 `api_reserve_seconds`
+    #     (가드레일 `travel.intake_reading.api_reserve_seconds`)를 남긴 만큼만 쓴다. 로컬이 첫 조각 · 조각 사이 규칙으로 멈추면
+    #     곧바로 유료가 남은 시간 전부로 처음부터 읽는다. 남은 시간이 예약분 이하면 로컬을 건너뛴다.
+    def _reader_window(self, chat: Any, api: bool, deadline: float, reserve: float, external: bool) -> float:
+        """이 경로가 이번 시도에 쓸 시간 — 유료는 남은 시간 전부, 로컬은 뒤 유료 몫을 남긴다."""
+        remaining = deadline - self._clock()
+        if remaining <= 0:
+            raise ModelSkipped("reader deadline exhausted")
+        if api or reserve <= 0 or not external:
+            return remaining
+        index = next((i for i, b in enumerate(self._backends) if b.chat is chat), len(self._backends))
+        if not any(b.is_api and b.breaker.snapshot()["state"] != "open" for b in self._backends[index + 1:]):
+            return remaining
+        window = remaining - reserve
+        if window <= 0:
+            raise ModelSkipped("reader reserve: the remaining time is kept for the paid model")
+        return window
+
     def reader_json_stream(self, system: str, user: str, *, on_piece: Callable[[str, str], None] | None = None,
                            first_wait: float = 15.0, stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0,
-                           external_fallback_enabled: bool = False) -> dict[str, Any]:
-        deadline = self._clock() + min(max_seconds, self.total_seconds)
-        def stream(chat, text, relay):
-            remaining = deadline - self._clock()
-            if remaining <= 0:
-                raise ModelSkipped("reader deadline exhausted")
-            return chat.json_stream(system, text, on_piece=relay, first_wait=min(first_wait, remaining),
-                                    stall=min(stall, remaining), max_seconds=remaining, max_tokens=max_tokens)
-        return self._run("reader_json_stream", self._streaming(stream, user, on_piece, api_only=False),
-                         deadline=deadline, reader=True, reader_external=external_fallback_enabled)
+                           external_fallback_enabled: bool = False, api_reserve_seconds: float = 0.0) -> dict[str, Any]:
+        deadline = self._clock() + float(max_seconds)
+        def call(chat: Any, api: bool) -> Any:
+            def stream(chat, text, relay):
+                window = self._reader_window(chat, api, deadline, float(api_reserve_seconds), external_fallback_enabled)
+                return chat.json_stream(system, text, on_piece=relay, first_wait=min(first_wait, window),
+                                        stall=min(stall, window), max_seconds=window, max_tokens=max_tokens)
+            return self._streaming(stream, user, on_piece, api_only=False)(chat, api)
+        return self._run("reader_json_stream", call, deadline=deadline, reader=True, reader_external=external_fallback_enabled)
 
     def reader_structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
                                  on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
                                  stall: float = 5.0, max_seconds: float = 180.0, api_only: bool = False,
-                                 external_fallback_enabled: bool = False) -> dict[str, Any]:
-        deadline = self._clock() + min(max_seconds, self.total_seconds)
-        def stream(chat, text, relay):
-            remaining = deadline - self._clock()
-            if remaining <= 0:
-                raise ModelSkipped("reader deadline exhausted")
-            return chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
-                                          first_wait=min(first_wait, remaining), stall=min(stall, remaining), max_seconds=remaining)
-        return self._run("reader_structured_stream", self._streaming(stream, user, on_piece, api_only=api_only),
-                         deadline=deadline, reader=True, reader_external=external_fallback_enabled)
+                                 external_fallback_enabled: bool = False, api_reserve_seconds: float = 0.0) -> dict[str, Any]:
+        deadline = self._clock() + float(max_seconds)
+        def call(chat: Any, api: bool) -> Any:
+            def stream(chat, text, relay):
+                window = self._reader_window(chat, api, deadline, float(api_reserve_seconds), external_fallback_enabled)
+                return chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
+                                              first_wait=min(first_wait, window), stall=min(stall, window), max_seconds=window)
+            return self._streaming(stream, user, on_piece, api_only=api_only)(chat, api)
+        return self._run("reader_structured_stream", call, deadline=deadline, reader=True, reader_external=external_fallback_enabled)
 
     def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
                                     validator: Callable[[dict[str, Any]], None], num_predict: int = 160,

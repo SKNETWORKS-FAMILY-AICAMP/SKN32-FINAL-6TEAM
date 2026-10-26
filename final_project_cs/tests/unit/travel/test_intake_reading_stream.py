@@ -299,7 +299,8 @@ def test_read_source_turns_a_failed_model_into_a_reading_failure_the_customer_se
 
 def test_read_source_reads_the_stream_settings_from_the_guardrails():
     assert pipeline._reading_stream(None) == {"first_token_seconds": 15, "stall_seconds": 5, "max_seconds": 120, "progress_seconds": 5,
-                                              "output_tokens_base": 1024, "output_tokens_per_line": 30, "output_tokens_per_char": 2}
+                                              "output_tokens_base": 1024, "output_tokens_per_line": 30, "output_tokens_per_char": 2,
+                                              "api_reserve_seconds": 30}   # [2026-10-26 x600 74b2b232] 유료 대체 몫 추가
     assert pipeline._reading_stream(STREAM) is STREAM
 
 
