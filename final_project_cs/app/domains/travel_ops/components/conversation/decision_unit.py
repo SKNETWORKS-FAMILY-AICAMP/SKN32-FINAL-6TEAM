@@ -983,10 +983,11 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                 and _local(target.starts_at).date() == _local(now).date()):
             decision = replace(decision,action="advance_trip",item=previous,minutes=None,
                 raw={**raw,"now_progress":{"requested_item_id":str(target.item_id),"current_item_id":str(previous.item_id)}})
-    return guard_setting_target(_current_route_read(decision, stops=stops, message=message or "", now=now))
+    return guard_setting_target(_current_route_read(decision, stops=stops, message=message or "", now=now),
+                                selected=selected_item_id)
 
 
-def guard_setting_target(decision: Decision) -> Decision:
+def guard_setting_target(decision: Decision, *, selected: Any = None) -> Decision:
     """★`[2026-10-26 x600 재시험 da4ccd97]` 실내·야외 조건이 붙은 장소 바꾸기의 대상이 **장소 기록상 이미 그 조건**이면 바로 바꾸지 않는다.
 
     ☆박물관 → 용산가족공원(야외)으로 바꾼 뒤 「야외로 바꿔줘」 — 모델이 대상으로 용산가족공원을 냈고(직전 대화에 그 이름) 팀이 이촌한강공원으로 또 바꿨다.
@@ -1005,6 +1006,16 @@ def guard_setting_target(decision: Decision) -> Decision:
         # ★`[2026-10-26 x600 c34bd376]` 조건은 있는데 바꿀 일정이 없다 — 팀이 조건 없이 모든 활동을 묻지 않게 대상 되묻기로 돌린다
         #   (`trip_messages._setting_swap_choices` 가 활동 · 조건으로 거른다. 모델 후보는 그대로 넘긴다)
         return replace(decision, action="clarify", change=None, raw={**raw, "setting_untargeted": {"action": decision.action}})
+    if (setting is not None and decision.action in ("apply_change", "propose_alternatives") and item is not None
+            and getattr(item, "kind", None) != "activity" and decision.change is not None
+            and (selected is None or str(getattr(item, "item_id", "")) != str(selected))
+            and raw.get("change_scope") not in ("time", "date") and (raw.get("time_edit") or {}).get("boundary", "none") == "none"):
+        # ★`[2026-10-26 x600 74b2b232]` 「실내를 야외로 바꿔줘」(화면 선택 없음) — 모델이 대상을 **방금 변경**(`target_change`)으로 잡아
+        #   직전에 바꾼 식당(하나면옥)을 냈고, 위 두 경우가 아니라 그대로 식당 팀으로 가 「야외로 확인된 다른 식당 … 없음」으로 끝났다.
+        #   조건 바꾸기의 대상이 변경 참조에서 온 활동 아닌 일정이고 화면에서 고른 것도 아니면 대상 되묻기(활동만 — `_setting_swap_choices`)로 돌린다.
+        #   화면에서 고른 일정 · 변경 참조 없이 낸 대상(고객이 그 일정을 가리킴)은 그대로다. 칸(`target_change` · 일정 종류 · 화면 선택)만 본다
+        return replace(decision, action="clarify", item=None, change=None,
+                       raw={**raw, "setting_untargeted": {"action": decision.action, "item_id": str(item.item_id), "from": "change"}})
     if (setting is None or decision.action not in ("apply_change", "propose_alternatives") or item is None
             or raw.get("change_scope") in ("time", "date") or (raw.get("time_edit") or {}).get("boundary", "none") != "none"
             or place_setting(getattr(item, "place", None)) != setting):
