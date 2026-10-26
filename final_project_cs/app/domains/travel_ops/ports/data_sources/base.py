@@ -68,6 +68,10 @@ class TravelSource:
                  transport: Callable[..., httpx.Response] | None = None,
                  limiter: Any | None = None, cache: Any | None = None,
                  proxy: str | None = None) -> None:
+        # ★`[2026-10-26]` 키를 주소에 싣는 어댑터를 쓰는 프로세스(api · 감시 · 일괄 작업)는 어디서든 로그 가림이 걸려 있게 한다(`core/log_redaction.py`, 한 번만 건다)
+        from app.core.log_redaction import install_log_redaction
+
+        install_log_redaction()
         self._timeout = timeout
         # ★경유 프록시(고정 IP 서버). 조립이 `apply_outbound_proxy()` 로 넣는다 — IP 에 묶인
         #   소스만. 없으면 바로 나간다.

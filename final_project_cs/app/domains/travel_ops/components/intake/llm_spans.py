@@ -175,8 +175,12 @@ def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime
             progress = _Progress(lines, unread, on_progress, every=float(stream["progress_seconds"]), clock=clock)
             progress.emit()
             budget = output_budget(len(unread), sum(len(lines[n - 1]) for n in unread), stream)
+            # ★`[2026-10-26 x600 74b2b232]` reader 입구에는 유료 대체 몫(`travel.intake_reading.api_reserve_seconds`)도 넘긴다
+            reserve = ({"api_reserve_seconds": float(stream["api_reserve_seconds"])}
+                       if policy and stream.get("api_reserve_seconds") is not None else {})
             raw = streamer(SYSTEM, user, on_piece=progress.piece, first_wait=float(stream["first_token_seconds"]),
-                           stall=float(stream["stall_seconds"]), max_seconds=float(stream["max_seconds"]), max_tokens=budget, **policy)
+                           stall=float(stream["stall_seconds"]), max_seconds=float(stream["max_seconds"]), max_tokens=budget,
+                           **policy, **reserve)
             report["output_tokens"] = budget
         else:
             raw = reader_json(SYSTEM, user, **policy) if callable(reader_json) else chat.json(SYSTEM, user)

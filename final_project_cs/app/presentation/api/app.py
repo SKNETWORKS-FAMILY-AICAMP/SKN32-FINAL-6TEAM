@@ -41,6 +41,10 @@ def create_app(controller=None, classifier=None, *,
       주입한다. 아무것도 안 주면 `/composer/*` 자체가 **존재하지 않는다** —
       "권한이 없다" 보다 "그런 표면이 없다" 가 훨씬 강한 보장이다.
     """
+    # ★`[2026-10-26]` 로그 가림을 먼저 건다 — 아래 `build_mcp_surface` 의 FastMCP 가 루트 로거를 INFO 로 올려 `httpx` 가 키가 든 요청 주소를 찍었다(`core/log_redaction.py`)
+    from app.core.log_redaction import install_log_redaction
+
+    install_log_redaction()
     injected_controller = controller is not None
     if classifier is None:
         classifier = composition.build_classifier()

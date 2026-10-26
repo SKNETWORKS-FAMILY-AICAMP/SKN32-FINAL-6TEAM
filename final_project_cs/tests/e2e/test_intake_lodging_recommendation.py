@@ -16,7 +16,8 @@ def manual_recommendation_baseline(monkeypatch):
     monkeypatch.setattr(pipeline, "agent_reader_config", lambda tenant: {**real(tenant), "prefill": "off"})
 
 
-def test_fresh_example_prefills_one_hotel_before_reporting_completion(around, monkeypatch):
+def test_fresh_example_asks_both_hotels_instead_of_prefilling_them(around, monkeypatch):
+    # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 먼저 채우기는 이름 없는 호텔을 채우지 않는다(후보가 하나여도) — 그 일정 카드가 후보에서 고르게 묻는다
     from app.domains.travel_ops.components.intake import pipeline
     from app.infrastructure.db.session import get_connection
 
@@ -38,11 +39,11 @@ def test_fresh_example_prefills_one_hotel_before_reporting_completion(around, mo
     view = _send(client, _key(client), PLAN)
     assert pending == ["reading"]
     assert view["status"] == "review" and view["stage"] == "review"
-    hotels = [i for i in view["review"]["items"] if i.get("lodging_group")]
-    assert len(hotels) == 2 and all(i["place"] and i["kind"] == "dining" for i in hotels)
-    assert len({(i["place"]["name"], i["place"]["latitude"], i["place"]["longitude"]) for i in hotels}) == 1
-    assert all(i["starts_at"] == "09:00" and i["ends_at"] < "10:00" for i in hotels)
-    assert {f["owner"] for f in view["prefill"]["filled"]} == {"lodging_team"}
+    asked = [q for q in view["prefill"]["questions"] if q["kind"] == "lodging_place"]
+    by_id = {i["id"]: i for i in view["review"]["items"]}
+    hotels = [by_id[q["item"]] for q in asked]
+    assert len(hotels) == 2 and all(i["place"] is None and i["place_state"] == "needs_choice" and i["kind"] == "dining" for i in hotels), view["prefill"]
+    assert not any(f["owner"] == "lodging_team" for f in view["prefill"]["filled"]), view["prefill"]
     assert not any(q["kind"] == "lodging_name" for q in view["prefill"]["questions"])
 
 

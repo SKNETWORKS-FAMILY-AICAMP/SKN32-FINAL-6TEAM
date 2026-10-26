@@ -338,6 +338,11 @@ travel:
     #       한 절대 시한 · reader 전용 입구 · `redaction.masked` 가 그대로 돈다. 끄려면 관리 콘솔 같은 이름에 false(원문은 다 가린다는 보장이 없다).
     external_fallback_enabled: true
     chunk_chars: 1800
+    #   missed_line_passes: `[2026-10-26 x600 74b2b232]` 다 읽은 뒤 모델이 빠뜨린 시각 있는 줄(규칙 읽기 기준)을 그 줄 + 앞 일차 머리줄만 묶어
+    #     같은 모델에 다시 보내는 횟수(`agent_read._missed_chunks`). 줄 번호 덮임만 본다 — 고정 · 끼니 · 시각의 뜻은 모델이 읽는다. 0 이면 예전처럼 규칙 항목으로 채운다.
+    #     ☆17항목 3일 계획에서 로컬 E4B 가 1일차 6곳만 내고 멈춰(x600 접수 14282da3 · 로컬 실E4B 재현 raw 6/17) 2일차 「(이 일정은 고정해 주세요)」가
+    #     고정 없이 등록됐다(규칙 항목은 고정을 읽지 않는다). 한 번이면 그 계획의 빠진 11줄이 한 묶음이다. **우리가 고른 값**
+    missed_line_passes: 1
     #   prefill: 읽은 직후 빈칸을 담당(식당 팀 · 활동 팀 · 이동 판정 · 계획 에이전트)에게 보내 맞춰 본 제안만 「우리가 채움」으로 싣는다(`intake/prefill.py`).
     #   고정 · 예약 일정은 건드리지 않는다. 고객만 아는 값은 질문으로 남긴다. mode 가 on 일 때만 돈다.
     prefill: "on"
@@ -553,6 +558,12 @@ travel:
     output_tokens_base: 1024
     output_tokens_per_line: 30
     output_tokens_per_char: 2
+    #   api_reserve_seconds 30 — `[2026-10-26 x600 74b2b232]` 유료 대체 몫. 뒤에 유료 경로가 있으면(외부 대체 켜짐) 로컬 시도는 `max_seconds` 에서 이만큼을
+    #     남긴 시간까지만 쓰고, 첫 조각(`first_token_seconds`) · 조각 사이(`stall_seconds`) 규칙으로 멈추면 곧바로 유료가 남은 시간 전부로 처음부터 읽는다.
+    #     ☆전에는 reader 시한이 채팅 SLA `llm_failover_total_seconds`(15)로 잘려 로컬이 15초를 다 쓰고 유료는 0초였다 —
+    #     계획 담기 16건 중 3건 「ollama=timeout, openai=deadline_exhausted」(접수 → 실패 15.3 · 16.7 · 16.4초).
+    #     출처: 같은 날 x600 유료 reader 실측 3.18 · 4.90 · 9.39초(계획 전체 · gpt-6-luna) — 최대의 약 3배. **우리가 고른 값**
+    api_reserve_seconds: 30
   # -- 채팅 해석(`decision_unit.decide`) 모델 호출 — 계획 읽기처럼 답을 조금씩 받으며 멈춤을 본다 (2026-10-26 사용자 승인 — `trip_messages._try_decide` 가 읽는다) --
   # 전에는 로컬 9초(`llm_failover_primary_timeout_seconds`) 고정 대기 뒤 유료 대체 1회였다 — 학습 E4B 해석 한 건이 5.1~7.3초(x600 실측,
   #   wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md) · 8.9초(로컬 실측, 2026-10-26_chat-outdoor-setting-clarify-candidates.md)라

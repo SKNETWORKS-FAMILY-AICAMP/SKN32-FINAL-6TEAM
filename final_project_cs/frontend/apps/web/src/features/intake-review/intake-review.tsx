@@ -164,7 +164,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
   //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
   const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
-  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", loadingFailed: query.data?.status === "fatal", fresh: arriving });
   // `[2026-10-24 ST4F-731]` While the reading screen is up (`flow.shown` — its questions and 「계획을 다 읽었어요」) the 「전체 자동 추천」 dry run waits.
   const server = useServerReview({ intakeId, view: query.data, language, apply, reread, waitWarmUp: flow.shown });
   // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen also draws that plan; every call still goes with the real one.

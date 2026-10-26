@@ -432,7 +432,8 @@ def validate_reader(chat: Any, *, stream: Any = None, agent: bool = False) -> No
 def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: int = 3072,
          chunk_chars: int = fragments_module.CHUNK_CHARS, stream: dict[str, Any] | None = None,
          on_progress: Any = None, clock: Any = time.monotonic, now=None,
-         external_fallback_enabled: bool = False, purpose: str = "intake") -> AgentRead:
+         external_fallback_enabled: bool = False, purpose: str = "intake",
+         expected_lines: Any = None, anchor_lines: Any = None, missed_line_passes: int = 0) -> AgentRead:
     """묶음마다 한 번씩 부른다(짧은 글은 한 번). 모델 · 모양 오류는 그대로 올린다 — 부르는 쪽(`pipeline.read_source`)이 규칙 미리보기로 읽는다.
 
     `lines` 는 규칙 읽기와 같은 줄(`text.splitlines()`) — 줄 번호가 규칙 · 확인 화면 · 이 읽기에서 같다.
@@ -440,7 +441,13 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
     ★`[2026-10-16 2회차 합의 · 사용자 승인]` `stream`(가드레일 `travel.intake_reading` 값)이 있고 모델이 `structured_stream` 을 가지면 답을 **조금씩 받으며**
       첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(`app/infrastructure/model_stream.py`). 로컬이 멈추면 넘김 장치가 그 묶음을 유료로 처음부터 읽는다.
       ★한 계획은 한 모델이 읽는다 — 어느 묶음이 유료로 답하면 그 뒤 묶음도 유료만 쓰고(`api_only`), 앞 묶음을 로컬이 읽었으면 **첫 묶음부터 유료로 다시** 읽는다.
-      `on_progress({phase: reading|reading_api, done, total, final?})` — 원문에 글자 그대로 있는 인용이 나온 서로 다른 줄 수 / 보낸 줄 수(`progress_seconds` 마다)."""
+      `on_progress({phase: reading|reading_api, done, total, final?})` — 원문에 글자 그대로 있는 인용이 나온 서로 다른 줄 수 / 보낸 줄 수(`progress_seconds` 마다).
+    ★`[2026-10-26 x600 74b2b232]` `expected_lines`(규칙 읽기가 시각을 읽은 항목 줄) · `anchor_lines`(일차 머리줄) · `missed_line_passes`
+      (가드레일 `travel.intake_reader.missed_line_passes`) — 묶음을 다 읽은 뒤 모델이 빠뜨린 시각 있는 줄이 있으면 **그 줄과 그 앞 일차 머리줄만**
+      이어 읽기 묶음으로 같은 모델에 다시 보낸다(원래 줄 번호 · 그 줄에서만 새 항목). 코드는 줄 번호 덮임만 보고, 고정 여부 등 뜻은 모델이 읽는다.
+      ☆17항목 3일 계획에서 로컬 E4B 가 1일차 6곳만 내고 멈춰, 2일차 「(이 일정은 고정해 주세요)」가 규칙 항목(고정을 읽지 않는다)으로 채워졌다.
+      이어 읽기가 유료로 답하면 위 규칙대로 첫 묶음부터 유료로 다시 읽는다. 이어 읽기가 실패하면 첫 결과를 지키고 `report.missed_line_error` 에 남긴다
+      (빠진 줄은 예전처럼 `pipeline._agent_rows` 가 규칙 항목으로 붙인다)."""
     if purpose not in READ_PURPOSES:
         raise ValueError(f"unknown reader purpose: {purpose!r}")
     if purpose == "intake":
@@ -469,25 +476,28 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
         paths: list[Any] = []
         prompt_hashes: list[str] = []
         restart = False
-        for index, part in enumerate(chunks):
-            context = state.note() if many else ""
+        queue, passes, missed_total, index = list(chunks), 0, 0, 0
+        while index < len(queue):
+            part, extra_pass = queue[index], index >= len(chunks)
+            split = many or extra_pass                 # 이어 읽기 묶음은 원래 줄 번호의 일부 줄이다 — 묶음처럼 보낸다
+            # 이어 읽기는 일차 머리줄을 함께 보낸다 — 앞 상태(마지막에 읽은 날)를 문맥 · 일차 다시 세기에 쓰지 않는다(가운데 날이 빠졌을 때 엉뚱한 날이 된다)
+            context = state.note() if many and not extra_pass else ""
             if now is not None:
                 context += (f"\nRequest received at {now.isoformat()}. 지금/당장 anchors this request to today. "
                             "For an immediate plan, resolve an ambiguous hour to the next occurrence today; "
                             "do not add a visit or dwell at the starting location. Keep explicit relative offsets inclusive of travel.")
-            system, user = system_for(today, context), (part.text if many else text)
+            system, user = system_for(today, context), (part.text if split else text)
             prompt_hashes.append(hashlib.sha256(system.encode()).hexdigest())
             _clear_path()
-            if callable(streamer):
-                progress.start(list(part.new_numbers) if many else list(range(1, len(lines) + 1)))
-                extra = {"api_only": True} if api_only else {}
-                if policy_wrapper:
-                    extra["external_fallback_enabled"] = external_fallback_enabled
-                raw = streamer(system, user, SCHEMA, num_predict=num_predict, on_piece=progress.piece,
-                               first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
-                               max_seconds=float(stream["max_seconds"]), **extra)
-            else:
-                raw = chat.structured(system, user, SCHEMA, num_predict=num_predict)
+            try:
+                raw = _call_part(streamer, chat, system, user, num_predict=num_predict, stream=stream, progress=progress,
+                                 numbers=list(part.new_numbers) if split else list(range(1, len(lines) + 1)),
+                                 api_only=api_only, policy_wrapper=policy_wrapper, external_fallback_enabled=external_fallback_enabled)
+            except Exception as exc:                   # noqa: BLE001 — 이어 읽기만 감싼다(첫 읽기 실패는 그대로 올린다)
+                if not extra_pass:
+                    raise
+                total.report["missed_line_error"] = f"{type(exc).__name__}: {exc}"[:200]
+                break
             path = _path()
             paths.append(path)
             if not api_only and isinstance(path, dict) and path.get("path") == "api":
@@ -496,9 +506,12 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
                     restart = True                     # 앞 묶음은 로컬이 읽었다 — 첫 묶음부터 유료로 다시
                     break
             if not isinstance(raw, dict) or not isinstance(raw.get("items"), list):
+                if extra_pass:
+                    total.report["missed_line_error"] = "ValueError: 읽기 에이전트 답의 모양이 다르다"
+                    break
                 raise ValueError("읽기 에이전트 답의 모양이 다르다")
-            got = ground(raw, lines, allowed=part.new_numbers if many else None, taken=taken)
-            if many:
+            got = ground(raw, lines, allowed=part.new_numbers if split else None, taken=taken)
+            if many and not extra_pass:
                 _rebase_days(got, state)
             _merge(total, got)
             last = got.items[-1] if got.items else None
@@ -508,6 +521,14 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
             state.places.extend(i.title.text for i in got.items)
             if progress is not None:
                 progress.finish_chunk()
+            index += 1
+            if index == len(queue) and expected_lines and passes < int(missed_line_passes or 0):
+                more, count = _missed_chunks(frags, total, lines, expected_lines, anchor_lines, chunk_chars)
+                if more:
+                    queue.extend(more)
+                    passes, missed_total = passes + 1, missed_total + count
+        if passes and not restart:
+            total.report.update({"missed_line_passes": passes, "missed_lines": missed_total})
         if not restart:
             break
         restarted = True
@@ -524,6 +545,57 @@ def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: in
     if restarted:
         total.report["restarted_on_api"] = True
     return total
+
+
+def _call_part(streamer: Any, chat: Any, system: str, user: str, *, num_predict: int, stream: Any, progress: Any,
+               numbers: list[int], api_only: bool, policy_wrapper: bool, external_fallback_enabled: bool) -> Any:
+    """묶음 하나를 부른다 — 조금씩 받기(reader 입구)면 진행 알림 · 멈춤 감시 값과 함께, 아니면 고정 대기 `structured`."""
+    if callable(streamer):
+        progress.start(numbers)
+        extra: dict[str, Any] = {"api_only": True} if api_only else {}
+        if policy_wrapper:
+            extra["external_fallback_enabled"] = external_fallback_enabled
+            # ★`[2026-10-26 x600 74b2b232]` 유료 대체 몫(`travel.intake_reading.api_reserve_seconds`) — 로컬이 시한을 다 쓰지 않게
+            if stream.get("api_reserve_seconds") is not None:
+                extra["api_reserve_seconds"] = float(stream["api_reserve_seconds"])
+        return streamer(system, user, SCHEMA, num_predict=num_predict, on_piece=progress.piece,
+                        first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
+                        max_seconds=float(stream["max_seconds"]), **extra)
+    return chat.structured(system, user, SCHEMA, num_predict=num_predict)
+
+
+class _MissedChunk(fragments_module.Chunk):
+    """이어 읽기 묶음 — 보낸 줄(빠진 줄 + 그 앞 일차 머리줄) 중 새 항목을 받을 줄은 빠진 줄뿐이다."""
+
+    def __init__(self, fragments: list[Any], allowed: set[int]) -> None:
+        super().__init__(fragments, 0)
+        self.allowed = allowed
+
+    @property
+    def new_numbers(self) -> set[int]:
+        return {f.n for f in self.fragments if f.n in self.allowed}
+
+
+def _missed_chunks(frags: list[Any], total: "AgentRead", lines: list[str], expected: Any, anchors: Any,
+                   chunk_chars: int) -> tuple[list[Any], int]:
+    """모델이 빠뜨린 시각 있는 줄(규칙 읽기 기준) → 이어 읽기 묶음. ★줄 번호 덮임만 본다(낱말 규칙 없음).
+
+    빼는 줄: 모델이 항목으로 읽은 줄 · 이동 · 조건 · 성향 · 빈칸 인용으로 읽은 줄(`pipeline._agent_rows` 가 규칙 항목을 붙이지 않는 줄과 같다).
+    보내는 줄: 빠진 줄 + 각 줄 바로 앞의 일차 머리줄(날짜 문맥). 정정 요청(`correction`)이 있으면 이어 읽지 않는다(정정으로 지운 줄을 되살리지 않게)."""
+    if "correction" in requests_from(total):
+        return [], 0
+    covered = {it.title.line for it in total.items}
+    quotes = [v.get("quote") for name in ("moves", "conditions", "preferences", "gaps") for v in getattr(total, name)
+              if isinstance(v, dict)]
+    noted = {n for n, line in enumerate(lines, start=1) for q in quotes if isinstance(q, str) and q.strip() and q in line}
+    missed = sorted({int(n) for n in expected} - covered - noted)
+    if not missed:
+        return [], 0
+    heads = sorted(int(n) for n in (anchors or ()))
+    context = {max(h for h in heads if h < n) for n in missed if any(h < n for h in heads)}
+    picked = [f for f in frags if f.n in set(missed) | context]
+    parts = fragments_module.chunk(picked, limit=chunk_chars, overlap=0)
+    return [_MissedChunk(part.fragments, set(missed)) for part in parts], len(missed)
 
 
 def _rebase_days(part: AgentRead, state: fragments_module.ReadState) -> None:

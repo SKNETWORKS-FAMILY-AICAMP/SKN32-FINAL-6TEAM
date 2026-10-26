@@ -133,6 +133,7 @@ DOMAIN_WORDS = (
 | `INV-CS-SEC-013` | **모델 서버 넘김 장치가 모든 경로에 실패해도 오류 · 로그에 키 값을 싣지 않는다**(상태 코드와 이유 이름만) | automated | `tests/unit/infrastructure/test_llm_failover.py::test_when_every_path_fails_the_error_names_the_reasons_and_never_the_key` |
 | `INV-CS-SEC-014` | **사진 · 스캔 이미지는 `llm_failover_vision` 을 따로 켜지 않으면 API 로 넘어가지 않는다** — 이미지의 이름 · 예약번호는 가릴 수 없다 | automated | `tests/unit/infrastructure/test_llm_failover.py::test_images_do_not_go_to_the_api_unless_vision_is_switched_on` |
 | `INV-CS-SEC-015` | **서버용 키가 비어 있으면 스위치가 켜져 있어도, 개인 키가 있어도 OpenAI 로 넘어가지 않는다**(Ollama 만 쓴다) | automated | `tests/unit/infrastructure/test_llm_failover.py::test_personal_key_does_not_enable_failover_without_a_server_key` |
+| `INV-CS-SEC-016` | **바깥 API 키는 로그 · 진단 기록 · 예외 문자열에 남지 않는다** — `httpx` · `httpcore` 로거는 WARNING 이상, 로그 레코드의 메시지 · 예외 글 · 스택 글에서 `redaction.SECRET_QUERY_PARAMS`(이름 목록은 이 한 곳) 쿼리 · JSON 값과 설정의 키 값을, `mask_json` 저장값에서 설정의 키 값을 `***` 로 가린다(`extra=` 필드에는 주소 · 키를 싣지 않는다 · `core/log_redaction.install_log_redaction`, 2026-10-26 x600 로그에 `serviceKey=` 주소가 찍힌 일) | automated | `tests/security/test_secret_query_log_redaction.py::test_the_api_app_does_not_let_httpx_print_request_urls` |
 
 **`INV-CS-SEC-004`가 셋을 한 번에 본다.** DB에만 마스킹하고 audit에 원본이 남는 실수를 막는다.
 

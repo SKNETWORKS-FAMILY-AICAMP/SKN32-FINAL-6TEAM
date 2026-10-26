@@ -149,18 +149,24 @@ export function asksOf(intake: Pick<IntakeView, "interpretations" | "sources">, 
  * `[2026-10-19 사용자 결정 — 못 찾은 장소는 후보 보이고 묻기]` The questions about a stop whose place was not found (`prefill.questions[]` `kind: "place_not_found"`), by the check's stop id.
  * Only those that name a stop of the check — the card of that stop carries the question; one that names none stays in the note above the list.
  */
-export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean }> {
+/** `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` The questions the stop's own card carries: a place not found, and a nameless hotel whose stay the customer picks from the candidates (never filled first). */
+const CARD_QUESTION_KINDS: ReadonlySet<string | undefined> = new Set(["place_not_found", "lodging_place"]);
+
+export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean; candidates?: PlanCandidate[] }> {
   const ids = new Set((intake.review?.items ?? []).map((item) => item.id));
-  const out = new Map<string, { question: string; blocked: boolean }>();
+  const out = new Map<string, { question: string; blocked: boolean; candidates?: PlanCandidate[] }>();
   for (const entry of intake.prefill?.questions ?? []) {
-    if (entry?.kind !== "place_not_found" || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
-    if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true });
+    if (!CARD_QUESTION_KINDS.has(entry?.kind) || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
+    // `[2026-10-26 12:52]` The candidates the server put on the question (a nameless hotel): drawn at once; only those it named fully (a place with a name).
+    const carried = Array.isArray(entry.candidates) ? entry.candidates.filter((candidate) => candidate?.place && typeof candidate.place.name === "string" && candidate.place.name)
+      .map((candidate) => planCandidate({ ...candidate, rows: Array.isArray(candidate.rows) ? candidate.rows : [] }, entry.item as string, "candidate", null)) : null;
+    if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true, ...(carried?.length ? { candidates: carried } : {}) });
   }
   return out;
 }
 
 /** A stop that has a place now (picked, or 「장소 없음」) is not asked about any more, whatever the record of the first fill still says. */
-function withUnfound(item: PlanItem, unfound: { question: string; blocked: boolean } | undefined): PlanItem {
+function withUnfound(item: PlanItem, unfound: { question: string; blocked: boolean; candidates?: PlanCandidate[] } | undefined): PlanItem {
   return unfound && !item.coordinates && !item.noPlace ? { ...item, unfound } : item;
 }
 
@@ -183,7 +189,7 @@ export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> &
   // `[2026-10-19]` A question about a stop's place not found is asked on that stop's card, not here.
   const onCards = new Set(unfoundQuestions(intake).keys());
   const questions = [...new Set((intake.prefill?.questions ?? [])
-    .filter((entry) => !(entry?.kind === "place_not_found" && typeof entry.item === "string" && onCards.has(entry.item)))
+    .filter((entry) => !(CARD_QUESTION_KINDS.has(entry?.kind) && typeof entry.item === "string" && onCards.has(entry.item)))
     .map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
   const understood = [...new Set(intake.sources.flatMap((source) => {
     const read = source.understanding;
@@ -246,6 +252,17 @@ export function serverProgressOf(stream: Pick<StreamState, "progress" | "phases"
   return { serverProgress: of(stream.progress), serverPhases: Object.fromEntries(Object.entries(stream.phases).map(([phase, packet]) => [phase, of(packet)])) };
 }
 
+/**
+ * The stop kind a picked candidate brings with it, or null to leave the stop's kind alone. ★`[2026-10-26 13:14 사용자 보고 — 검증 화면은 숙박인데 등록 뒤 액티비티]` A stay
+ * (`basis: "lodging"`, or the lodging class `32` whose place kind the server writes as `activity`) never retypes the stop — whether it is a stay, an activity or a meal there is the
+ * kind question's (`interpretations[]` `type: "kind"`); ☆before, picking one sent `kind: "activity"` and a stay was saved as an activity. A meal at the stay and a meal-time place are meals.
+ */
+export function retypeOf(candidate: Pick<Candidate, "basis" | "place">): "dining" | "activity" | null {
+  if (candidate.basis === "meal_inferred" || candidate.basis === "lodging_meal") return "dining";
+  if (candidate.basis === "lodging" || String(candidate.place.content_type_id ?? "") === "32") return null;
+  return candidate.place.kind === "dining" || candidate.place.kind === "activity" ? candidate.place.kind : null;
+}
+
 /** Candidates → the change screen's cards. `distance.from` is the nearby stop the distance was measured from. */
 export function planCandidate(candidate: Candidate, itemId: string, source: PlanCandidate["source"], info: PlaceInfo | null): PlanCandidate {
   const risk = itemRiskOf(candidate.risk);
@@ -261,7 +278,7 @@ export function planCandidate(candidate: Candidate, itemId: string, source: Plan
     ...(proposedTime ? { proposedTime } : {}),
     ...(candidate.basis ? { basis: candidate.basis } : {}),
     ...(candidate.experience ? { experience: candidate.experience } : {}),
-    ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
+    ...(retypeOf(candidate) ? { placeKind: retypeOf(candidate)! } : {}),
     ...(reason ? { reason } : {}),
     ...(candidate.legs ? { legs: { before: legOf(candidate.legs.before), after: legOf(candidate.legs.after) } } : {}),
     ...(candidate.pending ? { pending: { before: candidate.pending.before === true, after: candidate.pending.after === true, reason: candidate.pending.reason === true } } : {}),

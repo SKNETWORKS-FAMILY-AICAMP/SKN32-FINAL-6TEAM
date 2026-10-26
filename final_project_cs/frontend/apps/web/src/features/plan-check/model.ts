@@ -95,7 +95,7 @@ export interface PlanItem {
    * `[2026-10-19 사용자 결정 — 못 찾은 장소]` The server could not find this stop's place and asks (`prefill.questions[]` `kind: "place_not_found"`): the card shows `question` as it is,
    * its candidates, 「직접 고르기」 and 「장소 없이」. `blocked` = the lookup was blocked and searched once more. Absent once the stop has a place or 「장소 없음」.
    */
-  unfound?: { question: string; blocked: boolean };
+  unfound?: { question: string; blocked: boolean; candidates?: PlanCandidate[] };
   /**
    * `[2026-10-20 사용자 결정 — 계획 확인 C안]` How the server settled the place (`place_state`: `picked_nearest` = one of several, the nearest taken for now) and how many places
    * matched the name (`candidates_hint`) — what the question asked at the stop says. Absent where the server did not say (the preview, an older server).

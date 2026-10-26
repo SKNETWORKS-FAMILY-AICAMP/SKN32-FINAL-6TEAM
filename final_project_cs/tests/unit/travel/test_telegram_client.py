@@ -230,6 +230,9 @@ def test_a_full_send_writes_nothing_with_the_token_or_body_to_the_logs(caplog):
 
 def test_the_httpx_log_filter_drops_records_that_carry_the_token_and_keeps_the_rest(caplog):
     caplog.set_level(logging.DEBUG)
+    # contract_correction `[2026-10-26]`: `core/log_redaction.install_log_redaction` 가 이제 `httpx` 로거를 WARNING 으로 둔다(키가 든 요청 주소 INFO 줄 차단).
+    #  이 시험은 telegram 필터 자체(토큰 기록은 버리고 나머지는 둔다)를 보므로 httpx 로거 레벨만 이 시험 안에서 DEBUG 로 연다 — 단언은 그대로다
+    caplog.set_level(logging.DEBUG, logger="httpx")
     httpx_logger = logging.getLogger("httpx")
     httpx_logger.info('HTTP Request: POST https://api.telegram.org/bot%s/sendMessage "HTTP/1.1 200 OK"', TOKEN)
     httpx_logger.info('HTTP Request: GET https://example.org/health "HTTP/1.1 200 OK"')

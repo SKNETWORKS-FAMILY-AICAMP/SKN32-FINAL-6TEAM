@@ -115,9 +115,11 @@ def test_failover_stream_passes_only_remaining_shared_deadline():
             return {'items': []}
     def backend(name, cost, fail):
         return _Backend(name, Chat(cost, fail), CircuitBreaker(name, threshold=1, open_seconds=1), timeout=1)
+    # contract_correction [2026-10-26 x600 74b2b232]: reader 시한은 reader 자신의 max_seconds 다(채팅 SLA total_seconds 로 자르지 않는다).
+    #   옛 입력 total_seconds=3 · max_seconds=10 은 시한 3을 total 로 만들었다 — 같은 시한 3을 max_seconds 로 주고 기대([3, 1])는 그대로 둔다.
     chat = FailoverChat([backend('one', 2, True), backend('two', 1, False)],
-                        total_seconds=3, clock=lambda: now[0])
-    assert chat.reader_structured_stream('s', 'u', {}, num_predict=1, first_wait=1, stall=1, max_seconds=10) == {'items': []}
+                        total_seconds=15, clock=lambda: now[0])
+    assert chat.reader_structured_stream('s', 'u', {}, num_predict=1, first_wait=1, stall=1, max_seconds=3) == {'items': []}
     assert seen == [3, 1], 'backend received a renewed total instead of remaining time'
 
 
@@ -132,8 +134,9 @@ def test_failover_does_not_start_backend_after_shared_deadline():
             raise OllamaError('failed')
     backends = [_Backend(n, Chat(), CircuitBreaker(n, threshold=1, open_seconds=1)) for n in ('one','two')]
     with pytest.raises(OllamaError):
-        FailoverChat(backends, total_seconds=2, clock=lambda: now[0]).reader_structured_stream(
-            's', 'u', {}, num_predict=1, first_wait=1, stall=1, max_seconds=10)
+        # contract_correction [2026-10-26 x600 74b2b232]: 시한 2를 total_seconds 대신 reader 의 max_seconds 로 준다(기대 [2] 그대로)
+        FailoverChat(backends, total_seconds=15, clock=lambda: now[0]).reader_structured_stream(
+            's', 'u', {}, num_predict=1, first_wait=1, stall=1, max_seconds=2)
     assert seen == [2], 'expired caller budget still started a second backend'
 
 

@@ -27,6 +27,7 @@ def masked(value: object) -> str:
 
 
 def _mask(text: str) -> str:
+    text = redact_secret_values(text)               # 등록된 바깥 API 키 값(설정) — 이름 규칙은 로그에만 `[2026-10-26]`
     text = re.sub(r"\bsk-[A-Za-z0-9_-]+\b", "[REDACTED_API_KEY]", text)
     text = re.sub(r"\bpay_[A-Za-z0-9_-]+\b", "[REDACTED_PAYMENT_ID]", text)
     text = re.sub(r"(?<!\d)(\d{3})-(\d{4})-(\d{4})(?!\d)", r"\1-****-\3", text)
@@ -80,3 +81,50 @@ def mask_json(value: object) -> object:
     if isinstance(value, list):
         return [mask_json(item) for item in value]
     return masked(value) if isinstance(value, str) else value
+
+
+#: ★`[2026-10-26]` 로그 · 진단 기록 · 예외 문자열에서 **값을 가리는** 쿼리 · 폼 파라미터 이름(소문자로 비교한다). 바깥 API 가 키를 주소에 싣는 이름은
+#:  여기 한 곳에만 적는다 — 새 공급자가 다른 이름을 쓰면 이 목록만 늘린다(wiki `quality/invariants.md` INV-CS-SEC-016).
+#:  ☆x600 api 컨테이너 로그에 공공데이터 요청 주소가 `serviceKey=…` 째 찍혔다 — `httpx` INFO 줄(`log_redaction.py` 머리말).
+SECRET_QUERY_PARAMS = frozenset({
+    "servicekey", "key", "apikey", "api_key", "appkey", "app_key", "authkey", "auth_key", "crtfc_key", "certkey",
+    "client_secret", "client_key", "consumer_key", "consumer_secret", "secret", "access_token", "refresh_token",
+    "id_token", "token", "password", "passwd", "subscription-key", "x-api-key",
+})
+_NAMES = "|".join(sorted(map(re.escape, SECRET_QUERY_PARAMS), key=len, reverse=True))
+#: 주소 · 폼 모양 `name=value` — 값은 `&` · 공백 · 따옴표 · `<>#)` 앞까지(쉼표가 든 값도 통째로 가린다)
+_SECRET_PARAM = re.compile(r"(?i)(?<![A-Za-z0-9_\-])(" + _NAMES + r")=([^&\s\"'<>#)]+)")
+#: JSON · 사전 글 모양 `"name": "value"` · `'name': 'value'`
+_SECRET_JSON = re.compile(r"(?i)([\"'])(" + _NAMES + r")(\1\s*:\s*)([\"'])([^\"']*)(\4)")
+#: 이름으로 못 잡는 자리(키가 주소 경로 조각인 공급자)를 위해 설정에 든 **키 값 자체**를 모아 둔다 — `log_redaction.register_secret_values`.
+#:  값과 그 URL 인코딩 모양(`quote` · `quote_plus`)을 같이 넣는다. 8자 미만은 넣지 않는다(흔한 낱말까지 가리게 된다).
+_SECRET_VALUES: set[str] = set()
+SECRET_VALUE_MIN_LENGTH = 8
+
+
+def add_secret_values(values) -> None:
+    """가릴 값을 더한다 — 빈 값 · 짧은 값은 버린다. 원문 · `quote` · `quote_plus` 모양을 함께 넣는다."""
+    from urllib.parse import quote, quote_plus
+
+    for value in values or ():
+        text = str(value or "").strip()
+        if len(text) < SECRET_VALUE_MIN_LENGTH:
+            continue
+        _SECRET_VALUES.update({text, quote(text, safe=""), quote_plus(text, safe="")})
+
+
+def redact_secrets(value: object) -> str:
+    """로그 · 예외 글 — 비밀 파라미터 값(`serviceKey=…` → `serviceKey=***`, `"serviceKey": "…"`)과 등록된 키 값을 `***` 로 바꾼다. 이름 · 다른 파라미터는 그대로 둔다."""
+    text = _SECRET_PARAM.sub(lambda m: m.group(1) + "=***", str(value))
+    text = _SECRET_JSON.sub(lambda m: m.group(1) + m.group(2) + m.group(3) + m.group(4) + "***" + m.group(6), text)
+    return redact_secret_values(text)
+
+
+def redact_secret_values(value: object) -> str:
+    """등록된 키 값(설정의 `*_key` · `*_secret` · `*_token` …)만 `***` 로 — 이름 규칙은 걸지 않는다(저장값 `mask_json` 이 쓴다:
+    고객이 적은 링크의 `?token=` · `?key=` 는 고객 글이라 그대로 둔다)."""
+    text = str(value)
+    for secret in sorted(_SECRET_VALUES, key=len, reverse=True):
+        if secret in text:
+            text = text.replace(secret, "***")
+    return text

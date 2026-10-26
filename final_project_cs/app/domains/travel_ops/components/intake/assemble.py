@@ -127,6 +127,10 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
             all_rows.append((_row(source, index, fields, marks, first_day, [] if removed else problems), removed))
     _split_shared_lines([row for row, _ in all_rows], original_titles)
     rows = [row for row, removed in all_rows if not removed]
+    # `[2026-10-26 사용자 지시 — 호텔 종류 확인]` 답하지 않은 종류 확인 질문은 등록을 막는다(계산은 1안으로 한다 — Codex 검토)
+    from .interpretations import kind_problems
+
+    problems += [Problem("kind_unanswered", f"items[{index}].kind", text, sid) for sid, index, text in kind_problems(claims, rows)]
     # ★시각이 없는 것은 **원문 순서** 안에서 규칙으로 배치한다 — 시각순으로 먼저 세우면 시각 없는 「점심」이
     #   그날 마지막 항목 뒤로 밀려 저녁이 된다. 채운 뒤에 날짜·시각 순으로 세운다.
     rows.sort(key=lambda r: (r["date"] or "9999", r["order"]))       # order = (원본, 원문 줄, 번호)
@@ -243,7 +247,9 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
     if not place and not no_place:
         problems.append(Problem("no_place", f"{where}.place", f"「{title or '이 항목'}」의 장소를 정하지 못했습니다 — "
                                 "장소 이름을 고치거나 「장소 없음」으로 두세요", sid))
-    kind = value("kind") if value("kind") in ("activity", "dining") else \
+    # `[2026-10-26 사용자 지시 — 호텔 종류 확인]` 숙박(lodging)도 받는다 — 읽기 AI 의 숙박 읽기 · 고객이 고른 숙박(종류 확인 질문 · 확인 화면 고치기).
+    #   ☆전에는 활동 · 식사만 받아 AI 가 숙박으로 읽어도 활동이 됐다(숙박은 줄에 「체크인」 글자가 있을 때만 — `_stays`)
+    kind = value("kind") if value("kind") in ("activity", "dining", "lodging") else \
         ("dining" if (place or {}).get("kind") == "dining" else "activity")
     if (fields.get("kind") or {}).get("method") == "trip" and value("kind") in ("lodging", "flight"):
         kind = value("kind")            # `[2026-10-15 ST4F-490]` 수정 접수가 등록한 여행에서 가져온 숙소 · 항공은 그 종류 그대로(읽은 줄은 지금처럼 활동 · 식사)
@@ -276,7 +282,10 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
         return f"{row['title'] or ''} {row['text'] or ''}"
 
     # `[2026-10-15 ST4F-490]` 이미 숙소인 줄(수정 접수가 등록한 숙소에서 가져온 것 — 끝 날짜를 값 줄로 안다)은 합치지 않는다
-    ins = [r for r in rows if r["date"] and r["kind"] not in ("dining", "lodging") and _CHECK_IN.search(words(r))]
+    # `[2026-10-26 사용자 지시 — 호텔 종류 확인]` 체크인 말이 없어도 숙박으로 읽었거나 고객이 숙박을 고른 줄(끝 날을 모르는 숙박)도 체크인 줄과 같다
+    ins = [r for r in rows if r["date"] and ((r["kind"] not in ("dining", "lodging") and _CHECK_IN.search(words(r)))
+                                             or (r["kind"] == "lodging" and not r.get("end_date")
+                                                 and (r["claims"].get("kind") or {}).get("method") != "trip"))]
     if not ins:
         return rows
     outs = [r for r in rows if r["date"] and r["kind"] != "lodging" and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]

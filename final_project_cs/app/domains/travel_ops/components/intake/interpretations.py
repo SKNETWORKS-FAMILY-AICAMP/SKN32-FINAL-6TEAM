@@ -135,6 +135,79 @@ def options_of(question: dict[str, Any], fields: dict[str, dict[str, Any]]) -> l
     return out
 
 
+# ── 종류 확인 질문 `[2026-10-26 사용자 지시 — 호텔 종류 확인]` ─────────────────────────────
+#: 사용자: 「호텔에서 하는 활동 · 식사도 있으니 명확히 지정하지 않으면 검증 화면에서 무엇으로 잡을지(숙박/액티비티/식사) 고르게」.
+#:   장소가 숙소인데 원문이 종류를 정하지 않은 줄 — 해석 확인 질문과 같은 화면 길로 묻는다. 1안(id `reading`)은 읽은 종류, 답하기 전에는 1안으로
+#:   계산하되 등록은 막는다(`kind_problems` → 조립 문제 `kind_unanswered`, Codex 검토 2026-10-26).
+KIND_QUESTION = "kind"
+KIND_LABEL = {"lodging": "숙박", "activity": "활동", "dining": "식사"}
+_KIND_EFFECT = {"lodging": "숙박으로 둬요 — 체크인 시각 · 체크아웃 날은 적힌 값이 없으면 규칙으로 채우고 「규칙으로 채움」으로 보여요",
+                "activity": "이곳에서 하는 활동 일정으로 둬요",
+                "dining": "이곳에서 하는 식사 일정으로 둬요"}
+
+
+def kind_question_rows(*, index: int, position: int, line: int | None, quote: str, title: str,
+                       reading_kind: str | None, by_agent: bool) -> list[dict[str, Any]]:
+    """종류 확인 질문 값 줄 하나. `reading_kind` = 읽은 종류(읽기 AI 가 읽었으면 `by_agent`), 모르면 None — 그때도 묻되 추천 표시는 하지 않는다."""
+    qid = f"k-{position}-{index}"
+    question = {"id": qid, "type": KIND_QUESTION, "index": index, "line": line, "quote": quote.strip(), "title": title,
+                "reading": {"kind": reading_kind if reading_kind in KIND_LABEL else None, "by": "model" if by_agent else "rule"}}
+    return [{"field": QUESTION_FIELD + qid, "value": question, "method": "llm_agent" if by_agent else "rule",
+             "evidence": {"source": "model" if by_agent else "rule", "line": line}, "needs_review": True,
+             "note": "장소가 숙소인데 원문이 숙박 · 활동 · 식사를 정하지 않았다 — 고객에게 고르게 한다"}]
+
+
+def _current_kind(fields: dict[str, dict[str, Any]]) -> str:
+    """조립(`assemble._row`)과 같은 규칙으로 본 지금 종류."""
+    value = (fields.get("kind") or {}).get("value")
+    if value in KIND_LABEL:
+        return value
+    place = (fields.get("place") or {}).get("value")
+    return "dining" if isinstance(place, dict) and place.get("kind") == "dining" else "activity"
+
+
+def _kind_view(question: dict[str, Any], fields: dict[str, dict[str, Any]], answer: Any) -> tuple[list[dict[str, Any]], Any, str, str]:
+    """(선택지, 답, 적용된 선택지 id, 1안의 종류). 1안 id 는 P6 와 같은 `reading`, 나머지는 종류 이름."""
+    reading = question.get("reading") or {}
+    current = _current_kind(fields)
+    first = reading.get("kind") if reading.get("kind") in KIND_LABEL else current
+    by_model = reading.get("by") == "model" and reading.get("kind") in KIND_LABEL
+    quote = question.get("quote") or question.get("title")
+    options = [{"id": "reading", "label": KIND_LABEL[first], "recommended": by_model, "action": None, "query": None,
+                "reason": (f"읽기 AI 가 「{quote}」를 {KIND_LABEL[first]}(으)로 읽었어요" if by_model
+                           else f"지금은 {KIND_LABEL[first]}(으)로 두었어요 — 원문에 종류를 정하는 말이 없어요"),
+                "effect": _KIND_EFFECT[first]}]
+    options += [{"id": kind, "label": KIND_LABEL[kind], "recommended": False, "action": None, "query": None, "reason": None,
+                 "effect": _KIND_EFFECT[kind]} for kind in KIND_LABEL if kind != first]
+    applied = "reading" if current == first else current
+    kind_claim = fields.get("kind") or {}
+    if answer is None and kind_claim.get("method") == "customer":
+        answer = applied                     # 확인 화면에서 고객이 종류를 직접 고쳤다 — 그것이 답이다(질문이 남아 등록을 막지 않게)
+    return options, answer, applied, first
+
+
+def kind_problems(raw_claims: list[dict[str, Any]], rows: list[dict[str, Any]]) -> list[tuple[str, int, str]]:
+    """답하지 않은 종류 확인 질문 → `(원본, 항목 번호, 고객 말)`. 뺀 일정(`rows` 에 없는 것)은 막지 않는다."""
+    from .assemble import effective
+
+    claims = effective(raw_claims)
+    live = {(str(r["source_id"]), int(r["index"])) for r in rows}
+    answers = {c["field"][len(ANSWER_FIELD):]: c["value"] for c in claims if c["field"].startswith(ANSWER_FIELD)}
+    out = []
+    for claim in claims:
+        question = claim.get("value")
+        if not claim["field"].startswith(QUESTION_FIELD) or not isinstance(question, dict) or question.get("type") != KIND_QUESTION:
+            continue
+        sid, index = str(claim["source_id"]), int(question["index"])
+        if (sid, index) not in live:
+            continue
+        _, answer, _, _ = _kind_view(question, _item_fields(claims, sid, index), answers.get(question["id"]))
+        if answer is None:
+            name = question.get("title") or question.get("quote") or "이 일정"
+            out.append((sid, index, f"「{name}」을 숙박 · 활동 · 식사 중 어떤 일정으로 볼지 골라 주세요"))
+    return out
+
+
 def view(raw_claims: list[dict[str, Any]], positions: dict[str, int]) -> list[dict[str, Any]]:
     """`GET …/{id}` 의 `interpretations[]` · 진행 이벤트 `interpretation` 의 몸통(같은 모양). 질문 순서는 원본 · 줄 순."""
     from .assemble import effective
@@ -148,6 +221,17 @@ def view(raw_claims: list[dict[str, Any]], positions: dict[str, int]) -> list[di
         question = claim["value"]
         sid = str(claim["source_id"])
         fields = _item_fields(claims, sid, int(question["index"]))
+        if question.get("type") == KIND_QUESTION:
+            if (fields.get("removed") or {}).get("value") is True:
+                continue
+            options, answer, applied, first = _kind_view(question, fields, answers.get(question["id"]))
+            name = question.get("title") or question.get("quote")
+            out.append({"id": question["id"], "kind": "interpretation", "type": KIND_QUESTION,
+                        "question": f"「{name}」을 어떤 일정으로 볼까요? — 숙박 · 활동 · 식사 중에 골라 주세요",
+                        "quote": question.get("quote"), "line": question.get("line"),
+                        "item": f"{positions.get(sid, 0)}-{question['index']}", "source_id": sid, "index": question["index"],
+                        "options": options, "answer": answer, "applied": applied, "reading_kind": first, "actions": []})
+            continue
         removed = (fields.get("removed") or {}).get("value") is True
         options = options_of(question, fields)
         answer = answers.get(question["id"])
@@ -184,6 +268,13 @@ def edits_for(answers: dict[str, str], questions: list[dict[str, Any]]) -> list[
     edits = []
     for qid, option in answers.items():
         question = by_id[qid]
+        if question.get("type") == KIND_QUESTION:
+            # 종류 질문 — 1안은 읽은 종류, 나머지는 그 종류. 지금 판과 다를 때만 `items[n].kind` 하나
+            want = question["reading_kind"] if option == "reading" else option
+            now = question["reading_kind"] if question["applied"] == "reading" else question["applied"]
+            if want != now:
+                edits.append({"source_id": question["source_id"], "field": f"items[{question['index']}].kind", "value": want})
+            continue
         want_removed = option == "reading"
         if want_removed != (question["applied"] == "reading"):
             edits.append({"source_id": question["source_id"], "field": f"items[{question['index']}].removed", "value": want_removed})

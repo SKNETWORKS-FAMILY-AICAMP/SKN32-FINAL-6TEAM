@@ -38,6 +38,9 @@ MISSING_QUESTION = {"first_day_date": "여행 첫날이 언제인가요?", "lodg
 PLACE_NOT_FOUND_QUESTION = "「{title}」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
 PLACE_NOT_FOUND_BLOCKED_QUESTION = "「{title}」은 장소 조회가 막혀 다시 찾아봤지만 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
 PLACE_NOT_FOUND_ACTIONS = ("pick_candidate", "pick_myself", "no_place")
+#: `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 이름 없는 호텔 줄의 질문 카드 — 못 찾은 줄과 같은 모양(그 일정 · 후보 · 직접 고르기).
+#:   후보는 싣지 않는다 — 화면이 `GET …/candidates` 로 받는다(최대 3곳 + 숙소 안 식사 짝). 후보가 하나여도 먼저 채우지 않는다
+LODGING_PICK_QUESTION = "「{title}」 — 묵을 숙소를 후보에서 골라 주세요(후보가 하나여도 고르신 뒤에 넣어요)"
 
 
 def _open_stay(item: Mapping[str, Any]) -> bool:
@@ -347,6 +350,9 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
     filled = refound + [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
     items_now = {i.get("id"): i for i in (state["review"].get("items") or [])}
     questions = [_question(p, items_now, still_blocked) for p in latest.values() if p.owner == "ask_customer"]
+    for question in questions:
+        if question["kind"] == "lodging_place" and items_now.get(question.get("item")) is not None:
+            question.update(_stay_choices(conn, tenant_id=tenant_id, review=state["review"], item=items_now[question["item"]]))
     kept = [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": p.reason}
             for p in latest.values() if p.owner != "ask_customer" and not p.candidates]
     record = {"filled": [f for f in filled if f], "questions": _unique(questions), "kept": kept, "rounds": rounds,
@@ -395,13 +401,17 @@ def retry_blocked(gaps: list[Gap], *, claims: list[Mapping[str, Any]], items: li
 def _question(p: Proposal, items: Mapping[Any, Mapping[str, Any]], blocked: set[Any]) -> dict[str, Any]:
     """질문 하나 — 다른 질문(첫날 · 숙소 이름 · 범위)과 같은 목록에 모은다. 못 찾은 줄은 그 일정을 가리키는 칸과 단추를 싣는다."""
     row = {"kind": p.gap.kind, "question": (p.candidates[0] or {}).get("question") or p.gap.reason, "quote": p.gap.quote}
-    if p.gap.kind != "place_not_found":
+    if p.gap.kind not in ("place_not_found", "lodging_place"):
         return row
     item_id = p.gap.where.get("item")
     item = items.get(item_id) or {}
     title = item.get("title") or p.gap.quote or "이름 없는 일정"
     was_blocked = item_id in blocked
-    return {**row, "question": (PLACE_NOT_FOUND_BLOCKED_QUESTION if was_blocked else PLACE_NOT_FOUND_QUESTION).format(title=title),
+    if p.gap.kind == "lodging_place":
+        text = LODGING_PICK_QUESTION.format(title=title)
+    else:
+        text = (PLACE_NOT_FOUND_BLOCKED_QUESTION if was_blocked else PLACE_NOT_FOUND_QUESTION).format(title=title)
+    return {**row, "question": text,
             "item": item_id, "source_id": item.get("source_id"), "index": item.get("index"), "mode": "change",
             "actions": list(PLACE_NOT_FOUND_ACTIONS), "blocked": was_blocked}
 
@@ -454,10 +464,26 @@ def _kept_reason(code: Any) -> str:
             "no_candidates": "맞는 후보가 없어 그대로 두었어요", "nothing_to_change": "바꿀 것이 없었어요"}.get(str(code), "맞는 안이 없어 그대로 두었어요")
 
 
+def _stay_choices(conn, *, tenant_id: str, review: Mapping[str, Any], item: Mapping[str, Any]) -> dict[str, Any]:
+    """`[2026-10-26 12:52 사용자 보고 — 「후보 3개 목록이 바로 안 나온다」]` 이름 없는 호텔 질문에 **후보(최대 3곳)를 같이 싣는다** — 화면이 따로 묻기 전에 바로 보인다.
+    `GET …/candidates` 와 같은 계산(`candidates.alternatives`)이고, 카카오를 부르지 않는다(카카오 값은 약관상 저장하지 않는다 — 이 질문은 `reading.prefill` 에 남는다).
+    모델 이유 문장도 쓰지 않는다(틀 문장). 계산이 실패하면 숨기지 않고 `candidates: None` + `candidates_error` — 화면은 그때 지금처럼 `GET …/candidates` 로 묻는다."""
+    from . import candidates as candidates_module
+
+    try:
+        got = candidates_module.alternatives(conn, tenant_id=tenant_id, review=review, item=item, kakao=None, chat=None)
+    except Exception as exc:                                  # noqa: BLE001 — 후보 계산 실패는 질문을 막지 않고 이유를 남긴다
+        log.warning("prefill stay choices failed item=%s", item.get("id"), exc_info=True)
+        return {"candidates": None, "candidates_error": type(exc).__name__}
+    picks = [c for c in got.get("candidates") or [] if (c.get("place") or {}).get("source") != "kakao"]
+    return {"candidates": picks[:gaps_module.MAX_CANDIDATES]}
+
+
 def _unique(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    # 같은 문장이라도 다른 일정을 가리키는 카드 질문(「호텔」 이틀)은 둘 다 남긴다 — 일정마다 그 카드가 묻는다
     out: list[dict[str, Any]] = []
     for row in rows:
-        if row["question"] not in {r["question"] for r in out}:
+        if (row["question"], row.get("item")) not in {(r["question"], r.get("item")) for r in out}:
             out.append(row)
     return out
 

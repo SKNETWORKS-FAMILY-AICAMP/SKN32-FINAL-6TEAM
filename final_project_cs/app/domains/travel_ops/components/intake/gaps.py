@@ -19,7 +19,10 @@ from typing import Any, Callable, Iterable, Mapping
 ROUTES: dict[str, str] = {
     "meal_place": "dining_team",          # 「저녁은 숙소 근처에서」 — 끼니는 있는데 가게가 없다
     "activity_place": "activity_team",    # 「오후엔 근처 구경」 — 활동 자리는 있는데 장소가 없다
-    "lodging_place": "lodging_team",      # 아직 정하지 않은 호텔·조식 — 여행 공통 숙소 추천
+    # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 아직 정하지 않은 호텔 · 조식은 먼저 채우기가 첫 후보로 채우지 않고 고객에게 묻는다 —
+    #   확인 화면의 후보 카드(`GET …/candidates`, 숙소 셋 + 숙소 안 식사 짝)에서 고른다(후보가 하나여도). ☆전에는 숙소 추천(`lodging_team`)의 첫 후보를 바로 넣었다.
+    #   고객이 누르는 「자동 추천」 · 「전체 자동 추천」은 그대로 숙소 추천을 쓴다(`autofix`)
+    "lodging_place": "ask_customer",
     "move_mode": "mobility",              # 구간 수단이 없다 · 고른 수단으로 못 닿는다
     "tight_move": "mobility",             # 사실 검사 — 앞 일정 끝에서 다음 일정까지 이동이 빠듯하다
     "free_slot": "planner",               # 「둘째 날은 알아서」 「오후는 채워 주세요」 — 하루 · 시간대를 통째로
