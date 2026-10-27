@@ -1,5 +1,5 @@
 import type { IntakeWatchEvent } from "@/lib/live/stream";
-import type { IntakeFollow } from "./use-intake-events";
+import type { IntakeFollow, IntakeProgress } from "./use-intake-events";
 
 /**
  * ★우리가 고른 값 — how often a beat that says nothing new still re-reads the intake while the server reads: five server beats (3 s each).
@@ -29,3 +29,15 @@ export function rereadGate(now: () => number = () => performance.now()): (event:
 
 /** The intake is asked for on a timer only while there is no live stream (none here, or it went silent and reconnects) — not for the rest of the reading once it was lost. */
 export const followPolls = (follow: IntakeFollow): boolean => follow === "polling" || follow === "lost";
+
+/**
+ * `[2026-10-27 통합 K]` The follow state after an event of the reading stream. A connection's first packet (`accepted`) after the stream was `lost` does not
+ * yet prove the line works — a dead line (proxy buffering, a jammed server) says hello and then nothing — so the screen stays `lost` and keeps re-reading
+ * every 1.5 s (the `[2026-10-03]` rule: the customer must not sit on a screen that never moves). A stage, a beat, the end or the first connection's
+ * hello make it `live` (the `[2026-10-27]` rule: no timer beside a working stream). Returns `current` itself when nothing changes (no re-render).
+ */
+export function followAfter(current: IntakeProgress, event: IntakeWatchEvent): IntakeProgress {
+  if (current.follow === "lost" && event.type === "progress" && event.kind === "accepted") return current;
+  const slow = event.type === "progress" && event.slow;
+  return current.follow === "live" && current.slow === slow ? current : { follow: "live", slow };
+}

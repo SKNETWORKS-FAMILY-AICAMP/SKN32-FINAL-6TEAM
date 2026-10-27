@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { reconnectDelay } from "@/features/trip/use-trip-events";
 import { watchIntake, type IntakeContentHandler } from "@/lib/live/stream";
 import type { Language } from "@/lib/i18n";
-import { rereadGate } from "./follow";
+import { followAfter, rereadGate } from "./follow";
 
 /**
  * How the screen follows an intake the server is reading:
@@ -40,8 +40,7 @@ export function useIntakeEvents(intakeId: string, reading: boolean, language: La
         const reread = rereadGate();
         const end = await watchIntake(intakeId, language, (event) => {
           failures = 0;
-          const slow = event.type === "progress" && event.slow;
-          setProgress((current) => current.follow === "live" && current.slow === slow ? current : { follow: "live", slow });
+          setProgress((current) => followAfter(current, event));   // a hello after `lost` keeps polling until the line carries news (`followAfter`)
           if (reread(event)) onChange();
         }, stop.signal, undefined, onContent);
         if (stop.signal.aborted || end === "closed") return;

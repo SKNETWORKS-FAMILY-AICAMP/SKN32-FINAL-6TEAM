@@ -5,7 +5,7 @@ import type { IntakeWatchEvent } from "@/lib/live/stream";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { planSteps } from "@/features/plan-check/server-steps";
 import { readingScreenOf } from "@/features/plan-check/from-review";
-import { BEAT_REREAD_MS, followPolls, rereadGate } from "./follow";
+import { BEAT_REREAD_MS, followAfter, followPolls, rereadGate } from "./follow";
 
 // `[2026-10-27 웹 전수검사]` 읽기 화면의 진행 표시 · 접수 다시 읽기 신호.
 function intake(status: IntakeView["status"], stage: string, extra: Partial<ReviewedIntakeView> = {}): ReviewedIntakeView {
@@ -80,5 +80,20 @@ describe("when the screen reads the intake again (GET) while it follows the stre
     expect(followPolls("polling")).toBe(true);
     expect(followPolls("live")).toBe(false);
     expect(followPolls("stalled")).toBe(false);
+  });
+
+  // `[2026-10-27 통합 K]` CI (web) live 3/4 server-review.spec 「실시간 진행이 열렸다가 아무 소식도 없으면 … 폴링으로 끝까지」: a reconnect that only says hello (`accepted`)
+  //   on a dead line flipped the screen back to `live` and stopped polling, so the reading never ended on screen. A lost stream counts as back only when it carries news.
+  it("keeps polling after a reconnect until the stream carries news again — a hello (accepted) alone does not prove the line works", () => {
+    const live = { follow: "live", slow: false } as const;
+    const lost = { follow: "lost", slow: false } as const;
+    const event = (kind: "accepted" | "stage" | "beat", slow = false): IntakeWatchEvent => ({ type: "progress", kind, stage: "reading", elapsed: 1, slow });
+    expect(followAfter(lost, event("accepted"))).toBe(lost);                                   // still lost: keep the 1.5 s timer
+    expect(followPolls(followAfter(lost, event("accepted")).follow)).toBe(true);
+    expect(followAfter(lost, event("beat"))).toEqual(live);                                     // the line works again: the timer stops
+    expect(followAfter(lost, event("stage"))).toEqual(live);
+    expect(followAfter(lost, { type: "done" })).toEqual(live);
+    expect(followAfter(live, event("accepted"))).toBe(live);                                   // the first connection: unchanged, no re-render
+    expect(followAfter(live, event("beat", true))).toEqual({ follow: "live", slow: true });
   });
 });
