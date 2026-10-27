@@ -241,7 +241,8 @@ class TripDesk:
             return {"status": "stale", "version": trip["version"]}
         if current is None or current.kind != "dining":
             return {"status": "clarify", "text": "바꿀 식사 일정을 알려 주세요."}
-        if current.locked or current.booking_id:
+        if current.locked or current.booking_id or (current.detail or {}).get("customer_pinned"):
+            # `[2026-10-27 B 채팅 전수검사]` 고객 고정(`detail.customer_pinned`)도 고정이다(팀 입구 · 적용기와 같다)
             return {"status": "edit_refused", "reason": "locked_item", "text": "예약·고정된 식사 일정이라 장소를 바꾸지 않았어요."}
         if self._use_ledger:
             places = self._add_nearby(trip_id, SimpleNamespace(kind="dining", place=origin,
