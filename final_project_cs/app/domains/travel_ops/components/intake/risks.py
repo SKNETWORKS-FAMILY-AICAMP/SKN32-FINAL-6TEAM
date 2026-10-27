@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from datetime import datetime, timedelta
 from typing import Any, Callable
 from uuid import NAMESPACE_URL, uuid5
@@ -74,6 +76,9 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
     guard = get_guardrails()
     limit = int(guard.get("travel.mcp.risk_check.max_items"))
     snapshot = float(guard.get("travel.mcp.risk_check.snapshot_hours"))
+    together = int(guard.get("travel.mcp.risk_check.parallel_items"))
+    if together < 1:
+        raise ValueError(f"travel.mcp.risk_check.parallel_items 는 1 이상이어야 한다: {together}")
     items, checked, seen = [], 0, 0
     total = sum(1 for item in review.get("items", []) if item.get("kind") != "mobility")
 
@@ -86,32 +91,69 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
         except Exception:  # noqa: BLE001 — 알림 실패가 점검을 막지 않는다
             pass
 
+    # ★`[2026-10-27 서빙 속도]` 먼저 일정마다 「점검할 것 · 바로 정해지는 것」을 차례로 정한다(`to_item` 은 DB 를 읽는다 — 이 스레드에서만).
+    #   한도(`checked`)는 점검 결과와 상관없이 세므로 이 단계에서 예전과 같은 일정이 고정된다. 바깥 조회(`judge_item`)만 아래에서
+    #   첫 일정은 혼자(지역 단위 응답을 공유 캐시에 채운다 — `cache.py`), 나머지는 `parallel_items` 개까지 동시에 돈다.
+    #   x600 실측: 차례로 점검 p50 4.8초 · p95 19.5초(일정당 p50 1.24초) — `wiki/records/reports/2026-10-27_계획서빙_속도_병목측정.md`
+    plan: list[tuple[dict[str, Any], dict[str, Any], Any]] = []      # (보일 일정, 원래 일정, 정해진 위험 | 점검할 Item)
     for item in review.get("items", []):
         shown = dict(item)
         if item.get("kind") == "mobility":
-            items.append(shown)
+            plan.append((shown, item, None))
             continue
-        note(seen, item)
-        seen += 1
         same = earlier.get(str(item.get("id")))
         if same is not None and same[0] == _risk_sig(item):
-            shown["risk"] = same[1]
             checked += same[1].get("status") != "not_applicable" and same[1].get("code") != "no_time"   # 한도는 앞 판과 같은 일정에 걸리게 센다
-            items.append(shown)
+            plan.append((shown, item, ("reused", same[1])))
             continue
         parsed = to_item(conn, tenant_id, item)
         if parsed is None:
-            risk = _unknown(item, "no_time", "방문 날짜·시각을 정하면 위험을 확인해요")
+            plan.append((shown, item, ("done", _unknown(item, "no_time", "방문 날짜·시각을 정하면 위험을 확인해요"))))
         elif parsed.ends_at is not None and parsed.ends_at <= now:
-            risk = {**_unknown(item, "past", "끝난 일정이라 현재 위험을 다시 판단하지 않아요"), "status": "not_applicable"}
+            plan.append((shown, item, ("done", {**_unknown(item, "past", "끝난 일정이라 현재 위험을 다시 판단하지 않아요"),
+                                                "status": "not_applicable"})))
         elif checked >= limit:
-            risk = _unknown(item, "item_limit", "한 번에 확인할 수 있는 일정 수에 닿았어요 · 이 일정은 아직 확인하지 못했어요")
+            plan.append((shown, item, ("done", _unknown(item, "item_limit",
+                                                        "한 번에 확인할 수 있는 일정 수에 닿았어요 · 이 일정은 아직 확인하지 못했어요"))))
         else:
-            risk = risk_report.judge_item(checker, parsed, mode=mode, at=now, snapshot_hours=snapshot)
-            risk = _for_trip_date(risk, far=parsed.starts_at - now > timedelta(hours=CURRENT_ALERT_HOURS))
+            plan.append((shown, item, ("judge", parsed)))
             checked += 1
-        shown["risk"] = _present(risk, mode, now)
-        items.append(shown)
+
+    def judge(parsed: Any) -> dict[str, Any]:
+        risk = risk_report.judge_item(checker, parsed, mode=mode, at=now, snapshot_hours=snapshot)
+        return _for_trip_date(risk, far=parsed.starts_at - now > timedelta(hours=CURRENT_ALERT_HOURS))
+
+    waiting = [i for i, (_s, _i, step) in enumerate(plan) if step is not None and step[0] == "judge"]
+    futures: dict[int, Any] = {}
+    pool: ThreadPoolExecutor | None = None
+    try:
+        for position, (shown, item, step) in enumerate(plan):
+            if step is None:                                   # 이동 줄
+                items.append(shown)
+                continue
+            note(seen, item)
+            seen += 1
+            kind, value = step
+            if kind == "reused":
+                shown["risk"] = value
+                items.append(shown)
+                continue
+            if kind == "judge":
+                if position in futures:
+                    risk = futures[position].result()
+                else:
+                    risk = judge(value)
+                    rest = [i for i in waiting if i > position]
+                    if together > 1 and rest and not futures:
+                        pool = ThreadPoolExecutor(max_workers=min(together, len(rest)), thread_name_prefix="intake-risk")
+                        futures = {i: pool.submit(copy_context().run, judge, plan[i][2][1]) for i in rest}
+            else:
+                risk = value
+            shown["risk"] = _present(risk, mode, now)
+            items.append(shown)
+    finally:
+        if pool is not None:
+            pool.shutdown(wait=True)
     if total:
         note(total, None)
     return {**review, "items": items, "risk_schema_version": SCHEMA_VERSION, "risk_mode": mode,

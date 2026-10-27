@@ -461,6 +461,10 @@ travel:
       horizon_hours: 3           # 「곧 시작할」 = 지금부터 이 시간 안(진행 중 포함). 감시는 90분 안을 3분마다 점검한다 — 그보다 넓게 두되 캐시가 비는 만큼 확인 불가가 늘어난다
       snapshot_hours: 3          # 시작이 이보다 멀면 특보 · 대기질 · 교통 · 재난문자 · 지진은 「지금 상태」만 말해 확인 불가(`too_early`)로 둔다 — 예보만 앞을 본다(대기질은 시각을 무시한다)
       max_items: 6               # 한 번에 점검하는 항목 수 — 감시 묶음 상한(`travel.watch.batch_max_items`)과 같다
+      # parallel_items: `[2026-10-27 서빙 속도]` 계획 확인 화면의 위험 점검(`intake/risks.decorate`)에서 첫 일정을 혼자 점검한 뒤(지역 단위 응답을 공유 캐시에 채운다)
+      #   남은 일정을 동시에 점검하는 수. 1 이면 예전처럼 차례로. 일정 하나의 6종 소스는 이미 동시에 돈다(`disruptions.DisruptionCheck.check`).
+      #   출처: x600 실측 — 차례로 점검 p50 4.8초 · p95 19.5초, 일정당 p50 1.24초(접수 152건 · 2026-10-20~26). 값 3 은 위 `max_concurrent.risk_check` 4 보다 작게 둔 **우리가 고른 값**
+      parallel_items: 3
       # fresh(캐시에 없으면 새로 부름) — 낮은 우선순위: 항목은 적게, 소스의 하루 · 이번 달 한도의 이 비율까지만 쓴다(나머지는 감시 · 채팅 몫 — 차감하는 SQL 안에서 비교).
       #   DB 를 못 읽으면 부르지 않는다(일반 호출의 `source_budget_on_db_error` 와 무관하게)
       fresh_max_items: 3
