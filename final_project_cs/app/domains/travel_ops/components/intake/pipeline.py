@@ -1275,12 +1275,16 @@ def _require_lockable(conn, tenant_id: str, intake_id: UUID, revision: int, sour
 def draft(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int):
     """등록 직전 — (현재 상태, 이미 만든 여행 id, 조립 결과). ★판이 다르면 낡은 화면이라 막는다."""
     with conn.cursor() as cur:
-        cur.execute("SELECT status, revision, trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
+        cur.execute("SELECT status, revision, trip_id, stage FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
                     "AND customer_id=%s", (tenant_id, intake_id, customer_id))
         row = cur.fetchone()
         if row is None:
             raise LookupError("intake")
-        status, current, trip_id = row
+        status, current, trip_id, stage = row
+        if public_status(status, stage) == "reading" and status == "review":
+            # ★`[2026-10-27 A 접수·읽기 전수검사 A14]` 먼저 채우기 · 해석 답 반영이 아직 돈다(고객에게는 「읽는 중」) — 그 판으로 등록하지 않는다.
+            #   ☆예전에는 `status` 만 봐서, 일꾼이 곧 새 판을 쓰는 사이 1판으로 여행을 만들 수 있었다
+            raise IntakeConflict("intake_not_ready", "아직 계획을 읽고 있어요 — 끝나면 다시 눌러 주세요", status="reading")
         if status not in ("review", "confirmed"):
             raise IntakeConflict("intake_not_ready", f"아직 등록할 수 없습니다(상태 {status})", status=status)
         if revision != current:
