@@ -108,3 +108,16 @@ def test_ledger_exact_plain_hit_needs_no_second_query():
     conn = _Conn(plain=[row], normalized=[])
     out = c._ledger_places(conn, "demo", None, query="진진", radius_m=None)
     assert [p["name"] for p in out] == ["진진"] and len(conn.calls) == 1
+
+
+def test_second_query_prefilters_on_hangul_edge_characters_only():
+    """정규화 비교는 행마다 정규식이라 비싸다 — 정규화 검색어의 첫 · 끝 글자가 한글이면 원문 `ILIKE` 로 먼저 줄인다(로컬 실측 28 → 12 ms).
+    한글 음절은 NFKC · 대소문자에 바뀌지 않아 줄여도 빠지는 행이 없다. 한글이 아닌 끝 글자(「N서울타워」의 n)는 줄이는 데 쓰지 않는다."""
+    conn = _Conn(plain=[], normalized=[DOSAN])
+    c._db_places_by_name(conn, "demo", "도산 공원", None, NOW)
+    sql, args = conn.calls[1]
+    assert "title ILIKE %s AND title ILIKE %s AND regexp_replace" in sql and "%도%" in args and "%원%" in args
+    conn = _Conn(plain=[], normalized=[])
+    c._db_places_by_name(conn, "demo", "N 서울타워", None, NOW)
+    sql, args = conn.calls[1]
+    assert "%n%" not in args and "%N%" not in args and "%워%" in args and "%n서울타워%" in args
