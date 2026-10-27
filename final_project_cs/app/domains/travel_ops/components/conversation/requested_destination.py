@@ -8,6 +8,16 @@ from .journey_progress import terminal
 
 
 def apply(*, store, connect, trip_id, base_version, decision, now, request_id):
+    # `[2026-10-27 C 전수검사]` 저장소 운영 실패는 판 그대로가 확인될 때만 escalated · save_failed(전에는 일반 500)
+    from .storage_failure import guarded
+
+    return guarded(lambda: _apply(store=store, connect=connect, trip_id=trip_id, base_version=base_version,
+                                  decision=decision, now=now, request_id=request_id),
+                   connect=connect, tenant=store.tenant_id, trip_id=trip_id, base_version=base_version,
+                   where="requested destination")
+
+
+def _apply(*, store, connect, trip_id, base_version, decision, now, request_id):
     name = str((decision.raw or {}).get('destination_text') or '').strip()[:80]
     key = 'destination:' + str(request_id)
     with connect() as conn, conn.transaction():

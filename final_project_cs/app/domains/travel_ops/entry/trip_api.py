@@ -824,6 +824,10 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
     status = outcome.get("status")
     if status == "not_found":
         raise _error(404, "not_found", "resource not found")
+    if status == "escalated" and outcome.get("reason") == "save_failed":
+        # ★`[2026-10-27 C 전수검사]` 저장소 운영 실패 · 판 그대로 확인됨(`storage_failure.guarded`) — 500 이 아니라 503 save_failed.
+        #   예외 종류 · 메시지는 싣지 않는다. Retry-After 는 근거 값이 없어 붙이지 않는다(웹 「완료」 save_failed 와 같다)
+        raise _error(503, "save_failed", str(outcome.get("text") or ""), version=outcome.get("version"))
     if status in _CONFLICTS:
         details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict", "text")}
         raise _error(409, _CONFLICTS[status], f"request not applied: {status}", **details)
