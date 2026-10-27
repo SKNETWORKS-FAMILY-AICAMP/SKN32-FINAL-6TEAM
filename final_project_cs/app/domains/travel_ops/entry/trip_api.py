@@ -1338,8 +1338,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def _choose(tenant: str, trip_id: UUID, proposal_id: UUID, key: str | None, by: str,
                 customer_id: UUID | None = None) -> dict[str, Any]:
         """★한 트랜잭션 — 실패하면 아무것도 안 바뀐다. 먼저 고른 쪽이 이기고 나중 쪽은 409."""
+        import psycopg
+
         from app.domains.travel_ops.components.booking.offers.recheck import over_price_limit, price_limit_refusal
-        from app.domains.travel_ops.components.planning.pending import PendingStore, ProposalRefused, choose
+        from app.domains.travel_ops.components.planning import pending as pending_module
+        from app.domains.travel_ops.components.planning.pending import ProposalRefused, choose
 
         store = TripStore(tenant)
         # ★`[2026-10-13]` 숙소 후보는 고르기 **전에** 1박 값을 다시 본다(잠그기 전 — 바깥 검색을 잠근 채 부르지 않는다). 객실이 없으면 바꾸지 않는다
@@ -1354,11 +1357,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if limit is not None:
             raise _error(409, "over_price_limit", price_limit_refusal(price_check, limit, str(option.get("name") or "고른 숙소")),
                          detail={"price_check": price_check, "price_limit": limit})
+        proposals = pending_module.SnapshotPendingStore(tenant)
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
                 places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
-                result = choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
+                result = choose(conn=conn, store=store, pending=proposals, trip_id=trip_id,
                                 proposal_id=proposal_id, key=key, by=by, places_by_id=places,
                                 check=_check(), price_check=price_check)
             # ★`[2026-10-02 결함 인계 #2·#5]` 못 고르는 상태라 **닫은** 제안(`expired` 끝난 일정 · `superseded` 낡은 기준 버전)은 위 트랜잭션이 커밋된 **뒤에**
@@ -1367,6 +1371,18 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 raise ProposalRefused("expired" if result["status"] == "expired" else "stale",
                                       {k: v for k, v in result.items() if k != "status"})
             return result
+        except psycopg.OperationalError as exc:
+            # ★`[2026-10-27 C 전수검사 결함 12]` 저장소 운영 실패(잠금 초과 · 연결 끊김 · 취소 — COMMIT 중 포함) — 전에는 그대로 올라가 일반 500 이었다
+            #   (화면 · 에이전트는 고른 안이 들어갔는지 모른다). **새 연결로 그 제안 행을 다시 읽어** 이 요청이 잠근 때와 그대로일 때만
+            #   503 `save_failed`(「아무것도 바뀌지 않았어요」 — 제안은 열린 채라 같은 안을 다시 고를 수 있다). 판 번호만으로는 「그대로 둘게요」 ·
+            #   「바꿔 줘」(판은 그대로 · 제안 행만 바뀜)를 못 가린다(Codex Q3). 다시 읽지 못했거나 제안이 바뀌었으면 원래 예외를 올린다(숨기지 않는다).
+            #   코드 결함 계열(IntegrityError · ProgrammingError …)은 잡지 않는다. 응답엔 예외 종류도 메시지도 싣지 않고, 로그엔 여행 id 와 종류 이름만.
+            before = proposals.locked
+            if not pending_module.proposal_unchanged_after_failure(get_connection, tenant, trip_id, proposal_id, before):
+                raise
+            logger.error("proposal choice storage write failed trip=%s error=%s (proposal unchanged)", trip_id, type(exc).__name__)
+            raise _error(503, "save_failed", pending_module.CHOOSE_SAVE_FAILED_TEXT,
+                         **({"proposal_status": before.get("status")} if before else {})) from None
         except ProposalRefused as refused:
             status = {"not_found": 404, "already_decided": 409, "stale": 409, "expired": 409}.get(refused.code, 422)
             # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다
