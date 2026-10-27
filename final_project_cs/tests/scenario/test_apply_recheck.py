@@ -76,7 +76,8 @@ def test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied(case
         with pytest.raises(ActionRejected) as refused:
             ItineraryApply().apply(conn, tenant_id=case_world["tenant"], customer_id=case_world["customer"],
                                    case_id=uuid4(), arguments=arguments)
-    assert str(refused.value).startswith(RECHECK_FAILED) and "겹친다" in str(refused.value)
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「겹친다」)
+    assert str(refused.value).startswith(RECHECK_FAILED) and "시간이 겹쳐요" in str(refused.value)
     assert _trip(case_world)[0]["version"] == trip["version"]                       # ★아무것도 안 바뀌었다
 
 

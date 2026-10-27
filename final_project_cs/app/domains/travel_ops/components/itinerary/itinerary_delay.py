@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item
-from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part, check_itinerary, particle
 
 KST = ZoneInfo("Asia/Seoul")
 _DEFAULT_LENGTH = timedelta(hours=1)
@@ -89,7 +89,7 @@ def knock_on_text(delayed: Item, minutes: int, knocks: list[Knock]) -> str:
         tail += f" 걸린 곳은 다른 곳으로 바꿔 드릴 수 있어요 — 「{movable[0]} 바꿔줘」처럼 말씀해 주세요."
     if len(movable) < len(knocks):
         tail += " 예약·고정한 일정은 시각을 바꾸지 않았어요."
-    return f"{delayed.title}은(는) {minutes}분 늦어도 괜찮지만, 그만큼 뒤 일정이 밀려 이렇게 걸려요: {listed}. {tail}"
+    return f"{delayed.title}{particle(delayed.title, '은/는')} {minutes}분 늦어도 괜찮지만, 그만큼 뒤 일정이 밀려 이렇게 걸려요: {listed}. {tail}"
 
 
 __all__ = ["Knock", "delay_knock_on", "knock_on_text"]

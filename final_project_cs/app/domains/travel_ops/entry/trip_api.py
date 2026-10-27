@@ -543,7 +543,7 @@ def _seoul(moment: datetime | None) -> datetime | None:
 # ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
 #   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
 from app.domains.travel_ops.components.booking.change_link import change_token, change_url, change_view, render_change  # noqa: E402
-from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary, parts_from_items, with_ledger
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary, parts_from_items, refusal_message, with_ledger
 from app.domains.travel_ops.components.itinerary.density import measure_density
 from app.domains.travel_ops.components.itinerary.itinerary_quality import quality_warnings
 from app.domains.travel_ops.components.itinerary.plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
@@ -986,9 +986,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                          for it in request.items], _ledger_verdicts),
             constraints=request.constraints, party_size=request.party_size)
         if violations:
-            raise _error(422, "itinerary_infeasible",
-                         "이 일정은 그대로 수행할 수 없습니다: "
-                         + " / ".join(v.reason for v in violations),
+            raise _error(422, "itinerary_infeasible", refusal_message(violations),
                          violations=[v.as_dict() for v in violations])
         key = idempotency_key(tenant_id=tenant, request_id=request.request_id,
                               action_type="trip.create", business_subject=str(request.customer_id))

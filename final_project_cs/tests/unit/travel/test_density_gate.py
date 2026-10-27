@@ -159,7 +159,8 @@ def test_the_structural_violation_is_still_a_wall_whatever_the_density_says():
     a, b = _day()
     overlapping = _swap(a, "겹치는 곳", 250)                                          # B(10:00+240 시작)와 겹친다
     fit = fit_change(_ranked(overlapping), trip=TRIP, items=[a, b])
-    assert fit.change is None and fit.skipped[0].why == "schedule" and "겹친다" in fit.skipped[0].reasons[0]
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「겹친다」)
+    assert fit.change is None and fit.skipped[0].why == "schedule" and "시간이 겹쳐요" in fit.skipped[0].reasons[0]
 
 
 def test_hard_mode_blocks_a_density_regression_like_a_structural_violation(monkeypatch):

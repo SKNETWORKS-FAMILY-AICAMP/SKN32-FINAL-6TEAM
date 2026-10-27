@@ -135,7 +135,8 @@ def test_fit_change_returns_the_first_rank_that_passes_and_records_what_it_skipp
     fit = fit_change(best, trip=trip, items=[first, second])
     fitted = fit.change
     assert fit.rank == 3 and [s.rank for s in fit.skipped] == [1, 2] and [s.name for s in fit.skipped] == ["1순위", "2순위"]
-    assert all("겹친다" in s.reasons[0] and s.why == "schedule" for s in fit.skipped)
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「겹친다」)
+    assert all("시간이 겹쳐요" in s.reasons[0] and s.why == "schedule" for s in fit.skipped)
     assert fitted.summary["to"] == "3순위" and "skipped" not in fitted.summary
     assert "1순위" not in fitted.notice["text"] and "2순위" not in fitted.notice["text"]
     assert "skipped" not in fitted.notice.get("fit", {})
