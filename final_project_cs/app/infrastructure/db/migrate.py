@@ -120,6 +120,9 @@ def apply_all(conn, *, sleep=time.sleep, attempt_timeout_s: float | None = None)
         raise ValueError("attempt_timeout_s must be a positive number of seconds")
     sql = compiled_sql()
     if conn.info.transaction_status != TransactionStatus.IDLE:
+        if attempt_timeout_s is not None:
+            # 중첩 경로는 바깥 트랜잭션 안에서 한 번만 돈다 — 시도 제한을 걸 수 없으니 조용히 빼지 않고 거절한다
+            raise ValueError("attempt_timeout_s needs an idle connection (outermost call)")
         with conn.transaction():
             conn.execute(sql)
         return

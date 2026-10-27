@@ -118,7 +118,7 @@ class PlanTests(unittest.TestCase):
         d = document()
         j = cd.migration_job(d, IMAGE, SHA, "123")
         self.assertEqual(j["spec"]["backoffLimit"], 0)
-        self.assertEqual(j["spec"]["activeDeadlineSeconds"], 600)
+        self.assertEqual(j["spec"]["activeDeadlineSeconds"], cd.migration_job_settings()["active_deadline_seconds"])
         pod = j["spec"]["template"]["spec"]
         self.assertEqual(pod["restartPolicy"], "Never")
         self.assertFalse(pod["automountServiceAccountToken"])
@@ -179,6 +179,39 @@ class PlanTests(unittest.TestCase):
         with patch.object(cd, "migration_lock_policy", side_effect=ValueError("lock_policy missing")), \
              self.assertRaises(ValueError):
             cd.migration_job(document(), IMAGE, SHA, "123")
+
+    def test_job_timing_values_come_from_the_settings_file_only(self):
+        # ★[2026-10-28 독립 검토] 가드레일 수치(Job 기한 · 시도 제한 · 시작 여유 · 결과 대기 여유)는 코드에 박지 않는다(RULE.md 3) —
+        #   deploy/aws/migration-job.json 한 곳에서 읽고, 시험도 그 파일을 읽는다(값을 시험에 다시 적지 않는다)
+        shipped = json.loads(cd.MIGRATION_JOB_SETTINGS_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(cd.migration_job_settings(), shipped)
+        self.assertEqual((cd.MIGRATION_DEADLINE_SECONDS, cd.MIGRATION_ATTEMPT_TIMEOUT, cd.MIGRATION_START_RESERVE_SECONDS,
+                          cd.MIGRATION_RESULT_WAIT_MARGIN_SECONDS),
+                         (shipped["active_deadline_seconds"], shipped["attempt_timeout"],
+                          shipped["start_reserve_seconds"], shipped["result_wait_margin_seconds"]))
+        source = SOURCE.read_text(encoding="utf-8")
+        for name in ("MIGRATION_DEADLINE_SECONDS", "MIGRATION_ATTEMPT_TIMEOUT", "MIGRATION_START_RESERVE_SECONDS",
+                     "MIGRATION_RESULT_WAIT_MARGIN_SECONDS"):
+            self.assertRegex(source, rf"(?m)^{name} = _JOB\[")
+        self.assertNotRegex(source, r"MIGRATION_DEADLINE_SECONDS \+ [0-9]")
+
+    def test_bad_job_settings_stop_before_any_cluster_call(self):
+        good = cd.migration_job_settings()
+        bad_cases = [None, [], {k: v for k, v in good.items() if k != "start_reserve_seconds"},
+                     {**good, "extra": 1}, {**good, "active_deadline_seconds": 0},
+                     {**good, "start_reserve_seconds": "120"}, {**good, "result_wait_margin_seconds": True},
+                     {**good, "attempt_timeout": 120}, {**good, "attempt_timeout": "2 minutes"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "migration-job.json"
+            with self.assertRaisesRegex(cd.DeploymentError, "missing"):
+                cd.migration_job_settings(path)
+            for bad in bad_cases:
+                with self.subTest(bad=bad):
+                    path.write_text(json.dumps(bad), encoding="utf-8")
+                    with self.assertRaises(cd.DeploymentError):
+                        cd.migration_job_settings(path)
+            path.write_text(json.dumps(good), encoding="utf-8")
+            self.assertEqual(cd.migration_job_settings(path), good)
 
     def test_duration_settings_must_be_explicit_units(self):
         self.assertEqual(cd.seconds("5s"), 5)

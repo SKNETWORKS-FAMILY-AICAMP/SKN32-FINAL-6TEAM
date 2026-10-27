@@ -30,9 +30,12 @@ REVISION = "guguroute.io/source-sha"
 # migration message separately. The same value is also the session statement_timeout (backstop).
 # Worst case = lock_policy attempts x attempt bound + retry waits; it plus the start reserve (pod
 # scheduling, new image pull, interpreter start) must fit the Job deadline, or no Job is created.
-MIGRATION_DEADLINE_SECONDS = 600
-MIGRATION_ATTEMPT_TIMEOUT = "2min"
-MIGRATION_START_RESERVE_SECONDS = 120
+# The four Job timing values live in deploy/aws/migration-job.json (one place, no code defaults; a
+# missing or malformed file stops the CD before any cluster call). Why each value is what it is:
+# final_project_cs/wiki/operations/aws-main-cd.md.
+MIGRATION_JOB_SETTINGS_PATH = Path(__file__).resolve().parent / "aws" / "migration-job.json"
+MIGRATION_JOB_SETTING_KEYS = ("active_deadline_seconds", "attempt_timeout", "start_reserve_seconds",
+                              "result_wait_margin_seconds")
 MIGRATION_PLAN_DIR = Path(__file__).resolve().parents[1] / "app" / "infrastructure" / "db" / "migrations"
 # Kubernetes copies this file into the terminated container status (at most 4 KiB), so the
 # deployment can name the migration outcome without reading container logs.
@@ -44,6 +47,32 @@ FAILURE_FILE = "aws-deploy-failure.json"
 
 class DeploymentError(RuntimeError):
     pass
+
+
+def migration_job_settings(path=MIGRATION_JOB_SETTINGS_PATH):
+    """Read the migration Job timing values; refuse anything but the exact keys with positive values."""
+    try:
+        settings = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise DeploymentError("deploy/aws/migration-job.json is missing or not JSON") from exc
+    if not isinstance(settings, dict) or tuple(sorted(settings)) != tuple(sorted(MIGRATION_JOB_SETTING_KEYS)):
+        raise DeploymentError("deploy/aws/migration-job.json must define exactly "
+                              + ", ".join(MIGRATION_JOB_SETTING_KEYS))
+    for key in MIGRATION_JOB_SETTING_KEYS:
+        value = settings[key]
+        if key == "attempt_timeout":
+            if not isinstance(value, str) or not DURATION_RE.fullmatch(value):
+                raise DeploymentError("migration-job.json attempt_timeout must be a duration such as 2min")
+        elif type(value) is not int or value <= 0:
+            raise DeploymentError(f"migration-job.json {key} must be a positive integer")
+    return settings
+
+
+_JOB = migration_job_settings()
+MIGRATION_DEADLINE_SECONDS = _JOB["active_deadline_seconds"]
+MIGRATION_ATTEMPT_TIMEOUT = _JOB["attempt_timeout"]
+MIGRATION_START_RESERVE_SECONDS = _JOB["start_reserve_seconds"]
+MIGRATION_RESULT_WAIT_MARGIN_SECONDS = _JOB["result_wait_margin_seconds"]
 
 
 def seconds(value):
@@ -536,7 +565,7 @@ def _deploy(sha, namespace, images, public_url, database, settle, enter, timings
     job = migration_job(baselines["tripilot-api"], images["tripilot-api"], sha, os.environ["GITHUB_RUN_ID"])
     created = kubectl(namespace, "create", "-f", "-", "-o", "json", data=json.dumps(job))
     job_name = created["metadata"]["name"]
-    deadline = time.monotonic() + MIGRATION_DEADLINE_SECONDS + 120
+    deadline = time.monotonic() + MIGRATION_DEADLINE_SECONDS + MIGRATION_RESULT_WAIT_MARGIN_SECONDS
     while True:
         current = kubectl(namespace, "get", "job", job_name, "-o", "json")
         status = current.get("status", {})

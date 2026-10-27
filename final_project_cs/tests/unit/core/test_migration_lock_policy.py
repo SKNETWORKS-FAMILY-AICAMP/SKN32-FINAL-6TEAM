@@ -253,3 +253,11 @@ def test_the_attempt_limit_must_be_a_positive_number(world, limit):
     with pytest.raises(ValueError, match="attempt_timeout_s"):
         migrate.apply_all(conn, sleep=world.append, attempt_timeout_s=limit)
     assert conn.executed == []
+
+
+def test_a_nested_call_refuses_an_attempt_limit_instead_of_dropping_it(world):
+    # ★[2026-10-28 독립 검토] 바깥 트랜잭션 안에서는 시도 제한을 걸 수 없다 — 제한 없이 조용히 돌지 않고 시작 전에 거절한다
+    conn = _Conn([None], status=TransactionStatus.INTRANS)
+    with pytest.raises(ValueError, match="attempt_timeout_s"):
+        migrate.apply_all(conn, sleep=world.append, attempt_timeout_s=30)
+    assert conn.executed == [] and conn.transactions == 0
