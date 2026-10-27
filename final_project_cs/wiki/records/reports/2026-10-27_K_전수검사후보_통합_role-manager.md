@@ -60,6 +60,12 @@ DB 시험 사후 대조(`cmp.txt`): 바뀐 행은 새 tenant 뿐이다(기존 te
 ## 5. push · 배포
 - push 대상 = 이 보고서를 담은 커밋(`integ/K-allaudit-20261027` tip). 직전 `git ls-remote` 로 두 원격이 064208bdd 그대로일 때만 fast-forward(force 없음). 원격 SHA · CI(main) 수동 실행 · x600 deploy.log 결과는 push 뒤 세션 K 최종 보고와 `cache/scratch/_coord/K-allaudit-integration-NOTICE.md` 에 적고, 다음 기록 커밋에 옮긴다(문서만 다시 push 하면 x600 배포가 한 번 더 돈다).
 
+## 5-1. 추가 기록 — 첫 push(9a15223e0) 뒤 결과 · CI 고침 (17:16~17:4x)
+- push: 17:16:08 팀 · 개인 role-manager `064208bdd → 9a15223e0`(fast-forward, 직전 ls-remote 두 원격 064208bdd 확인).
+- x600: `deploy.log` 17:20:10 시작 → `Deployment safety migrate: passed`(재시도 줄 없음 · 교착 재현 안 됨) → 17:23:26 「반영 완료 9a15223e0c (이전 064208bdd4)」, 공지판 `deploy:9a15223e0c` done, `/health` 200.
+- CI (main) [40472347206](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM/actions/runs/40472347206): 13,041 통과 · **2 실패** · 466 건너뜀(ruff · Docker 통과). 실패 2건은 `tests/integration/db/test_migrations_rerun.py` 의 임시 plan(`lock_policy` 없음)이 C 의 「lock_policy 없으면 시작 안 함」 계약에 걸린 **시험 낡음** — 운영 plan 에는 정책이 있고 x600 마이그레이션도 통과. 고침: 임시 plan 에 실제 plan 의 `lock_policy` 를 그대로 싣는다(단언 그대로, 값 새로 만들지 않음). 로컬 격리 러너는 임시 DB 생성을 막아 이 파일이 건너뜀 → 판정은 CI 재실행.
+- CI (web) [40472351405](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM/actions/runs/40472351405): check 통과, live 238 통과 · **1 실패** — `server-review.spec.ts:51` 「실시간 진행이 열렸다가 아무 소식도 없으면 「연결이 끊겼어요」를 알리고 폴링으로 끝까지 따라간다」. **제품 회귀(D)**: D 가 「끊긴 동안만 폴링」으로 바꾼 뒤, 죽은 줄에 다시 붙어 인사(`accepted`)만 받아도 `live` 로 돌아가 폴링을 멈춰 읽기가 화면에서 끝나지 않았다(10-03 규칙 「고객이 멈춘 화면에 앉아 있지 않게」 위반). 고침: `follow.followAfter` — `lost` 뒤 인사만으로는 `live` 가 아니고 단계 · 박동 · 끝이 와야 폴링을 멈춘다(D 의 「살아 있는 줄 옆 타이머 없음」은 유지). 단위 시험 RED 1 → GREEN, vitest 1,218/1,218 · tsc 0 · eslint 0. Playwright 는 이 PC 에 브라우저가 없어 CI (web) 재실행으로 판정.
+
 ## 6. 디스크
 - 시작 16:06 C: 여유 998M. `modelq-G-20261027/base`(064208bdd 깨끗한 비교 트리, 변경 0) worktree 제거로 2.6G. 통합 트리 sparse(약 0.4G) 뒤 2.1~2.2G.
 - web node_modules 는 `integ-F-20261027` 것을 junction(package-lock md5 `fbf752db…` 같음).
