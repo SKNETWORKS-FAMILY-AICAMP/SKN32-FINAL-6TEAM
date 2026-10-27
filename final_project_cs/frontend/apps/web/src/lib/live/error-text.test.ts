@@ -30,6 +30,13 @@ describe("the customer's sentence for a server refusal (ST4F-611 · 문구 대�
     expect(refusalSentence("service_updating", caddy, undefined, "en")).toBe("The service is switching to a new version. Please try again shortly.");
   });
 
+  it("says the plan was not saved and nothing changed when 「완료」 fails to write (503 save_failed, web-intakes /confirm 7)", () => {
+    const server = "지금 일정을 저장하지 못했어요(저장 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 「완료」를 다시 눌러 주세요.";
+    expect(refusalSentence("save_failed", server, { version: 3 }, "ko")).toBe(server);
+    expect(refusalSentence("save_failed", server, { version: 3 }, "en"))
+      .toBe("We couldn't save the plan just now. Nothing was changed. Please try again shortly.");
+  });
+
   it("has a Korean and an English sentence for every code, both ending politely", () => {
     for (const [code, text] of Object.entries(REFUSAL_TEXT)) {
       const [ko, en] = typeof text === "function" ? text({ cap: 2 }) : text;

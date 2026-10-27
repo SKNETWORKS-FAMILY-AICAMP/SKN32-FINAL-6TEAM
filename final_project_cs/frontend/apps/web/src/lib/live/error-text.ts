@@ -86,6 +86,8 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   // `[2026-10-20 D-CS-019]` 새 판으로 바꾸는 동안 api 대신 Caddy 가 답한다(`deploy/Caddyfile.tripilot` 「handle_errors」)
   service_updating: [`서비스를 새 판으로 바꾸는 중이에요. ${AGAIN[0]}`, `The service is switching to a new version. ${AGAIN[1]}`],
   risk_check_unavailable: [`지금은 일정 위험을 점검할 수 없어요. ${AGAIN[0]}`, `The trip risk check is unavailable right now. ${AGAIN[1]}`],
+  // `[2026-10-26 묶음 M]` 「일정 수정」 「완료」가 새 판을 쓰다 저장소 오류로 멈췄고, 다시 읽어 판이 그대로인 것을 확인한 때(web-intakes /confirm 7)
+  save_failed: [`지금 일정을 저장하지 못했어요. 일정은 바꾸지 않았어요. ${AGAIN[0]}`, `We couldn't save the plan just now. Nothing was changed. ${AGAIN[1]}`],
   // 여행 · 계획
   not_found: ["찾을 수 없어요. 지워졌거나 주소가 바뀌었을 수 있어요.", "Not found. It may have been removed."],
   item_not_found: [`그 일정을 찾지 못했어요. ${REFRESH[0]}`, `We couldn't find that item. ${REFRESH[1]}`],
