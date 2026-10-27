@@ -16,6 +16,8 @@ domain: travel
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
 
+2026-10-27 전수검사 A~J 후보 통합(F · C · B · G · A · D · E · H · J 9/9, I 제외) — 빠른 관문 10,530/10,530 · vitest 1,217/1,217 · DB core 89/89 · 수용 49 엄격 39/49, role-manager 반영 [보고서](records/reports/2026-10-27_K_전수검사후보_통합_role-manager.md)
+
 2026-10-27 미통합 후보 통합(T04 범위 경계 되묻기 · 「일정 수정」 완료 저장 실패 503 save_failed + 웹 문구표 짝) — role-manager 064208bd 위 통합 후보 `integ/F-20261027`, 빠른 관문 10345/10345 · DB 67/67 · vitest 1206/1206, 실 E4B T04 · X02 · F03 2/3(T04 는 저장 없이 되묻기 — 모델 과제), push 대기: [보고서](records/reports/2026-10-27_F_후보통합_T04_저장실패503_064208bd.md)
 
 2026-10-27 TeamFlow(팀플로) 버그 수집 189건(전체 688건 중 미해결 ∪ 최근 30일 버그) — 결함 111건 중 해결 표시 93건 · 미해결 18건, 숙소 고를 때 상한 넘는 재확인 가격 적용(ST4F-709) · 「수 있음」을 수요일 휴무로 읽던 것(ST4F-685)을 격리 후보에서 고침(단위 시험까지, 푸시 전): [보고서](records/reports/2026-10-27_teamflow_버그수집_J.md)
