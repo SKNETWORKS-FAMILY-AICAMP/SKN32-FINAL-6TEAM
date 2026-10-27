@@ -14,6 +14,10 @@
 #   check 와 live 를 따로 띄우고, live 는 독립된 실행 환경 4개로 나눠 동시에 돈다(Playwright --shard). 묶음마다 모방 서버 ·
 #   빌드가 따로라 서로 상태를 건드리지 않는다. 한 묶음 안은 지금처럼 하나씩(workers 1) — workers 를 늘리면 모방 서버의
 #   일정 · 로그 · 세션 상태를 시험끼리 나눠 써서 깨진다. 마지막 「web (check · e2e · live)」가 결과를 모아 하나라도 실패면 실패다.
+# ★`[2026-10-27 — AWS 배포 대기 줄이기]` 4묶음 → 8묶음. main 실측(실행 40270328504): 시험 파일 147개 · 실행 합 3,493초인데
+#   묶음 1이 1,100초(가장 짧은 묶음 632초)라 CI (web) 20분이 AWS 배포(CI (main) 9분 뒤)를 11분 더 붙잡았다. 묶음을 늘리면
+#   묶음당 시험 시간이 약 440초로 준다(가장 긴 파일 233초). 묶음 안은 그대로 workers 1 — 시험 수 · 내용은 바꾸지 않는다.
+#   필수 검사 이름(main 보호 규칙)은 이 묶음 이름을 보지 않는다(2026-10-27 확인: ruff · 전체 시험 · Docker 빌드).
 name: CI (web)
 
 on:
@@ -65,7 +69,7 @@ jobs:
         run: npm run check
 
   live:
-    name: web live ${{ matrix.shard }}/4
+    name: web live ${{ matrix.shard }}/8
     # develop 에서는 건너뛴다(위 env FULL 과 같은 식 — job 의 if 에서는 env 를 읽지 못해 다시 쓴다)
     if: ${{ github.ref == 'refs/heads/main' || github.base_ref == 'main' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
@@ -73,7 +77,7 @@ jobs:
       # 한 묶음이 실패해도 나머지 묶음은 끝까지 돈다 — 실패를 한 번에 모두 본다
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     env:
       # live 시험은 serve.mjs 가 데이터 모드를 live 로 덮어쓴다(값이 없어도 되지만 check 와 같은 바탕을 둔다)
       NEXT_PUBLIC_DATA_MODE: demo
@@ -92,11 +96,11 @@ jobs:
       - run: npm ci
       - name: 브라우저 설치
         run: npx playwright install --with-deps chromium
-      - name: 브라우저 시험 (mock 서버) — ${{ matrix.shard }}/4 묶음
-        run: npm run test:live -- --shard=${{ matrix.shard }}/4
+      - name: 브라우저 시험 (mock 서버) — ${{ matrix.shard }}/8 묶음
+        run: npm run test:live -- --shard=${{ matrix.shard }}/8
 
   web:
-    # 예전 단일 작업과 같은 이름 — 결과를 한 줄로 본다. check · live 네 묶음 중 하나라도 성공이 아니면 실패
+    # 예전 단일 작업과 같은 이름 — 결과를 한 줄로 본다. check · live 여덟 묶음 중 하나라도 성공이 아니면 실패
     # develop(FULL=false)에서는 live 가 건너뜀(skipped)이라 check 만 본다
     name: web (check · e2e · live)
     needs: [check, live]
@@ -105,6 +109,6 @@ jobs:
     steps:
       - name: 결과 모으기
         run: |
-          echo "check: ${{ needs.check.result }} · live(4묶음): ${{ needs.live.result }} · 전체 관문: $FULL"
+          echo "check: ${{ needs.check.result }} · live(8묶음): ${{ needs.live.result }} · 전체 관문: $FULL"
           test "${{ needs.check.result }}" = "success"
           if [ "$FULL" = "true" ]; then test "${{ needs.live.result }}" = "success"; fi

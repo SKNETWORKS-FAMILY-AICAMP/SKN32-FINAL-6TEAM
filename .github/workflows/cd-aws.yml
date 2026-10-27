@@ -16,7 +16,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  gate:
+  # One job: the immutable git-<sha> images are built and pushed while the path-filtered
+  # web/admin checks are still running. The full gate must pass before the database or any
+  # application changes; an unused pushed image changes nothing that customers use.
+  deploy:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' &&
@@ -25,30 +28,8 @@ jobs:
        (github.event.workflow_run.event == 'push' ||
         github.event.workflow_run.event == 'workflow_dispatch'))
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    outputs:
-      ready: ${{ steps.gate.outputs.ready }}
-      sha: ${{ steps.gate.outputs.sha }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Require current main and every scheduled CI result
-        id: gate
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CD_TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: python final_project_cs/deploy/aws_cd.py gate
-
-  deploy:
-    needs: gate
-    if: needs.gate.outputs.ready == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # publication (~6 min) overlaps the CI wait (gate limit 40 min), then deployment (<= ~15 min)
+    timeout-minutes: 75
     permissions:
       contents: read
       actions: read
@@ -60,41 +41,72 @@ jobs:
       CD_PUBLIC_URL: ${{ secrets.CD_PUBLIC_URL }}
       CD_RDS_INSTANCE: ${{ secrets.CD_RDS_INSTANCE }}
       CD_WEB_BUILD_ENV: ${{ secrets.CD_WEB_BUILD_ENV }}
+      CD_TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.gate.outputs.sha }}
+          ref: main
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Require current main and a successful CI (main)
+        id: publishable
+        run: python final_project_cs/deploy/aws_cd.py gate --main-only
       - uses: aws-actions/configure-aws-credentials@v5
+        if: steps.publishable.outputs.ready == 'true'
         with:
           role-to-assume: ${{ secrets.CD_AWS_ROLE_ARN }}
           aws-region: ${{ vars.CD_AWS_REGION }}
           role-duration-seconds: 3600
           mask-aws-account-id: true
       - uses: azure/setup-kubectl@v4
+        if: steps.publishable.outputs.ready == 'true'
         with:
           version: v1.34.1
       - name: Connect to the existing EKS cluster
+        if: steps.publishable.outputs.ready == 'true'
         env:
           CLUSTER: ${{ secrets.CD_EKS_CLUSTER }}
         run: |
           echo "KUBECONFIG=$RUNNER_TEMP/guguroute-kubeconfig" >> "$GITHUB_ENV"
           aws eks update-kubeconfig --name "$CLUSTER" --region "$AWS_REGION" --kubeconfig "$RUNNER_TEMP/guguroute-kubeconfig"
       - name: Authenticate image publication
+        if: steps.publishable.outputs.ready == 'true'
         run: aws ecr get-login-password | docker login --username AWS --password-stdin "$CD_ECR_REGISTRY"
       - name: Build and publish the same checked revision
-        run: python final_project_cs/deploy/aws_cd.py publish --sha "${{ needs.gate.outputs.sha }}"
+        if: steps.publishable.outputs.ready == 'true'
+        run: python final_project_cs/deploy/aws_cd.py publish --sha "${{ steps.publishable.outputs.sha }}"
+      - name: Require current main and every scheduled CI result
+        id: gate
+        if: steps.publishable.outputs.ready == 'true'
+        run: python final_project_cs/deploy/aws_cd.py gate
+      # The CI wait can be long; renew the short-lived role before the database step.
+      - uses: aws-actions/configure-aws-credentials@v5
+        if: steps.gate.outputs.ready == 'true'
+        with:
+          role-to-assume: ${{ secrets.CD_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.CD_AWS_REGION }}
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
       - name: Migrate atomically, deploy and verify actual image digests
-        run: python final_project_cs/deploy/aws_cd.py deploy --sha "${{ needs.gate.outputs.sha }}"
+        if: steps.gate.outputs.ready == 'true' && steps.gate.outputs.sha == steps.publishable.outputs.sha
+        run: python final_project_cs/deploy/aws_cd.py deploy --sha "${{ steps.gate.outputs.sha }}"
       - name: Preserve the sanitized deployment result
-        if: success()
+        if: success() && steps.gate.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: aws-deployment-${{ needs.gate.outputs.sha }}
+          name: aws-deployment-${{ steps.gate.outputs.sha }}
           path: aws-deploy-result.json
           retention-days: 30
           if-no-files-found: error
+      # Stage, own error text or exception type, migration outcome, recovery result and timings only.
+      - name: Preserve the sanitized failure stage
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-deployment-failure-${{ github.run_id }}
+          path: aws-deploy-failure.json
+          retention-days: 30
+          if-no-files-found: ignore
