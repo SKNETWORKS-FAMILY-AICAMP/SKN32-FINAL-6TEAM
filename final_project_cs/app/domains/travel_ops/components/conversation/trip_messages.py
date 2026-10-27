@@ -429,6 +429,11 @@ def _handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message
 
                 offered = offered_decision(conn, tenant=tenant, trip_id=trip_id, items=items, message=message,
                                            selected=selected_item_id) if mode == "on" else None
+                if offered is None and mode == "on":
+                    # ★`[2026-10-27 B 채팅 전수검사]` 바로 앞 답의 종류 확인 선택지(숙소를 숙박 · 활동 · 식사 중 무엇으로)를 누른 문장이면 모델 없이 그 넣기로(`kind_choice`)
+                    from .kind_choice import decide as kind_decision
+
+                    offered = kind_decision(conn, tenant=tenant, trip_id=trip_id, version=int(trip["version"]), message=message)
                 decision, failure = ((offered, None) if offered is not None else
                                      _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
                                                  message=message, selected=selected_item_id, chat=chat, now=at))
@@ -1160,7 +1165,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         if goal:
             chat_reply["edit_goal"] = goal
     kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version", "proposal_id",
-                                    "choices") if k in outcome}
+                                    "choices", "kind_offer") if k in outcome}
     if offers:
         kept["offered"] = [{**c, "choice": key} for c, key in offers]
     if basis.get("suspect_wrong_change"):

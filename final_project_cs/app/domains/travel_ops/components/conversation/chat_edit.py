@@ -48,6 +48,53 @@ class EditOp:
     reflow: bool = False             # 명시된 시각을 지키며 같은 날 뒤 일정을 맞춘다
     end_said: bool = False           # 넣기: 끝 시각을 고객이 말했나(아니면 `DEFAULT_STAY` 로 채운 값 — 못 찾음 카드에 미리 채우지 않는다)
     kept: tuple[str, ...] = ()       # 범위 옮기기: 범위 안이지만 그대로 둔 일정(고정 · 예약 · 이미 시작) — 답에 보인다(`done_text`)
+    #: 넣기 `[2026-10-27 B 채팅 전수검사 — 호텔 종류 확인]` 원문 말이 하나로 정한 종류(`intake.pipeline._said_kinds` — 접수와 같은 말). 없거나 둘 이상이면 None
+    said_kind: str | None = None
+    #: 넣기: 종류를 고객이 정했다(원문 말이 정함 · 종류 확인 선택지를 고름) — 숙소여도 다시 묻지 않는다
+    kind_confirmed: bool = False
+
+
+#: 종류 확인 선택지가 Case 기록에 남기는 넣기 칸 — 이 칸만 저장하고 되살린다(`kind_choice`)
+ADD_FIELDS = ("kind", "date", "starts_at", "ends_at", "place_name", "title", "item_kind", "end_said", "said_kind", "kind_confirmed")
+#: 숙소에 넣을 수 있는 종류와 선택지 이름 · 선택지 문장에 넣는 말(선택지 문장은 서버가 만들고 정확히 같을 때만 받는다)
+KIND_CHOICES = (("lodging", "숙박", "숙박으로"), ("activity", "활동", "활동으로"), ("dining", "식사", "식사로"))
+
+
+def said_kind(text: str | None) -> str | None:
+    """원문이 일정 종류를 **하나로** 정하면 그 종류 — 접수의 호텔 줄과 같은 말(`intake.pipeline._said_kinds`). 아니면 None."""
+    from app.domains.travel_ops.components.intake.pipeline import _said_kinds
+
+    said = _said_kinds(text or "")
+    return next(iter(said)) if len(said) == 1 else None
+
+
+def op_spec(op: EditOp) -> dict[str, Any]:
+    """넣기 하나 → 저장할 칸(`ADD_FIELDS`)."""
+    return {name: getattr(op, name) for name in ADD_FIELDS}
+
+
+def op_from_spec(spec: dict[str, Any]) -> EditOp:
+    """저장한 칸 → 넣기 하나. 넣기가 아니거나 모르는 칸이 있으면 ValueError(지어 채우지 않는다)."""
+    if not isinstance(spec, dict) or spec.get("kind") != "add" or set(spec) - set(ADD_FIELDS):
+        raise ValueError("kind choice op is not a stored add")
+    return EditOp(**spec)
+
+
+def _kind_question(ops: list[EditOp], op: EditOp, *, base_version: int) -> EditRefused:
+    """`[2026-10-27 B 채팅 전수검사 — 호텔 종류 확인]` 숙소를 넣는데 종류(숙박 · 활동 · 식사)를 원문이 하나로 정하지 않았다 — 넣지 않고 묻는다.
+    선택지마다 그 종류로 정한 넣기 전부를 Case 기록(`kind_offer`)에 남긴다 — 고객이 선택지 문장을 그대로 보내면 모델 없이 그대로 넣는다(`kind_choice`)."""
+    name = op.place_name or op.title or "그곳"
+    when = f"{int(op.date[5:7])}월 {int(op.date[8:10])}일 {op.starts_at} " if op.date and op.starts_at else ""
+    options, choices = [], []
+    for kind, label, words in KIND_CHOICES:
+        message = f"{when}{name} {words} 넣어 줘"
+        chosen = [op_spec(replace(o, item_kind=kind, kind_confirmed=True) if o is op else o) for o in ops]
+        options.append({"label": label, "message": message, "ops": chosen})
+        choices.append({"label": label, "message": message})
+    return EditRefused("need_kind", f"「{name}」은(는) 숙소예요. 어떤 일정으로 넣을까요? 묵는 일정이면 「숙박」, 둘러보는 일정이면 「활동」, "
+                                    "식사 일정이면 「식사」를 골라 주세요. 일정은 아직 바꾸지 않았어요.",
+                       choices=choices, choices_title="어떤 일정으로 넣을까요?",
+                       kind_offer={"version": int(base_version), "options": options})
 
 
 class EditRefused(Exception):
@@ -183,22 +230,42 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
         frozen = {str(i.item_id) for i in items if i.kind != "mobility"} - {str(k) for k in where}
         by_id = {i.item_id: i for i in items}
         tour, kakao, dining = lookups() if any(o.kind in ("place", "add") for o in ops) else (None, None, None)
-        for op in ops:
-            if op.kind == "add" and op.item_kind is None:
-                # 넣기는 종류(활동 · 식사)를 함께 보내야 한다 — 웹 「＋」 가 고른 곳의 종류를 싣는 것과 같다. 같은 이름 찾기로 먼저 찾는다
-                from app.domains.travel_ops.components.intake.places import resolve
+        from app.domains.travel_ops.components.intake.landmarks import is_lodging_text
+        from app.domains.travel_ops.components.intake.places import LODGING_CONTENT_TYPE
 
-                with connect() as conn:
-                    ours = pipeline._our_places(conn, tenant, trip_id=trip_id)
+        for op in ops:
+            if op.kind != "add" or op.kind_confirmed:
+                continue
+            if op.item_kind is not None and op.item_kind != "lodging" and not is_lodging_text(op.place_name):
+                continue                       # 리더가 종류를 읽은 숙소 말 없는 곳 — 지금 그대로(이름 찾기는 고치기가 한다)
+            # 넣기는 종류(활동 · 식사 · 숙박)를 함께 보내야 한다 — 웹 「＋」 가 고른 곳의 종류를 싣는 것과 같다. 같은 이름 찾기로 먼저 찾는다
+            from app.domains.travel_ops.components.intake.places import resolve
+
+            with connect() as conn:
+                ours = pipeline._our_places(conn, tenant, trip_id=trip_id)
+                found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining, conn=conn)
+                if found.status != "resolved" and found.blocked:
+                    # ★`[2026-10-19 사용자 결정]` 조회가 막혀서 못 찾은 것은 고객에게 돌려주기 전에 **한 번** 더 찾는다(없는 곳이라서 못 찾은 것은 다시 찾지 않는다)
                     found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining, conn=conn)
-                    if found.status != "resolved" and found.blocked:
-                        # ★`[2026-10-19 사용자 결정]` 조회가 막혀서 못 찾은 것은 고객에게 돌려주기 전에 **한 번** 더 찾는다(없는 곳이라서 못 찾은 것은 다시 찾지 않는다)
-                        found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining, conn=conn)
-                if found.status != "resolved":
+            if found.status != "resolved":
+                if op.item_kind is None:
                     raise EditRefused("place_not_found", _refusal("place_not_found", found.note or "찾지 못함"))
-                op.item_kind = "dining" if found.kind == "dining" else "activity"
+                continue                       # 리더 넣기 — 못 찾은 곳은 고치기가 「못 찾음」으로 답한다(지금 그대로)
+            stay = (str(found.content_type_id or "") == LODGING_CONTENT_TYPE or op.item_kind == "lodging"
+                    or is_lodging_text(op.place_name))
+            if not stay:
+                op.item_kind = op.item_kind or ("dining" if found.kind == "dining" else "activity")
+                continue
+            # ★`[2026-10-27 B 채팅 전수검사 · 사용자 보고 「등록 뒤 채팅 ○○호텔 넣어 줘」가 액티비티]` 숙소는 종류를 확인한다 — 접수의 호텔 줄과 같다
+            #   (Codex q1 1-1): 원문 말이 하나로 정하고, 리더가 읽은 종류가 있으면 그것과도 같을 때만 그 종류. 아니면 넣지 않고 묻는다
+            if op.said_kind is None or op.item_kind not in (None, op.said_kind):
+                raise _kind_question(ops, op, base_version=base_version)
+            op.item_kind, op.kind_confirmed = op.said_kind, True
         edits: list[dict[str, Any]] = []
         locks: list[dict[str, Any]] = []
+        #: ★`[2026-10-27 B 채팅 전수검사]` 넣기는 **하나씩** 보낸다 — 새 일정 계약(`pipeline._new_items`)은 한 번에 새 일정 하나만 받는다.
+        #:  ☆전에는 리더가 읽은 여러 곳(「2시에 북촌, 6시에 광장시장 넣어줘」 — D-025)을 한 묶음에 실어 늘 「새 일정은 한 번에 하나씩 추가해 주세요」로 거절됐다
+        adds: list[list[dict[str, Any]]] = []
         unpinned: set[Any] = set()
         auto_pinned = {f"items[{where[i.item_id]}]" for i in items
                        if i.item_id in where and not i.locked and (i.detail or {}).get("customer_pinned")}
@@ -206,8 +273,10 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             if op.kind == "add":
                 fields = {"title": op.title or op.place_name, "date": op.date, "starts_at": op.starts_at,
                           "ends_at": op.ends_at, "kind": op.item_kind or "activity", "place": {"name": op.place_name}}
-                edits += [{"source_id": source_id, "field": f"items[{added_index}].{name}", "value": value}
-                          for name, value in fields.items()]
+                # 숙박(lodging)의 끝은 체크아웃 날이다 — 새 일정 계약(`pipeline._new_items`)이 끝 칸을 요구해 같은 날 끝을 보내지만, 수정 접수 조립의
+                #   숙박 규칙(`assemble._stays`)이 등록과 같게 체크아웃(다음 체크인 날 · 여행 마지막 날 · 같은 날이면 다음 날 11:00, 규칙 채움 표시)으로 다시 정한다
+                adds.append([{"source_id": source_id, "field": f"items[{added_index}].{name}", "value": value}
+                             for name, value in fields.items()])
                 added_index += 1
                 continue
             if op.item_id not in where:
@@ -246,6 +315,10 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                                         near=op.near or ((item.place["latitude"], item.place["longitude"]) if item.place else None), choose_near=True,
                                         conn=conn)
                     new_kind = "dining" if named.kind == "dining" else ("activity" if named.kind else None)
+                    if str(named.content_type_id or "") == LODGING_CONTENT_TYPE:
+                        # ★`[2026-10-27 B 채팅 전수검사]` 숙소로 바꾸면 일정 종류는 그대로 둔다 — 숙소 찾기는 kind=activity 를 내므로(분류 32)
+                        #   「점심을 롯데호텔 서울로 바꿔 줘」(호텔 안 식사)가 활동이 됐다. 숙박으로 바꾸기는 「일정 수정」의 종류 고치기 몫이다
+                        new_kind = None
                     if named.status == "resolved" and new_kind and new_kind != item.kind:
                         edits.append({"source_id": source_id, "field": f"{prefix}.kind", "value": new_kind})
                 edits.append({"source_id": source_id, "field": f"{prefix}.place", "value": {"name": op.place_name, **({"near": list(op.near)} if op.near else {})}})
@@ -257,7 +330,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 # 고정은 따로 보낸다(`pipeline.edit` — 고정 요청에 다른 고치기를 섞지 않는다)
                 locks.append({"source_id": source_id, "field": f"{prefix}.locked", "value": op.kind == "lock"})
         relock: list[dict[str, Any]] = []
-        for batch in (edits, locks):
+        add_ops = [o for o in ops if o.kind == "add"]
+        for batch in (edits, *adds, locks):
             if not batch:
                 continue
             try:
@@ -266,9 +340,10 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                                              revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining, learn_aliases=False,
                                              reflow=any(o.reflow for o in ops) or bool((cause_extra or {}).get("fit_time_changes")))
             except pipeline.IntakeConflict as exc:
-                add_days = {o.date for o in ops if o.kind == "add" and o.date}
-                if batch is not edits or exc.code != "schedule_conflict" or not add_days:
+                added = next((n for n, a in enumerate(adds) if a is batch), None)
+                if added is None or exc.code != "schedule_conflict" or not add_ops[added].date:
                     raise
+                add_days = {add_ops[added].date}
                 # ★`[2026-10-15 사용자 결정]` 넣기가 앞뒤 고정 일정에 막히면 **B: 그날 고정 표시를 이 요청 동안만 풀고 뒤 일정을 밀어 자리를 만든 뒤 다시 고정한다.
                 #   그래도 안 되면 C: 빈 시간을 찾아 「이 시각에 넣을까요」로 안내한다**
                 with connect() as conn:
@@ -278,19 +353,19 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 release = [f"items[{index}]" for item_id, index in where.items()
                            if index in pinned_now and by_id[item_id].starts_at.astimezone(KST).date().isoformat() in add_days
                            and not reopen._policy_locked(by_id[item_id])]
-                retry = [{"source_id": source_id, "field": f"{p}.locked", "value": False} for p in release] + edits
+                retry = [{"source_id": source_id, "field": f"{p}.locked", "value": False} for p in release] + batch
                 try:
                     if not release:
                         raise exc
                     with connect() as conn:
                         revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
                                                  revision=revision, edits=retry, tour=tour, kakao=kakao, dining=dining, learn_aliases=False)
-                    relock = [{"source_id": source_id, "field": f"{p}.locked", "value": True} for p in release]
+                    relock += [{"source_id": source_id, "field": f"{p}.locked", "value": True} for p in release]
                     log.info("chat edit add: pushed past pinned stops trip=%s released=%d", trip_id, len(release))
                 except pipeline.IntakeConflict as again:
                     if again.code != "schedule_conflict":
                         raise
-                    raise EditRefused("no_room", _no_room_text(ops, items, now)) from None
+                    raise EditRefused("no_room", _no_room_text([add_ops[added]], items, now)) from None
         for lock in relock:
             try:
                 with connect() as conn:
@@ -545,6 +620,12 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
     by_alias = {f"i{n}": item for n, item in enumerate(stops, 1)}
     raw = decision.raw or {}
     action, item = decision.action, decision.item
+    if raw.get("source") == "kind_choice" and action == "add_item":
+        # ★`[2026-10-27 B 채팅 전수검사]` 바로 앞 답의 종류 확인 선택지를 누른 것(`kind_choice`) — 그 답이 남긴 넣기를 고른 종류로 그대로 넣는다(모델 없음)
+        chosen = [op_from_spec(spec) for spec in raw.get("ops") or []]
+        if not chosen:
+            raise EditRefused("not_an_edit", "무엇을 바꿀지 알아듣지 못해 일정은 바꾸지 않았어요.")
+        return chosen, " · ".join(op.title or op.place_name or "" for op in chosen) + " 넣기"
     anchor_time = raw.get("anchor_time") if isinstance(raw.get("anchor_time"), str) and _TIME.match(raw.get("anchor_time") or "") else None
     if raw.get("anchor_kind") not in (None, "time", "none"):
         anchor_time = None                                  # 기준이 일정 · 지금 · 앞 답이면 시각 칸이 아니다
@@ -678,7 +759,7 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
         end = begin + DEFAULT_STAY
         _same_day(begin.date().isoformat(), begin.strftime("%H:%M"), end.strftime("%H:%M") if end.date() == begin.date() else "00:00", name)
         return [EditOp("add", date=begin.date().isoformat(), starts_at=begin.strftime("%H:%M"), ends_at=end.strftime("%H:%M"),
-                       place_name=name, title=name)], f"{name} 넣기"
+                       place_name=name, title=name, said_kind=said_kind(message))], f"{name} 넣기"
     raise EditRefused("not_an_edit", "무엇을 바꿀지 알아듣지 못해 일정은 바꾸지 않았어요.")
 
 
@@ -694,6 +775,7 @@ def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: lis
     first_day = min((s.starts_at.astimezone(KST).date() for s in stops), default=now.astimezone(KST).date())
     today = now.astimezone(KST).date()
     fallback_day = day or (today if today >= first_day else first_day).isoformat()
+    lines = (message or "").splitlines()
     ops: list[EditOp] = []
     for it in getattr(got, "items", []) or []:
         title = it.title.text.strip()[:80]
@@ -705,8 +787,13 @@ def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: lis
         if end.date() != begin.date():
             continue
         _same_day(when, it.start, end.strftime("%H:%M"), title)
+        # ★`[2026-10-27 B 채팅 전수검사]` 이해 에이전트가 읽은 숙박(lodging)을 버리지 않는다(전에는 식사가 아니면 활동). 종류를 정하는 원문 말은
+        #   그 항목이 든 줄만 본다(다른 줄의 끼니 말이 숙소의 종류가 되지 않게) — 숙소면 `_run_locked` 가 확인한다
+        line = it.title.line
+        segment = lines[line - 1] if isinstance(line, int) and 0 < line <= len(lines) else title
         ops.append(EditOp("add", date=when, starts_at=it.start, ends_at=end.strftime("%H:%M"), place_name=title, title=title,
-                          item_kind="dining" if it.kind == "dining" else "activity", end_said=bool(it.end and it.end > it.start)))
+                          item_kind=it.kind if it.kind in ("dining", "lodging") else "activity",
+                          end_said=bool(it.end and it.end > it.start), said_kind=said_kind(segment)))
     return ops
 
 
