@@ -1662,18 +1662,25 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return await run_in_threadpool(content, state)
 
         async def flow():
+            # ★`[2026-10-28 독립 검토 후속]` 슬롯은 응답이 끝날 때가 아니라 **이 연결이 시작한 DB 조회 · 내용 계산이 모두 끝날 때** 돌려준다(`settle`).
+            #   끊긴 뒤에도 스레드 · psycopg 연결은 끝까지 도므로, 먼저 돌려주면 사용자당 상한이 실제 열린 연결 수를 묶지 못한다. 응답은 기다리지 않고 곧바로 끝난다.
             try:
-                async for chunk in op_stream.watch(
-                        read, op="intake", cfg=cfg, is_disconnected=http.is_disconnected,
-                        done=lambda s: s["status"] in ("review", "confirmed", "fatal"),
-                        stage_of=lambda s: s["stage"], label_of_state=lambda s: s["stage_label"],
-                        quiet_for=lambda s: s["quiet_seconds"],
-                        stalled_after=float(guard.get("travel.op_stream.intake_stalled_seconds")),
-                        poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds")),
-                        extra=extra):
+                stream = op_stream.watch(
+                    read, op="intake", cfg=cfg, is_disconnected=http.is_disconnected,
+                    done=lambda s: s["status"] in ("review", "confirmed", "fatal"),
+                    stage_of=lambda s: s["stage"], label_of_state=lambda s: s["stage_label"],
+                    quiet_for=lambda s: s["quiet_seconds"],
+                    stalled_after=float(guard.get("travel.op_stream.intake_stalled_seconds")),
+                    poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds")),
+                    extra=extra, settle=lambda: op_stream.release(tenant, customer))
+            except BaseException:
+                op_stream.release(tenant, customer)       # 흐름을 만들지도 못했다 — 돌릴 조회도 없다
+                raise
+            try:
+                async for chunk in stream:
                     yield chunk
             finally:
-                op_stream.release(tenant, customer)
+                await stream.aclose()                     # 응답 쪽이 이 흐름을 닫아도(GeneratorExit) watch 의 뒷정리 · settle 이 곧바로 돈다
 
         return StreamingResponse(flow(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

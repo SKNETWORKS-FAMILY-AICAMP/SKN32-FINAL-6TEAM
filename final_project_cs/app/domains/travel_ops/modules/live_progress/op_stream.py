@@ -266,6 +266,7 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
                 is_disconnected: Callable[[], Any], cfg: dict[str, float] | None = None,
                 poll_seconds: float = 1.0, stalled_after: float | None = None,
                 extra: Callable[[dict[str, Any]], Awaitable[list[str]]] | None = None,
+                settle: Callable[[], None] | None = None,
                 clock: Callable[[], float] = time.monotonic) -> AsyncIterator[str]:
     """**DB 에 적히는 진행**(접수 읽기 — 뒤에서 도는 일꾼이 `stage` 를 갱신한다)을 흘린다.
 
@@ -291,19 +292,46 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
         끝나지 않는 조회를 「읽기 실패」로 세지 않는다(`stalled` · `unavailable` 판정은 실제로 읽은 결과로만 한다).
       - 끝 · 연결 끊김 · 닫힘(`aclose`)에는 뒤의 작업을 취소하고 회수한다. 이미 스레드에서 도는 조회는 멈출 수 없으니 **늦게 온 결과는 버린다**.
       - 콜백(`stage_of` · `done` · `quiet_for`)의 버그는 전처럼 그대로 올라간다(삼키지 않는다).
+
+    ★`[2026-10-28 독립 검토 후속]` `settle()` — 이 흐름이 **끝났고 그 흐름이 시작한 조회 · 내용 계산이 하나도 돌고 있지 않을 때** 정확히 한 번 부른다
+      (부르는 쪽은 여기서 `release` 한다 — 사용자당 상한 `max_per_user` 이 끊긴 뒤에도 실제로 열린 DB 연결 수를 묶게).
+      - 끊김 · 닫힘 · 시한에도 **응답은 곧바로 끝낸다**. 스레드에서 도는 조회는 멈출 수 없으므로, 그 조회를 기다리는 뒤의 작업(`asyncio.shield` 로 감싼 작업)만
+        살려 두고 끝나면 `settle` 한다. 그래서 `starlette.run_in_threadpool` 의 전역 스레드 상한(anyio limiter) 토큰도 스레드가 끝날 때까지 반납되지 않는다.
+        전에는 바깥 취소가 그 대기를 뚫어 슬롯 · 토큰이 먼저 돌아오고 스레드 · psycopg 연결만 상한 밖에 남았다.
+      - 바깥에서 온 취소는 그대로 올라간다(삼키지 않는다). 늦게 끝난 조회의 결과 · 예외는 버린다(이벤트로 내지 않는다).
+      - 첫 `__anext__` 전에 버린 생성기는 몸체가 돌지 않으므로 `settle` 도 부르지 않는다 — 부르는 쪽이 이 경우를 따로 돌려준다.
     """
-    cfg = cfg or limits(op)
-    started = last_beat = stage_started = clock()
     stage: str | None = None
     #: 뒤의 작업이 지금 무엇을 기다리나 — beat 가 그대로 싣는다
     pending: dict[str, Any] = {"what": None, "since": None}
     #: 뒤의 작업 → 이 루프. 크기 1 — 받는 쪽(연결)이 느리면 뒤의 작업도 멈춘다(조회가 쌓이지 않는다)
     queue: asyncio.Queue[tuple[str, Any]] = asyncio.Queue(maxsize=1)
+    #: 지금 기다리는 조회 · 내용 계산(스레드를 붙든 작업) — 흐름이 끝나도 이것들이 끝날 때까지 `settle` 하지 않는다
+    inflight: set[asyncio.Future[Any]] = set()
+    worker: asyncio.Task[None] | None = None
+    ended = {"closing": False, "settled": False}
+
+    def settle_when_idle(_: Any = None) -> None:
+        if ended["settled"] or not ended["closing"] or inflight or (worker is not None and not worker.done()):
+            return
+        ended["settled"] = True
+        if settle is not None:
+            settle()
+
+    def landed(call: asyncio.Future[Any]) -> None:
+        inflight.discard(call)
+        if not call.cancelled():
+            call.exception()                       # 늦게 끝난 조회의 실패는 버린다(받는 쪽이 이미 떠났다) — 「꺼내지 않은 예외」 경고를 막는다
+        settle_when_idle()
 
     async def waiting(what: str, call: Callable[[], Awaitable[Any]]) -> Any:
         pending["what"], pending["since"] = what, clock()
         try:
-            return await call()
+            running = asyncio.ensure_future(call())
+            inflight.add(running)
+            running.add_done_callback(landed)
+            # 바깥 취소가 스레드 대기를 뚫지 않게 — 뚫으면 anyio 토큰 · 사용자 슬롯이 스레드보다 먼저 돌아온다
+            return await asyncio.shield(running)
         finally:
             pending["what"] = pending["since"] = None
 
@@ -382,9 +410,11 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
         except Exception as exc:                   # noqa: BLE001 — 콜백의 버그는 이 루프에서 다시 올린다(삼키지 않는다)
             await queue.put(("raise", exc))
 
-    worker = asyncio.create_task(produce())
     state: dict[str, Any] | None = None
     try:
+        cfg = cfg or limits(op)
+        started = last_beat = stage_started = clock()
+        worker = asyncio.create_task(produce())
         while True:
             now = clock()
             left = cfg["max_seconds"] - (now - started)
@@ -436,9 +466,16 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
                                    "pending": what,
                                    "pending_seconds": (round(now - since, 1) if what is not None and since is not None else None)})
     finally:
-        worker.cancel()
-        # 취소된 뒤의 작업을 회수한다 — `asyncio.wait` 는 그 작업의 취소 · 예외를 올리지 않고, 바깥에서 온 취소는 삼키지 않는다
-        await asyncio.wait({worker})
+        ended["closing"] = True
+        try:
+            if worker is not None:
+                worker.cancel()
+                worker.add_done_callback(settle_when_idle)
+                # 취소된 뒤의 작업을 회수한다 — `asyncio.wait` 는 그 작업의 취소 · 예외를 올리지 않고, 바깥에서 온 취소는 삼키지 않는다.
+                # 뒤의 작업은 스레드를 `shield` 너머로 기다리므로 곧바로 끝난다(스레드를 기다리지 않는다)
+                await asyncio.wait({worker})
+        finally:
+            settle_when_idle()                     # 돌고 있는 조회가 없으면 지금, 있으면 마지막 조회가 끝날 때(`landed`)
 
 
 __all__ = ["STAGES", "Progress", "acquire", "error_payload", "label_of", "limits", "release", "run", "sse", "watch"]
