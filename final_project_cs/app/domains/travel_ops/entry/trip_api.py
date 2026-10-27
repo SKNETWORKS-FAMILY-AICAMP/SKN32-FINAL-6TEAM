@@ -1308,8 +1308,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"trip_id": str(trip_id), "proposals": [_proposal_view(r) for r in rows]}
 
     def _stay_recheck(store: TripStore, trip_id: UUID, proposal_id: UUID, key: str,
-                      customer_id: UUID | None) -> dict[str, Any] | None:
-        """고른 안이 숙소 「다른 후보」의 마이리얼트립 숙소면 그 날짜 1박 값을 다시 본다(`booking/offers/recheck`). 그 밖에는 None.
+                      customer_id: UUID | None) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        """고른 안이 숙소 「다른 후보」의 마이리얼트립 숙소면 그 날짜 1박 값을 다시 본다(`booking/offers/recheck`) → (확인 결과, 고른 후보). 그 밖에는 None.
         읽기만 한다(잠그지 않는다) — 고르기 자체의 판정(기준 판 · 열린 제안)은 뒤의 트랜잭션이 다시 한다."""
         from app.domains.travel_ops.components.booking.offers.recheck import recheck_stay
         from app.domains.travel_ops.components.planning.pending import PendingStore
@@ -1333,19 +1333,27 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         keyword = item.detail.get("area") or (item.place or {}).get("district") or (item.place or {}).get("name")
         return recheck_stay(getattr(sources, "travel_search", None), option,
                             check_in=_seoul(item.starts_at).date().isoformat(), check_out=_seoul(check_out).date().isoformat(),
-                            adults=int(trip.get("party_size") or 1), google=getattr(sources, "stay_google", None), keyword=keyword)
+                            adults=int(trip.get("party_size") or 1), google=getattr(sources, "stay_google", None), keyword=keyword), option
 
     def _choose(tenant: str, trip_id: UUID, proposal_id: UUID, key: str | None, by: str,
                 customer_id: UUID | None = None) -> dict[str, Any]:
         """★한 트랜잭션 — 실패하면 아무것도 안 바뀐다. 먼저 고른 쪽이 이기고 나중 쪽은 409."""
+        from app.domains.travel_ops.components.booking.offers.recheck import over_price_limit, price_limit_refusal
         from app.domains.travel_ops.components.planning.pending import PendingStore, ProposalRefused, choose
 
         store = TripStore(tenant)
         # ★`[2026-10-13]` 숙소 후보는 고르기 **전에** 1박 값을 다시 본다(잠그기 전 — 바깥 검색을 잠근 채 부르지 않는다). 객실이 없으면 바꾸지 않는다
-        price_check = _stay_recheck(store, trip_id, proposal_id, key, customer_id) if key else None
+        rechecked = _stay_recheck(store, trip_id, proposal_id, key, customer_id) if key else None
+        price_check, option = rechecked if rechecked else (None, None)
         if price_check and price_check.get("status") == "gone":
             raise _error(409, "option_gone", "그 날짜에 남은 객실이 없어요 — 일정은 그대로 두었어요. 다른 후보를 고르거나 「바꿔 줘」라고 해 주세요",
                          detail={"price_check": price_check})
+        # ★`[2026-10-27 LB-05 · TeamFlow ST4F-709]` 다시 본 1박 값이 고객이 말한 상한(「1박 ○원 이하」 — 후보의 `price_limit`)을 넘으면 바꾸지 않는다.
+        #   전에는 새 가격으로 그대로 적용해 말한 조건을 넘는 숙소가 일정에 들어갔다
+        limit = over_price_limit(price_check, option) if option else None
+        if limit is not None:
+            raise _error(409, "over_price_limit", price_limit_refusal(price_check, limit, str(option.get("name") or "고른 숙소")),
+                         detail={"price_check": price_check, "price_limit": limit})
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)

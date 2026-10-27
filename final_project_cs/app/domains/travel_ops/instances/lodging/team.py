@@ -55,6 +55,7 @@ from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, T
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from app.domains.travel_ops.components.booking.offers.recheck import over_price_limit, price_limit_refusal
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
 from .ledger import item_key
 from .interpret import (LABELS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, rule_checks, rule_dates,
@@ -1430,6 +1431,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                                 decisions=[{"itinerary": "lodging_gone", "item": item.title, "choice": held["key"], "price_check": check}],
                                 answer=f"{held['name']}은(는) 다시 확인해 보니 그 날짜에 남은 객실이 없어요. 일정은 그대로 두었어요. "
                                        "다른 후보를 고르시거나 「바꿔 줘」라고 하시면 새로 찾아 드릴게요.")
+        # `[2026-10-27 LB-05 · TeamFlow ST4F-709]` 다시 본 1박 값이 고객이 말한 상한(후보의 `price_limit`)을 넘으면 바꾸지 않는다 — 웹 고르기(`trip_api._choose`)와 같은 판정
+        limit = over_price_limit(check, held)
+        if limit is not None:
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND,
+                                decisions=[{"itinerary": "lodging_over_limit", "item": item.title, "choice": held["key"],
+                                            "price_check": check, "price_limit": limit}],
+                                answer=price_limit_refusal(check, limit, held["name"]))
         previous = {**applied_record(item), **({k: item.detail["chosen"][k] for k in ("source", "price_per_night", "link")
                                                if k in item.detail.get("chosen", {})})}
         remaining = [option for option in alternates if option is not held] + [previous]

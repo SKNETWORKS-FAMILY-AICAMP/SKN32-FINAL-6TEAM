@@ -27,6 +27,11 @@ GATE: dict[str, dict[str, str]] = {
     "test_choose_recheck.py": {
         "test_same_changed_gone_and_unreadable": "고를 때 숙소 가격 재확인 — 같음 · 바뀜 · 객실 없음 · 확인 못 함",
     },
+    "test_choose_price_limit.py": {                               # `[2026-10-27 LB-05 · ST4F-709]`
+        "test_a_recheck_above_the_said_limit_is_over_and_anything_else_is_not": "다시 본 1박 값이 고객이 말한 상한을 넘는지",
+        "test_web_choice_over_the_said_limit_is_refused_with_409_and_nothing_changes": "웹 고르기 — 상한 넘으면 409 · 일정 그대로",
+        "test_chat_choice_over_the_said_limit_is_not_applied": "채팅 고르기 — 상한 넘으면 바꾸지 않고 알림",
+    },
     "test_transit_module.py": {                                   # `[2026-10-14]` 예약 모듈 — 기차 · 버스(TAGO)
         "test_the_rules_read_the_transport_mode_and_station_names": "규칙이 교통수단(기차 · 버스 · 비행기) · 역 · 등급을 읽음",
         "test_the_adapter_uses_the_2026_03_addresses_and_normalises_rows": "TAGO 어댑터 — 2026-03 주소 · 응답 정리",
