@@ -16,6 +16,7 @@ import json
 import re
 import logging
 import threading
+import time
 from typing import Any, Callable
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -221,6 +222,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             if received_at.tzinfo is None:
                 received_at = received_at.replace(tzinfo=KST)
             received_at = received_at.astimezone(KST)
+        # ★`[2026-10-28 서빙 속도]` 단계별 벽시계(로그 한 줄 — 고객 글 · 장소 이름 없음). 확인 화면 공개 전 기다림을 서버 로그만으로 나눠 볼 수 있게
+        marks: dict[str, float] = {"start": time.monotonic()}
         beat = _Heartbeat(connect, tenant_id, intake_id)
         beat.__enter__()
         # ★`[2026-10-27 서빙 속도]` 확인 화면으로 넘길 때까지(먼저 채우기 · 해석 답 반영 포함) 앞단으로 센다 — 뒤의 대안 미리 준비가 이 동안 일정을 새로 맡지 않는다(`foreground.py`)
@@ -278,6 +281,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect,
                         external_fallback_enabled=reader.get("external_fallback_enabled", False), activity_web=activity_web,
                         agent_missed_line_passes=int(reader.get("missed_line_passes") or 0))
+        marks["read"] = time.monotonic()
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -287,6 +291,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                                      claims=_claims(conn, tenant_id, intake_id, 1), force=True, on_event=push)
         except Exception:                                  # noqa: BLE001 — 검사 장애가 읽기를 지우지 않는다
             log.warning("intake review failed intake=%s", intake_id, exc_info=True)
+        marks["check"] = time.monotonic()
         # ★`[2026-10-26 사용자 지시]` 「전부 과거면 계획 고르는 화면으로 넘어가면 안되고 그 전에 있는 계획담기 페이지의 가드레일에 걸려서 통과 안되게」 —
         #   확인 화면 상태(`review`)로 넘기기 **전에** 첫 검사의 날짜를 등록 가드와 같은 판정으로 본다. 모두 오늘 이전이면 계획 담기에서 끝낸다(`fatal`, 등록 거절과 같은 코드).
         #   일부만 과거 · 오늘 · 미래 · 날짜 미확정 · 오늘 끝나는 밤 일정은 지금처럼 확인 화면으로 간다. 검사가 실패했으면(저장본 없음) 판정하지 않는다
@@ -300,16 +305,28 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             cur.execute("UPDATE trip_intakes SET status='review', stage=%s, updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'",
                         ("checking" if filling or asking else "review", tenant_id, intake_id))
+        if not (filling or asking):
+            marks["published"] = time.monotonic()          # 확인 화면 공개(`stage=review`)
         if filling:
             _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining, push=push)
+        marks["prefill"] = time.monotonic()
         if filling or asking:
             # 로딩 중에 받아 둔 해석 답을 첫 검사 · 먼저 채우기 뒤에 반영한다(그 지점부터 다시 검사 — `pipeline.edit`)
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining, push=push)
             with connect() as conn, conn.transaction(), conn.cursor() as cur:
                 cur.execute("UPDATE trip_intakes SET stage='review', updated_at=now() "
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
+            marks["published"] = time.monotonic()          # 확인 화면 공개(`stage=review`)
             # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+        marks["foreground"] = time.monotonic()
+        # `to_review_s` = 맡은 때 → 확인 화면 공개(`stage=review`) · `foreground_s` = 공개 뒤 두 번째 해석 답 반영까지(앞단 끝)
+        log.info("intake stage timing intake=%s read_s=%.2f check_s=%.2f prefill_s=%.2f answers_s=%.2f to_review_s=%.2f foreground_s=%.2f "
+                 "filling=%s asking=%s",
+                 intake_id, marks["read"] - marks["start"], marks["check"] - marks["read"], marks["prefill"] - marks["check"],
+                 (marks["published"] - marks["prefill"]) if filling or asking else 0.0, marks["published"] - marks["start"],
+                 marks["foreground"] - marks["start"],
+                 filling, asking)
         front.__exit__(None, None, None)                     # 확인 화면으로 넘겼다 — 여기부터는 뒤의 일이다
         front = None
         # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.

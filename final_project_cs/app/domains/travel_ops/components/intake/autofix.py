@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime, timedelta
-from typing import Any, Callable
+from typing import Any, Callable, Collection
 
 from . import candidates as cand_module
 from . import lodging_context as stay_context
@@ -104,9 +104,19 @@ def latest_end(engine: Any, place: dict[str, Any], next_place: dict[str, Any], n
 
 
 def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, engine: Callable[..., Any] | None = None,
-         use_engine: bool = True, now: datetime | None = None, item_id: str | None = None) -> dict[str, Any]:
+         use_engine: bool = True, now: datetime | None = None, item_id: str | None = None,
+         item_ids: Collection[str] | None = None) -> dict[str, Any]:
     """검증을 끝낸 대체 일정. `{changes:[{id, source_id, index, title, from, to, reason, edits}], kept:[{id, title, reason}]}`.
-    DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다."""
+    DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다.
+
+    `item_ids` `[2026-10-28 서빙 속도]` 이 일정들(과 그 일정이 낀 공통 숙소 묶음)만 맞춰 본다 — `item_id` 하나와 같은 거르기를 여럿으로.
+      먼저 채우기(`prefill.run`)가 **빈칸 일정만** 넘긴다: 그 밖의 일정 결과는 먼저 채우기가 쓰지 않고 버리는데, 계산기 시간과 요청 한도만 써 왔다.
+      빈 모음이면 아무것도 계산하지 않는다. `item_id` 와 함께 주면 `TypeError`. 안 주면(None) 전과 같다(고객이 누르는 전체 자동 추천)."""
+    if item_id is not None and item_ids is not None:
+        raise TypeError("plan: item_id 와 item_ids 는 함께 줄 수 없다")
+    only: set[Any] | None = {item_id} if item_id is not None else set(item_ids) if item_ids is not None else None
+    if only is not None and not only:
+        return {"changes": [], "kept": []}
     defaulted = engine is None and use_engine
     if defaulted:
         engine = default_engine(None)
@@ -141,7 +151,7 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
         return engine_for(a_id, b_id, scope=("lodging", dates.get(b_id) or dates.get(a_id)))
 
     for members in stay_context.groups(items):
-        if len(members) < 2 or (item_id is not None and not any(x["id"] == item_id for x in members)):
+        if len(members) < 2 or (only is not None and not any(x["id"] in only for x in members)):
             continue
         if not any(x["status"] == "review" or x["id"] in late_into for x in members):
             continue
@@ -153,7 +163,7 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
     for i, item in enumerate(items):
         if item["id"] in handled:
             continue
-        if item_id is not None and item["id"] != item_id:
+        if only is not None and item["id"] not in only:
             continue
         placed_bad = item["status"] == "review"
         late = item["id"] in late_into
