@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal, Mapping
 
+from app.domains.travel_ops.ports.data_sources.notice_drill import is_drill
 from app.domains.travel_ops.ports.data_sources.notice_status import notice_status
 
 Level = Literal["day", "trip"]
@@ -50,6 +51,9 @@ class SafetyRules:
     # 멈춘 다음 날 아침에 「이어갈까요?」를 한 번 묻는다(저절로 재개하지는 않는다)
     morning_ask_enabled: bool = True
     morning_ask_hour: int = 9
+    # `[2026-10-27]` 훈련 판정의 실제 사건 표지 · 장소 이름 낱말(공용 판정 `notice_drill`). 직접 만드는 시험 규칙은 빈 값 — 운영은 `from_guardrails` 가 채운다
+    drill_actual_keywords: tuple[str, ...] = ()
+    drill_place_words: tuple[str, ...] = ()
 
     @classmethod
     def from_guardrails(cls) -> "SafetyRules":
@@ -70,7 +74,9 @@ class SafetyRules:
                    reminder_interval_hours=float(guard.get("travel.safety.reminder.interval_hours")),
                    reminder_max_count=int(guard.get("travel.safety.reminder.max_count")),
                    morning_ask_enabled=bool(guard.get("travel.safety.reminder.morning_ask_enabled")),
-                   morning_ask_hour=int(guard.get("travel.safety.reminder.morning_ask_hour")))
+                   morning_ask_hour=int(guard.get("travel.safety.reminder.morning_ask_hour")),
+                   drill_actual_keywords=tuple(listed("drill_actual_keywords")),
+                   drill_place_words=tuple(listed("drill_place_words")))
 
 
 @dataclass(frozen=True)
@@ -130,7 +136,8 @@ def _from_quake(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent | N
 def _from_message(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent | None:
     kind, step = str(cause.get("kind") or "").strip(), str(cause.get("step") or "").strip()
     text = str(cause.get("text") or "").strip()
-    if any(word in text for word in rules.exclude_keywords) or notice_status(text).ended:
+    if is_drill(text, drill_words=rules.exclude_keywords, actual_words=rules.drill_actual_keywords,
+                place_words=rules.drill_place_words) or notice_status(text).ended:
         return None                                        # 훈련 · 끝난 사건(해제 · 종료 · 철회 …) — 정지시키지 않는다
     keyword = next((word for word in rules.trip_keywords if word in text), None)
     weather = kind in _WEATHER_KINDS
