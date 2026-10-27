@@ -37,6 +37,24 @@ describe("the customer's sentence for a server refusal (ST4F-611 · 문구 대�
       .toBe("We couldn't save the plan just now. Nothing was changed. Please try again shortly.");
   });
 
+  it("says the plan is not ready yet instead of a general sentence on 409 intake_not_ready (web-intakes draft · registration)", () => {
+    expect(refusalSentence("intake_not_ready", "아직 계획을 읽고 있어요 — 끝나면 다시 눌러 주세요", { status: "reading" }, "ko"))
+      .toBe("아직 계획을 읽고 있어요 — 끝나면 다시 눌러 주세요");
+    expect(refusalSentence("intake_not_ready", "아직 등록할 수 없습니다(상태 reading)", undefined, "en"))
+      .toBe("This plan can't be registered yet. Please try again when reading has finished.");
+    expect(refusalSentence("intake_not_ready", "intake not ready", undefined, "ko"))
+      .toBe("아직 등록할 수 없어요. 계획 읽기가 끝나면 다시 눌러 주세요.");
+  });
+
+  it("says the stay was not changed because the rechecked price is over the customer's per-night limit (409 over_price_limit, trips.md)", () => {
+    expect(refusalSentence("over_price_limit", "over limit", { price_limit: 150000 }, "en"))
+      .toBe("The rechecked price is above your per-night limit (150,000 KRW), so the stay was not changed. Please pick another option.");
+    expect(refusalSentence("over_price_limit", "over limit", { price_limit: 150000 }, "ko"))
+      .toBe("다시 본 1박 값이 말씀하신 상한(150,000원)을 넘어 숙소를 바꾸지 않았어요. 다른 후보를 골라 주세요.");
+    expect(refusalSentence("over_price_limit", "over limit", undefined, "ko"))
+      .toBe("다시 본 1박 값이 말씀하신 상한을 넘어 숙소를 바꾸지 않았어요. 다른 후보를 골라 주세요.");
+  });
+
   it("has a Korean and an English sentence for every code, both ending politely", () => {
     for (const [code, text] of Object.entries(REFUSAL_TEXT)) {
       const [ko, en] = typeof text === "function" ? text({ cap: 2 }) : text;
