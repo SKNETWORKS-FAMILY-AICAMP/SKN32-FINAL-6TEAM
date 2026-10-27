@@ -39,7 +39,7 @@ test("읽는 동안 생존 신호마다 접수를 다시 읽지 않고, 검사 �
   // ① 붙잡힌 화면에서 9초(8초 넘으면 「n초째」) 기다려도 막대는 끝난 상태다.
   await page.waitForTimeout(9_000);
   const bar = page.getByRole("progressbar", { name: "계획 확인 진행" });
-  await expect(bar).toHaveAttribute("aria-valuetext", /^정리 완료/);
+  await expect(bar).toHaveAttribute("aria-valuetext", /^읽기 완료 · 확인 결과 없음/);
   await expect(page.getByText(/\d+초째/)).toHaveCount(0);
   await page.screenshot({ path: test.info().outputPath("reading-ended-review-null.png"), fullPage: false });
 });

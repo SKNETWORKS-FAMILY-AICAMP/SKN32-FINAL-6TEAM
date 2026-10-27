@@ -45,7 +45,9 @@ export function useIntakeEvents(intakeId: string, reading: boolean, language: La
           if (reread(event)) onChange();
         }, stop.signal, undefined, onContent);
         if (stop.signal.aborted || end === "closed") return;
-        if (end === "done" || end === "gone") { onChange(); return; }
+        // [2026-10-27] "done" already passed through rereadGate and called onChange via the result event.
+        if (end === "done") return;
+        if (end === "gone") { onChange(); return; }
         if (end === "stalled") { setProgress({ follow: "stalled", slow: false }); onChange(); return; }
         if (end === "unsupported") { setProgress({ follow: "polling", slow: false }); return; }
         failures += 1;

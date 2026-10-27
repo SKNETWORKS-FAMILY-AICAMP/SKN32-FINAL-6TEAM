@@ -31,6 +31,7 @@ describe("the reading screen once the server's reading is over", () => {
     const steps = planSteps(view, false);
     expect(steps.current).toBeNull();
     expect(steps.finished).toBe(true);
+    expect(steps.unchecked).toBe(true);
   });
 
   it("still counts while the server reads", () => {

@@ -20,9 +20,11 @@ export interface Steps {
   current: Step | null;
   /** Every step is over but the check is not done yet: the screen is putting the result together. */
   wrapping: boolean;
-  /** 0–100, the cells filled. 100 only once the check is done. */
+  /** 0–100, the cells filled. 100 once the reading has ended or the check is done. */
   percent: number;
   finished: boolean;
+  /** The reading ended without a completed check. */
+  unchecked: boolean;
 }
 
 /** ★우리가 고른 값 — the same as the server's `slow` beat (`op_stream.slow_seconds`): one step quiet this long says for how long under the bar. */
@@ -61,7 +63,7 @@ export function planSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "
   });
   const current = steps.find((step) => step.state === "current") ?? null;
   const percent = finished ? 100 : Math.min(99, steps.reduce((sum, step) => sum + step.fraction, 0) / steps.length * 100);
-  return { steps, current, wrapping: !finished && at >= keys.length, percent, finished };
+  return { steps, current, wrapping: !finished && at >= keys.length, percent, finished, unchecked: finished && view.stage !== "done" };
 }
 
 /** The name of a step, as under its cell. */
