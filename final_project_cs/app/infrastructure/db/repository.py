@@ -156,6 +156,23 @@ def create_activity_judge_shadow(conn: Connection, record: dict[str, Any]) -> UU
         return cur.fetchone()[0]
 
 
+#: 표 `activity_llm_decisions`(308)에 싣는 칸 — 이 밖의 키는 버린다(고객 문장 · 장소명이 실수로 섞여 와도 저장되지 않게).
+_DECISION_COLUMNS = ("tenant_id", "case_id", "run_id", "capability", "kind", "mode", "outcome", "code_result",
+                     "llm_result", "served_result", "changed", "reason", "reason_guard", "failure_code", "error",
+                     "latency_ms", "model")
+_DECISION_JSON = {"code_result", "llm_result", "served_result"}
+
+
+def create_activity_llm_decision(conn: Connection, record: dict[str, Any]) -> UUID:
+    """LLM 운영 판정 한 건(코드 결과 · LLM 원래 답 · 고객에게 나간 결과)을 한 행으로. `[2026-10-24]`"""
+    values = [Json(record.get(name)) if name in _DECISION_JSON and record.get(name) is not None else record.get(name)
+              for name in _DECISION_COLUMNS]
+    with conn.cursor() as cur:
+        cur.execute(f"INSERT INTO activity_llm_decisions ({','.join(_DECISION_COLUMNS)}) "
+                    f"VALUES ({','.join(['%s'] * len(_DECISION_COLUMNS))}) RETURNING decision_id", values)
+        return cur.fetchone()[0]
+
+
 def create_llm_call(conn: Connection, *, run_id: UUID | None, prompt_id: UUID, provider: str, model: str, response_json: dict[str, Any] | None = None, input_tokens: int | None = None, output_tokens: int | None = None, latency_ms: int | None = None, cost_microusd: int | None = None) -> UUID:
     with conn.cursor() as cur:
         cur.execute("INSERT INTO llm_calls (run_id,prompt_id,provider,model,response_json,input_tokens,output_tokens,latency_ms,cost_microusd) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING call_id", (run_id,prompt_id,provider,model,Json(response_json) if response_json is not None else None,input_tokens,output_tokens,latency_ms,cost_microusd)); return cur.fetchone()[0]

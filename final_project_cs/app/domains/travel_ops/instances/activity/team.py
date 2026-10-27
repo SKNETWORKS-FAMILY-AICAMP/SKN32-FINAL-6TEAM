@@ -31,6 +31,7 @@ from app.domains.travel_ops.components.itinerary.itinerary_changes import ACTIVI
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, Consent, ItineraryWork
 from app.domains.travel_ops.components.planning.pending import needs_consent, weather_only
 from app.domains.travel_ops.components.planning.safety import classify as classify_safety
+from . import decision_log
 from . import failure_codes as fc
 from .disaster_impact import Impact, ImpactRules, assess
 from .verdicts import holidays_needed, hours_verdict
@@ -136,6 +137,9 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     judge_llm: Any | None = None
     #: 섀도 기록을 표(`activity_judge_shadow`)에 쓰는 함수 — 조립이 넣는다.
     judge_shadow_sink: Any | None = None
+    #: ★`[2026-10-24]` LLM 운영 판정(코드 결과 · LLM 답 · 고객에게 나간 결과)을 표(`activity_llm_decisions`)에 쓰는 함수 — 조립이 넣는다.
+    #:  `None` 이면 남기지 않는다(시험 · 판정 LLM 이 없는 조립).
+    judge_decision_sink: Any | None = None
     #: 섀도 판정을 돌리는 실행기. `None` 이면 판정 계층의 기본 스레드 풀(시험은 바로 끝나는 실행기를 넣는다).
     judge_runner: Any | None = None
     #: ★`[2026-10-12]` 판정 LLM 호출 예산 — 판정 종류 → 「불러도 되나」. 조립이 `external_call_budget` 으로 만들어 넣는다
@@ -657,6 +661,18 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         budget = self.judge_budget if self.judge_budget is not None else local_web_budget()
         verdict = rule_first(ctx, request, Verdict(request.kind, "unknown", "rule", basis=basis),
                              LLMJudge(self.judge_llm), budget=budget)
+        # ★`[2026-10-24]` 운영 판정 기록 — 코드(규칙)는 「모름」, LLM 이 정한 값이 고객 결과에 쓰였는지를 남긴다
+        code = {"value": "unknown", "basis": basis}
+        if verdict.known:
+            decision_log.record(self.judge_decision_sink, task, kind=request.kind, mode="llm",
+                                outcome=decision_log.LLM_SERVED, code_result=code, served_result={"value": verdict.value},
+                                llm_result={"value": verdict.value, "confidence": verdict.confidence},
+                                latency_ms=verdict.metrics.get("latency_ms"), model=verdict.metrics.get("model"))
+        elif verdict.source == "llm" or verdict.failure_code:
+            decision_log.record(self.judge_decision_sink, task, kind=request.kind, mode="llm",
+                                outcome=decision_log.CODE_FALLBACK, code_result=code, served_result=code,
+                                llm_result={"value": verdict.value}, failure_code=verdict.failure_code,
+                                latency_ms=verdict.metrics.get("latency_ms"), model=verdict.metrics.get("model"))
         return verdict if verdict.known else None
 
     def _live_status_check(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
