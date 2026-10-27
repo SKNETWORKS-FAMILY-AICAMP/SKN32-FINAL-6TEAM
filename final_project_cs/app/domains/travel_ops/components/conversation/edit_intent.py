@@ -35,6 +35,37 @@ def schemas(aliases: list[str]) -> dict[str, Any]:
 SETTINGS = ("any", "indoor", "outdoor")
 
 
+def paid_time_edit(aliases: list[str]) -> dict[str, Any]:
+    """유료 넘김 경로(`decision_unit._schema(plain=True)`)의 `time_edit` — 실행할 수 있는 경계 · 범위 조합만 갈래로 싣는다. `[2026-10-26 x600 40231a56]`
+
+    ★로컬 생성 문법은 갈래(`generation_variants`)로 맞는 조합만 생성하게 한다. 유료 스키마는 두 칸을 따로 둬 `start` + `following` 같은
+      실행할 수 없는 조합을 낼 수 있었고, 그 답은 `validate` 가 `inconsistent temporal scope` 로 거절했다(x600 Case 72e29b8c
+      「오후 5시 30분으로 옮겨줘」 — `ollama=timeout, openai=content`). OpenAI 엄격 모드는 최상위가 아닌 칸 안의 anyOf 를 받는다.
+    갈래 규칙은 `_inconsistent` 와 `validate` 의 range 조건 중 이 칸 안에서 정해지는 것과 같다(다른 칸과 묶인 조건은 `validate` 가 그대로 본다).
+    문장 · 일정 이름은 싣지 않는다."""
+    from copy import deepcopy
+
+    base = schemas(aliases)["time_edit"]
+
+    def variant(boundary: list[str], scope: list[str], **fixed: Any) -> dict[str, Any]:
+        shape = deepcopy(base)
+        shape["properties"]["boundary"] = {"type": "string", "enum": boundary}
+        shape["properties"]["scope"] = {"type": "string", "enum": scope}
+        for key, value in fixed.items():
+            kind = "boolean" if type(value) is bool else "integer" if type(value) is int else "string"
+            shape["properties"][key] = {"type": kind, "enum": [value]}
+        return shape
+
+    return {"anyOf": [
+        variant(["none"], ["item"]),
+        variant(["start", "end", "duration"], ["item"], continue_previous=False),
+        variant(["shift"], ["item", "following"], continue_previous=False),
+        variant(["shift"], ["range"], time="", duration_minutes=0, cascade=False, continue_previous=False),
+        variant(["reflow"], ["following"]),
+    ], "description": "시간 수정. boundary 와 scope 의 맞는 조합만 — start · end · duration 은 scope=item, reflow 는 scope=following, "
+                      "range 는 shift 만(target_item=none, query 필수). 시간 변경이 없으면 boundary=none, scope=item"}
+
+
 def requested_setting(raw: dict[str, Any] | None) -> str | None:
     """검증을 지난 해석의 실내·야외 조건 — indoor/outdoor 이거나 None(조건 없음 · 옛 해석)."""
     want = ((raw or {}).get("place_setting") or {}).get("want")
@@ -320,6 +351,44 @@ def ask_on_clock_ambiguity(decision):
                    question=(f"말씀에 시각이 여러 개({shown}) 있어 {name}몇 시로 바꿀지 확실하지 않아 일정은 바꾸지 않았어요. "
                              f"「{found['clocks'][0]}로 옮겨 줘」처럼 시각 하나만 말씀해 주세요."),
                    raw={**(decision.raw or {}), "clock_ambiguity": found})
+
+
+def range_boundary(raw: dict[str, Any] | None) -> bool:
+    """`[2026-10-26 fix5 · 수용 T04]` 해석의 기준 시각이 **범위 경계**인가 — anchor_kind=time · relation before/after · 유효한 HH:MM.
+
+    change_time 의 새 시작 시각은 relation=at 의 anchor_time 이다(`decision_unit.SYSTEM`). before/after 의 기준 시각은 범위 경계이며
+    「옮길 새 시작이나 종료가 아니다」(위 `SYSTEM`). 칸 구조만 본다 — 문장을 읽지 않는다."""
+    raw = raw or {}
+    return (raw.get("anchor_kind") == "time" and raw.get("relation") in ("before", "after")
+            and bool(TIME.fullmatch(str(raw.get("anchor_time") or ""))))
+
+
+def range_anchor_conflict(decision) -> dict[str, Any] | None:
+    """실행될 시간 변경이 범위(scope=range)가 아닌데 기준 시각이 범위 경계다 — 한 일정만인지 경계 전후 전부인지 해석이 정하지 못했다.
+
+    ☆실 E4B J 2차 T04 「1월 2일 오후 2시 이전 일정들을 전부 한 시간 당겨줘」 → change_time · target i2 · time_edit start/item ·
+      anchor_time 14:00 · relation before → `chat_edit.ops_for` 가 인사동을 14:00 으로 옮기려 했다. 범위로 고쳐 실행하지 않는다(Codex fix5 G2)."""
+    raw = decision.raw or {}
+    spec = raw.get("time_edit") or {}
+    # 한 일정(scope=item)만 본다 — following 은 기준 일정(anchor_item) 경로, range 는 경계 시각을 쓰는 경로다(Codex fix5 q2: 조건을 좁힌다)
+    if (spec.get("scope") != "item" or spec.get("boundary", "none") == "none"
+            or not _executes_time_edit({**raw, "action": decision.action}) or not range_boundary(raw)):
+        return None
+    return {"reason": "range_boundary_on_one_item", "anchor_time": raw["anchor_time"], "relation": raw["relation"],
+            "scope": spec.get("scope"), "boundary": spec.get("boundary")}
+
+
+def ask_on_range_anchor(decision):
+    """`range_anchor_conflict` 이면 바꾸지 않고 한 일정인지 기준 시각 전후 전부인지 되묻는 clarify 로 바꾼다(선택지 없음 — 고객이 말한다)."""
+    found = range_anchor_conflict(decision)
+    if found is None:
+        return decision
+    side = "이전" if found["relation"] == "before" else "이후"
+    name = f"「{decision.item.title}」 하나만 옮길지, " if decision.item is not None else ""
+    return replace(decision, action="clarify", choices=[],
+                   question=(f"{name}{found['anchor_time']} {side} 일정 전부를 옮길지 확실하지 않아 일정은 바꾸지 않았어요. "
+                             f"어느 쪽인지 말씀해 주세요."),
+                   raw={**(decision.raw or {}), "range_anchor_conflict": found})
 
 
 def resume(decision, *, items, turns, version: int, now: datetime, ttl_seconds: int):

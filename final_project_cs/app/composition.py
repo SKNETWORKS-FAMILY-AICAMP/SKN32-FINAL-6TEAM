@@ -377,6 +377,20 @@ def build_activity_judge_shadow_sink():
     return sink
 
 
+def build_activity_llm_decision_sink():
+    """LLM 운영 판정 한 건을 표 `activity_llm_decisions`(308) 한 행으로 쓰는 함수. `[2026-10-24]`
+
+    ★섀도 기록 함수와 같은 모양 — 호출마다 연결을 새로 연다(백그라운드 스레드에서도 불린다).
+    """
+    from app.infrastructure.db.repository import create_activity_llm_decision
+
+    def sink(record: dict[str, Any]) -> None:
+        with get_connection() as conn, conn.transaction():
+            create_activity_llm_decision(conn, record)
+
+    return sink
+
+
 def build_activity_judge_budget():
     """판정 LLM 호출 예산 — 판정 종류 → 「불러도 되나」. `external_call_budget` 의 두 줄로 센다. `[2026-10-13]`
     활동 코어 전달 사항 7번.
@@ -403,11 +417,13 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     #   조용히 네트워크를 타지 않게. 위 `build_travel_sources` 와 같은 이유다.
     judge_llm = None
     shadow_sink = None
+    decision_sink = None
     judge_budget = None
     production = tools is None           # 아래에서 tools 를 만들어 넣으므로 먼저 적어 둔다
     if tools is None:
         judge_llm = build_activity_judge_llm()
         shadow_sink = build_activity_judge_shadow_sink() if judge_llm is not None else None
+        decision_sink = build_activity_llm_decision_sink() if judge_llm is not None else None
         judge_budget = build_activity_judge_budget() if judge_llm is not None else None
         config.require_module("vector_rag", "default ReadToolbox")
         # ★바깥 소스는 **조립이 넣는다.** 도구가 스스로 만들면 테스트가 조용히
@@ -461,6 +477,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                     f"team '{declaration.team_id}' supports activity_judge_mode {list(supported)}, got '{mode}'")
             team.judge_llm = judge_llm
             team.judge_shadow_sink = shadow_sink
+            if hasattr(team, "judge_decision_sink"):
+                team.judge_decision_sink = decision_sink
             if hasattr(team, "judge_budget"):
                 team.judge_budget = judge_budget
         if production and hasattr(team, "live_lookup"):
@@ -797,7 +815,11 @@ def _dining_agent_judge():
     if kind == "openai" and (settings.openai_api_key or "").strip():
         chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna")
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
-        chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
+        shared = (model or settings.ollama_model) == settings.ollama_model
+        # 해석과 같은 모델이면 같은 문맥 길이 · 만료를 보낸다 — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다(G 실측 33 s + 31 s)
+        same = ({"num_ctx": int(getattr(settings, "ollama_num_ctx", 0) or 0),
+                 "keep_alive": str(getattr(settings, "ollama_keep_alive", "") or "")} if shared else {})
+        chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, **same)
     else:
         logging.getLogger(__name__).warning("dining agent judge enabled but model %s has no key/address — rule review only",
                                             judge_settings["model"])

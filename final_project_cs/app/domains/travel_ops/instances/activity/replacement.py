@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from concurrent.futures import TimeoutError as FuturesTimeout
 from datetime import datetime
 from typing import Any
@@ -17,13 +18,26 @@ from . import failure_codes as fc
 from app.domains.travel_ops.components.intake.survey_answers import REPLACEMENT_QUESTION
 from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
-from . import alternative_order, place_aliases, place_identity
+from . import alternative_order, decision_log, place_aliases, place_identity
 from .alternatives import FALLBACK_DROPS, RADIUS_START_KM, preference_from_survey, rank_alternatives
 from .disaster_impact import ImpactRules, assess
 from .judge.llm import file_instructions
 from .judge.modes import _run, default_runner, kind_mode
 
 _order_log = logging.getLogger("acop.activity.alternative_order")
+
+
+def _ms(started: float) -> int:
+    return int((time.monotonic() - started) * 1000)
+
+
+def _raw_order(output: Any) -> dict[str, Any] | None:
+    """LLM 의 원래 답 — 검사(목록 밖 장소 버리기 · 이유 문장 검사기) **전** 값. 운영 판정 기록의 `llm_result`. `[2026-10-24]`"""
+    if not isinstance(output, dict):
+        return {"unreadable": type(output).__name__} if output is not None else None
+    order = output.get("order")
+    return {"order": [str(x) for x in order] if isinstance(order, list) else None,
+            "used_preference": output.get("used_preference"), "reason": output.get("reason")}
 
 #: ★`[2026-10-14]` 여행을 못 찾은 예약에서 다시 묻는 문항 — 여행 설문의 그 문항 그대로다(새 형식을 만들지 않는다).
 #:  활동 → 코어 전달 8번 회신(`wiki/records/reports/2026-10-13_활동_전달8_설문전달_회신.md`).
@@ -336,11 +350,22 @@ class ReplacementMixin:
             survey, alternative_order.customer_words(task.input_text, task.context.current_state))
         if len(pool) < 2 or preference is None:
             return None
+        code_ids = [str(a.get("contentid")) for a in pool]
+        code = {"order": code_ids}
+
+        def log(outcome: str, *, served: list[str] | None = None, **fields: Any) -> None:
+            # ★`[2026-10-24]` 운영 판정 기록 — 코드 순서 · LLM 원래 답 · 고객에게 나간 순서(`decision_log`)
+            decision_log.record(getattr(self, "judge_decision_sink", None), task, kind=alternative_order.KIND, mode=mode,
+                                outcome=outcome, code_result=code,
+                                served_result={"order": served} if served is not None else code, **fields)
+
         budget = getattr(self, "judge_budget", None)
         try:
             if budget is not None and not budget(alternative_order.KIND):
+                log(decision_log.SKIPPED, failure_code="budget_exhausted")
                 return {"by": "code", "skipped": "budget_exhausted"}
         except Exception:  # noqa: BLE001 — 세지 못하면 부르지 않는다(판정 계층과 같다)
+            log(decision_log.SKIPPED, failure_code="budget_unreadable")
             return {"by": "code", "skipped": "budget_unreadable"}
         rows = {str(c.get("contentid")): c for c in candidates}
         classes = {k: str(v.get("lclsSystm3") or v.get("lclsSystm2") or "") for k, v in rows.items()}
@@ -358,18 +383,25 @@ class ReplacementMixin:
                              instructions=file_instructions(alternative_order.KIND), run_id=task.run_id)
 
         if mode == "shadow":
-            code_ids = [str(a.get("contentid")) for a in pool]
 
             def work() -> None:
+                started = time.monotonic()
                 try:
-                    applied = alternative_order.apply(pool, _run(ask()).output,
+                    call = _run(ask())
+                    applied = alternative_order.apply(pool, call.output,
                                                       customer_text=preference.get("customer_text"), classes=classes)
                 except Exception as exc:  # noqa: BLE001 — 섀도는 고객 결과와 상관없다. 보이게만 남긴다
                     _order_log.warning(json.dumps({"event": "alternative_order_shadow_error",
                                                    "case_id": str(task.case_id), "error": type(exc).__name__},
                                                   ensure_ascii=False))
+                    log(decision_log.SHADOW, failure_code=fc.LLM_ERROR, error=type(exc).__name__,
+                        latency_ms=_ms(started))
                     return
                 llm_ids = applied[1]["ids"] if applied else None
+                log(decision_log.SHADOW, llm_result=_raw_order(call.output), reason=applied[1]["reason"] if applied else None,
+                    reason_guard=applied[1]["reason_guard"] if applied else None,
+                    failure_code=None if applied else fc.LLM_SCHEMA_INVALID, latency_ms=_ms(started),
+                    model=getattr(call, "model", None))
                 _order_log.info(json.dumps({"event": "alternative_order_shadow", "case_id": str(task.case_id),
                                             "code_first": code_ids[0], "llm_first": llm_ids[0] if llm_ids else None,
                                             "agree": bool(llm_ids) and llm_ids[0] == code_ids[0],
@@ -377,27 +409,36 @@ class ReplacementMixin:
 
             (getattr(self, "judge_runner", None) or default_runner()).submit(work)
             return None
+        started = time.monotonic()
         try:
             call = _run(ask(), timeout=timeout)
         except FuturesTimeout:
             self._record_failure(task, fc.LLM_TIMEOUT, tool=alternative_order.KIND)
             warnings.append("대체 후보 순서 LLM 이 시간 안에 답하지 않아 코드 순서로 보여 줬다")
+            log(decision_log.CODE_FALLBACK, failure_code=fc.LLM_TIMEOUT, latency_ms=_ms(started))
             return {"by": "code", "failed": fc.LLM_TIMEOUT}
         except Exception as exc:  # noqa: BLE001 — 429 · 키 없음 · 프롬프트 미등록 — 종류만 남기고 코드 순서
             self._record_failure(task, fc.LLM_ERROR, tool=alternative_order.KIND, error=type(exc).__name__)
             warnings.append("대체 후보 순서 LLM 을 부르지 못해 코드 순서로 보여 줬다")
+            log(decision_log.CODE_FALLBACK, failure_code=fc.LLM_ERROR, error=type(exc).__name__, latency_ms=_ms(started))
             return {"by": "code", "failed": fc.LLM_ERROR, "error": type(exc).__name__}
+        latency = _ms(started)
+        model = getattr(call, "model", None)
         # ★`[2026-10-20]` 이유 문장 지킴이 — 확인할 수 없는 말 · 「A 아니면 B」 거꾸로 읽기 · 장소 번호는 정해진 문장으로
         applied = alternative_order.apply(pool, getattr(call, "output", None),
                                           customer_text=preference.get("customer_text"), classes=classes)
         if applied is None:
             warnings.append("대체 후보 순서 LLM 의 답을 쓸 수 없어 코드 순서로 보여 줬다")
+            log(decision_log.CODE_FALLBACK, llm_result=_raw_order(getattr(call, "output", None)),
+                failure_code=fc.LLM_SCHEMA_INVALID, latency_ms=latency, model=model)
             return {"by": "code", "failed": fc.LLM_SCHEMA_INVALID}
         ordered, record = applied
         alt["alternatives"] = [*ordered, *[a for a in alt["alternatives"] if not a.get("revalidated")]]   # 더보기는 그대로
         if record["dropped"]:
             warnings.append(f"대체 후보 순서 LLM 이 목록에 없는 장소 {record['dropped']}곳을 냈다 — 버렸다")
-        return {**record, "model": getattr(call, "model", None)}
+        log(decision_log.LLM_SERVED, served=record["ids"], llm_result=_raw_order(call.output), reason=record["reason"],
+            reason_guard=record["reason_guard"], latency_ms=latency, model=model)
+        return {**record, "model": model}
 
     def _recheck_disaster(self, task: TeamTask, ranked: dict[str, Any], candidates: list[dict[str, Any]],
                           starts_at: Any, seen: set[str], evidence: list) -> tuple[list, str | None]:

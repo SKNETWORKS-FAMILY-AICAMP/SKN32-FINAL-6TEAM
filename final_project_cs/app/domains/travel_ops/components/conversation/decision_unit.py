@@ -477,7 +477,11 @@ def _schema(stops: list[Stop], changes: list[Change], *, message: str | None = N
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
     if plain:
         # 유료 넘김 경로용 — 생성 문법(갈래 · 문장 인용 enum) 없이 칸 모양만(`_api_schema_kwargs`)
-        return schema
+        # ★`[2026-10-26 x600 40231a56]` 단 `time_edit` 은 실행할 수 있는 경계 · 범위 조합만(칸 안의 anyOf — 엄격 모드가 받는다).
+        #   두 칸을 따로 두면 유료 답이 `inconsistent temporal scope` 로 거절됐다(Case 72e29b8c). 로컬 문법(아래)은 바뀌지 않는다
+        from .edit_intent import paid_time_edit
+
+        return {**schema, "properties": {**schema["properties"], "time_edit": paid_time_edit(items)}}
     # Generate action before edit details. A read cannot activate a time mutation;
     # keep both full branches so Ollama's grammar need not implement if/then.
     from copy import deepcopy
@@ -564,10 +568,80 @@ def _schema(stops: list[Stop], changes: list[Change], *, message: str | None = N
         named_quotes = [s.alias for s in stops if any(len(name) >= 2 and name in message for name in (
             str(getattr(s.item, "title", "") or ""),
             str((getattr(s.item, "place", None) or {}).get("name") or "")))]
-        return {"anyOf": generation_variants(variants, items, query_schema(stops), message,
-                                             quoted_days=day_quotes, quoted_items=named_quotes)}
+        generated = generation_variants(variants, items, query_schema(stops), message,
+                                        quoted_days=day_quotes, quoted_items=named_quotes)
+        # ★`[2026-10-27 G 모델 품질]` 읽기 항목의 기준 칸은 anchor_kind 로 갈린다 — 쓸모없는 칸을 아무 값으로 채우지 못하게(`_shape_generation`)
+        return {"anyOf": [_shape_generation(variant) for variant in generated]}
     schema["anyOf"] = variants
     return schema
+
+
+_CLOCK_PATTERN = "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+
+
+def _anchor_branches(read: dict[str, Any]) -> list[dict[str, Any]]:
+    """읽기 항목 하나를 `anchor_kind` 로 가른 갈래들. `[2026-10-27 G 모델 품질 · F02 류]`
+
+    SYSTEM 의 기준 칸 계약 그대로다 — anchor_item 은 item 일 때만(그 밖에는 none), anchor_time 은 time 일 때만(그 밖에는 빈 문자열),
+    기준 없음(none)은 기준 그 자체(at · steps 1). 「다음 일정」처럼 지금 기준 앞뒤는 now 로 낸다(서버도 none+앞뒤를 now 로 계산한다).
+    ☆왜: 칸이 서로 독립한 필수 enum 이라 실 E4B 가 기준 없음(none)에 대상 별칭 · before 를 채웠고(수용 F02 · 개발 문장 「남산공원 주소 알려줘」),
+      서버가 그 칸으로 이웃 일정을 계산했다. 생성만 좁힌다 — 받은 답은 고쳐 쓰지 않는다(`time_anchor.clean` · `read_requests` 규칙은 옛 기록용으로 그대로).
+    이미 좁혀진 칸(목록 읽기 · 범위 갈래)은 교집합만 남기고(시각 enum · steps enum 포함), 남는 값이 없는 종류는 갈래를 만들지 않는다.
+    어느 종류도 남지 않으면 빈 목록이다 — 원래 스키마로 조용히 되돌리지 않는다(`_shape_generation` 이 그 읽기를 생성 불가로 둔다)."""
+    from copy import deepcopy
+
+    props = read.get("properties") or {}
+    if not {"anchor_kind", "anchor_item", "anchor_time", "relation", "steps"} <= set(props):
+        return [read]
+    aliases = list(props["anchor_item"].get("enum") or [])
+    relations = list(props["relation"].get("enum") or [])
+    clock = props["anchor_time"]
+    clock_enum = clock.get("enum")
+    steps_enum = props["steps"].get("enum")
+    out = []
+    for kind in props["anchor_kind"].get("enum") or []:
+        allowed = [a for a in aliases if (a != "none") == (kind == "item")]
+        if kind == "time":
+            # 이미 좁혀진 시각(enum)은 빈 값만 빼고 그대로, 아니면 HH:MM — 교집합이 비면 갈래를 만들지 않는다
+            times = None if clock_enum is None else [t for t in clock_enum if t]
+            time_spec = ({"type": "string", "enum": times} if times else None) if clock_enum is not None else (
+                clock if clock.get("pattern") else {"type": "string", "pattern": _CLOCK_PATTERN})
+        else:
+            time_spec = {"type": "string", "enum": [""]} if clock_enum is None or "" in clock_enum else None
+        if not allowed or time_spec is None:
+            continue
+        if kind == "none" and ("at" not in relations or (steps_enum is not None and 1 not in steps_enum)):
+            continue
+        branch = deepcopy(read)
+        fields = branch["properties"]
+        fields["anchor_kind"] = {"type": "string", "enum": [kind]}
+        fields["anchor_item"] = {"type": "string", "enum": allowed}
+        fields["anchor_time"] = time_spec
+        if kind == "none":
+            fields["relation"] = {"type": "string", "enum": ["at"]}
+            fields["steps"] = {"type": "integer", "enum": [1]}
+        out.append(branch)
+    return out
+
+
+def _shape_generation(variant: dict[str, Any]) -> dict[str, Any]:
+    """로컬 생성 문법 갈래 하나의 마무리 — 읽기 항목 기준 칸을 `anchor_kind` 로 가른다(`_anchor_branches`). `[2026-10-27 G 모델 품질]`
+
+    유료 넘김(plain) 스키마는 이 함수를 지나지 않는다. ☆검토했지만 넣지 않은 것: 쓰이지 않는 고치기 칸(change_time 답의 place_search ·
+    place_setting, 시간 할 일이 없는 답의 time_edit)을 null 로 내기 — 개발 문장 16개 실 E4B 측정에서 출력 토큰 −11% 였지만 갈래가 늘어
+    생성 속도도 −6% 라 전체 시간은 −2% 에 그쳤고, 기록 모양(옛 기록과 섞임)·재생 도구 영향이 커서 이번 후보에서 뺐다(보고서 2026-10-27 G)."""
+    from copy import deepcopy
+
+    shaped = deepcopy(variant)
+    fields = shaped["properties"]
+    reads = fields.get("reads")
+    if isinstance(reads, dict) and isinstance(reads.get("items"), dict):
+        alternatives = reads["items"].get("anyOf") or [reads["items"]]
+        branches = [branch for alternative in alternatives for branch in _anchor_branches(alternative)]
+        # 갈래가 하나도 남지 않으면 읽기 항목을 낼 수 없다(빈 배열만) — 제약 없는 원래 항목으로 되돌리지 않는다
+        fields["reads"] = ({**reads, "items": {"anyOf": branches} if len(branches) > 1 else branches[0]} if branches
+                           else {"type": "array", "maxItems": 0})
+    return shaped
 
 
 def default_query(raw: dict[str, Any], stops: list[Stop]) -> dict[str, str]:
@@ -640,6 +714,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         except ValueError as error:
             reason = str(error)
             evidence_failure = reason.replace(" ", "_") if reason in known else "unspecified"
+            # ★`[2026-10-26 x600 40231a56]` 넘김 장치가 이 코드(정해 둔 이름만)를 `llm_failover … failed` 로그 줄에 싣는다
+            error.log_code = evidence_failure
             raise
 
     try:

@@ -20,9 +20,11 @@ export interface Steps {
   current: Step | null;
   /** Every step is over but the check is not done yet: the screen is putting the result together. */
   wrapping: boolean;
-  /** 0–100, the cells filled. 100 only once the check is done. */
+  /** 0–100, the cells filled. 100 once the reading has ended or the check is done. */
   percent: number;
   finished: boolean;
+  /** The reading ended without a completed check. */
+  unchecked: boolean;
 }
 
 /** ★우리가 고른 값 — the same as the server's `slow` beat (`op_stream.slow_seconds`): one step quiet this long says for how long under the bar. */
@@ -44,9 +46,9 @@ const over = (key: StepKey, packet: ServerProgress | null) =>
  * The cells from the view. `withAnswers` shows the 「답 반영」 cell: there are questions read while it read (the server puts their answers in at the end), or the
  * server already sent that step. Without it the cell is left out — a plan with no such question never has that step.
  */
-export function planSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "lines">, withAnswers: boolean): Steps {
+export function planSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "lines"> & Pick<Partial<PlanCheckView>, "ended">, withAnswers: boolean): Steps {
   const keys = STEP_KEYS.filter((key) => key !== "answers" || withAnswers || packetOf(view, "answers"));
-  const finished = view.stage === "done";
+  const finished = view.stage === "done" || view.ended === true;
   let at = view.stage === "received" ? -1 : view.stage === "checking" ? 1 : 0;      // an older server sends no counts: the stage says reading or the check
   keys.forEach((key, index) => { if (packetOf(view, key)) at = Math.max(at, index); });
   while (at >= 0 && at < keys.length && over(keys[at], packetOf(view, keys[at]))) at += 1;
@@ -61,7 +63,7 @@ export function planSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "
   });
   const current = steps.find((step) => step.state === "current") ?? null;
   const percent = finished ? 100 : Math.min(99, steps.reduce((sum, step) => sum + step.fraction, 0) / steps.length * 100);
-  return { steps, current, wrapping: !finished && at >= keys.length, percent, finished };
+  return { steps, current, wrapping: !finished && at >= keys.length, percent, finished, unchecked: finished && view.stage !== "done" };
 }
 
 /** The name of a step, as under its cell. */

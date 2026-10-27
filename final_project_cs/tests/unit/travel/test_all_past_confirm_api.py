@@ -54,7 +54,11 @@ def confirm_api(monkeypatch):
                 raise AssertionError("unexpected persistent mutation")
             if "customer_id=%s" in sql:
                 assert params[:2] == ("confirm-proof", intake)
-                self.rows = [(self.status, 1, saved if self.status == "confirmed" else None)] if params[2] == self.owner else []
+                row = (self.status, 1, saved if self.status == "confirmed" else None)
+                # `[2026-10-27 A14]` 등록 준비(`draft`)가 단계도 읽는다 — 확인 화면 · 등록한 접수의 단계는 상태와 같다(review · confirmed)
+                if "stage" in sql.split("FROM")[0]:
+                    row += (self.status,)
+                self.rows = [row] if params[2] == self.owner else []
             elif "FROM intake_claims" in sql:
                 fields = {"trip.title": "합성 자유시간", "trip.party_size": 1}
                 for i, offset in enumerate(self.offsets):

@@ -255,6 +255,24 @@ def test_two_different_times_in_one_time_change_are_asked_back_and_nothing_is_sa
     assert turns[-1]["role"] == "assistant" and turns[-1]["text"] == body["answer"]
 
 
+def test_a_range_boundary_clock_on_one_stop_is_asked_back_and_nothing_is_saved(chat):
+    """`[2026-10-26 fix5 · 수용 T04]` 실 E4B 가 「… 오후 2시 이전 일정들을 전부 한 시간 당겨줘」를 한 일정(인사동) · start/item ·
+    anchor_time 14:00 · relation before 로 읽었다. 기준 시각을 인사동의 새 시작으로 쓰지 않고(전에는 14:00 으로 옮기려 했다) 되묻는다 —
+    일정 그대로 · 다른 일정 목록 없음 · 대화 기록에 같은 답."""
+    message = "오후 2시 이전 일정들을 전부 한 시간 당겨줘"
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="인사동", anchor_kind="time", anchor_time="14:00", relation="before", at_day="none",
+            time_edit={"time": "", "scope": "item", "cascade": True, "boundary": "start", "evidence": message,
+                       "duration_minutes": 0, "continue_previous": False})
+    body = _say(chat, message, "edit-range-boundary")
+    after, items = _latest(chat)
+    assert after == before and _hm(items["인사동"].starts_at) == "12:00", body
+    assert body["status"] == "clarify" and not body.get("choices"), body
+    assert "14:00 이전" in body["answer"] and "인사동" in body["answer"] and "일정은 바꾸지 않았어요" in body["answer"], body
+    turns = chat["client"].get(f"/v1/web/trips/{chat['trip']['trip_id']}/chat", headers=_h(chat["key"])).json()["turns"]
+    assert turns[-1]["role"] == "assistant" and turns[-1]["text"] == body["answer"]
+
+
 def test_an_open_edit_screen_with_unsaved_changes_is_not_overwritten(chat):
     from .test_trip_reopen import _edit, _index, _reopen
 

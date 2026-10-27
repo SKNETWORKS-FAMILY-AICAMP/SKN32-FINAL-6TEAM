@@ -13,8 +13,11 @@ from __future__ import annotations
 from contextlib import nullcontext
 from datetime import datetime
 import json
+import logging
 from typing import Any, Callable
 from uuid import UUID
+
+log = logging.getLogger(__name__)
 
 #: ★외부 서비스에서 받은 장소 — 공용 장소 표에 쌓지 않고 **그 여행 전용 행**으로 넣는다(마이그레이션 029).
 #:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`). `trip_api` 가 이 이름을 그대로 다시 내보낸다.
@@ -34,6 +37,42 @@ class CommitRefused(Exception):
     def __init__(self, status: int, code: str, message: str, **detail: Any) -> None:
         super().__init__(message)
         self.status, self.code, self.message, self.detail = status, code, message, detail
+
+
+#: 저장 실패 뒤 다시 읽기가 끝나지 않은 저장(끊긴 연결의 COMMIT)을 기다리는 한도 — 넘으면 「모른다」(부르는 쪽이 원래 예외를 올린다)
+SETTLE_LOCK_TIMEOUT = "5s"
+
+
+def request_id_for(intake_id: UUID, revision: int) -> str:
+    """수정 접수 그 판의 「완료」가 쓰는 판의 요청 id — 두 번 눌러도 판은 하나(`version_for_request`)."""
+    return f"intake:{intake_id}:r{revision}"
+
+
+def version_unchanged_after_failure(connect: Callable[[], Any], tenant: str, trip_id: UUID, base_version: int, *,
+                                    request_id: str | None = None) -> bool:
+    """저장 실패 뒤 **새 연결로** 여행의 지금 판을 다시 읽는다 — 기준 판 그대로(이고 `request_id` 를 주면 그 요청의 판도 없음)면 True.
+    다시 읽기도 실패하면 False(모른다 — 「안 바꿨다」고 말하지 않는다).
+
+    ★`[2026-10-26 묶음 L · Codex q3]` 판 번호만 읽으면, 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않았을 때 그 앞을 읽을 수 있다.
+      새 판 저장(`append_version`)은 `trips` 행을 UPDATE 하므로 그 행에 `FOR SHARE` 를 걸어 **앞 트랜잭션이 끝날 때까지(저장 또는 되돌림)
+      기다린 뒤** 읽는다. 한도(`SETTLE_LOCK_TIMEOUT`) 안에 끝나지 않으면 모른다로 본다.
+    ★`[2026-10-26 묶음 M]` 채팅 고치기(`chat_edit`) · 웹 「일정 수정」 완료(`trip_api._confirm_reopened`)가 같이 쓴다(전에는 `chat_edit` 안에만).
+      웹 완료는 같은 잠금 · 트랜잭션 안에서 그 「완료」의 요청 id 판이 없는지도 본다(Codex M-q1 Q5).
+    ☆다시 읽기 실패 로그에는 여행 id 와 예외 종류 이름만 — 메시지 · SQL 인자는 고객 값을 담을 수 있다."""
+    try:
+        with connect() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute(f"SET LOCAL lock_timeout = '{SETTLE_LOCK_TIMEOUT}'")
+            cur.execute("SELECT latest_version FROM trips WHERE tenant_id=%s AND trip_id=%s FOR SHARE", (tenant, trip_id))
+            row = cur.fetchone()
+            applied = None
+            if row is not None and request_id is not None:
+                cur.execute("SELECT version FROM itinerary_versions WHERE tenant_id=%s AND trip_id=%s "
+                            "AND cause_json @> %s::jsonb LIMIT 1", (tenant, trip_id, json.dumps([{"request_id": request_id}])))
+                applied = cur.fetchone()
+    except Exception as exc:                                     # noqa: BLE001 — 모르면 「안 바꿨다」고 말하지 않는다(부르는 쪽이 원래 예외를 올린다)
+        log.warning("storage failure readback failed trip=%s error=%s", trip_id, type(exc).__name__)
+        return False
+    return row is not None and int(row[0]) == int(base_version) and applied is None
 
 
 def store_place(conn, cur, tenant: str, trip_id: UUID, *, name: str, kind: str, lat: float, lon: float,
@@ -111,7 +150,7 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
     from app.domains.travel_ops.components.itinerary.itinerary_changes import with_request
 
     trip_id, base_version = UUID(str(reopened["trip_id"])), int(reopened["version"])
-    request_id = f"intake:{intake_id}:r{revision}"
+    request_id = request_id_for(intake_id, revision)
     with connect() as conn:
         applied = store.version_for_request(conn, trip_id, request_id)
     if applied is not None:
@@ -184,4 +223,5 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
     return version, True, plan
 
 
-__all__ = ["CommitRefused", "EXTERNAL_PLACE_SOURCES", "commit", "store_place"]
+__all__ = ["CommitRefused", "EXTERNAL_PLACE_SOURCES", "SETTLE_LOCK_TIMEOUT", "commit", "request_id_for", "store_place",
+           "version_unchanged_after_failure"]

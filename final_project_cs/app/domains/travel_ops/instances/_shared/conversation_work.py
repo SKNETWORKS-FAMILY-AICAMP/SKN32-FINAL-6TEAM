@@ -232,7 +232,8 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
             if chosen and chosen.get("choice") is not None:
                 request["choice"] = chosen["choice"]
             return work._change(task, ctx)
-        if item.locked or item.booking_id:
+        if item.locked or item.booking_id or (item.detail or {}).get("customer_pinned"):
+            # ★`[2026-10-27 B 채팅 전수검사 · Codex 2-1]` 고객 고정(`detail.customer_pinned` — 등록한 여행의 고객 고정 칸)도 같다.
             # ★`[2026-10-26 T16 · D-020]` 고정 · 예약 일정은 채팅의 「다른 곳으로」로 바꾸지 않는다 — 시각 옮기기(`edit_intent`) ·
             #   근처 식당(`near_alternate`)과 같은 거절이다. 고정은 「○○ 고정 풀어줘」로 먼저 풀고, 보류 제안은 `/proposals/{id}/choose` 로만 고른다
             return _protected_refusal(work, task, ctx, item)
@@ -296,9 +297,10 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
 
 def _protected_refusal(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:
     """고정 · 예약 항목의 장소 바꾸기 요청 — 일정 · 보류 제안을 쓰지 않고 `edit_refused` 로 답한다."""
-    reason = "item_locked" if item.locked else "item_booked"
+    pinned = bool(item.locked or (item.detail or {}).get("customer_pinned"))
+    reason = "item_locked" if pinned else "item_booked"
     answer = (f"{item.title}은(는) 고정한 일정이라 바꾸지 않았어요. 「{item.title} 고정 풀어줘」라고 먼저 말씀해 주세요."
-              if item.locked else f"{item.title}은(는) 예약된 일정이라 장소를 바꾸지 않았어요.")
+              if pinned else f"{item.title}은(는) 예약된 일정이라 장소를 바꾸지 않았어요.")
     return work._result(task, outcome="completed", confidence=1.0, evidence=ctx["evidence"], answer=answer,
                         next_action=NextAction.RESPOND,
                         decisions=[{"itinerary": "edit_refused", "reason": reason, "item": item.title}])

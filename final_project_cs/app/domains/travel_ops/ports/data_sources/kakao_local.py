@@ -58,21 +58,50 @@ class KakaoLocal(TravelSource):
         """
         if not query or not query.strip():
             return []
+        params = {"query": query.strip(), "size": str(max(1, min(int(size), 15)))}
+        if category_group_code:
+            params["category_group_code"] = category_group_code
+        if near is not None and not anywhere:
+            params.update({"y": f"{near[0]:.6f}", "x": f"{near[1]:.6f}",
+                           "radius": str(max(1, min(int(radius or NEAR_RADIUS_M), NEAR_RADIUS_M))),
+                           "sort": "distance"})
+        else:
+            params["rect"] = SEOUL_RECT
+        documents = self._documents(params)
+        if documents is None:
+            return None
+        out = []
+        for doc in documents:
+            place = _place(doc)
+            if place is not None and place["address"].startswith("서울"):
+                out.append(place)
+        return out
+
+    def outside_seoul(self, query: str, *, size: int = 5) -> list[dict[str, Any]] | None:
+        """`[2026-10-27 장소 품질 전수검사]` 서울 사각 **없이** 한 번 찾아 주소가 서울 밖인 곳만 — 「서비스 지역 밖」 근거용(서비스 범위는 넓히지 않는다).
+
+        서울 검색이 비었을 때만 부른다(`candidates.search`). 각 곳에 `region`(주소 첫 낱말 — 「부산」 · 「제주특별자치도」)을 붙인다.
+        못 불렀으면 `None`(근거가 아니다), 없으면 `[]`. 예산 · 약관 조건은 `search` 와 같다(응답을 담아 두지 않는다)."""
+        if not query or not query.strip():
+            return []
+        documents = self._documents({"query": query.strip(), "size": str(max(1, min(int(size), 15)))})
+        if documents is None:
+            return None
+        out = []
+        for doc in documents:
+            place = _place(doc)
+            if place is not None and place["address"] and not place["address"].startswith("서울"):
+                out.append({**place, "region": place["address"].split()[0]})
+        return out
+
+    def _documents(self, params: dict[str, str]) -> list[dict[str, Any]] | None:
+        """키워드 검색 한 번 — 문서 목록. 못 불렀으면(차단 · 예산 · 시간 초과 · 연결 · 응답 이상) 사유를 남기고 `None`."""
         if not self._allow():
             return None
         if not self._budget.try_reserve(METER):
             self._miss("budget_exhausted", METER)
             return None
         try:
-            params = {"query": query.strip(), "size": str(max(1, min(int(size), 15)))}
-            if category_group_code:
-                params["category_group_code"] = category_group_code
-            if near is not None and not anywhere:
-                params.update({"y": f"{near[0]:.6f}", "x": f"{near[1]:.6f}",
-                               "radius": str(max(1, min(int(radius or NEAR_RADIUS_M), NEAR_RADIUS_M))),
-                               "sort": "distance"})
-            else:
-                params["rect"] = SEOUL_RECT
             response = self._request(URL, params, {"Authorization": f"KakaoAK {self._key}"})
         except httpx.TimeoutException as exc:
             self._miss("timeout", str(exc))
@@ -92,20 +121,19 @@ class KakaoLocal(TravelSource):
         if not isinstance(documents, list):
             self._miss("unexpected_shape", str(payload)[:120])
             return None
-        out = []
-        for doc in documents:
-            address = str(doc.get("road_address_name") or doc.get("address_name") or "")
-            if not address.startswith("서울"):
-                continue
-            try:
-                latitude, longitude = float(doc["y"]), float(doc["x"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            out.append({"id": str(doc.get("id") or ""), "name": str(doc.get("place_name") or ""),
-                        "category": str(doc.get("category_name") or ""),
-                        "category_group": str(doc.get("category_group_code") or ""),
-                        "address": address, "latitude": latitude, "longitude": longitude})
-        return out
+        return documents
 
+
+def _place(doc: dict[str, Any]) -> dict[str, Any] | None:
+    """카카오 문서 하나 → 우리 모양. 좌표가 없으면 `None`."""
+    address = str(doc.get("road_address_name") or doc.get("address_name") or "")
+    try:
+        latitude, longitude = float(doc["y"]), float(doc["x"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return {"id": str(doc.get("id") or ""), "name": str(doc.get("place_name") or ""),
+            "category": str(doc.get("category_name") or ""),
+            "category_group": str(doc.get("category_group_code") or ""),
+            "address": address, "latitude": latitude, "longitude": longitude}
 
 __all__ = ["KakaoLocal", "METER", "SEOUL_RECT"]

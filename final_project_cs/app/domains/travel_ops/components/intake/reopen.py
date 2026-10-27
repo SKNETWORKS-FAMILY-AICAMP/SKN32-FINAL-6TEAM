@@ -334,7 +334,7 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
         # `[2026-10-15 ST4F-490]` 정책 잠금 일정을 같은 곳에서 고쳤으면 원래 세부(편명 · 숙소 정보 등)를 이어받는다 — 다시 정하는 칸만 새로 쓴다
         inherit = same_spot and _policy_locked(origin)
         inherited = {k: v for k, v in (origin.detail or {}).items()
-                     if k not in ("provenance", "intake", "booking", "customer_pinned")} if inherit else {}
+                     if k not in ("provenance", "intake", "booking", "customer_pinned", "rollback_hold")} if inherit else {}
         detail: dict[str, Any] = {**inherited, "provenance": row["provenance"], "intake": {"intake_id": intake_id, "revision": revision}}
         if origin is not None and origin.detail.get("execution"):
             from copy import deepcopy

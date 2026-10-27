@@ -80,10 +80,11 @@ class OpenAIToolChat:
 
 class OllamaToolChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 120.0, keep_alive: str = "30m",
-                 post: Callable[..., httpx.Response] | None = None) -> None:
+                 post: Callable[..., httpx.Response] | None = None, num_ctx: int = 0) -> None:
         if not base_url:
             raise ToolChatError("Ollama 주소가 비어 있다")
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, float(timeout), keep_alive
+        self.num_ctx = num_ctx
         self._post = post or (lambda url, payload: httpx.post(url, json=payload,
                                                              timeout=httpx.Timeout(self.timeout, connect=5.0)))
 
@@ -107,7 +108,11 @@ class OllamaToolChat:
 
     def step(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]], *, final_json: bool = False) -> ToolTurn:
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False, "options": {"temperature": 0},
-                                   "messages": self._messages(messages), "keep_alive": self.keep_alive}
+                                   "messages": self._messages(messages)}
+        if self.num_ctx > 0:
+            payload["options"]["num_ctx"] = self.num_ctx
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
         if tools:
             payload["tools"] = tools
         if final_json:

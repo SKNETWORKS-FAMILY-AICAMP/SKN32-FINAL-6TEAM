@@ -334,6 +334,17 @@ def _record(store, conn, *, trip_id, base_version, key, decision, original, afte
 
 
 def apply(*, store, connect, trip_id, base_version, decision, now, request_id, message, destination=None, hours=None):
+    """`_apply` 를 저장소 운영 실패 확인으로 감싼다 — `[2026-10-27 C 전수검사]` 판 그대로가 확인될 때만 escalated · save_failed(전에는 일반 500)."""
+    from .storage_failure import guarded
+
+    return guarded(lambda: _apply(store=store, connect=connect, trip_id=trip_id, base_version=base_version,
+                                  decision=decision, now=now, request_id=request_id, message=message,
+                                  destination=destination, hours=hours),
+                   connect=connect, tenant=store.tenant_id, trip_id=trip_id, base_version=base_version,
+                   where="journey progress")
+
+
+def _apply(*, store, connect, trip_id, base_version, decision, now, request_id, message, destination=None, hours=None):
     """Version, actual progress and notice are saved by the canonical store transaction.
 
     ★`[2026-10-22 사용자 결정 — ST4F-716]` 도착(`arrive_item`) 밖의 진행은 이동 계산 · 운영시간 확인을 **트랜잭션 밖에서** 하고, 저장 트랜잭션에서

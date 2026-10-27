@@ -6,5 +6,13 @@
     "007_returns_order_item.sql",
     "008_products_return_restriction.sql"
   ],
-  "reason": "D-023: preserve historical SQL bytes; exclude retired commerce tables from current installation and reruns. No existing database tables are dropped."
+  "reason": "D-023: preserve historical SQL bytes; exclude retired commerce tables from current installation and reruns. No existing database tables are dropped.",
+  "lock_policy": {
+    "lock_timeout_ms": 5000,
+    "attempts": 3,
+    "retry_wait_seconds": [
+      3,
+      10
+    ]
+  }
 }

@@ -60,6 +60,8 @@ def _grounded(observed):
     import copy
     answer = copy.deepcopy(observed)
     answer["reads"][0].update(target_item="none", query={"day": "d1", "period": "all", "kind": "all", "position": "all"})
+    # `[2026-10-27 G]` 기준 없음(anchor_kind=none)의 앞뒤 칸은 at 하나만 남는다(`decision_unit._anchor_branches`) — 관측 답의 after 는 쓸모없는 칸을 채운 값이다
+    answer["reads"][0].update(relation="at")
     answer["choices"] = []
     return answer
 

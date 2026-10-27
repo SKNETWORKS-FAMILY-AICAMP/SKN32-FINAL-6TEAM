@@ -512,6 +512,10 @@ def _planner_ledger(conn) -> Any:
 
 # ★`status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태
 #   `IntakeConflict(..., status=...)`) 같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다.
+#: `[2026-10-26 묶음 M]` 웹 「일정 수정」 완료가 저장소 쓰기 실패로 새 판을 쓰지 못했고, 다시 읽어 판이 그대로임을 확인했을 때의 말(채팅 `SAVE_FAILED_TEXT` 와 같은 모양)
+DONE_SAVE_FAILED_TEXT = "지금 일정을 저장하지 못했어요(저장 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 「완료」를 다시 눌러 주세요."
+
+
 def _error(status: int, code: str, message: str, /, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
@@ -820,6 +824,10 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
     status = outcome.get("status")
     if status == "not_found":
         raise _error(404, "not_found", "resource not found")
+    if status == "escalated" and outcome.get("reason") == "save_failed":
+        # ★`[2026-10-27 C 전수검사]` 저장소 운영 실패 · 판 그대로 확인됨(`storage_failure.guarded`) — 500 이 아니라 503 save_failed.
+        #   예외 종류 · 메시지는 싣지 않는다. Retry-After 는 근거 값이 없어 붙이지 않는다(웹 「완료」 save_failed 와 같다)
+        raise _error(503, "save_failed", str(outcome.get("text") or ""), version=outcome.get("version"))
     if status in _CONFLICTS:
         details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict", "text")}
         raise _error(409, _CONFLICTS[status], f"request not applied: {status}", **details)
@@ -1300,8 +1308,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"trip_id": str(trip_id), "proposals": [_proposal_view(r) for r in rows]}
 
     def _stay_recheck(store: TripStore, trip_id: UUID, proposal_id: UUID, key: str,
-                      customer_id: UUID | None) -> dict[str, Any] | None:
-        """고른 안이 숙소 「다른 후보」의 마이리얼트립 숙소면 그 날짜 1박 값을 다시 본다(`booking/offers/recheck`). 그 밖에는 None.
+                      customer_id: UUID | None) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        """고른 안이 숙소 「다른 후보」의 마이리얼트립 숙소면 그 날짜 1박 값을 다시 본다(`booking/offers/recheck`) → (확인 결과, 고른 후보). 그 밖에는 None.
         읽기만 한다(잠그지 않는다) — 고르기 자체의 판정(기준 판 · 열린 제안)은 뒤의 트랜잭션이 다시 한다."""
         from app.domains.travel_ops.components.booking.offers.recheck import recheck_stay
         from app.domains.travel_ops.components.planning.pending import PendingStore
@@ -1325,19 +1333,27 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         keyword = item.detail.get("area") or (item.place or {}).get("district") or (item.place or {}).get("name")
         return recheck_stay(getattr(sources, "travel_search", None), option,
                             check_in=_seoul(item.starts_at).date().isoformat(), check_out=_seoul(check_out).date().isoformat(),
-                            adults=int(trip.get("party_size") or 1), google=getattr(sources, "stay_google", None), keyword=keyword)
+                            adults=int(trip.get("party_size") or 1), google=getattr(sources, "stay_google", None), keyword=keyword), option
 
     def _choose(tenant: str, trip_id: UUID, proposal_id: UUID, key: str | None, by: str,
                 customer_id: UUID | None = None) -> dict[str, Any]:
         """★한 트랜잭션 — 실패하면 아무것도 안 바뀐다. 먼저 고른 쪽이 이기고 나중 쪽은 409."""
+        from app.domains.travel_ops.components.booking.offers.recheck import over_price_limit, price_limit_refusal
         from app.domains.travel_ops.components.planning.pending import PendingStore, ProposalRefused, choose
 
         store = TripStore(tenant)
         # ★`[2026-10-13]` 숙소 후보는 고르기 **전에** 1박 값을 다시 본다(잠그기 전 — 바깥 검색을 잠근 채 부르지 않는다). 객실이 없으면 바꾸지 않는다
-        price_check = _stay_recheck(store, trip_id, proposal_id, key, customer_id) if key else None
+        rechecked = _stay_recheck(store, trip_id, proposal_id, key, customer_id) if key else None
+        price_check, option = rechecked if rechecked else (None, None)
         if price_check and price_check.get("status") == "gone":
             raise _error(409, "option_gone", "그 날짜에 남은 객실이 없어요 — 일정은 그대로 두었어요. 다른 후보를 고르거나 「바꿔 줘」라고 해 주세요",
                          detail={"price_check": price_check})
+        # ★`[2026-10-27 LB-05 · TeamFlow ST4F-709]` 다시 본 1박 값이 고객이 말한 상한(「1박 ○원 이하」 — 후보의 `price_limit`)을 넘으면 바꾸지 않는다.
+        #   전에는 새 가격으로 그대로 적용해 말한 조건을 넘는 숙소가 일정에 들어갔다
+        limit = over_price_limit(price_check, option) if option else None
+        if limit is not None:
+            raise _error(409, "over_price_limit", price_limit_refusal(price_check, limit, str(option.get("name") or "고른 숙소")),
+                         detail={"price_check": price_check, "price_limit": limit})
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
@@ -2094,8 +2110,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         - `request_id` = `intake:{접수}:r{판}` — 두 번 눌러도 판은 하나. 바뀐 것이 없으면 판을 쓰지 않는다(`changed: false`)
         - 지난 일정(끝 ≤ 지금)을 바꾸거나 빼거나 지난 때에 더하면 422 `item_in_past`
         """
+        import psycopg
+
         from app.domains.travel_ops.components.intake.pipeline import mark_confirmed
-        from app.domains.travel_ops.components.intake.reopen_commit import CommitRefused, commit
+        from app.domains.travel_ops.components.intake.reopen_commit import (CommitRefused, commit, request_id_for,
+                                                                             version_unchanged_after_failure)
 
         if request.survey is not None:
             raise _error(422, "trip_field_locked", "등록한 여행의 설문은 여기서 바꾸지 않아요")
@@ -2109,6 +2128,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                          now=datetime.now(KST), before_write=lambda: _count("confirm", tenant, customer, http))
         except CommitRefused as refused:
             raise _error(refused.status, refused.code, refused.message, **refused.detail) from None
+        except psycopg.OperationalError as exc:
+            # ★`[2026-10-26 묶음 M · F03 같은 결함 — 남은 일 3]` 저장소 운영 실패 — 전에는 그대로 올라가 일반 500 이었다(화면은 저장됐는지 모른다).
+            #   `commit` 이 돌아오기 전의 실패이고, **새 연결로 다시 읽어** 판이 다시 연 판 그대로 · 이 「완료」의 판도 없음을 확인한 때만
+            #   503 `save_failed`(「일정은 바꾸지 않았어요」)로 답한다. 다시 읽지 못했거나 · 판이 바뀌었으면 원래 예외를 그대로 올린다(숨기지 않는다).
+            #   `commit` 이 돌아온 뒤(아래 확정 표시 · 조회)의 실패는 이미 저장됐으므로 여기서 잡지 않는다. 코드 결함 계열(IntegrityError …)도 잡지 않는다.
+            #   접수는 `review` 로 남는다(확정 표시가 같은 트랜잭션이라 함께 되돌려졌다) — 같은 「완료」를 다시 누를 수 있다. 응답엔 예외 종류도 메시지도 싣지 않고,
+            #   로그엔 여행 id 와 예외 종류 이름만 남긴다(메시지 · SQL 인자는 고객 값을 담을 수 있다).
+            base_version = int(reopened["version"])
+            if not version_unchanged_after_failure(get_connection, tenant, trip_id, base_version,
+                                                   request_id=request_id_for(intake_id, request.revision)):
+                raise
+            logger.error("web edit done storage write failed trip=%s error=%s (version unchanged)", trip_id, type(exc).__name__)
+            raise _error(503, "save_failed", DONE_SAVE_FAILED_TEXT, version=base_version) from None
         with get_connection() as conn:
             mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=trip_id)
             return {"intake_id": str(intake_id), "status": "confirmed", "trip": _trip_view(conn, store, trip_id),

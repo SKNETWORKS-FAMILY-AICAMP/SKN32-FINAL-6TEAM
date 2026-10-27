@@ -757,17 +757,24 @@ class Controller:
                         logger.error("auto proposal apply storage failure action_type=%s error=%s",
                                      proposal.action_type, type(exc).__name__)
                         raise _Stop(self._escalation("action_storage_failed", type(exc).__name__)) from exc
-                    action_id = self.repository.create_action_request(
-                        conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
-                        action_type=proposal.action_type, arguments=proposal.arguments,
-                        idempotency_key=key, status="succeeded", provider_ref=outcome.result_ref)
-                    # ★`[2026-09-22]` 실행 장부(v11 §12 DoD-20). 적을 것이 하나도 없으면 UPDATE 를
-                    #   내지 않는다 — 장부 칸을 안 쓰는 적용기(일정 조정)의 경로를 건드리지 않는다.
-                    ledger = outcome.ledger()
-                    if any(value is not None for value in ledger.values()):
-                        self.repository.set_action_status(
-                            conn, tenant_id=case["tenant_id"], action_id=action_id,
-                            status="succeeded", ledger=ledger)
+                    try:
+                        action_id = self.repository.create_action_request(
+                            conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
+                            action_type=proposal.action_type, arguments=proposal.arguments,
+                            idempotency_key=key, status="succeeded", provider_ref=outcome.result_ref)
+                        # ★`[2026-09-22]` 실행 장부(v11 §12 DoD-20). 적을 것이 하나도 없으면 UPDATE 를
+                        #   내지 않는다 — 장부 칸을 안 쓰는 적용기(일정 조정)의 경로를 건드리지 않는다.
+                        ledger = outcome.ledger()
+                        if any(value is not None for value in ledger.values()):
+                            self.repository.set_action_status(
+                                conn, tenant_id=case["tenant_id"], action_id=action_id,
+                                status="succeeded", ledger=ledger)
+                    except psycopg.OperationalError as exc:
+                        # ★`[2026-10-27 C 전수검사]` 적용기 뒤 실행 장부 쓰기도 같은 savepoint 안이다 — 저장소 운영 실패면
+                        #   적용기 쓰기까지 되돌리고 명시적 escalated. 전에는 적용기 호출만 감싸 여기서 나는 실패가 새었다.
+                        logger.error("auto proposal ledger storage failure action_type=%s error=%s",
+                                     proposal.action_type, type(exc).__name__)
+                        raise _Stop(self._escalation("action_storage_failed", type(exc).__name__)) from exc
                     record = {"action_id": str(action_id), "action_type": proposal.action_type,
                               "result_ref": outcome.result_ref, "summary": outcome.summary}
                     if outcome.answer is not None:
@@ -776,6 +783,13 @@ class Controller:
         except _Stop as stop:
             return stop.outcome
         return applied
+
+    @staticmethod
+    def _storage_failure(action: dict[str, Any], exc: BaseException) -> tuple[str, str, str]:
+        # 기록 · 로그에는 예외 **종류 이름**만 — 메시지 · SQL 인자는 고객 값을 담을 수 있다.
+        logger.error("approved action apply storage failure action_type=%s error=%s",
+                     action.get("action_type"), type(exc).__name__)
+        return ("action_storage_failed", type(exc).__name__, "failed")
 
     def _apply_approved(self, conn, case: dict[str, Any], approved: list[dict[str, Any]], actor_id: str):
         """**승인된** 제안을 적용기로 실행한다(`[2026-09-18]`, wiki `actions/approval.md`).
@@ -806,17 +820,31 @@ class Controller:
                     except (TimeoutError, ConnectionError) as exc:
                         failure, failed_action = ("action_provider_unknown", str(exc), "unknown"), action
                         raise
+                    except psycopg.OperationalError as exc:
+                        failure, failed_action = self._storage_failure(action, exc), action
+                        raise
                     # ★`[2026-09-22]` 실행 장부를 같은 UPDATE 로 적는다(v11 §12 DoD-20) —
                     #   무엇을(action_type·인자)·왜(reason)·얼마에(amount_cents·출처)·되돌림 기한.
                     #   코어는 이 값들의 뜻을 모른다. 적용기가 채우고 여기서 그대로 싣는다.
-                    self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
-                                                      action_id=action["action_id"], status="succeeded",
-                                                      provider_ref=outcome.result_ref,
-                                                      ledger=outcome.ledger())
+                    try:
+                        self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
+                                                          action_id=action["action_id"], status="succeeded",
+                                                          provider_ref=outcome.result_ref,
+                                                          ledger=outcome.ledger())
+                    except psycopg.OperationalError as exc:
+                        failure, failed_action = self._storage_failure(action, exc), action
+                        raise
                     applied.append({"action_id": str(action["action_id"]), "action_type": action["action_type"],
                                     "result_ref": outcome.result_ref, "summary": outcome.summary})
                     outbox.extend(outcome.outbox)
-        except (ActionConflict, ActionRejected, TimeoutError, ConnectionError):
+        except (ActionConflict, ActionRejected, TimeoutError, ConnectionError, psycopg.OperationalError):
+            # ★`[2026-10-27 C 전수검사 · 묶음 M 남은 일 3]` 저장소 운영 실패(psycopg OperationalError 계열 — 연결 · 잠금 ·
+            #   취소 · 디스크)도 savepoint 가 되돌린 뒤 명시적 escalated(`action_storage_failed`)로 닫는다. 전에는 그대로 올라가
+            #   run_case 의 A 단계 전체가 되돌려지고 Case 가 `resuming` 에 남았다(승인만 있고 결과 없음 · HTTP 500).
+            #   코드 결함(IntegrityError · ProgrammingError …)은 잡지 않는다. 되돌린 뒤 실패 기록 · 전이도 못 쓰면(연결이 죽었다)
+            #   그 예외가 그대로 올라간다 — 「적용 안 됨」을 확정하지 못했으니 숨기지 않는다.
+            if failure is None:
+                raise
             guardrail, observed, status = failure
             self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
                                               action_id=failed_action["action_id"], status=status)

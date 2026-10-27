@@ -424,7 +424,13 @@ def test_rollback_restores_and_the_watcher_leaves_it_alone(api):
     assert back.json()["version"] == 3
     view = _detail(api, trip_id)
     sky = _slot(view, 2)
-    assert sky["place"] == "잠실 스카이타워" and sky["customer_pinned"] is True
+    # contract_correction `[2026-10-26 x600 40231a56 · Codex]`: was `sky["customer_pinned"] is True` — the rollback marked restored stops as
+    #   customer pins. The watch hold is now its own marker (`detail.rollback_hold`); the public customer pin keeps the old version's value.
+    assert sky["place"] == "잠실 스카이타워" and sky["customer_pinned"] is False
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT i.detail FROM itinerary_items i JOIN trips t ON t.trip_id=i.trip_id AND t.tenant_id=i.tenant_id "
+                    "AND i.version=t.latest_version WHERE i.trip_id=%s AND i.title=%s", (trip_id, sky["title"]))
+        assert (cur.fetchone()[0] or {}).get("rollback_hold") is True
     assert view["history"][-1]["reason"] == "rollback"
 
     again = api["tick"]("09:10")                                       # ★다시 자동으로 바꾸지 않는다

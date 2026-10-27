@@ -29,7 +29,7 @@ from datetime import date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from app.domains.travel_ops.components.places.place_hours import DAYS, days_in
+from app.domains.travel_ops.components.places.place_hours import DAYS, NOT_A_DAY_AFTER, days_in
 
 HolidayLookup = Callable[[date], "dict[str, Any] | None"]
 
@@ -73,7 +73,7 @@ _WEEKEND = re.compile(r"주말")
 _MONTHLY = re.compile(r"(?:매월|(?<![가-힣\d])월)\s*(?:\d+|한|두|세)\s*(?:회|번|차례)(?!\s*째)")
 _IRREGULAR = re.compile(r"비정기|부정기")
 #: 요일 글자만 쓴 나열 — 「매주 월, 화」 · 「월·화」
-_BARE_DAY = re.compile(r"(?<![가-힣])([월화수목금토일])(?=\s*(?:[,·~]|요일|$|\s))")
+_BARE_DAY = re.compile(rf"(?<![가-힣])([월화수목금토일])(?=\s*(?:[,·~]|요일|$|\s)){NOT_A_DAY_AFTER}")
 #: 판정에 쓰지 않는 군말 — 이것만 남으면 「못 읽은 조각」이 아니다
 _FILLER = re.compile(r"매주|매월|매달|매년|정기\s*휴(?:무|관|일|실일)?|휴(?:무|관|궁|장|업|실)(?:일)?|당일|및|그리고|[\s,·~\-.:;]|"
                      r"요일|주|일|월|\[|\]|법정|날")

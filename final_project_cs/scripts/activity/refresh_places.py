@@ -4,6 +4,7 @@
        ★`areaCode=1` 로 받으면 서울 행의 대부분이 빠진다(서울 주소인데 지역코드가 빈 행 87% — 2026-09-29 확인)
     2. 활동 원장에 처음 적는 장소는 **기준점**으로만 적는다(다시 받지 않는다 — CSV 가 그 무렵 받은 원문이다)
     3. 기준점과 다른 장소만 `detailIntro2` 로 운영시간 · 휴무를 다시 받아 적는다 — 원문이 바뀌었으면 요일표를 비운다
+       ★`[2026-10-27]` 받은 칸이 비었으면(칸 없음 · 항목 없음) 채워 둔 글을 유지한다(`kept_on_empty`) — NULL 로 덮지 않는다
        → 다음 `read_hours.py` 가 그 장소만 다시 편다
     4. 목록에 있지만 원장에 없는 서울 장소는 **수만 센다** — 새 장소를 넣을지는 데이터 결정이다(`merge_tourapi_new.py`)
 브랜드 매장(OY · DS · AB · MS …)은 관광공사에 없어 보지 않는다. 매일 밤 돌리는 것(예약)은 운영 쪽 일이다(코어 sweeper · 작업 스케줄러).
@@ -81,7 +82,7 @@ def refresh(conn, listed: Iterable[dict[str, Any]], fetch_intro: IntroFetcher, *
         cur.execute("SELECT content_id, source_modified_at, usetime_text, restdate_text FROM activity.ac_place "
                     "WHERE content_id = ANY(%s)", (list(rows),))
         stored = {cid: (mod, use, rest) for cid, mod, use, rest in cur.fetchall()}
-    out = {"baseline": 0, "same": 0, "changed": 0, "refetched": 0, "text_changed": 0,
+    out = {"baseline": 0, "same": 0, "changed": 0, "refetched": 0, "text_changed": 0, "kept_on_empty": 0,
            "not_in_ledger": len(set(rows) - set(stored)), "over_limit": 0}
     calls = 0
     for cid, (mod, use, rest) in stored.items():
@@ -104,6 +105,13 @@ def refresh(conn, listed: Iterable[dict[str, Any]], fetch_intro: IntroFetcher, *
         new_use, new_rest = hours_from_intro(fetch_intro(cid, str(rows[cid].get("contenttypeid") or "")),
                                              str(rows[cid].get("contenttypeid") or ""))
         out["refetched"] += 1
+        # ★`[2026-10-27 장소 품질 전수검사]` 관광공사가 빈 값(칸 없음 · 항목 없음)을 주면 채워 둔 글을 NULL 로 덮지 않는다 — NULL 은 「휴무 없음」이 아니다.
+        #   ☆전에는 같은 매장군 · 사람 · Claude 가 채운 운영시간 · 휴무가 관광공사 갱신 때 지워졌다(2026-10-26 381건 판단의 남은 일 · Codex Q3).
+        #   비어 있지 않은 새 글이면 지금처럼 덮고 요일표를 비운다.
+        kept = (new_use is None and bool(use)) or (new_rest is None and bool(rest))
+        new_use = use if new_use is None and use else new_use
+        new_rest = rest if new_rest is None and rest else new_rest
+        out["kept_on_empty"] += int(kept)
         text_changed = (new_use, new_rest) != (use, rest)
         out["text_changed"] += int(text_changed)
         if dry_run:
@@ -156,7 +164,8 @@ def main() -> None:
             print(f"{args.new_since} 이후 등록된 새 장소 {len(fresh):,}곳 → {OUT_PATH.name} "
                   "(python -X utf8 scripts/merge_tourapi_new.py 로 병합 — 작업용, 올리지 않는다)")
     print(f"목록 서울 {len(listed):,}행 → 기준점 {result['baseline']:,} · 그대로 {result['same']:,} · 바뀜 {result['changed']:,}"
-          f"(다시 받음 {result['refetched']:,} · 원문 바뀜 {result['text_changed']:,} · 상한에 걸림 {result['over_limit']:,})"
+          f"(다시 받음 {result['refetched']:,} · 원문 바뀜 {result['text_changed']:,} · 빈 값이라 채운 글 유지 {result['kept_on_empty']:,}"
+          f" · 상한에 걸림 {result['over_limit']:,})"
           f" · 원장에 없음 {result['not_in_ledger']:,}" + (" — dry-run, 쓰지 않았다" if args.dry_run else ""))
     if result["text_changed"] and not args.dry_run:
         print("→ 원문이 바뀐 곳은 요일표를 비웠다. python scripts/activity/read_hours.py 로 다시 편다")
