@@ -100,7 +100,9 @@ test("삭제 → 되돌리기: 삭제는 누르자마자 서버에 저장만 하
   await page.getByRole("button", { name: "다시 제출" }).click();
   await expect(card(page, "광장시장")).toHaveCount(0);
   expect(await edits()).toHaveLength(3);                                                             // 빼기는 다시 보내지 않는다
-  expect((await server.received("POST", "/revalidate")).length).toBe(1);                           // 전체를 한 번 다시 확인한다
+  // 전체를 한 번 다시 확인한다. `[2026-10-27 Q]` 카드가 먼저 사라지고 확인 요청은 그 뒤에 도착할 수 있어(main CI(web) 40481751934 에서 0건으로 한 번 실패)
+  //   같은 파일 · plan-check-redesign 처럼 도착을 기다린다 — 기대값 1 그대로
+  await expect.poll(async () => (await server.received("POST", "/revalidate")).length).toBe(1);
 });
 
 test("수정 화면: 예약한 일정은 서버가 후보를 주지 않고(booked_needs_name) 화면은 그 이유와 이름을 쓰라는 안내를 말한다 — 일반 「다른 후보가 없어요」가 아니다", async ({ page, request }) => {
