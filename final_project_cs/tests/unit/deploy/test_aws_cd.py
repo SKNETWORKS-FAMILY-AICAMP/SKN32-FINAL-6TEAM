@@ -126,24 +126,55 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(pod["containers"][0]["env"], d["spec"]["template"]["spec"]["containers"][0]["env"])
         compile(pod["containers"][0]["command"][2], "<migration>", "exec")
 
-    def test_migration_bounds_lock_and_statement_waits_inside_the_deadline(self):
+    def test_migration_bounds_every_attempt_inside_the_deadline(self):
         j = cd.migration_job(document(), IMAGE, SHA, "123")
         c = j["spec"]["template"]["spec"]["containers"][0]
-        # ★[2026-10-27 K §4] lock_timeout 은 migration-plan.json lock_policy 한 곳 — Job 은 statement_timeout 만 싣는다
-        self.assertEqual(c["command"][3:], [cd.MIGRATION_RESULT_PATH, cd.MIGRATION_STATEMENT_TIMEOUT])
+        # ★[2026-10-27 K §4] lock_timeout 은 migration-plan.json lock_policy 한 곳 — Job 은 시도 제한만 싣는다
+        # ★[2026-10-28 독립 검토] 시도마다 같은 제한이 새로 걸린다 — 초(정수)를 함께 넘겨 Job 이 시도별 감시에 쓴다
+        self.assertEqual(c["command"][3:], [cd.MIGRATION_RESULT_PATH, cd.MIGRATION_ATTEMPT_TIMEOUT,
+                                            str(cd.seconds(cd.MIGRATION_ATTEMPT_TIMEOUT))])
         self.assertFalse(hasattr(cd, "MIGRATION_LOCK_TIMEOUT"))
+        self.assertFalse(hasattr(cd, "MIGRATION_STATEMENT_TIMEOUT"))
         self.assertEqual(c["terminationMessagePath"], cd.MIGRATION_RESULT_PATH)
-        budget = cd.migration_lock_budget_seconds()
-        self.assertLess(budget + cd.seconds(cd.MIGRATION_STATEMENT_TIMEOUT), j["spec"]["activeDeadlineSeconds"])
+        self.assertEqual(j["spec"]["activeDeadlineSeconds"], cd.MIGRATION_DEADLINE_SECONDS)
+        self.assertLessEqual(cd.migration_worst_case_seconds() + cd.MIGRATION_START_RESERVE_SECONDS,
+                             j["spec"]["activeDeadlineSeconds"])
 
-    def test_lock_budget_is_read_from_the_migration_plan_and_must_fit_the_deadline(self):
+    def test_worst_case_counts_every_attempt_of_the_shipped_lock_policy(self):
+        # ★[2026-10-28 독립 검토] 옛 검사식(잠금 예산 + 문장 제한 한 번)은 재시도마다 다시 걸리는 제한을 한 번만 셌다.
+        #   값은 지금 산출물 migration-plan.json 과 지금 설정에서 읽는다 — 시험에 횟수 · 대기를 박지 않는다.
         plan = Path(__file__).resolve().parents[3] / "app/infrastructure/db/migrations/migration-plan.json"
         policy = json.loads(plan.read_text(encoding="utf-8"))["lock_policy"]
-        expected = policy["attempts"] * policy["lock_timeout_ms"] / 1000 + sum(policy["retry_wait_seconds"])
-        self.assertEqual(cd.migration_lock_budget_seconds(), expected)
-        huge = {"lock_timeout_ms": 400_000, "attempts": 2, "retry_wait_seconds": [0]}
-        with patch.object(cd, "migration_lock_policy", return_value=huge), \
-             self.assertRaisesRegex(cd.DeploymentError, "lock"):
+        expected = policy["attempts"] * cd.seconds(cd.MIGRATION_ATTEMPT_TIMEOUT) + sum(policy["retry_wait_seconds"])
+        self.assertEqual(cd.migration_worst_case_seconds(), expected)
+        self.assertLessEqual(expected + cd.MIGRATION_START_RESERVE_SECONDS, cd.MIGRATION_DEADLINE_SECONDS)
+
+    def test_job_is_refused_when_all_attempts_cannot_end_before_the_deadline(self):
+        policy = {"lock_timeout_ms": 5000, "attempts": 3, "retry_wait_seconds": [3, 10]}
+        deadline = cd.MIGRATION_DEADLINE_SECONDS
+        # 한 시도는 기한 안이지만 세 시도는 넘는다 — 옛 식(3*5+13+제한 < 기한)은 통과시켰다
+        per_attempt = (deadline - cd.MIGRATION_START_RESERVE_SECONDS) // 3 + 60
+        self.assertLess(policy["attempts"] * 5 + 13 + per_attempt, deadline)
+        with patch.object(cd, "migration_lock_policy", return_value=policy), \
+             patch.object(cd, "MIGRATION_ATTEMPT_TIMEOUT", f"{per_attempt}s"), \
+             self.assertRaisesRegex(cd.DeploymentError, "deadline"):
+            cd.migration_job(document(), IMAGE, SHA, "123")
+        fitting = (deadline - cd.MIGRATION_START_RESERVE_SECONDS - 13) // 3
+        with patch.object(cd, "migration_lock_policy", return_value=policy), \
+             patch.object(cd, "MIGRATION_ATTEMPT_TIMEOUT", f"{fitting}s"):
+            self.assertEqual(cd.migration_worst_case_seconds(), 3 * fitting + 13)
+            cd.migration_job(document(), IMAGE, SHA, "123")
+        with patch.object(cd, "migration_lock_policy", return_value={**policy, "retry_wait_seconds": [3, 10 + 3]}), \
+             patch.object(cd, "MIGRATION_ATTEMPT_TIMEOUT", f"{fitting}s"), \
+             self.assertRaisesRegex(cd.DeploymentError, "deadline"):
+            cd.migration_job(document(), IMAGE, SHA, "123")
+
+    def test_lock_timeout_must_be_shorter_than_one_attempt(self):
+        # lock_timeout 이 시도 제한 이상이면 잠금 재시도가 일어날 수 없다 — 설정이 서로 어긋난 것이다
+        limit = cd.seconds(cd.MIGRATION_ATTEMPT_TIMEOUT)
+        with patch.object(cd, "migration_lock_policy",
+                          return_value={"lock_timeout_ms": limit * 1000, "attempts": 2, "retry_wait_seconds": [0]}), \
+             self.assertRaisesRegex(cd.DeploymentError, "lock_timeout"):
             cd.migration_job(document(), IMAGE, SHA, "123")
         with patch.object(cd, "migration_lock_policy", side_effect=ValueError("lock_policy missing")), \
              self.assertRaises(ValueError):
@@ -194,8 +225,9 @@ class PlanTests(unittest.TestCase):
                     raise FakeDatabaseError("connection lost during commit")
                 return False
 
-        def apply_all(conn):
+        def apply_all(conn, **options):
             calls.append("apply_all")
+            calls.append(("apply_all options", options))
             if error:
                 raise error("migration statement failed")
 
@@ -231,6 +263,18 @@ class PlanTests(unittest.TestCase):
         raised, recorded, _, _ = self.run_migration_script(error=type("LockNotAvailable", (Exception,), {"sqlstate": "55P03"}))
         self.assertIsNotNone(raised)
         self.assertEqual(recorded, {"migration": "failed_before_commit", "error": "LockNotAvailable", "sqlstate": "55P03"})
+
+    def test_job_gives_apply_all_the_per_attempt_limit(self):
+        raised, _, calls, _ = self.run_migration_script()
+        self.assertIsNone(raised)
+        self.assertIn(("apply_all options", {"attempt_timeout_s": cd.seconds(cd.MIGRATION_ATTEMPT_TIMEOUT)}), calls)
+
+    def test_a_failure_while_committing_inside_apply_all_is_recorded_as_unknown(self):
+        # ★[2026-10-28] apply_all 의 COMMIT 중에 끊기면 반영됐는지 모른다 — 「되돌림 확정」으로 적지 않는다
+        lost = type("OperationalError", (Exception,), {"migration_commit_uncertain": True, "migration_attempts": 1})
+        raised, recorded, _, _ = self.run_migration_script(error=lost)
+        self.assertIsNotNone(raised)
+        self.assertEqual(recorded, {"migration": "commit_unknown", "error": "OperationalError", "attempts": 1})
 
     def test_lost_commit_is_recorded_as_unknown_not_rolled_back(self):
         raised, recorded, _, _ = self.run_migration_script(commit_error=True)
@@ -342,6 +386,13 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(executed.count("MIGRATION SQL"), 2)
         self.assertEqual(recorded, {"migration": "failed_before_commit", "error": "MigrationLockFailed",
                                     "sqlstate": "55P03", "attempts": 2})
+
+    def test_an_attempt_over_its_limit_is_recorded_with_the_attempt_number(self):
+        over = type("MigrationAttemptTimeout", (Exception,), {"sqlstate": "57014", "attempts": 2})
+        raised, recorded, _, _ = self.run_migration_script(error=over)
+        self.assertIsNotNone(raised)
+        self.assertEqual(recorded, {"migration": "failed_before_commit", "error": "MigrationAttemptTimeout",
+                                    "sqlstate": "57014", "attempts": 2})
 
     def test_failed_job_block_names_the_recorded_outcome(self):
         failed = {"metadata": {"name": "job-1"}, "status": {"failed": 1}}

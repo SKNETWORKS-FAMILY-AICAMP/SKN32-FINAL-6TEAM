@@ -24,9 +24,15 @@ REVISION = "guguroute.io/source-sha"
 # lock queues every later query on that table behind it, so the wait is bounded well inside the Job
 # deadline and the whole transaction rolls back instead of stalling customer requests.
 # The lock wait itself (lock_timeout, deadlock/lock-wait retries) belongs to migration-plan.json
-# lock_policy, which apply_all applies per attempt; the Job only adds the session statement bound.
+# lock_policy, which apply_all applies per attempt. The Job adds one bound per attempt: apply_all
+# restarts it for every retry and cancels (rolls back) an attempt that outruns it. statement_timeout
+# alone cannot be that bound - PostgreSQL 13+ applies it to each statement of the one multi-statement
+# migration message separately. The same value is also the session statement_timeout (backstop).
+# Worst case = lock_policy attempts x attempt bound + retry waits; it plus the start reserve (pod
+# scheduling, new image pull, interpreter start) must fit the Job deadline, or no Job is created.
 MIGRATION_DEADLINE_SECONDS = 600
-MIGRATION_STATEMENT_TIMEOUT = "5min"
+MIGRATION_ATTEMPT_TIMEOUT = "2min"
+MIGRATION_START_RESERVE_SECONDS = 120
 MIGRATION_PLAN_DIR = Path(__file__).resolve().parents[1] / "app" / "infrastructure" / "db" / "migrations"
 # Kubernetes copies this file into the terminated container status (at most 4 KiB), so the
 # deployment can name the migration outcome without reading container logs.
@@ -263,7 +269,7 @@ import json
 from pathlib import Path
 import sys
 
-result_path, statement_timeout = sys.argv[1:3]
+result_path, statement_timeout, attempt_seconds = sys.argv[1:4]
 
 
 def record(document):
@@ -289,10 +295,11 @@ try:
         conn.commit()
         if conn.info.transaction_status != TransactionStatus.IDLE:
             raise RuntimeError("connection is not idle before the migration")
-        apply_all(conn)
+        apply_all(conn, attempt_timeout_s=int(attempt_seconds))
         applied = True
 except Exception as exc:
-    failure = {"migration": "commit_unknown" if applied else "failed_before_commit", "error": type(exc).__name__}
+    uncertain = applied or getattr(exc, "migration_commit_uncertain", False) is True
+    failure = {"migration": "commit_unknown" if uncertain else "failed_before_commit", "error": type(exc).__name__}
     if isinstance(getattr(exc, "sqlstate", None), str):
         failure["sqlstate"] = exc.sqlstate
     attempts = getattr(exc, "attempts", getattr(exc, "migration_attempts", None))
@@ -313,23 +320,26 @@ def migration_lock_policy():
     return module.lock_policy(MIGRATION_PLAN_DIR)
 
 
-def migration_lock_budget_seconds():
-    """Worst-case lock waiting across all attempts: attempts x lock_timeout + waits between attempts."""
+def migration_worst_case_seconds():
+    """Longest the migration can run: every lock_policy attempt at its full bound plus the waits between."""
     policy = migration_lock_policy()
-    return policy["attempts"] * policy["lock_timeout_ms"] / 1000 + sum(policy["retry_wait_seconds"])
+    attempt = seconds(MIGRATION_ATTEMPT_TIMEOUT)
+    if policy["lock_timeout_ms"] >= attempt * 1000:
+        raise DeploymentError("lock_policy lock_timeout must be shorter than one migration attempt")
+    return policy["attempts"] * attempt + sum(policy["retry_wait_seconds"])
 
 
 def migration_job(baseline, image, sha, run_id):
     pod = copy.deepcopy(baseline["spec"]["template"]["spec"])
     if len(pod["containers"]) != 1:
         raise DeploymentError("Unexpected API sidecar")
-    if seconds(MIGRATION_STATEMENT_TIMEOUT) >= MIGRATION_DEADLINE_SECONDS:
-        raise DeploymentError("The migration statement bound must end before the Job deadline")
-    if migration_lock_budget_seconds() + seconds(MIGRATION_STATEMENT_TIMEOUT) >= MIGRATION_DEADLINE_SECONDS:
-        raise DeploymentError("The migration lock_policy retries plus the statement bound must end before the Job deadline")
+    if migration_worst_case_seconds() + MIGRATION_START_RESERVE_SECONDS > MIGRATION_DEADLINE_SECONDS:
+        raise DeploymentError("Every lock_policy attempt at its bound plus the retry waits and start reserve "
+                              "must end before the Job deadline")
     c = pod["containers"][0]
     c["image"] = immutable_image(image)
-    c["command"] = ["python", "-c", MIGRATION_SCRIPT, MIGRATION_RESULT_PATH, MIGRATION_STATEMENT_TIMEOUT]
+    c["command"] = ["python", "-c", MIGRATION_SCRIPT, MIGRATION_RESULT_PATH, MIGRATION_ATTEMPT_TIMEOUT,
+                    str(seconds(MIGRATION_ATTEMPT_TIMEOUT))]
     c.pop("args", None)
     for key in ("readinessProbe", "livenessProbe", "startupProbe", "lifecycle", "ports"):
         c.pop(key, None)
