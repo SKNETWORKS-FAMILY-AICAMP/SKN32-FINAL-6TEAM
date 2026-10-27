@@ -1479,6 +1479,15 @@ def _model_side_failure(exc: BaseException) -> bool:
     return not (reasons and all(reason == "content" for reason in reasons))
 
 
+def _answer_side_failure(exc: BaseException) -> bool:
+    """에이전트 실패가 **답 내용 쪽**(모델은 답했지만 모양 · 스키마 · 인용 검사에서 떨어짐)인가 — 줄 읽기로 한 번 더 읽어도 되는 갈래.
+    `[2026-10-27 A 접수·읽기 전수검사 A03]` `ValueError`(모양 · JSON) · `OllamaError` 계열(내용 오류 · 넘김 장치가 「모양」 이유로 실패 — 모델 쪽은
+    `_model_side_failure` 가 먼저 가른다)만. 그 밖(`KeyError` · `TypeError` · `AttributeError` …)은 코드 결함이라 숨기지 않는다."""
+    from app.infrastructure.ollama_chat import OllamaError
+
+    return isinstance(exc, (ValueError, OllamaError))
+
+
 def _reading_stream(given: dict[str, Any] | None) -> dict[str, Any]:
     """남은 줄 모델 호출의 조금씩 받기 설정 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
     if given is not None:
@@ -1564,6 +1573,11 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             if isinstance(exc, agent_module.ReaderPolicyError) or (agent_mode == "on" and _model_side_failure(exc)):
                 log.warning("intake reading outcome=failed by=agent_model error=%s", agent_error)
                 raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
+            if agent_mode == "on" and not _answer_side_failure(exc):
+                # ★`[2026-10-27 A 접수·읽기 전수검사 A03]` 답 내용 쪽(모양 · 스키마 · 인용)도 모델 쪽도 아닌 **예상하지 못한 예외**(코드 결함)는
+                #   줄 읽기로 조용히 대체하지 않는다 — 그대로 올려 `process` 가 `reading_failed`(고객 문장만)로 끝낸다
+                log.warning("intake reading outcome=failed by=agent_unexpected error=%s", type(exc).__name__)
+                raise
             log.warning("intake agent read failed (answer side — reading lines instead): %s", agent_error)
     use_agent = agent_mode == "on" and agent_out is not None and (bool(agent_out.items) or not read.items)
     #: 어느 길로 읽었나 — `reading.agent` 값 줄과 로그에 남긴다(화면 · 관리 콘솔에서 본다). 줄 읽기가 실패하면 `failed` 로 로그만 남고 접수가 「읽기 실패」가 된다
