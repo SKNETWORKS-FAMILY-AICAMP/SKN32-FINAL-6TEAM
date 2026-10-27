@@ -50,6 +50,20 @@ _DIGIT_HOUR = re.compile(r"(\d{1,2})\s*(?::|시)")
 _S = {"type": "string"}
 _NS = {"type": ["string", "null"]}
 _NI = {"type": ["integer", "null"]}
+
+
+def _dated_items(item: dict[str, Any]) -> dict[str, Any]:
+    """항목 스키마를 두 갈래로 — 날짜 없음(date · date_quote 둘 다 null) / 날짜 있음(date 문자열 · date_quote 빈칸 아닌 문자열). `[2026-10-27]`
+
+    ☆왜(수용 I05 실 E4B 진단 `fix5 ev/diag-i05.json`): 두 칸이 독립된 「문자열 또는 null」이라 items 3개 모두 date 만 내고 date_quote=null —
+      `ground` 가 인용 없는 날짜를 버려(dropped.date=3) 첫날을 다시 물었다. 생성 문법만 좁힌다: 인용이 원문에 없으면 `ground` 가 지금처럼 버리고,
+      코드가 인용을 붙이지 않는다(fix5 Codex G1 에서 기각한 규칙 인용 붙이기와 다르다). 유료 엄격 스키마는 `strict_schema` 가 minLength 를 지운다."""
+    from copy import deepcopy
+
+    undated, dated = deepcopy(item), deepcopy(item)
+    undated["properties"].update(date={"type": "null"}, date_quote={"type": "null"})
+    dated["properties"].update(date={"type": "string"}, date_quote={"type": "string", "minLength": 1})
+    return {"anyOf": [undated, dated]}
 SCHEMA: dict[str, Any] = {
     "type": "object",
     "required": ["guard", "pieces", "items", "moves", "conditions", "preferences", "gaps", "missing", "trip"],
@@ -61,12 +75,13 @@ SCHEMA: dict[str, Any] = {
                                  "out_of_scope": {"type": "boolean"}, "quote": _NS}},
         "pieces": {"type": "array", "items": {"type": "object", "required": ["kind", "quote"],
                    "properties": {"kind": {"enum": list(PIECES)}, "quote": _S}}},
-        "items": {"type": "array", "items": {"type": "object",
+        # ★`[2026-10-27 G 모델 품질 · 수용 I05]` 날짜를 내면 날짜 인용 칸을 비울 수 없다(`_dated_items`) — 생성 문법만 좁힌다
+        "items": {"type": "array", "items": _dated_items({"type": "object",
                   "required": ["place_quote", "day", "date", "date_quote", "start", "end", "time_quote", "kind", "locked", "locked_quote"],
                   "properties": {"place_quote": _S, "day": _NI, "date": _NS, "date_quote": _NS, "start": _NS, "end": _NS,
                                  "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]},
                                  # I06: 고객이 이 항목을 고정/고정 안 함이라고 **명시**했을 때만 true/false — 아니면 null. 근거 인용 없으면 버린다(`ground`)
-                                 "locked": {"type": ["boolean", "null"]}, "locked_quote": _NS}}},
+                                 "locked": {"type": ["boolean", "null"]}, "locked_quote": _NS}})},
         "moves": {"type": "array", "items": {"type": "object", "required": ["mode", "scope", "day", "from_quote", "to_quote", "quote"],
                   "properties": {"mode": {"enum": list(MODES)}, "scope": {"enum": ["segment", "day", "all"]}, "day": _NI,
                                  "from_quote": _NS, "to_quote": _NS, "quote": _S}}},

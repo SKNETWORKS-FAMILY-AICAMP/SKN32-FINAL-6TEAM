@@ -29,8 +29,10 @@ from app.infrastructure.model_stream import StreamStalled
 KST = ZoneInfo("Asia/Seoul")
 STREAM = {"first_token_seconds": 8, "stall_seconds": 5, "max_seconds": 12}
 MESSAGE = "합성박물관 일정을 한 시간 뒤로 미뤄줘"
-#: 이 고정 일정 · 문장으로 만든 로컬 생성 문법의 sha256 — 기준 922d628df 에서 잰 값(유료 갈래 추가 전)
-GRAMMAR_SHA256 = "681483c6787688f514548152dd07054a19f99482fcea4fbada2885e77947948a"
+#: 이 고정 일정 · 문장으로 만든 로컬 생성 문법의 sha256 — 기준 922d628df 에서 잰 값(유료 갈래 추가 전)은 681483c6…947948a.
+#: `[2026-10-27 G]` 읽기 항목 기준 칸 갈래(`decision_unit._shape_generation`)로 바뀐 값. 그 갈래를 빼면(항등) 옛 값 그대로임을 확인했다
+#:  (보고서 2026-10-27 G · `ev/pincheck.py`) — 유료 갈래가 로컬 문법에 섞이지 않았다는 이 시험의 뜻은 그대로다.
+GRAMMAR_SHA256 = "b36b43eac3cf57ddabd99322117ca3b82b59d209159750853bbc3c5259447833"
 
 
 @pytest.fixture(autouse=True)

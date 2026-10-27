@@ -47,10 +47,15 @@ def _claim(claims, field):
 
 
 def test_generation_schema_has_nullable_locked_slot_with_quote():
-    props = agent_read.SCHEMA["properties"]["items"]["items"]["properties"]
-    assert props["locked"] == {"type": ["boolean", "null"]}
-    assert props["locked_quote"] == {"type": ["string", "null"]}
-    assert {"locked", "locked_quote"} <= set(agent_read.SCHEMA["properties"]["items"]["items"]["required"])
+    # `[2026-10-27 G · I05]` 항목 스키마는 날짜 유무 두 갈래(`agent_read._dated_items`) — 모든 갈래에 같은 고정 칸이 있어야 한다
+    item_schema = agent_read.SCHEMA["properties"]["items"]["items"]
+    branches = item_schema["anyOf"] if "anyOf" in item_schema else [item_schema]
+    assert branches
+    for branch in branches:
+        props = branch["properties"]
+        assert props["locked"] == {"type": ["boolean", "null"]}
+        assert props["locked_quote"] == {"type": ["string", "null"]}
+        assert {"locked", "locked_quote"} <= set(branch["required"])
 
 
 def test_i06_explicit_lock_reaches_claim_assemble_and_keeps_booking_date_time():
