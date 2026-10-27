@@ -147,3 +147,28 @@ def test_decide_cannot_receive_the_f02_shape_and_does_not_repair_it():
     model = _GrammarBoundModel(_fact_raw(f02_shape))
     with pytest.raises(du.DecisionFailed):
         du.decide(model, stops=STOPS, changes=[], history=[], selected_item_id=None, message=FACT_MESSAGE)
+
+
+def _bare_read(**fields):
+    read = du._schema(STOPS, [], plain=True)["properties"]["reads"]["items"]
+    import copy
+    read = copy.deepcopy(read)
+    read["properties"].update(fields)
+    return read
+
+
+def test_anchor_branches_keep_existing_narrowed_slots():
+    """이미 좁혀진 칸(시각 enum · steps enum)은 교집합만 남긴다 — 덮어쓰지 않는다(Codex q2 P3)."""
+    read = _bare_read(anchor_time={"type": "string", "enum": ["", "14:00"]}, steps={"type": "integer", "enum": [2]})
+    kinds = {b["properties"]["anchor_kind"]["enum"][0]: b for b in du._anchor_branches(read)}
+    assert kinds["time"]["properties"]["anchor_time"] == {"type": "string", "enum": ["14:00"]}
+    assert "none" not in kinds                                   # steps 2 만 허용 → 기준 없음(steps 1) 갈래는 없다
+    assert kinds["item"]["properties"]["steps"] == {"type": "integer", "enum": [2]}
+
+
+def test_no_surviving_anchor_branch_means_no_read_not_an_unconstrained_read():
+    """남는 갈래가 없으면 빈 목록 — 제약 없는 원래 항목으로 조용히 되돌리지 않는다(Codex q2 P3)."""
+    read = _bare_read(anchor_kind={"type": "string", "enum": ["item"]}, anchor_item={"type": "string", "enum": ["none"]})
+    assert du._anchor_branches(read) == []
+    variant = {"properties": {"action": {"type": "string", "enum": ["answer_fact"]}, "reads": {"type": "array", "items": read}}}
+    assert du._shape_generation(variant)["properties"]["reads"] == {"type": "array", "maxItems": 0}

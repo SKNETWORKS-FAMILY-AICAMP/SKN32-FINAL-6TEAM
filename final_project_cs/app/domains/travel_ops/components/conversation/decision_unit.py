@@ -586,7 +586,8 @@ def _anchor_branches(read: dict[str, Any]) -> list[dict[str, Any]]:
     기준 없음(none)은 기준 그 자체(at · steps 1). 「다음 일정」처럼 지금 기준 앞뒤는 now 로 낸다(서버도 none+앞뒤를 now 로 계산한다).
     ☆왜: 칸이 서로 독립한 필수 enum 이라 실 E4B 가 기준 없음(none)에 대상 별칭 · before 를 채웠고(수용 F02 · 개발 문장 「남산공원 주소 알려줘」),
       서버가 그 칸으로 이웃 일정을 계산했다. 생성만 좁힌다 — 받은 답은 고쳐 쓰지 않는다(`time_anchor.clean` · `read_requests` 규칙은 옛 기록용으로 그대로).
-    이미 좁혀진 칸(목록 읽기 · 범위 갈래)은 교집합만 남기고, 남는 값이 없는 종류는 갈래를 만들지 않는다."""
+    이미 좁혀진 칸(목록 읽기 · 범위 갈래)은 교집합만 남기고(시각 enum · steps enum 포함), 남는 값이 없는 종류는 갈래를 만들지 않는다.
+    어느 종류도 남지 않으면 빈 목록이다 — 원래 스키마로 조용히 되돌리지 않는다(`_shape_generation` 이 그 읽기를 생성 불가로 둔다)."""
     from copy import deepcopy
 
     props = read.get("properties") or {}
@@ -594,24 +595,33 @@ def _anchor_branches(read: dict[str, Any]) -> list[dict[str, Any]]:
         return [read]
     aliases = list(props["anchor_item"].get("enum") or [])
     relations = list(props["relation"].get("enum") or [])
-    clock_enum = props["anchor_time"].get("enum")
+    clock = props["anchor_time"]
+    clock_enum = clock.get("enum")
+    steps_enum = props["steps"].get("enum")
     out = []
     for kind in props["anchor_kind"].get("enum") or []:
         allowed = [a for a in aliases if (a != "none") == (kind == "item")]
-        no_clock = kind == "time" and clock_enum is not None and not any(clock_enum)
-        no_blank = kind != "time" and clock_enum is not None and "" not in clock_enum
-        if not allowed or no_clock or no_blank or (kind == "none" and "at" not in relations):
+        if kind == "time":
+            # 이미 좁혀진 시각(enum)은 빈 값만 빼고 그대로, 아니면 HH:MM — 교집합이 비면 갈래를 만들지 않는다
+            times = None if clock_enum is None else [t for t in clock_enum if t]
+            time_spec = ({"type": "string", "enum": times} if times else None) if clock_enum is not None else (
+                clock if clock.get("pattern") else {"type": "string", "pattern": _CLOCK_PATTERN})
+        else:
+            time_spec = {"type": "string", "enum": [""]} if clock_enum is None or "" in clock_enum else None
+        if not allowed or time_spec is None:
+            continue
+        if kind == "none" and ("at" not in relations or (steps_enum is not None and 1 not in steps_enum)):
             continue
         branch = deepcopy(read)
         fields = branch["properties"]
         fields["anchor_kind"] = {"type": "string", "enum": [kind]}
         fields["anchor_item"] = {"type": "string", "enum": allowed}
-        fields["anchor_time"] = ({"type": "string", "pattern": _CLOCK_PATTERN} if kind == "time" else {"type": "string", "enum": [""]})
+        fields["anchor_time"] = time_spec
         if kind == "none":
             fields["relation"] = {"type": "string", "enum": ["at"]}
             fields["steps"] = {"type": "integer", "enum": [1]}
         out.append(branch)
-    return out or [read]
+    return out
 
 
 def _shape_generation(variant: dict[str, Any]) -> dict[str, Any]:
@@ -628,7 +638,9 @@ def _shape_generation(variant: dict[str, Any]) -> dict[str, Any]:
     if isinstance(reads, dict) and isinstance(reads.get("items"), dict):
         alternatives = reads["items"].get("anyOf") or [reads["items"]]
         branches = [branch for alternative in alternatives for branch in _anchor_branches(alternative)]
-        fields["reads"] = {**reads, "items": {"anyOf": branches} if len(branches) > 1 else branches[0]}
+        # 갈래가 하나도 남지 않으면 읽기 항목을 낼 수 없다(빈 배열만) — 제약 없는 원래 항목으로 되돌리지 않는다
+        fields["reads"] = ({**reads, "items": {"anyOf": branches} if len(branches) > 1 else branches[0]} if branches
+                           else {"type": "array", "maxItems": 0})
     return shaped
 
 
