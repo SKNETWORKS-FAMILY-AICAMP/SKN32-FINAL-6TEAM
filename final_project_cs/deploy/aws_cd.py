@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import importlib.util
 from datetime import datetime, timezone
 import json
 import os
@@ -22,9 +23,11 @@ REVISION = "guguroute.io/source-sha"
 # The migration Job runs while the current API keeps serving. A DDL statement that waits for a table
 # lock queues every later query on that table behind it, so the wait is bounded well inside the Job
 # deadline and the whole transaction rolls back instead of stalling customer requests.
+# The lock wait itself (lock_timeout, deadlock/lock-wait retries) belongs to migration-plan.json
+# lock_policy, which apply_all applies per attempt; the Job only adds the session statement bound.
 MIGRATION_DEADLINE_SECONDS = 600
-MIGRATION_LOCK_TIMEOUT = "5s"
 MIGRATION_STATEMENT_TIMEOUT = "5min"
+MIGRATION_PLAN_DIR = Path(__file__).resolve().parents[1] / "app" / "infrastructure" / "db" / "migrations"
 # Kubernetes copies this file into the terminated container status (at most 4 KiB), so the
 # deployment can name the migration outcome without reading container logs.
 MIGRATION_RESULT_PATH = "/dev/termination-log"
@@ -260,7 +263,7 @@ import json
 from pathlib import Path
 import sys
 
-result_path, lock_timeout, statement_timeout = sys.argv[1:4]
+result_path, statement_timeout = sys.argv[1:3]
 
 
 def record(document):
@@ -268,6 +271,7 @@ def record(document):
 
 
 import psycopg
+from psycopg.pq import TransactionStatus
 from app.infrastructure.db.migrate import apply_all, safety_manifest
 from app.infrastructure.db.session import get_connection
 
@@ -275,22 +279,44 @@ safety_manifest()
 applied = False
 try:
     with get_connection() as conn:
-        for name, value in (("lock_timeout", lock_timeout), ("statement_timeout", statement_timeout)):
-            accepted = conn.execute("SELECT set_config(%s, %s, false)", (name, value)).fetchone()[0]
-            shown = conn.execute("SELECT current_setting(%s)", (name,)).fetchone()[0]
-            if shown != accepted or shown in ("0", "", None):
-                raise RuntimeError(name + " was not applied")
+        name = "statement_timeout"
+        accepted = conn.execute("SELECT set_config(%s, %s, false)", (name, statement_timeout)).fetchone()[0]
+        shown = conn.execute("SELECT current_setting(%s)", (name,)).fetchone()[0]
+        if shown != accepted or shown in ("0", "", None):
+            raise RuntimeError(name + " was not applied")
+        # End the check transaction (the session setting stays) so apply_all runs at the outermost
+        # level and applies migration-plan.json lock_policy with its deadlock/lock-wait retries.
+        conn.commit()
+        if conn.info.transaction_status != TransactionStatus.IDLE:
+            raise RuntimeError("connection is not idle before the migration")
         apply_all(conn)
         applied = True
 except Exception as exc:
     failure = {"migration": "commit_unknown" if applied else "failed_before_commit", "error": type(exc).__name__}
     if isinstance(getattr(exc, "sqlstate", None), str):
         failure["sqlstate"] = exc.sqlstate
+    attempts = getattr(exc, "attempts", getattr(exc, "migration_attempts", None))
+    if type(attempts) is int:
+        failure["attempts"] = attempts
     record(failure)
     raise
 record({"migration": "committed"})
 print(json.dumps({"migration": "committed"}))
 """
+
+
+def migration_lock_policy():
+    """Load lock_policy through the migration package's own validator (no second copy of the values)."""
+    spec = importlib.util.spec_from_file_location("migration_plan_for_cd", MIGRATION_PLAN_DIR.parent / "migration_plan.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.lock_policy(MIGRATION_PLAN_DIR)
+
+
+def migration_lock_budget_seconds():
+    """Worst-case lock waiting across all attempts: attempts x lock_timeout + waits between attempts."""
+    policy = migration_lock_policy()
+    return policy["attempts"] * policy["lock_timeout_ms"] / 1000 + sum(policy["retry_wait_seconds"])
 
 
 def migration_job(baseline, image, sha, run_id):
@@ -299,10 +325,11 @@ def migration_job(baseline, image, sha, run_id):
         raise DeploymentError("Unexpected API sidecar")
     if seconds(MIGRATION_STATEMENT_TIMEOUT) >= MIGRATION_DEADLINE_SECONDS:
         raise DeploymentError("The migration statement bound must end before the Job deadline")
+    if migration_lock_budget_seconds() + seconds(MIGRATION_STATEMENT_TIMEOUT) >= MIGRATION_DEADLINE_SECONDS:
+        raise DeploymentError("The migration lock_policy retries plus the statement bound must end before the Job deadline")
     c = pod["containers"][0]
     c["image"] = immutable_image(image)
-    c["command"] = ["python", "-c", MIGRATION_SCRIPT, MIGRATION_RESULT_PATH,
-                    MIGRATION_LOCK_TIMEOUT, MIGRATION_STATEMENT_TIMEOUT]
+    c["command"] = ["python", "-c", MIGRATION_SCRIPT, MIGRATION_RESULT_PATH, MIGRATION_STATEMENT_TIMEOUT]
     c.pop("args", None)
     for key in ("readinessProbe", "livenessProbe", "startupProbe", "lifecycle", "ports"):
         c.pop(key, None)
@@ -341,6 +368,8 @@ def job_outcome(namespace, job_name):
         outcome["sqlstate"] = message["sqlstate"]
     if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", str(message.get("error", ""))):
         outcome["error"] = message["error"]
+    if type(message.get("attempts")) is int and 0 <= message["attempts"] <= 100:
+        outcome["attempts"] = message["attempts"]
     if isinstance(terminated.get("exitCode"), int):
         outcome["exit_code"] = terminated["exitCode"]
     if re.fullmatch(r"[A-Za-z]{1,40}", str(terminated.get("reason", ""))):
@@ -349,7 +378,8 @@ def job_outcome(namespace, job_name):
 
 
 def describe_outcome(outcome):
-    return ", ".join(f"{k}={outcome[k]}" for k in ("migration", "error", "sqlstate", "reason", "exit_code") if k in outcome)
+    return ", ".join(f"{k}={outcome[k]}" for k in ("migration", "error", "sqlstate", "attempts", "reason", "exit_code")
+                     if k in outcome)
 
 
 def require_clean_jobs(jobs, outcomes=None):

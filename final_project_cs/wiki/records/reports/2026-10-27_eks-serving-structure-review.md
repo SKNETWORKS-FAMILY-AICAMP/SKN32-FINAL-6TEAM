@@ -160,6 +160,7 @@ CD (AWS) 시작 13:50 (CI (main) 끝난 직후)
 - 실행: `python -m unittest tests/unit/deploy/test_aws_cd.py` → **40/40 = 100%**(기존 25 그대로 통과, 새 15). 처음(RED) 실행(워크플로 시험 추가 전 39개)은 18개 실패 — 새 시험 14개 전부와, 바꾼 배포 시험 도우미(새 함수 `job_outcome` 을 가로챔)를 쓰는 기존 4개. 워크플로 순서 시험은 옛 `cd-aws.yml` 에 대해 따로 실패를 확인했다. ruff 0.16.8(CI 와 같은 판) 통과, actionlint 1.7.12(CI 와 같은 판, windows_arm64 체크섬 일치) 통과.
 - 이 PC 는 Python 3.14 로 돌렸다(CI 는 3.12). 실제 Postgres·EKS·GitHub 실행으로는 확인하지 않았다 — `lock_timeout` 동작·종료 기록 읽기·8묶음 시간은 다음 실제 실행에서 확인해야 한다.
 - 계약 문서 [aws-main-cd.md](../../operations/aws-main-cd.md) 에 `[2026-10-27 후보]` 세 줄을 먼저 더했다.
+- `[2026-10-27 23:5x 후속 — K §4 상충 수정]` 통합 K 가 찾은 상충(C `migrate.apply_all` lock_policy 재시도 ↔ 이 후보 A 의 세션 `set_config`)을 고쳤다: 확인 SELECT 가 연 트랜잭션 때문에 `apply_all` 이 중첩 경로로 가 재시도가 꺼지던 것 → 확인 뒤 `conn.commit()` + IDLE 확인 후 맨 바깥 호출. `MIGRATION_LOCK_TIMEOUT "5s"` 상수를 지우고 잠금 값은 `lock_policy` 한 곳에서만(Job 생성 때 같은 검증기로 읽어 예산이 600초 안인지 확인). 종료 기록에 `attempts` 추가. 근거: 루트 `wiki/records/reports/2026-10-27_eks-lock-policy-conflict-fix-and-latency-readback.md`.
 
 ## 5. 필요한 사용자 결정 · 권한
 

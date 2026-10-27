@@ -129,11 +129,25 @@ class PlanTests(unittest.TestCase):
     def test_migration_bounds_lock_and_statement_waits_inside_the_deadline(self):
         j = cd.migration_job(document(), IMAGE, SHA, "123")
         c = j["spec"]["template"]["spec"]["containers"][0]
-        self.assertEqual(c["command"][3:], [cd.MIGRATION_RESULT_PATH, cd.MIGRATION_LOCK_TIMEOUT,
-                                             cd.MIGRATION_STATEMENT_TIMEOUT])
+        # ★[2026-10-27 K §4] lock_timeout 은 migration-plan.json lock_policy 한 곳 — Job 은 statement_timeout 만 싣는다
+        self.assertEqual(c["command"][3:], [cd.MIGRATION_RESULT_PATH, cd.MIGRATION_STATEMENT_TIMEOUT])
+        self.assertFalse(hasattr(cd, "MIGRATION_LOCK_TIMEOUT"))
         self.assertEqual(c["terminationMessagePath"], cd.MIGRATION_RESULT_PATH)
-        self.assertLess(cd.seconds(cd.MIGRATION_LOCK_TIMEOUT), cd.seconds(cd.MIGRATION_STATEMENT_TIMEOUT))
-        self.assertLess(cd.seconds(cd.MIGRATION_STATEMENT_TIMEOUT), j["spec"]["activeDeadlineSeconds"])
+        budget = cd.migration_lock_budget_seconds()
+        self.assertLess(budget + cd.seconds(cd.MIGRATION_STATEMENT_TIMEOUT), j["spec"]["activeDeadlineSeconds"])
+
+    def test_lock_budget_is_read_from_the_migration_plan_and_must_fit_the_deadline(self):
+        plan = Path(__file__).resolve().parents[3] / "app/infrastructure/db/migrations/migration-plan.json"
+        policy = json.loads(plan.read_text(encoding="utf-8"))["lock_policy"]
+        expected = policy["attempts"] * policy["lock_timeout_ms"] / 1000 + sum(policy["retry_wait_seconds"])
+        self.assertEqual(cd.migration_lock_budget_seconds(), expected)
+        huge = {"lock_timeout_ms": 400_000, "attempts": 2, "retry_wait_seconds": [0]}
+        with patch.object(cd, "migration_lock_policy", return_value=huge), \
+             self.assertRaisesRegex(cd.DeploymentError, "lock"):
+            cd.migration_job(document(), IMAGE, SHA, "123")
+        with patch.object(cd, "migration_lock_policy", side_effect=ValueError("lock_policy missing")), \
+             self.assertRaises(ValueError):
+            cd.migration_job(document(), IMAGE, SHA, "123")
 
     def test_duration_settings_must_be_explicit_units(self):
         self.assertEqual(cd.seconds("5s"), 5)
@@ -154,8 +168,17 @@ class PlanTests(unittest.TestCase):
         configured = {}
 
         class Conn:
+            # psycopg 기본(autocommit 꺼짐): 첫 execute 가 트랜잭션을 열고 commit 이 닫는다
+            def __init__(self):
+                self.info = types.SimpleNamespace(transaction_status="IDLE")
+
+            def commit(self):
+                calls.append("commit")
+                self.info.transaction_status = "IDLE"
+
             def execute(self, sql, params=()):
                 calls.append(sql)
+                self.info.transaction_status = "INTRANS"
                 if "set_config" in sql:
                     configured[params[0]] = params[1]
                     return types.SimpleNamespace(fetchone=lambda: (params[1],))
@@ -178,6 +201,7 @@ class PlanTests(unittest.TestCase):
 
         modules = {
             "psycopg": types.SimpleNamespace(Error=FakeDatabaseError),
+            "psycopg.pq": types.SimpleNamespace(TransactionStatus=types.SimpleNamespace(IDLE="IDLE")),
             "app": types.ModuleType("app"), "app.infrastructure": types.ModuleType("app.infrastructure"),
             "app.infrastructure.db": types.ModuleType("app.infrastructure.db"),
             "app.infrastructure.db.migrate": types.SimpleNamespace(apply_all=apply_all, safety_manifest=lambda: {}),
@@ -188,7 +212,7 @@ class PlanTests(unittest.TestCase):
             result = Path(tmp) / "termination-log"
             raised = None
             with patch.dict(sys.modules, modules), \
-                 patch.object(sys, "argv", ["-c", str(result), "5s", "5min"]), \
+                 patch.object(sys, "argv", ["-c", str(result), *command[4:]]), \
                  patch("builtins.print"):
                 try:
                     exec(compile(command[2], "<migration>", "exec"), {"__name__": "__main__"})
@@ -214,10 +238,110 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(recorded["migration"], "commit_unknown")
 
     def test_migration_refuses_when_the_server_did_not_accept_the_bounds(self):
-        raised, recorded, calls, _ = self.run_migration_script(shown={"lock_timeout": "0"})
+        raised, recorded, calls, _ = self.run_migration_script(shown={"statement_timeout": "0"})
         self.assertIsNotNone(raised)
         self.assertNotIn("apply_all", calls)
         self.assertEqual(recorded["migration"], "failed_before_commit")
+
+    def test_bound_check_transaction_is_closed_before_apply_all(self):
+        # ★[2026-10-27 K §4] 확인 SELECT 가 연 트랜잭션이 남아 있으면 apply_all 이 중첩 경로로 가 lock_policy 재시도가 꺼진다
+        raised, _, calls, _ = self.run_migration_script()
+        self.assertIsNone(raised)
+        self.assertLess(calls.index("commit"), calls.index("apply_all"))
+        self.assertFalse(any("lock_timeout" in c for c in calls if isinstance(c, str) and "set_config" in c))
+
+    def run_with_real_apply_all(self, failures, policy):
+        """Job 스크립트를 진짜 `migrate.apply_all` 과 psycopg 처럼 트랜잭션 상태를 바꾸는 가짜 연결로 돌린다."""
+        from contextlib import contextmanager
+        import sys
+        import types
+
+        import psycopg
+        from psycopg.pq import TransactionStatus
+
+        from app.infrastructure.db import migrate
+
+        executed, failures, configured = [], list(failures), {}
+
+        class Conn:
+            def __init__(self):
+                self.info = types.SimpleNamespace(transaction_status=TransactionStatus.IDLE)
+
+            def commit(self):
+                executed.append("COMMIT")
+                self.info.transaction_status = TransactionStatus.IDLE
+
+            @contextmanager
+            def transaction(self):
+                outer = self.info.transaction_status == TransactionStatus.IDLE
+                executed.append("BEGIN" if outer else "SAVEPOINT")
+                self.info.transaction_status = TransactionStatus.INTRANS
+                try:
+                    yield
+                except BaseException:
+                    executed.append("ROLLBACK" if outer else "ROLLBACK TO SAVEPOINT")
+                    if outer:
+                        self.info.transaction_status = TransactionStatus.IDLE
+                    raise
+                executed.append("COMMIT" if outer else "RELEASE SAVEPOINT")
+                if outer:
+                    self.info.transaction_status = TransactionStatus.IDLE
+
+            def execute(self, sql, params=()):
+                executed.append(sql)
+                if self.info.transaction_status == TransactionStatus.IDLE:
+                    self.info.transaction_status = TransactionStatus.INTRANS
+                if sql == "MIGRATION SQL" and failures:
+                    failure = failures.pop(0)
+                    if failure is not None:
+                        raise failure
+                if "set_config" in sql:
+                    configured[params[0]] = params[1]
+                    return types.SimpleNamespace(fetchone=lambda: (params[1],))
+                value = configured.get(params[0]) if "current_setting" in sql else None
+                return types.SimpleNamespace(fetchone=lambda: (value,))
+
+        @contextmanager
+        def session():
+            yield Conn()
+
+        command = cd.migration_job(document(), IMAGE, SHA, "1")["spec"]["template"]["spec"]["containers"][0]["command"]
+        with tempfile.TemporaryDirectory(dir=os.environ.get("CD_TEST_ROOT")) as tmp:
+            result = Path(tmp) / "termination-log"
+            raised = None
+            with patch.object(migrate, "compiled_sql", return_value="MIGRATION SQL"), \
+                 patch.object(migrate, "lock_policy", return_value=policy), \
+                 patch.object(migrate, "safety_manifest", return_value={}), \
+                 patch.dict(sys.modules, {"app.infrastructure.db.session": types.SimpleNamespace(get_connection=session)}), \
+                 patch.object(sys, "argv", ["-c", str(result), *command[4:]]), \
+                 patch("builtins.print"):
+                try:
+                    exec(compile(command[2], "<migration>", "exec"), {"__name__": "__main__"})
+                except Exception as exc:  # noqa: BLE001 - the script's own failure is under test
+                    raised = exc
+            recorded = json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+        return raised, recorded, executed, psycopg
+
+    def test_job_migration_keeps_the_lock_policy_retry_of_apply_all(self):
+        import psycopg
+        policy = {"lock_timeout_ms": 5000, "attempts": 2, "retry_wait_seconds": [0]}
+        raised, recorded, executed, _ = self.run_with_real_apply_all(
+            [psycopg.errors.LockNotAvailable("lock wait"), None], policy)
+        self.assertIsNone(raised)
+        self.assertEqual(recorded, {"migration": "committed"})
+        self.assertEqual(executed.count("MIGRATION SQL"), 2)                   # 잠금 대기 초과 뒤 한 번 더
+        self.assertEqual(executed.count("SET LOCAL lock_timeout = '5000ms'"), 2)  # 값은 lock_policy 에서
+        self.assertNotIn("SAVEPOINT", executed)                                 # 중첩(재시도 없음) 경로가 아니다
+
+    def test_exhausted_lock_retries_are_recorded_with_sqlstate(self):
+        import psycopg
+        policy = {"lock_timeout_ms": 5000, "attempts": 2, "retry_wait_seconds": [0]}
+        raised, recorded, executed, _ = self.run_with_real_apply_all(
+            [psycopg.errors.DeadlockDetected("deadlock"), psycopg.errors.LockNotAvailable("lock wait")], policy)
+        self.assertIsNotNone(raised)
+        self.assertEqual(executed.count("MIGRATION SQL"), 2)
+        self.assertEqual(recorded, {"migration": "failed_before_commit", "error": "MigrationLockFailed",
+                                    "sqlstate": "55P03", "attempts": 2})
 
     def test_failed_job_block_names_the_recorded_outcome(self):
         failed = {"metadata": {"name": "job-1"}, "status": {"failed": 1}}
@@ -241,6 +365,20 @@ class PlanTests(unittest.TestCase):
             self.assertEqual(cd.job_outcome("unit", "job-1")["migration"], "unknown")
         with patch.object(cd, "kubectl", return_value={"items": []}):
             self.assertEqual(cd.job_outcome("unit", "job-1"), {"migration": "unknown", "reason": "no-pod"})
+
+    def test_job_outcome_carries_the_lock_retry_count_only_as_a_bounded_integer(self):
+        def pods(attempts):
+            message = {"migration": "failed_before_commit", "error": "MigrationLockFailed", "sqlstate": "55P03",
+                       "attempts": attempts}
+            return {"items": [{"status": {"containerStatuses": [{"state": {"terminated": {
+                "exitCode": 1, "reason": "Error", "message": json.dumps(message)}}}]}}]}
+        with patch.object(cd, "kubectl", return_value=pods(3)):
+            outcome = cd.job_outcome("unit", "job-1")
+        self.assertEqual(outcome["attempts"], 3)
+        self.assertIn("attempts=3", cd.describe_outcome(outcome))
+        for bad in ["3", 3.0, -1, 101, True]:
+            with self.subTest(bad=bad), patch.object(cd, "kubectl", return_value=pods(bad)):
+                self.assertNotIn("attempts", cd.job_outcome("unit", "job-1"))
 
     def test_failed_or_unknown_job_prevents_another_migration(self):
         for status in [{}, {"failed": 1}, {"active": 1}]:
