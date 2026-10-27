@@ -5,6 +5,14 @@ import { LiveError } from "@/lib/live/client";
 export function assertPlaceSearchComplete(found: { results: readonly unknown[]; notes?: readonly string[] }, t: Translate): void {
   if (found.results.length) return;
   const notes = found.notes ?? [];
+  // [2026-10-27] 서울 밖에 같은 이름이 있다(서버가 카카오 주소로 확인) — 「결과 없음」이 아니라 서비스 지역 밖이라고 말한다. 범위는 서울(D-016)
+  const outside = notes.filter((note) => note.startsWith("outside_service_area:")).map((note) => note.slice("outside_service_area:".length));
+  if (outside.length) {
+    const where = outside.join(" · ");
+    throw new LiveError("place_search_outside_service_area", t(
+      `「${where}」에 있는 장소로 보여요. 지금은 서울 일정만 도와드려요.`,
+      `This place appears to be in ${where}. We currently support Seoul trips only.`));
+  }
   if (notes.some((note) => note.startsWith("kakao:"))) {
     const limited = notes.some((note) => note === "kakao:budget_exhausted" || note === "kakao:http_429");
     throw new LiveError("place_search_unavailable", limited

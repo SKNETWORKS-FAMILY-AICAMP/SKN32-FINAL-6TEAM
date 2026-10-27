@@ -1570,6 +1570,7 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
             said.append("no_same_kind")
         return pool
 
+    seen_in_seoul = bool(found)                     # 거르기 전 — 서울에서 무엇이든 찾았으면(종류 · 지역이 안 맞아도) 서울 밖 근거를 찾지 않는다
     found = narrow(found, notes)
     if not found and kakao is None:
         notes.append("kakao:unavailable")
@@ -1632,7 +1633,26 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
         answer["relevance"] = [{"rank": rank, "order": "relevance", **_present(p, a, prev, nxt, ref, area)}
                                for rank, (p, a) in enumerate(best, start=1)]
         notes += [n for n in said if n.startswith("kakao:") and n not in notes]
+    if (not seen_in_seoul and not answer["results"] and not answer.get("relevance") and kakao is not None
+            and not any(n.startswith("kakao:") for n in notes)):
+        _note_outside_service_area(kakao, q, notes)
     return answer
+
+
+def _note_outside_service_area(kakao: Any, query: str, notes: list[str]) -> None:
+    """`[2026-10-27 장소 품질 전수검사]` 서울 결과가 비었을 때 — 카카오를 서울 사각 없이 **한 번** 불러 정규화 이름이 검색어와 같은 곳이
+    서울 밖에 있으면 `outside_service_area:<시·도>`. 서비스 범위(서울 — D-016)는 넓히지 않는다 — 결과는 그대로 비어 있다.
+
+    ☆사용자 시연(2026-10-27): 해운대해수욕장 · 감천문화마을이 「결과 없음」만 떠 이름을 잘못 쓴 것처럼 보였다(부산 30/30 · 시연 8/8 빈 결과, 로컬 실측).
+    ★근거는 이름이 **같은** 서울 밖 장소뿐이다 — 이름이 다른 곳(「… 주차장」)은 근거가 아니고, 못 불렀으면 `kakao:<사유>` 만 남긴다(Codex 검토 Q1)."""
+    hits = kakao.outside_seoul(query)
+    if hits is None:
+        misses = getattr(kakao, "misses", None) or {}
+        notes.append("kakao:" + (max(misses, key=misses.get) if misses else "unavailable"))
+        return
+    key = normalize_full(query)
+    regions = dict.fromkeys(h["region"] for h in hits if h.get("region") and normalize_full(h.get("name") or "") == key)
+    notes.extend(f"outside_service_area:{region}" for region in regions)
 
 
 
