@@ -3,10 +3,10 @@
 배경: role-manager 위 SSE beat 후보(35e1b0259 + 20a9a2bdf) Codex 검토 — 슬롯은 본문 생성기(`flow`)가 돌아야 돌려주는데,
  ①`acquire` 와 응답 반환 사이의 실패(설정 · `Feed` 만들기),
  ②본문이 첫 순회도 하기 전에 브라우저가 떠남(spec 2.0 — `http.disconnect` 가 먼저 와 task group 이 `stream_response` 를 취소),
- ③spec 2.4 의 send 실패(`ClientDisconnect`) 뒤 멈춘 본문 생성기 — 응답 객체가 살아 있으면 GC 가 닫지 않는다,
-에서는 슬롯이 그대로 남았다. 사용자당 3개(`travel.op_stream.max_per_user`)가 차면 그 사용자는 프로세스가 끝날 때까지 429 다.
+에서는 슬롯이 그대로 남았다(①② RED). 사용자당 3개(`travel.op_stream.max_per_user`)가 차면 그 사용자는 프로세스가 끝날 때까지 429 다.
+ ③spec 2.4 의 send 실패(`ClientDisconnect`) 뒤 멈춘 본문 생성기는 GC 없이도 이미 슬롯이 돌아왔다(watch 가 `is_disconnected` 로 끝낸다) — 회귀 감시로 둔다.
 
-★계약: 위 세 길에서도 슬롯은 정확히 한 번 돌아온다. 본문이 돈 경우는 기존대로 그 연결의 조회 · 내용 계산이 끝날 때(`settle`).
+★계약: 위 세 길(①②③)에서 슬롯은 정확히 한 번 돌아온다. 본문이 돈 경우는 기존대로 그 연결의 조회 · 내용 계산이 끝날 때(`settle`).
 실제 nested endpoint 와 실제 Starlette `StreamingResponse` 를 쓰고 DB · `Feed` · 설정만 메모리 대역(`test_intake_watch_slot_lifetime` 의 것).
 """
 

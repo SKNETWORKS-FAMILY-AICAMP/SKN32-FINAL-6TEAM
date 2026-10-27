@@ -403,9 +403,14 @@ def test_intake_events_end_at_once_for_a_review_intake_and_close_as_stalled_for_
         ended = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
     assert ended[0][0] == "accepted" and ended[-1][0] == "result"
     assert [n for n, _ in ended if n != "beat"] == ["accepted", "result"]
+    # ★`[2026-10-28 role-manager 관문 db11 — 시간 경쟁]` 사이의 beat 는 내용 계산 중(`pending: content`)이거나, 내용 계산이 막 끝나 `result` 가
+    #   큐에 들어가는 순간(끊김 확인 `is_disconnected` 를 기다리는 사이)에 나간 `pending: null` 이다. 둘 다 사실대로다 — 다시 읽기(`read`)는 없다.
     for name, beat in ended[1:-1]:
-        assert name == "beat" and beat["pending"] == "content" and beat["stage"] == "review"
-        assert type(beat["pending_seconds"]) in (int, float) and beat["pending_seconds"] >= 0
+        assert name == "beat" and beat["pending"] in ("content", None) and beat["stage"] == "review"
+        if beat["pending"] is None:
+            assert beat["pending_seconds"] is None
+        else:
+            assert type(beat["pending_seconds"]) in (int, float) and beat["pending_seconds"] >= 0
     assert reads["n"] == 1                                       # 다시 읽지 않았다(폴링 회차 없음)
     state = ended[-1][1]["state"]
     assert state["status"] == "review" and state["stage"] == "review" and set(state) >= {"stage_label", "revision", "quiet_seconds"}
