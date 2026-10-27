@@ -103,7 +103,11 @@ def _plan(tmp_path, monkeypatch, sources):
     from app.infrastructure.db import migrate
     for name, source in sources.items():
         (tmp_path / name).write_text(source, encoding="utf-8")
-    (tmp_path / "migration-plan.json").write_text(json.dumps({"version": 1, "historical_files": []}))
+    # `[2026-10-27 통합 K]` 계약상 plan 에 잠금 정책(lock_policy)이 반드시 있다(없으면 apply_all 이 시작하지 않는다 — C 전수검사).
+    #   임시 plan 도 실제 plan 의 값을 그대로 싣는다(값을 시험에서 새로 만들지 않는다)
+    real = json.loads((migrate.MIGRATION_DIR / "migration-plan.json").read_text(encoding="utf-8"))
+    (tmp_path / "migration-plan.json").write_text(json.dumps({"version": 1, "historical_files": [],
+                                                              "lock_policy": real["lock_policy"]}))
     monkeypatch.setattr(migrate, "MIGRATION_DIR", tmp_path)
 
 
