@@ -157,10 +157,14 @@ def test_web_query_separates_only_a_known_area_at_the_edge(search_context):
     conn = Catalog([("1", "39", "가을식당", "서울 성동구 성수동1가", 37.544, 127.055)])
 
     result = c.search(conn, **search_context, query="성수 가을식당")
-    ambiguous = c.search(conn, **search_context, query="가을 식당")
+    # ★`[2026-10-27]` 사전에 없는 앞말(「봄」)은 지명으로 떼지 않는다 — 떼었다면 「가을식당」이 나왔을 것이다.
+    #   (전에는 「가을 식당」으로 이것을 봤지만, 지금은 띄어쓰기를 무시한 전체 이름 비교가 그 이름 그대로 찾는다 — 아래)
+    ambiguous = c.search(conn, **search_context, query="봄 가을식당")
+    spaced = c.search(conn, **search_context, query="가을 식당")
 
     assert [row["place"]["ref"] for row in result["results"]] == ["tour:1"]
     assert ambiguous["results"] == []
+    assert [row["place"]["ref"] for row in spaced["results"]] == ["tour:1"] and spaced["query"] == "가을 식당"
 
 
 class SearchStore:

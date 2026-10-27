@@ -573,6 +573,47 @@ def _search_area_sql(hint: str | None, area: dict[str, Any] | None, address: str
     return f"AND {normalized} LIKE %s ", [pattern]
 
 
+def _name_match_passes(column: str, query: str, names_of: Callable[[list[tuple]], list[str]], rows: list[tuple]):
+    """이름 비교 조건(SQL 조각, 인자)을 차례로 낸다 — ①원문 `ILIKE '%검색어%'` ②①에서 정규화 이름이 검색어와 같은 곳을 못 찾았을 때만
+    정규화 이름(`_normalized_sql` — 띄어쓰기 · 가운뎃점 · 괄호 설명 무시) `LIKE '%정규화 검색어%'`. `[2026-10-27 장소 품질 전수검사]`
+
+    ☆「도산 공원」(목록 「도산공원」) · 「서울명동성당」(목록 「서울 명동성당」)을 못 찾았다(띄어쓰기 하나 넣은 서울 명소 1/18 = 5.6%).
+    ②는 행마다 정규식을 돌려 한 번에 약 22 ms(관광공사 목록 8천 행, 로컬 실측)라 ①로 충분하면 부르지 않는다.
+    `rows` 는 부르는 쪽이 모으는 결과 목록 — ①의 결과를 보고 ②를 낼지 정한다."""
+    escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    yield f"{column} ILIKE %s", ["%" + escaped + "%"]
+    key = normalize_full(query)
+    if len(key) < 2 or any(normalize_full(name) == key for name in names_of(rows)):
+        return
+    key_escaped = key.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    yield f"{_normalized_sql(column)} LIKE %s", ["%" + key_escaped + "%"]
+
+
+def _merge_rows(rows: list[tuple], more: list[tuple], *, key: Callable[[tuple], Any]) -> None:
+    """앞 단계 결과 뒤에 새 행만 붙인다(같은 행은 한 번만)."""
+    seen = {key(r) for r in rows}
+    rows.extend(r for r in more if key(r) not in seen)
+
+
+def _ledger_pass(conn, sql: str, args: list[Any], order: str, order_args: list[Any], limit: int, address: str,
+                 address_sources: list[str], area_hint: str | None, area: dict[str, Any] | None, rows: list[tuple]) -> None:
+    """요식 원장 이름검색 한 단계 — 지역 근거 주소를 고르는 순서는 전과 같다."""
+    for address_source in address_sources:
+        area_sql, area_args = _search_area_sql(area_hint, area, address_source)
+        try:
+            with conn.transaction(), conn.cursor() as cur:   # 스키마가 없는 DB도 바깥 트랜잭션을 보존한다
+                cur.execute(sql + area_sql + f"ORDER BY {order} LIMIT %s", [*args, *area_args, *order_args, limit * 2])
+                _merge_rows(rows, cur.fetchall(), key=lambda r: r[0])
+            return
+        except Exception as exc:                            # noqa: BLE001
+            missing = type(exc).__name__ in ("UndefinedTable", "UndefinedColumn", "InvalidSchemaName", "InsufficientPrivilege")
+            if missing and address_source != address:
+                continue                                    # 원장 주소를 못 읽으면 places에 명시된 주소만 인정한다
+            if type(exc).__name__ in ("UndefinedColumn", "UndefinedTable"):
+                return
+            raise
+
+
 def _ledger_places(conn, tenant_id: str, ref: tuple[float, float] | None, *, limit: int = 15,
                    query: str | None = None, radius_m: int | None = 2000, area_hint: str | None = None,
                    area: dict[str, Any] | None = None, branch_hint: str | None = None) -> list[dict[str, Any]]:
@@ -595,8 +636,6 @@ def _ledger_places(conn, tenant_id: str, ref: tuple[float, float] | None, *, lim
     order_args = []
     if query:
         escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        sql += "AND name ILIKE %s "
-        args.append("%" + escaped + "%")
         order = "CASE WHEN name ILIKE %s THEN 0 WHEN name ILIKE %s THEN 1 ELSE 2 END, "
         order_args += [escaped, escaped + "%"]
     if ref:
@@ -611,20 +650,12 @@ def _ledger_places(conn, tenant_id: str, ref: tuple[float, float] | None, *, lim
     if area_hint and not area:
         address_sources.insert(0, "COALESCE(NULLIF(" + address + ", ''), (SELECT road_address FROM dining.dn_place "
                                "WHERE place_uid::text = places.attributes->>'dining_place_uid'))")
-    for address_source in address_sources:
-        area_sql, area_args = _search_area_sql(area_hint, area, address_source)
-        try:
-            with conn.transaction(), conn.cursor() as cur:   # 스키마가 없는 DB도 바깥 트랜잭션을 보존한다
-                cur.execute(sql + area_sql + f"ORDER BY {order} LIMIT %s", [*args, *area_args, *order_args, limit * 2])
-                rows = cur.fetchall()
-            break
-        except Exception as exc:                            # noqa: BLE001
-            missing = type(exc).__name__ in ("UndefinedTable", "UndefinedColumn", "InvalidSchemaName", "InsufficientPrivilege")
-            if missing and address_source != address:
-                continue                                    # 원장 주소를 못 읽으면 places에 명시된 주소만 인정한다
-            if type(exc).__name__ in ("UndefinedColumn", "UndefinedTable"):
-                return []
-            raise
+    rows: list[tuple] = []
+    passes = (_name_match_passes("name", query, lambda got: [r[1] for r in got], rows) if query
+              else iter([("TRUE", [])]))
+    for name_sql, name_args in passes:
+        _ledger_pass(conn, sql + f"AND {name_sql} ", [*args, *name_args], order, order_args, limit, address, address_sources,
+                     area_hint, area, rows)
     out = []
     details = _ledger_details(conn, [uid for *_rest, uid in rows if uid])
     for place_id, name, lat, lon, address, uid in rows:
@@ -658,17 +689,19 @@ def _db_places_by_name(conn, tenant_id: str, query: str, ref: tuple[float, float
                        limit: int = 10, *, area_hint: str | None = None,
                        area: dict[str, Any] | None = None, branch_hint: str | None = None) -> list[dict[str, Any]]:
     """검색어가 이름에 든 관광공사 목록 장소(서울)."""
-    like = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
     order, args = ("(latitude - %s)^2 + ((longitude - %s) * 0.8)^2", [ref[0], ref[1]]) if ref else ("length(title)", [])
     branch_order, branch_args = _branch_order_sql("title", query, branch_hint)
     order, args = branch_order + order, branch_args + args
     area_sql, area_args = _search_area_sql(area_hint, area, "address")
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog "
-            "WHERE tenant_id = ANY(%s) AND source='tour_api' AND title ILIKE %s AND latitude IS NOT NULL "
-            f"AND address LIKE '서울%%' {area_sql}ORDER BY {order} LIMIT %s", [_tenants(tenant_id), like, *area_args, *args, limit])
-        rows = cur.fetchall()
+    rows: list[tuple] = []
+    for name_sql, name_args in _name_match_passes("title", query, lambda got: [r[2] for r in got], rows):
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog "
+                f"WHERE tenant_id = ANY(%s) AND source='tour_api' AND {name_sql} AND latitude IS NOT NULL "
+                f"AND address LIKE '서울%%' {area_sql}ORDER BY {order} LIMIT %s", [_tenants(tenant_id), *name_args, *area_args, *args, limit])
+            _merge_rows(rows, cur.fetchall(), key=lambda r: r[0])
+    rows = rows[:limit]
     from app.domains.travel_ops.components.places.catalog_pool import reuse_hours
     from app.domains.travel_ops.components.planning.planner import Cand
 
