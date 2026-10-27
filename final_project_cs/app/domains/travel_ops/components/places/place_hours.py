@@ -162,7 +162,10 @@ def _hm(hour: str, minute: str) -> str:
     return f"{int(hour):02d}:{minute}"
 
 
-_DAY_TOKEN = re.compile(r"(?<![가-힣\d])([월화수목금토일])(?:요일)?(?![가-힣])|([월화수목금토일])요일")
+#: `[2026-10-27 TeamFlow ST4F-685]` 요일 한 글자 뒤에 「있 · 없」이 오면 요일이 아니다 — 「가동 중지될 수 있음」의 「수」(가능 · 불가능의 「수」)를
+#:   수요일로 읽어 멀쩡한 수요일을 휴무로 판정했다. 휴무 판정의 맨 글자 요일(`closure_rules._BARE_DAY`)도 이 규칙(`NOT_A_DAY_AFTER`)을 쓴다
+NOT_A_DAY_AFTER = r"(?!\s*[있없])"
+_DAY_TOKEN = re.compile(rf"(?<![가-힣\d])([월화수목금토일])(?:요일)?(?![가-힣]){NOT_A_DAY_AFTER}|([월화수목금토일])요일")
 
 
 def days_in(quote: str) -> set[str]:
