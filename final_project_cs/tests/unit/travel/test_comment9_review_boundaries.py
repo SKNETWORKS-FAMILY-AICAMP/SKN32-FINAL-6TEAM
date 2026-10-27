@@ -2,6 +2,7 @@ from datetime import timedelta
 import pytest
 from tests.unit.travel.test_intake_visit_time_restriction import _Conn, _at, _activity_team, _review, RESTRICT, ALWAYS, PLACE  # noqa: F401 (_activity_team: autouse fixture)
 from app.domains.travel_ops.components.intake import review, candidates, hours
+from tests.helpers.relative_dates import day, shift_text
 
 @pytest.mark.parametrize('end', ['09:00','10:00'])
 def test_invalid_end_never_clears_the_visit_condition(end):
@@ -23,9 +24,10 @@ def test_multiday_and_24h_never_clear():
         f=hours.facts_for(_Conn([text]),'t',dict(PLACE),'activity',_at('10:00'),_at('11:30')+timedelta(days=3))
         assert f.conditions == [text]
 
+# ★`[2026-10-28]` 원래 2026-11-02(월) 고정 — 그 날이 지나면 전부-과거 가드가 검사를 막는다. 실행 날 기준 같은 요일로 옮긴다.
 def _inputs():
-    sources=[{'source_id':'s','position':0,'kind':'text','filename':None,'transcript':'2026-11-02 10:00–11:30 북촌한옥마을'}]
-    values={'title':'북촌한옥마을','date':'2026-11-02','starts_at':'10:00','ends_at':'11:30','kind':'activity',
+    sources=[{'source_id':'s','position':0,'kind':'text','filename':None,'transcript':shift_text('2026-11-02 10:00–11:30 북촌한옥마을')}]
+    values={'title':'북촌한옥마을','date':day('2026-11-02'),'starts_at':'10:00','ends_at':'11:30','kind':'activity',
             'place':dict(PLACE,latitude=37.582,longitude=126.983)}
     claims=[{'source_id':'s','field':f'items[6].{k}','value':v,'method':'document','evidence':{'line':1},'needs_review':False,'note':None} for k,v in values.items()]
     return sources,claims

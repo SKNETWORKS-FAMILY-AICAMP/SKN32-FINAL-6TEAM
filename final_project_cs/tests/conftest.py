@@ -42,31 +42,6 @@ def _guardian_switch_on_for_feature_tests(request, monkeypatch):
     monkeypatch.setattr("app.domains.travel_ops.components.settings_hook.guardian_enabled", lambda tenant_id: True)
 
 
-#: 「모든 일정이 오늘 이전」 등록 거절(`itinerary_checks.all_dates_before_today`)이 쓰는 **시험의 오늘**.
-#: ★`[2026-10-26]` 시험 대본·접수 fixture 는 날짜가 고정돼 있다(대본 2026-09-23 등, 가장 이른 날 2026-08-17).
-#:   가드가 실제 시계를 읽으면 그 날이 지나는 순간 실행 날짜만으로 시험이 깨진다 — 날짜가 지난 대본은 지금 이미 422, 오늘·내일 날짜의
-#:   fixture 는 다음 날부터 422. 그래서 가드의 시계만 모든 고정 날짜보다 앞선 하루로 고정한다(제품 가드는 그대로).
-#:   실제 오늘보다 앞선 날이라 상대 날짜(어제 · 내일) fixture 의 판정도 바꾸지 않는다.
-ALL_PAST_GUARD_TEST_TODAY = (2026, 8, 1)
-
-
-@pytest.fixture(autouse=True)
-def _pin_all_past_guard_today(monkeypatch):
-    """가드 자체를 재는 시험은 이 고정 위에 자기 시계(`monkeypatch.setattr(checks, "datetime", ...)` · `now=`)를 다시 넣는다."""
-    from datetime import datetime
-
-    from app.domains.travel_ops.components.itinerary import itinerary_checks as checks
-
-    pinned = datetime(*ALL_PAST_GUARD_TEST_TODAY, 12, tzinfo=checks.KST)
-
-    class _PinnedToday(datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return pinned.astimezone(tz) if tz else pinned.replace(tzinfo=None)
-
-    monkeypatch.setattr(checks, "datetime", _PinnedToday)
-
-
 @pytest.fixture(autouse=True)
 def _wire_domain_teams():
     """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.

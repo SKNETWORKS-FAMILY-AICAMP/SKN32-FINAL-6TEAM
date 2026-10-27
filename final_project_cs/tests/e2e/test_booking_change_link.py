@@ -34,8 +34,14 @@ from app.domains.travel_ops.components.itinerary.plan_link import plan_token
 from app.domains.travel_ops.entry.trip_api import build_trip_router, change_token
 from app.presentation import security
 from app.presentation.api.app import create_app
+from tests.helpers import relative_dates as reldate
 
-START = datetime(2026, 10, 3, 15, 0, tzinfo=UTC)
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_03 = reldate.day("2026-10-03")
+D_2026_10_04 = reldate.day("2026-10-04")
+
+START = reldate.moved(datetime(2026, 10, 3, 15, 0, tzinfo=UTC))
 
 #: 1인 가격(원)만 다른 세 장소. ★`없음` 은 `price_krw` 칸 자체가 없다 — 「모름」을 만드는 자리다.
 PLACES = {"본래": 31_000, "대안A": 35_000, "대안B": 62_000, "가격없음": None}
@@ -138,7 +144,7 @@ def test_the_link_shows_the_item_the_alternatives_and_the_difference(world):
 
     assert "바뀔 항목" in text and "BK-AIR-1" in text and "본래" in text
     # ★`[2026-10-03 ui 검증 세션 지적]` 화면은 **서울 시계**로 찍는다 — `START` 는 UTC 2026-10-03 15:00 = 서울 10-04 00:00. 전에는 이 시험이 UTC 날짜(10-03)를 못 박고 있었다(9시간 어긋난 시각)
-    assert "2026-10-04 00:00" in text and "2026-10-03 15:00" not in text           # 현재 시각
+    assert f"{D_2026_10_04} 00:00" in text and f"{D_2026_10_03} 15:00" not in text           # 현재 시각
     assert "seoul-air" in text and "SUP-AIR-1" in text
     assert "스카이데크 전망" in text                    # 이 예약에 걸린 일정 항목
 

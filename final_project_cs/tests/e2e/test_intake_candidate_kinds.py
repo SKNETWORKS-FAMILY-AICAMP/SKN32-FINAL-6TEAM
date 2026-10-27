@@ -27,6 +27,11 @@ from app.infrastructure.db.session import get_connection
 
 from .test_intake_review import _catalog, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
 
 NOW = datetime(2030, 1, 5, 9, 0, tzinfo=timezone(timedelta(hours=9)))
 REF = (37.5796, 126.9770)                       # 경복궁 근처
@@ -110,7 +115,7 @@ def test_a_hotel_breakfast_line_gets_lodging_candidates_from_the_map_and_never_a
     around  # 카탈로그에도 광화문호텔(숙박)이 있다 — 목록 후보와 카카오 후보가 같이 온다
     client, _tour, kakao = _client(kakao=_LodgingKakao())
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n09:00 호텔 조식\n11:00 경복궁")
+    view = _send(client, headers, f"{D_2026_10_15}\n09:00 호텔 조식\n11:00 경복궁")
     hotel = _item(view, "호텔")
     got = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/candidates?source_id={hotel['source_id']}&index={hotel['index']}"
                      f"&revision={view['revision']}", headers=headers).json()
@@ -138,7 +143,7 @@ def test_a_bare_hotel_line_without_breakfast_gets_the_same_two_kinds_of_candidat
 
     client, _tour, _kakao = _client(kakao=_LodgingKakao())
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n09:00 호텔\n11:00 경복궁")
+    view = _send(client, headers, f"{D_2026_10_15}\n09:00 호텔\n11:00 경복궁")
     hotel = _item(view, "호텔")
     # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 먼저 채우기는 이름 없는 호텔을 채우지 않는다(후보가 하나여도) — 그 일정 카드가 후보에서 고르게 묻는다
     assert hotel["place_state"] == "needs_choice" and hotel["place"] is None, hotel

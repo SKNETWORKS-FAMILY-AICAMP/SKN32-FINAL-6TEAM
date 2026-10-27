@@ -25,6 +25,14 @@ from app.domains.travel_ops.entry.trip_api import build_trip_router
 from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
+D_2026_10_16 = reldate.day("2026-10-16")
+D_2026_11_02 = reldate.day("2026-11-02")
+D_2026_11_03 = reldate.day("2026-11-03")
 
 PHOTO = Path(__file__).resolve().parents[1] / "fixtures" / "intake" / "seoul_2n3d_plan.png"
 #: 사진에 그려 넣은 원문 — 가짜 받아쓰기가 그대로 돌려준다
@@ -139,16 +147,16 @@ def test_pdf_docx_and_xlsx_are_read_with_their_own_parsers(api):
     pdf = fitz.open()
     page = pdf.new_page()
     # 내장 한국어 글꼴 — 맑은 고딕 파일을 통째로 넣으면 10MB 제한을 넘는다(제한은 그대로 둔다)
-    page.insert_text((72, 72), "1일차 2026-10-15\n09:00 경복궁\n12:30 토속촌삼계탕", fontname="korea", fontsize=12)
+    page.insert_text((72, 72), f"1일차 {D_2026_10_15}\n09:00 경복궁\n12:30 토속촌삼계탕", fontname="korea", fontsize=12)
     pdf_bytes = pdf.tobytes()
     document = docx.Document()
-    document.add_paragraph("1일차 2026-10-15")
+    document.add_paragraph(f"1일차 {D_2026_10_15}")
     table = document.add_table(rows=1, cols=2)
     table.rows[0].cells[0].text, table.rows[0].cells[1].text = "09:00", "경복궁"
     buffer = io.BytesIO()
     document.save(buffer)
     book = openpyxl.Workbook()
-    book.active.append(["1일차", "2026-10-15"])
+    book.active.append(["1일차", D_2026_10_15])
     book.active.append(["09:00", "경복궁"])
     sheet = io.BytesIO()
     book.save(sheet)
@@ -206,7 +214,7 @@ def test_the_kind_comes_from_the_bytes_not_the_name(api, name):
 
 
 # ── 2주차: 남은 줄(모델이 가리키기만) → 날짜 → 장소 ───────────────────────────
-CHAT_PLAN = "1일차 2026-10-15\n09:00 경복궁\n점심은 토속촌에서 먹을래\n저녁엔 광장시장 가 보고 싶어"
+CHAT_PLAN = f"1일차 {D_2026_10_15}\n09:00 경복궁\n점심은 토속촌에서 먹을래\n저녁엔 광장시장 가 보고 싶어"
 
 
 class Labeler:
@@ -267,7 +275,7 @@ def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
     assert items[1]["fields"]["title"]["method"] == "llm_span"
     assert items[1]["fields"]["kind"]["value"] == "dining"                   # 「점심」 → 끼니
     # 날짜 — 본문에 적힌 날짜가 모델이 가리킨 줄까지 이어진다
-    assert [i["date"] for i in items] == ["2026-10-15"] * 3
+    assert [i["date"] for i in items] == [D_2026_10_15] * 3
     # 장소 — 관광공사(서울 필터) 정확 일치 · 카카오로 이름을 찾아 관광공사에서 다시 확인
     places = [i["fields"]["place"] for i in items]
     # ★`[2026-10-05]` 「토속촌삼계탕」은 개발 DB 의 요식 원장에도 있어(관광공사 재수집으로 들어왔다) 원장이 먼저 찾을 수 있다 — 시험이 DB 내용에 기대지 않게 둘 다 허용한다
@@ -377,16 +385,16 @@ def test_a_plan_without_dates_asks_for_the_first_day_before_registering(api):
     blocked = _confirm(client, headers, view["intake_id"], view["revision"], status=422)
     assert blocked["error"]["code"] == "intake_incomplete"
     assert {p["code"] for p in blocked["error"]["problems"]} == {"no_date"}
-    fixed = _edit(client, headers, view, {"field": "trip.first_day", "value": "2026-11-02"})
+    fixed = _edit(client, headers, view, {"field": "trip.first_day", "value": D_2026_11_02})
     assert fixed["check"]["ready"] is True
     trip = _confirm(client, headers, view["intake_id"], fixed["revision"])["trip"]
-    assert [i["starts_at"][:16] for i in trip["items"]] == ["2026-11-02T09:00", "2026-11-03T10:00"]
+    assert [i["starts_at"][:16] for i in trip["items"]] == [f"{D_2026_11_02}T09:00", f"{D_2026_11_03}T10:00"]
 
 
 def test_an_unfound_place_is_fixed_by_name_or_left_without_a_place(api):
     client, _, _ = _full_client()
     headers = _key(client)
-    view = _send(client, headers, text="1일차 2026-10-15\n09:00 경복궁\n11:00 동네 산책\n13:00 모르는식당")
+    view = _send(client, headers, text=f"1일차 {D_2026_10_15}\n09:00 경복궁\n11:00 동네 산책\n13:00 모르는식당")
     source = view["sources"][0]["source_id"]
     problems = {(p["code"], p["field"]) for p in view["check"]["problems"]}
     assert problems == {("no_place", "items[1].place"), ("no_place", "items[2].place")}
@@ -408,7 +416,7 @@ def test_a_booking_number_is_carried_and_only_customer_pinning_protects_the_item
 
     client, _, _ = _full_client()
     headers = _key(client)
-    view = _send(client, headers, text="1일차 2026-10-15\n19:00 경복궁 · 예약번호 KY-20931")
+    view = _send(client, headers, text=f"1일차 {D_2026_10_15}\n19:00 경복궁 · 예약번호 KY-20931")
     trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
     items = _stored(api, trip)
     assert items[0].detail["booking"] == {"booking_no": "KY-20931", "declared_by": "customer_plan"}
@@ -417,7 +425,7 @@ def test_a_booking_number_is_carried_and_only_customer_pinning_protects_the_item
     assert protected_reason(replace(items[0], detail={**items[0].detail, "customer_pinned": True})) == "customer_pinned"
 
 
-LUNCH_PLAN = "\n".join(["1일차 2026-10-15", "09:00 경복궁", "점심은 토속촌에서 먹을래", "15:00 광장시장"])
+LUNCH_PLAN = "\n".join([f"1일차 {D_2026_10_15}", "09:00 경복궁", "점심은 토속촌에서 먹을래", "15:00 광장시장"])
 
 
 def test_a_lunch_line_is_placed_at_lunch_even_after_a_later_timed_stop(api):
@@ -431,8 +439,8 @@ def test_a_lunch_line_is_placed_at_lunch_even_after_a_later_timed_stop(api):
     assert "「점심」" in filled[0]["note"]
 
 
-ALIAS_FIRST = chr(10).join(["1일차 2026-10-15", "09:00 경복궁", "11:00 옛날시장"])
-ALIAS_NEXT = chr(10).join(["1일차 2026-10-16", "10:00 옛날시장"])
+ALIAS_FIRST = chr(10).join([f"1일차 {D_2026_10_15}", "09:00 경복궁", "11:00 옛날시장"])
+ALIAS_NEXT = chr(10).join([f"1일차 {D_2026_10_16}", "10:00 옛날시장"])
 
 
 def test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan(api):
@@ -518,11 +526,11 @@ def test_a_plan_with_the_date_on_every_line_registers_on_those_days(api):
     """★`[2026-09-28]` 줄마다 날짜를 쓴 글 — 날짜가 「모름」이 되고 제목이 날짜가 되던 것(ui 세션 실서버 시험)."""
     client, _, _ = _full_client()
     headers = _key(client)
-    view = _send(client, headers, text="2026-10-15 09:00 경복궁\n2026-10-15 13:00 광장시장\n2026-10-16 10:00 경복궁")
+    view = _send(client, headers, text=f"{D_2026_10_15} 09:00 경복궁\n{D_2026_10_15} 13:00 광장시장\n{D_2026_10_16} 10:00 경복궁")
     assert view["check"]["ready"] is True, view["check"]["problems"]
     trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
     assert [i["starts_at"][:16] for i in trip["items"] if i["kind"] != "mobility"] == [
-        "2026-10-15T09:00", "2026-10-15T13:00", "2026-10-16T10:00"]
+        f"{D_2026_10_15}T09:00", f"{D_2026_10_15}T13:00", f"{D_2026_10_16}T10:00"]
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT title FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip["trip_id"]))
         assert cur.fetchone()[0] == "내 여행"

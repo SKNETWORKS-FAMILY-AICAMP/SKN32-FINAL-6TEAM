@@ -4,9 +4,15 @@ import pytest
 from .test_intake_candidate_kinds import _LodgingKakao, around  # noqa: F401
 from .test_intake_review import _client, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_24 = reldate.day("2026-10-24")
+D_2026_10_25 = reldate.day("2026-10-25")
 
 
-PLAN = "2026-10-24\n09:00 호텔 조식\n10:00 경복궁\n2026-10-25\n09:00 호텔 조식\n10:00 경복궁"
+PLAN = f"{D_2026_10_24}\n09:00 호텔 조식\n10:00 경복궁\n{D_2026_10_25}\n09:00 호텔 조식\n10:00 경복궁"
 
 
 @pytest.fixture(autouse=True)
