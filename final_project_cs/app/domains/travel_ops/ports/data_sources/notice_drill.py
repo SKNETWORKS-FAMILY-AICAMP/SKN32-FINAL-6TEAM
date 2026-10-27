@@ -15,6 +15,8 @@
     1. 장소 이름 낱말(`drill_place_words` — 훈련장 · 훈련소 …)은 먼저 지운다 — 훈련 표지가 아니다.
     2. 실제 사건 표지(`drill_actual_keywords` — 「실제 상황입니다」 · 「실제 화재」 · 「훈련이 아닌」 …)가 하나라도 있으면
        **훈련이 아니다**(실제가 이긴다 — 놓치는 쪽보다 한 번 더 알리는 쪽으로 틀린다).
+       단 표지 바로 뒤가 조건 · 가정 꼬리(`drill_conditional_tails` — 「시」 · 「의 경우」 · 「할 경우」 · 「에 대비」 …)면 세지 않는다 —
+       「실제 화재 시에는 119에 신고」 · 「실제 상황 발생 시 대피」는 훈련 안내의 흔한 말투다.
     3. 그렇지 않고 훈련 표지(`exclude_keywords` — 훈련 · 실제 상황이 아 · 가상 상황 · 시험 발송 …)가 있으면 훈련이다.
 
 ★판정 근거(`basis`)는 걸린 표지 원값이다 — 근거 없는 판정을 만들지 않는다. 낱말은 모두 `config/guardrails.yaml`
@@ -41,13 +43,25 @@ class DrillStatus:
     basis: str | None = None
 
 
+def _asserted(body: str, word: str, tails: tuple[str, ...]) -> bool:
+    """`word` 가 조건 · 가정 꼬리 없이 한 번이라도 나오나."""
+    start = body.find(word)
+    while start >= 0:
+        rest = body[start + len(word):]
+        if not any(rest.startswith(tail) for tail in tails):
+            return True
+        start = body.find(word, start + 1)
+    return False
+
+
 def drill_status(text: Any, *, drill_words: tuple[str, ...], actual_words: tuple[str, ...] = (),
-                 place_words: tuple[str, ...] = ()) -> DrillStatus:
+                 place_words: tuple[str, ...] = (), conditional_tails: tuple[str, ...] = ()) -> DrillStatus:
     body = _key(text)
     for word in place_words:
         if _key(word):
             body = body.replace(_key(word), " ")
-    actual = next((_key(w) for w in actual_words if _key(w) and _key(w) in body), None)
+    tails = tuple(_key(t) for t in conditional_tails if _key(t))
+    actual = next((_key(w) for w in actual_words if _key(w) and _asserted(body, _key(w), tails)), None)
     if actual is not None:
         return DrillStatus(False, actual)
     drill = next((_key(w) for w in drill_words if _key(w) and _key(w) in body), None)
@@ -55,5 +69,6 @@ def drill_status(text: Any, *, drill_words: tuple[str, ...], actual_words: tuple
 
 
 def is_drill(text: Any, *, drill_words: tuple[str, ...], actual_words: tuple[str, ...] = (),
-             place_words: tuple[str, ...] = ()) -> bool:
-    return drill_status(text, drill_words=drill_words, actual_words=actual_words, place_words=place_words).drill
+             place_words: tuple[str, ...] = (), conditional_tails: tuple[str, ...] = ()) -> bool:
+    return drill_status(text, drill_words=drill_words, actual_words=actual_words, place_words=place_words,
+                        conditional_tails=conditional_tails).drill

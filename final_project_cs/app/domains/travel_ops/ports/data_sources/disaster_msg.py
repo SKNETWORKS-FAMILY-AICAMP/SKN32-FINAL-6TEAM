@@ -104,7 +104,8 @@ def _safety_words() -> tuple[tuple[str, ...], dict[str, tuple[str, ...]]]:
 
     return listed("trip_keywords"), {"drill_words": listed("exclude_keywords"),
                                      "actual_words": listed("drill_actual_keywords"),
-                                     "place_words": listed("drill_place_words")}
+                                     "place_words": listed("drill_place_words"),
+                                     "conditional_tails": listed("drill_conditional_tails")}
 
 #: 우리 지역 이름 → 재난문자 수신지역 표기.
 REGION_NAMES = {"서울": "서울특별시"}

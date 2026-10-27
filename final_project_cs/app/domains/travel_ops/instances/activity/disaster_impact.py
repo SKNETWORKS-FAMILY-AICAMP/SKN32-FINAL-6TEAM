@@ -52,6 +52,7 @@ class ImpactRules:
     #: `[2026-10-27]` 훈련 판정의 실제 사건 표지 · 장소 이름 낱말(재난 정지와 같은 `travel.safety.drill_*` — 공용 판정 `notice_drill`)
     drill_actual_words: tuple[str, ...] = ()
     drill_place_words: tuple[str, ...] = ()
+    drill_conditional_tails: tuple[str, ...] = ()
 
     @classmethod
     def load(cls) -> ImpactRules:
@@ -70,7 +71,8 @@ class ImpactRules:
                    release_words=words("travel.safety.impact.release_keywords"),
                    closure_words=words("travel.safety.impact.place_closure_keywords"),
                    drill_actual_words=tuple(str(x) for x in guard.get("travel.safety.drill_actual_keywords")),
-                   drill_place_words=tuple(str(x) for x in guard.get("travel.safety.drill_place_words")))
+                   drill_place_words=tuple(str(x) for x in guard.get("travel.safety.drill_place_words")),
+                   drill_conditional_tails=tuple(str(x) for x in guard.get("travel.safety.drill_conditional_tails")))
 
     def is_released(self, text: Any) -> bool:
         """훈련 문자(재난 정지와 같은 낱말)와 ① 상황이 끝났다는 문자.
@@ -81,7 +83,7 @@ class ImpactRules:
         from app.domains.travel_ops.components.planning.safety import is_drill, notice_status
 
         return (is_drill(text, drill_words=self.exclude_words, actual_words=self.drill_actual_words,
-                         place_words=self.drill_place_words)
+                         place_words=self.drill_place_words, conditional_tails=self.drill_conditional_tails)
                 or any(word in _key(text) for word in self.release_words)
                 or notice_status(str(text or "")).ended)
 
