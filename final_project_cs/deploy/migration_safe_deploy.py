@@ -276,7 +276,7 @@ def migration_cause(stdout):
         error, state, attempts = value["error"], value["sqlstate"], value["attempts"]
         if (isinstance(error, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", error)
                 and (state is None or (isinstance(state, str) and re.fullmatch(r"[0-9A-Z]{5}", state)))
-                and type(attempts) is int and 0 < attempts < 100):
+                and type(attempts) is int and 0 <= attempts < 100):
             return f"{error} sqlstate={state} attempts={attempts}"
         return None
     return None

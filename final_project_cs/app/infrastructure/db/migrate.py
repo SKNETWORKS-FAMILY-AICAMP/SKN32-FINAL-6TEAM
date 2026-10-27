@@ -80,6 +80,10 @@ def apply_all(conn, *, sleep=time.sleep) -> None:
             _line(migration="retry", attempt=attempt, attempts=attempts, error=type(exc).__name__,
                   sqlstate=exc.sqlstate, wait_seconds=waits[attempt - 1])
             sleep(waits[attempt - 1])
+        except BaseException as exc:
+            # 다시 하지 않는 실패 — 몇 번째 시도에서 났는지만 붙여 그대로 올린다(배포 기록이 「시도 2」를 「1」로 적지 않게)
+            exc.migration_attempts = attempt
+            raise
 
 
 def main() -> None:
@@ -94,9 +98,11 @@ def main() -> None:
     except MigrationLockFailed as exc:
         _line(migration="failed", error=exc.error, sqlstate=exc.sqlstate, attempts=exc.attempts)
         sys.exit(1)
-    except psycopg.Error as exc:
-        # ★실패 원인을 배포 기록에 남긴다 — 종류 · SQLSTATE 만(메시지에는 표 이름 · 값 · 접속 정보가 섞일 수 있다)
-        _line(migration="failed", error=type(exc).__name__, sqlstate=getattr(exc, "sqlstate", None), attempts=1)
+    except (psycopg.Error, ValueError) as exc:
+        # ★실패 원인을 배포 기록에 남긴다 — 종류 · SQLSTATE · 시도 횟수만(메시지에는 표 이름 · 값 · 접속 정보가 섞일 수 있다).
+        #   ValueError 는 산출물 · lock_policy 검사 실패다(시도 0 — SQL 을 보내기 전)
+        _line(migration="failed", error=type(exc).__name__, sqlstate=getattr(exc, "sqlstate", None),
+              attempts=getattr(exc, "migration_attempts", 0 if isinstance(exc, ValueError) else 1))
         sys.exit(1)
     print(f"Applied migrations from {MIGRATION_DIR}")
 

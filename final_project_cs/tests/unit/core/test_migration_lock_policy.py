@@ -141,3 +141,42 @@ def test_main_reports_other_database_failures_by_kind_only(monkeypatch, capsys):
     assert json.loads(out.strip().splitlines()[-1]) == {"migration": "failed", "error": "UndefinedTable",
                                                         "sqlstate": "42P01", "attempts": 1}
     assert "hunter2" not in out and "secret_table" not in out
+
+
+def test_a_different_failure_after_a_retry_reports_the_real_attempt_count(world, monkeypatch, capsys):
+    # `[Codex 검토 2026-10-27]` 교착으로 한 번 다시 한 뒤 다른 오류가 나면 시도 횟수는 2 다(전에는 1 로 적을 뻔했다)
+    conn = _Conn([psycopg.errors.DeadlockDetected("x"), psycopg.errors.UndefinedTable("secret_table")])
+    with pytest.raises(psycopg.errors.UndefinedTable) as raised:
+        migrate.apply_all(conn, sleep=world.append)
+    assert raised.value.migration_attempts == 2
+
+    @contextmanager
+    def connection():
+        yield conn
+
+    conn.failures = [psycopg.errors.DeadlockDetected("x"), psycopg.errors.UndefinedTable("secret_table")]
+    monkeypatch.setattr(migrate, "get_connection", connection)
+    monkeypatch.setattr("sys.argv", ["migrate"])
+    capsys.readouterr()
+    with pytest.raises(SystemExit):
+        migrate.main()
+    last = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert last == {"migration": "failed", "error": "UndefinedTable", "sqlstate": "42P01", "attempts": 2}
+
+
+def test_a_bad_lock_policy_is_reported_as_a_failed_line(monkeypatch, capsys):
+    @contextmanager
+    def connection():
+        yield _Conn([None])
+
+    def bad(directory):
+        raise ValueError("migration-plan.json lock_policy must define ...")
+
+    monkeypatch.setattr(migrate, "compiled_sql", lambda: "MIGRATION SQL")
+    monkeypatch.setattr(migrate, "lock_policy", bad)
+    monkeypatch.setattr(migrate, "get_connection", connection)
+    monkeypatch.setattr("sys.argv", ["migrate"])
+    with pytest.raises(SystemExit):
+        migrate.main()
+    last = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert last == {"migration": "failed", "error": "ValueError", "sqlstate": None, "attempts": 0}
