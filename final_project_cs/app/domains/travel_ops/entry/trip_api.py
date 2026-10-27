@@ -1358,9 +1358,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, "over_price_limit", price_limit_refusal(price_check, limit, str(option.get("name") or "고른 숙소")),
                          detail={"price_check": price_check, "price_limit": limit})
         proposals = pending_module.SnapshotPendingStore(tenant)
+        owned = False
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
+                owned = True
                 places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
                 result = choose(conn=conn, store=store, pending=proposals, trip_id=trip_id,
                                 proposal_id=proposal_id, key=key, by=by, places_by_id=places,
@@ -1377,12 +1379,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             #   503 `save_failed`(「아무것도 바뀌지 않았어요」 — 제안은 열린 채라 같은 안을 다시 고를 수 있다). 판 번호만으로는 「그대로 둘게요」 ·
             #   「바꿔 줘」(판은 그대로 · 제안 행만 바뀜)를 못 가린다(Codex Q3). 다시 읽지 못했거나 제안이 바뀌었으면 원래 예외를 올린다(숨기지 않는다).
             #   코드 결함 계열(IntegrityError · ProgrammingError …)은 잡지 않는다. 응답엔 예외 종류도 메시지도 싣지 않고, 로그엔 여행 id 와 종류 이름만.
+            #   ★`[2026-10-28 C12 리뷰]` 소유 확인(`_trip_or_404`) 전에 실패했으면 다시 읽지 않는다 — 다시 읽기는 고객을 보지 않아 남의 여행의 열린 제안에도
+            #   503(평소 404)을 냈다(존재 신호 · 「다시 골라 주세요」가 거짓). 이 요청은 아무것도 쓰지 않았으니 원래 예외. 잠그기 전 실패도 다시 읽은 제안이 `open` 이다.
             before = proposals.locked
-            if not pending_module.proposal_unchanged_after_failure(get_connection, tenant, trip_id, proposal_id, before):
+            if not owned or not pending_module.proposal_unchanged_after_failure(get_connection, tenant, trip_id, proposal_id, before):
                 raise
             logger.error("proposal choice storage write failed trip=%s error=%s (proposal unchanged)", trip_id, type(exc).__name__)
             raise _error(503, "save_failed", pending_module.CHOOSE_SAVE_FAILED_TEXT,
-                         **({"proposal_status": before.get("status")} if before else {})) from None
+                         proposal_status=before.get("status") if before else "open") from None
         except ProposalRefused as refused:
             status = {"not_found": 404, "already_decided": 409, "stale": 409, "expired": 409}.get(refused.code, 422)
             # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다

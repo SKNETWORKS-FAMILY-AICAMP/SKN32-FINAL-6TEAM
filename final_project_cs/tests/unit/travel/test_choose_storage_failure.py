@@ -110,6 +110,39 @@ def test_code_defects_in_a_choice_are_not_relabelled(web, error):
     assert seen["readback"] == [], "코드 결함은 다시 읽지도 않는다"
 
 
+def test_a_failure_before_the_ownership_check_is_not_relabelled(web, monkeypatch):
+    """`[2026-10-28 C12 리뷰]` 소유 확인(`_trip_or_404`) 전에 실패하면 다시 읽지 않는다 — 다시 읽기는 고객을 보지 않아 남의 여행 · 열린 제안에도
+    503(평소 404)을 낼 수 있었다. 이 요청은 아무것도 쓰지 않았다 — 원래 예외."""
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+
+    app, seen = web
+
+    def latest(self, conn, trip_id):
+        raise psycopg.OperationalError(PRIVATE)
+
+    monkeypatch.setattr(TripStore, "latest", latest)
+    with pytest.raises(psycopg.OperationalError):
+        _post(app)
+    assert seen["readback"] == []
+
+
+def test_a_failure_after_the_ownership_check_but_before_the_lock_is_503_with_an_open_proposal(web, monkeypatch):
+    """소유는 확인했고 제안은 아직 안 잠갔다(장소 읽기 실패) — 다시 읽어 열려 있으면 503, 본문의 `proposal_status` 는 계약대로 `open`."""
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+
+    app, seen = web
+
+    def places(self, conn, trip_id):
+        raise psycopg.errors.QueryCanceled(PRIVATE)
+
+    monkeypatch.setattr(TripStore, "places", places)
+    response = _post(app)
+    assert response.status_code == 503, response.text
+    assert response.json()["detail"]["error"]["proposal_status"] == "open"
+    [(_, _, _, before)] = seen["readback"]
+    assert before is None
+
+
 def test_the_refusals_keep_their_codes(web, monkeypatch):
     """거절(`ProposalRefused`)은 그대로 — 저장 실패 처리가 404 · 409 를 가리지 않는다."""
     app, seen = web
