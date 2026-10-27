@@ -86,6 +86,8 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   // `[2026-10-20 D-CS-019]` 새 판으로 바꾸는 동안 api 대신 Caddy 가 답한다(`deploy/Caddyfile.tripilot` 「handle_errors」)
   service_updating: [`서비스를 새 판으로 바꾸는 중이에요. ${AGAIN[0]}`, `The service is switching to a new version. ${AGAIN[1]}`],
   risk_check_unavailable: [`지금은 일정 위험을 점검할 수 없어요. ${AGAIN[0]}`, `The trip risk check is unavailable right now. ${AGAIN[1]}`],
+  // `[2026-10-26 묶음 M]` 「일정 수정」 「완료」가 새 판을 쓰다 저장소 오류로 멈췄고, 다시 읽어 판이 그대로인 것을 확인한 때(web-intakes /confirm 7)
+  save_failed: [`지금 일정을 저장하지 못했어요. 일정은 바꾸지 않았어요. ${AGAIN[0]}`, `We couldn't save the plan just now. Nothing was changed. ${AGAIN[1]}`],
   // 여행 · 계획
   not_found: ["찾을 수 없어요. 지워졌거나 주소가 바뀌었을 수 있어요.", "Not found. It may have been removed."],
   item_not_found: [`그 일정을 찾지 못했어요. ${REFRESH[0]}`, `We couldn't find that item. ${REFRESH[1]}`],
@@ -93,10 +95,21 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   stale_revision: ["그 사이 다른 곳에서 바뀌었어요. 새로 불러와 주세요.", "It changed elsewhere in the meantime. Please reload it."],
   intake_confirmed: ["이미 등록한 계획이에요.", "This plan is already registered."],
   intake_incomplete: ["등록하기 전에 채워야 할 곳이 있어요.", "Some details are needed before registering."],
+  // `[2026-10-27 통합 K]` 등록 준비 · 등록이 아직 읽는 중(먼저 채우기 · 해석 답 반영 포함)인 접수를 거절(A 전수검사 A14 · registration)
+  intake_not_ready: ["아직 등록할 수 없어요. 계획 읽기가 끝나면 다시 눌러 주세요.", "This plan can't be registered yet. Please try again when reading has finished."],
   intake_reopened: ["등록한 여행을 고치는 중이에요. 일정 짜기는 새 여행에서 해 주세요.", "You're editing a registered trip. Plan a new schedule in a new trip."],
   read_items_outside_days: ["읽은 일정 중 고른 날짜 밖의 것이 있어요. 첫날 · 일수를 맞추거나 새로 짜기를 골라 주세요.", "Some items fall outside the chosen dates. Adjust the first day and number of days, or plan anew."],
   trip_field_locked: ["등록한 여행의 설문은 여기서 바꾸지 않아요.", "Survey answers of a registered trip can't be changed here."],
   option_gone: ["그 날짜에 남은 객실이 없어요. 일정은 그대로 두었어요. 다른 후보를 골라 주세요.", "No rooms are left on that date. Your plan is unchanged — please pick another option."],
+  // `[2026-10-27 통합 K · TeamFlow ST4F-709]` 숙소 후보를 고를 때 다시 본 1박 값이 고객이 말한 상한(`detail.price_limit`)을 넘어 바꾸지 않았다(trips.md 보류 제안 고르기)
+  over_price_limit: (detail) => {
+    const limit = number(detail, "price_limit");
+    return limit
+      ? [`다시 본 1박 값이 말씀하신 상한(${limit.toLocaleString("ko-KR")}원)을 넘어 숙소를 바꾸지 않았어요. 다른 후보를 골라 주세요.`,
+        `The rechecked price is above your per-night limit (${limit.toLocaleString("en-US")} KRW), so the stay was not changed. Please pick another option.`]
+      : ["다시 본 1박 값이 말씀하신 상한을 넘어 숙소를 바꾸지 않았어요. 다른 후보를 골라 주세요.",
+        "The rechecked price is above your per-night limit, so the stay was not changed. Please pick another option."];
+  },
   item_locked: ["고정한 일정이라 바꾸지 않았어요. 먼저 고정을 풀어 주세요.", "That item is locked, so it wasn't changed. Unlock it first."],
   invalid_place: ["그 일정에는 장소 위치가 없어 이동을 판단할 수 없어요.", "That item has no location, so travel to it can't be checked."],
   not_available: ["이 구간은 이동 수단을 고를 수 없어요.", "You can't choose transport for this leg."],

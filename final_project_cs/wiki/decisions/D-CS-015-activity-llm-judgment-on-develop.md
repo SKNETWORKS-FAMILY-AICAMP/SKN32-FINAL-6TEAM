@@ -154,7 +154,7 @@ LLM 이 읽은 값으로 판정했으면 답에 붙인다. 규칙 · 고객이 �
 | 2 휴무 규칙표 저장 | `[미구현]` | `ac_place` 에 휴무 규칙표 칸이 없다. 지금은 규칙이 못 읽으면 **요청마다** LLM(`team.py` — 종류 모드 `llm` 일 때만, 「휴무다」만) |
 | 3 실내외 1회 판정 · 저장 | 코드 `[완료]` · LLM 단계 `[미실행]` | `activity.ac_indoor`(301) · `indoor_store.py`(우선순위 operator > customer > llm > class) · `scripts/activity/decide_indoor.py --model`. 로컬 DB 는 분류 5,435/6,334곳(85.8%), 모름 899곳 |
 | 4 재난 — 분류표에 없는 문자만 LLM | 코드 `[완료]` | `team.py` — 「막는다」만 받는다. 저장 안 함(실시간 사실) |
-| 5 원문 바뀜 알아채기 | 코드 `[완료]` · 정기 실행 `[미등록]` | `scripts/activity/refresh_places.py`(302 `source_modified_at`). 정기 실행 자리는 코어 요청(`docs/activity/코어_요청사항_2026-10-14.md` 6번) |
+| 5 원문 바뀜 알아채기 | 코드 `[완료]` · 정기 실행 `[미등록]` | `scripts/activity/refresh_places.py`(302 `source_modified_at`). 정기 실행 자리는 코어 요청(`docs/activity/코어_요청사항_2026-10-14.md` 6번) · `[2026-10-27]` **빈 값 보존** — 관광공사 상세가 칸을 비우면(칸 없음 · 항목 없음) 채워 둔 운영시간 · 휴무 글을 NULL 로 덮지 않고 유지한다(`kept_on_empty`). 2026-10-26 381건 규칙 R2(출처 없는 칸은 새 NULL 도 적용)를 이 경로에서 바꾼 것([기록](../records/reports/2026-10-27_장소_운영시간_품질_전수검사.md)) |
 | 6 고객 안내 문구 | 코드 `[완료]` | `instances/activity/notices.py` `HOURS_AUTO_READ` · `INDOOR_AUTO` |
 | 7 계획 검증 고객 답 저장 | 일부 | 고객 답은 선택지로 받아 그 Case 안에서 쓴다. 저장(`record(..., "customer")`)으로 이어지는 재개 경로는 코어 협의 |
 

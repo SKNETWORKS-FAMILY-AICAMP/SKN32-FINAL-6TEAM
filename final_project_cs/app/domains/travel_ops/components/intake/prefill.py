@@ -41,6 +41,8 @@ PLACE_NOT_FOUND_ACTIONS = ("pick_candidate", "pick_myself", "no_place")
 #: `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 이름 없는 호텔 줄의 질문 카드 — 못 찾은 줄과 같은 모양(그 일정 · 후보 · 직접 고르기).
 #:   후보는 싣지 않는다 — 화면이 `GET …/candidates` 로 받는다(최대 3곳 + 숙소 안 식사 짝). 후보가 하나여도 먼저 채우지 않는다
 LODGING_PICK_QUESTION = "「{title}」 — 묵을 숙소를 후보에서 골라 주세요(후보가 하나여도 고르신 뒤에 넣어요)"
+#: `[2026-10-27 A 접수·읽기 전수검사]` 계획 에이전트가 고른 새 일정을 판에 넣지 못했을 때 `kept[].reason` — 「우리가 채움」으로 적지 않는다
+ADD_FAILED_REASON = "고른 일정을 넣지 못해 그대로 두었어요"
 
 
 def _open_stay(item: Mapping[str, Any]) -> bool:
@@ -252,6 +254,7 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
     claims = pipeline._claims(conn, tenant_id, intake_id, revision)
     trip = {k: (v.get("value") if isinstance(v, dict) else v) for k, v in (pipeline._trip_fields(claims) or {}).items()}
     state: dict[str, Any] = {"revision": revision, "review": found}
+    not_added: set[Any] = set()                         # 계획 에이전트가 고른 새 일정 중 판에 넣지 못한 빈칸(`_add_item` 실패)
 
     def plan() -> Mapping[str, Any]:
         return autofix_module.plan(conn, tenant_id=tenant_id, review=state["review"], kakao=kakao)
@@ -285,8 +288,14 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
             pick = p.candidates[0] if p.owner == "planner" else None
             if not pick or "place" not in pick:
                 continue
-            new = _add_item(conn, pipeline, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new,
-                            pick=pick, source_id=p.gap.where.get("source_id"), tour=tour, kakao=kakao, dining=dining) or new
+            added = _add_item(conn, pipeline, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new,
+                              pick=pick, source_id=p.gap.where.get("source_id"), tour=tour, kakao=kakao, dining=dining)
+            if added is None:
+                # ★`[2026-10-27 A 접수·읽기 전수검사]` 판에 넣지 못한 새 일정은 「우리가 채움」이 아니다 — 아래 `kept` 로 이유와 함께 남긴다
+                not_added.add(p.gap.key)
+            else:
+                not_added.discard(p.gap.key)
+                new = added
         if new != draft["revision"]:
             _, state["review"] = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new)
         state["revision"] = new
@@ -347,7 +356,8 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
     if keys:
         note(final=True)
     latest = {p.gap.key: p for p in used}
-    filled = refound + [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
+    filled = refound + [_filled_line(p) for p in latest.values()
+                        if p.owner != "ask_customer" and p.candidates and p.error is None and p.gap.key not in not_added]
     items_now = {i.get("id"): i for i in (state["review"].get("items") or [])}
     questions = [_question(p, items_now, still_blocked) for p in latest.values() if p.owner == "ask_customer"]
     for question in questions:
@@ -355,6 +365,8 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
             question.update(_stay_choices(conn, tenant_id=tenant_id, review=state["review"], item=items_now[question["item"]]))
     kept = [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": p.reason}
             for p in latest.values() if p.owner != "ask_customer" and not p.candidates]
+    kept += [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": ADD_FAILED_REASON}
+             for p in latest.values() if p.gap.key in not_added and p.candidates]
     record = {"filled": [f for f in filled if f], "questions": _unique(questions), "kept": kept, "rounds": rounds,
               "proposals": [p.as_dict() for p in used]}
     _store(conn, tenant_id=tenant_id, intake_id=intake_id, revision=draft["revision"], record=record)

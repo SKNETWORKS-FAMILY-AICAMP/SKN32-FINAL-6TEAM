@@ -111,4 +111,22 @@ def price_note(check: dict[str, Any] | None) -> str:
     return ""
 
 
-__all__ = ["price_note", "recheck_stay"]
+def over_price_limit(check: dict[str, Any] | None, option: dict[str, Any]) -> float | None:
+    """`[2026-10-27 LB-05 · ST4F-709]` 고를 때 다시 본 1박 값이 고객이 말한 상한(후보의 `price_limit` — 숙소 팀이 싣는다)을 넘으면 그 상한.
+    아니면 `None` — 상한을 말하지 않았거나(옛 후보 포함) · 다시 보지 못했거나(`unchecked`) · 객실이 없으면(`gone`, 따로 거절) 비교하지 않는다."""
+    limit = option.get("price_limit")
+    if not check or check.get("status") not in ("same", "changed") or not isinstance(limit, (int, float)):
+        return None
+    now = check.get("now")
+    return limit if isinstance(now, (int, float)) and now > limit else None
+
+
+def price_limit_refusal(check: dict[str, Any], limit: float, name: str) -> str:
+    """상한을 넘어 바꾸지 않을 때 고객에게 하는 말 — 객실이 없을 때(「…남은 객실이 없어요. 일정은 그대로 두었어요.」)와 같은 꼴."""
+    now = (f"지금 판매처 최저가 1박 {_won(check.get('now'))}~" if check.get("basis") == "sellers"
+           else f"지금 1박 {_won(check.get('now'))}")
+    return (f"{name}은(는) 다시 확인해 보니 {now}이라 말씀하신 1박 {_won(limit)} 이하를 넘어요. 일정은 그대로 두었어요. "
+            "다른 후보를 고르시거나 「바꿔 줘」라고 하시면 새로 찾아 드릴게요.")
+
+
+__all__ = ["over_price_limit", "price_limit_refusal", "price_note", "recheck_stay"]

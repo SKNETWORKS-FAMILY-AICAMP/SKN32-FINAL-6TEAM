@@ -38,6 +38,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .base import TravelSource
+from .notice_drill import is_drill
 from .notice_impact import impact_detail
 from .notice_status import notice_status
 
@@ -84,23 +85,27 @@ DISRUPTIVE_KINDS = WEATHER_KINDS | PLACE_KINDS
 #:   전염병: 2023-09~2026-10 서울 26건은 말라리아 경보 같은 생활 안내였다. 「AI」 1건은 실종자 찾기 문자였다(잘못 붙은 구분)
 RECORD_ONLY_KINDS = frozenset({"전염병", "수도", "통신", "에너지", "금융", "의료", "가축질병", "가뭄", "건조", "AI"})
 assert OFFICIAL_KINDS <= DISRUPTIVE_KINDS | RECORD_ONLY_KINDS | {"기타"}, "공식 재해구분이 어느 갈래에도 없다"
-#: 설정(`config/guardrails.yaml`)을 못 읽을 때만 쓰는 값 — 정본은 `travel.safety.*` 한 곳이다
-_FALLBACK_SEVERE = ("공습경보", "경계경보", "화산", "분화", "전쟁", "미사일", "방사능", "생화학")
-_FALLBACK_EXCLUDE = ("훈련", "실제 상황이 아")
 #: 공식 목록에 없는 재해구분을 이미 경고한 이름 — 같은 이름을 회차마다 되풀이해 경고하지 않는다
 _warned_new_kinds: set[str] = set()
 
 
-def _safety_words() -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """(심각 낱말, 제외 낱말) — 정본은 `travel.safety`. 설정이 없는 환경(시험 · 옛 설정)에서는 기본값."""
-    try:
-        from app.core.settings import get_guardrails
+def _safety_words() -> tuple[tuple[str, ...], dict[str, tuple[str, ...]]]:
+    """(심각 낱말, 훈련 판정 낱말) — 정본은 `travel.safety` 한 곳.
 
-        guard = get_guardrails()
-        return (tuple(str(w) for w in guard.get("travel.safety.trip_keywords")),
-                tuple(str(w) for w in guard.get("travel.safety.exclude_keywords")))
-    except Exception:                                  # noqa: BLE001 — 설정 오류가 재난문자 판정을 죽이지 않는다
-        return _FALLBACK_SEVERE, _FALLBACK_EXCLUDE
+    ★`[2026-10-27 C 전수검사]` 전에는 설정을 못 읽으면(`except Exception`) 코드에 박은 옛 낱말로 **조용히** 바꿨다 — 운영 설정에서
+      낱말을 바꿔도 설정 오류 한 번이면 옛 낱말로 판정하고 아무도 몰랐다. 이제 설정 오류는 그대로 올라간다(무음 폴백 금지).
+    """
+    from app.core.settings import get_guardrails
+
+    guard = get_guardrails()
+
+    def listed(name: str) -> tuple[str, ...]:
+        return tuple(str(w) for w in guard.get(f"travel.safety.{name}"))
+
+    return listed("trip_keywords"), {"drill_words": listed("exclude_keywords"),
+                                     "actual_words": listed("drill_actual_keywords"),
+                                     "place_words": listed("drill_place_words"),
+                                     "conditional_tails": listed("drill_conditional_tails")}
 
 #: 우리 지역 이름 → 재난문자 수신지역 표기.
 REGION_NAMES = {"서울": "서울특별시"}
@@ -235,13 +240,13 @@ def judge(rows: list[dict[str, Any]], *, region: str, district: str | list[str] 
           window_start: datetime, at: datetime) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """창 안·지역 안의 행 → (이상으로 셀 문자, 모르는 구분). 판정 규칙은 모듈 docstring."""
     messages, unclassified = [], []
-    severe_words, exclude_words = _safety_words()
+    severe_words, drill_words = _safety_words()
     for row in rows:
         if not (window_start <= row["created_at"] <= at
                 and _covers(row["regions"], region, district)):
             continue
         # ★끝난 사건의 문자(해제 · 종료 · 철회 · 개방 …)는 이상이 아니다 — 공용 판정 `notice_status`. ★`[2026-10-06]` 훈련 문자도 이상이 아니다(`travel.safety.exclude_keywords` — 「민방위 훈련」 한 통으로 일정이 바뀌면 안 된다)
-        if notice_status(row["text"]).ended or any(word in row["text"] for word in exclude_words):
+        if notice_status(row["text"]).ended or is_drill(row["text"], **drill_words):
             continue
         item = {"kind": row["kind"], "step": row["step"], "text": row["text"],
                 "created_at": row["created_at"].isoformat(),

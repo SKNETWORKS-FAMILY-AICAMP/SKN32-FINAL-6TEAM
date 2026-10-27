@@ -11,6 +11,10 @@ const ko = (korean: string) => korean;
 const states = (steps: ReturnType<typeof planSteps>) => Object.fromEntries(steps.steps.map((step) => [step.key, step.state])) as Record<StepKey, string>;
 
 describe("the plan check's bar, one cell per step of the server", () => {
+  it("marks a completed check as checked", () => {
+    expect(planSteps(view("done"), false).unchecked).toBe(false);
+  });
+
   it("has a cell for every step it works through — 「답 반영」 only when there are answers to put in", () => {
     expect(planSteps(view("reading"), false).steps.map((step) => step.key)).toEqual(["reading", "places", "hours", "moves", "risks", "prefill"]);
     expect(planSteps(view("reading"), true).steps.map((step) => step.key)).toContain("answers");

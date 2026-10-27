@@ -19,6 +19,10 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 ## 세션 정리 메모 (최근 것이 위)
 
+2026-10-27 「전수검사 A~J 후보 통합」 세션(Claude, K): 격리 트리 `cache/scratch/integ-K-allaudit-20261027`(브랜치 `integ/K-allaudit-20261027`, 팀 · 개인 role-manager 064208bd 위). 한 일: F → C → B → G → A → D → E → H → J 9/9 후보 cherry-pick(문서 충돌 3곳 양쪽 보존), 통합 수정 2(저장 실패 계약 단락 정합 · 웹 문구표 intake_not_ready · over_price_limit). 빠른 관문 10,530/10,530 · vitest 1,217/1,217 · tsc · ruff · DB core 89/89 · 실 E4B 수용 49 엄격 39/49(기준 38). I(EKS)는 제외 — C lock_policy 와의 상충 분석은 보고서 §4. role-manager 팀 · 개인 fast-forward push(develop · main 미변경). [보고서](../../final_project_cs/wiki/records/reports/2026-10-27_K_전수검사후보_통합_role-manager.md)
+
+2026-10-27 「미통합 후보 통합」 세션(Claude, F): 격리 트리 `cache/scratch/integ-F-20261027/rm`(브랜치 `integ/F-20261027`, 팀 · 개인 role-manager 064208bd 위). 한 일: T04 범위 경계 되묻기(145367ee) · fix5 보고서 · 「일정 수정」 완료 저장 실패 503(7f19fe4cd) cherry-pick, 웹 문구표 `save_failed` 짝 추가, 관문 · DB · vitest 실패 0, 실 E4B 3행 재시험. **push 안 함 — 부모 승인 뒤 role-manager fast-forward 만**(develop · main 미변경). 남은 일: 승인 경로 `_apply_approved` 저장 실패(보고서 M), push 뒤 CI(main) 수동 실행. [보고서](../../final_project_cs/wiki/records/reports/2026-10-27_F_후보통합_T04_저장실패503_064208bd.md)
+
 2026-10-26 「호텔 종류 확인」 세션(Claude, H): 격리 트리 `cache/scratch/hotel-kind-20261026/rm`(16d6b00a 위). 호텔 줄 종류 확인 질문 · 숙소 후보 고객 선택 · 체크인 없는 숙박 — role-manager 만 push, develop·main 미반영(사용자 팀 화면 검증 뒤 별도 지시). 남은 것: 등록 뒤 채팅 「○○호텔 넣어 줘」 종류 확인. [기록](../../final_project_cs/wiki/records/reports/2026-10-26_호텔_종류확인_후보선택.md)
 
 2026-10-20 「오라클 모델 순서 · x600 통로」 세션(Claude): 오라클 api·worker 에 x600 경유 줄 추가·재생성, x600 통로 재기동(11438 응답 200). 런팟 끊김 → x600 전환 시험은 보류(운영 터널 차단), 점검 공지는 관리 콘솔 몫. 인계 [2026-10-20_oracle-failover-session](2026-10-20_oracle-failover-session.md) · 기록 [2026-10-20_oracle-x600-fallback-and-failover-test](../records/reports/2026-10-20_oracle-x600-fallback-and-failover-test.md)

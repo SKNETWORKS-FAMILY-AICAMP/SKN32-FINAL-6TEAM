@@ -337,3 +337,47 @@ def test_a_second_proposal_that_would_be_swallowed_goes_to_a_human(world):
     case, ours, theirs, actions, events = _state(tenant, case_id, booking)
     assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_key_collision", events[-1]
     assert ours == theirs == "confirmed"
+
+@pytest.mark.parametrize("target", ["handler", "ledger"])
+def test_a_storage_failure_while_executing_an_approved_cancel_is_an_explicit_escalation(world, monkeypatch, target):
+    """`[2026-10-26 묶음 M · F03 같은 결함]` 승인된 취소를 적용하는 중 저장소 운영 실패(통제 주입 — 이 예약의 `bookings` 취소 UPDATE,
+    또는 적용기 뒤 실행 장부 `action_requests` succeeded UPDATE)가 나면 예외로 새지 않는다: savepoint 가 되돌려 원장 · 우리 예약은
+    그대로(공급자 원장은 주입 **전에** 이미 UPDATE 됐다 — 되돌려졌는지 본다) · 작업 `failed` · Case `escalated`(`action_storage_failed`,
+    observed = 예외 종류 이름뿐). ☆전에는 `run_case` 가 OperationalError 를 그대로 올려 A 단계 전체가 되돌려졌다(Case `resuming` 잔류)."""
+    import psycopg
+
+    tenant, customer, booking = world
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    action_id = _approve(tenant, case_id)
+    raw_execute = psycopg.Cursor.execute
+    seen = []
+
+    def failing(cursor, query, params=None, **kw):
+        text = str(query).upper()
+        hit = (("UPDATE BOOKINGS SET STATUS='CANCELLED'" in text and str(booking) in str(params)) if target == "handler"
+               else ("UPDATE ACTION_REQUESTS SET STATUS" in text and params and params[0] == "succeeded"
+                     and str(action_id) in str(params)))
+        if hit:
+            seen.append(True)
+            raise psycopg.OperationalError("CONTROLLED_STORAGE_WRITE_FAILURE 010-1234-5678")
+        return raw_execute(cursor, query, params, **kw)
+
+    with monkeypatch.context() as patched:
+        patched.setattr(psycopg.Cursor, "execute", failing)
+        outcome = asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    assert seen, "주입이 실제 적용 경로에 닿지 않았다"
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert outcome["status"] == "escalated" and str(case["status"]) == "escalated", events[-1]
+    assert events[-1][0] == "guardrail_escalated"
+    assert events[-1][1]["guardrail"] == "action_storage_failed" and events[-1][1]["observed"] == ["OperationalError"]
+    assert ours == theirs == "confirmed"                              # ★반쯤 바뀐 것이 없다(공급자 원장 UPDATE 도 되돌려졌다)
+    assert actions == [("booking.cancel", "failed", None)]
+    assert "CONTROLLED" not in str(events) and "010-1234" not in str(events)
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM outbox WHERE tenant_id=%s", (tenant,))
+        assert cur.fetchone()[0] == 0                                  # 실행하지 못했으면 안내도 없다
+        cur.execute("SELECT status FROM agent_runs WHERE tenant_id=%s AND case_id=%s ORDER BY started_at DESC LIMIT 1",
+                    (tenant, case_id))
+        assert cur.fetchone()[0] == "failed"

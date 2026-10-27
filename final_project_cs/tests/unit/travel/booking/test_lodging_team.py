@@ -1833,3 +1833,14 @@ def test_d23_name_lookup_keeps_only_the_same_district_or_the_same_spot():
     result, _, _ = _run(reply, {"read.landmark": nowon, "read.stay_search": _listing([]), "read.stay_google": google, "read.stays_lookup": other},
                         text="다음 달 6일부터 3박 노원구 성인 2명")
     assert "· 럭스 —" not in result.answer, "구글 좌표와 4km 떨어진 같은 이름(노원 럭스)의 구를 쓰지 않는다"
+
+
+def test_lb05_options_carry_the_price_limit_the_customer_said():
+    """`[2026-10-21 LB-05]` 「1박 ○원 이하」 · 「더 싸게」로 낸 후보에 그 상한을 싣는다 — 고를 때 다시 본 값이 상한을 넘는지
+    고르기 쪽(`trip_api._choose`)이 볼 수 있게. 상한이 없으면 `None`."""
+    result, _, _ = _with_conditions(_plan(), max_price=130000)
+    assert {o["price_limit"] for o in result.action_proposals[0].arguments["ask_options"]["options"]} == {130000}
+    result, _, _ = _with_conditions(_plan(stay_detail={"price_per_night": 120000}), cheaper=True)
+    assert {o["price_limit"] for o in result.action_proposals[0].arguments["ask_options"]["options"]} == {119999}, "원래 가격 - 1"
+    result, _, _ = _itinerary(_plan())
+    assert {o["price_limit"] for o in result.action_proposals[0].arguments["ask_options"]["options"]} == {None}

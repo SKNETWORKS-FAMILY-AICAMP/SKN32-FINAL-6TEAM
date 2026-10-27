@@ -31,6 +31,11 @@ class Kakao:
         self.calls.append((query, kwargs))
         return deepcopy(self.rows)
 
+    def outside_seoul(self, query, **kwargs):
+        """`[2026-10-27]` 어댑터의 서울 밖 근거 조회 — 이 시험의 장소는 모두 서울이라 빈 목록."""
+        self.outside_calls = [*getattr(self, 'outside_calls', []), query]
+        return []
+
 
 def restaurant(name, ident, lat=37.55):
     return {'id': ident, 'name': name, 'latitude': lat, 'longitude': 127.0,

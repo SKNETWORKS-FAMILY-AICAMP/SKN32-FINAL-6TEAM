@@ -124,7 +124,25 @@ def test_trip_desk_adjusted_outcome_with_other_options_offers_choices_and_record
     """팀 밖 결과(이름 말한 곳 · 근처 식당)도 같은 계산 — 공개 선택지 {label, message} · 기록 `offered` 에 key."""
     _, _, more = _after_fresh_swap()
     offers = case_dispatch.alternate_offers({"to": "한일옥", "kind": "dining", "more_options": more})
-    assert [c["label"] for c, _ in offers] == ["식당 조선옥", "식당 순라길비비", "식당 13:30으로 늦추면 인사동 옥정"]
-    assert all(sorted(c) == ["label", "message"] for c, _ in offers)
+    # contract_correction `[2026-10-26 x600 40231a56]`: label was 「식당 13:30으로 늦추면 인사동 옥정」 (the candidate's condition
+    #   note glued in front of the name). The label is the place name only; the note travels in its own optional key.
+    assert [c["label"] for c, _ in offers] == ["식당 조선옥", "식당 순라길비비", "식당 인사동 옥정"]
+    assert [sorted(c) for c, _ in offers] == [["label", "message"], ["label", "message"], ["label", "message", "note"]]
+    assert offers[2][0]["note"] == "13:30으로 늦추면"
+    state = {"trip_outcome": {"offered": [{**c, "choice": k} for c, k in offers]}}
+    assert case_dispatch.offered_alternates(state) == offers
+
+
+def test_alternate_label_is_the_place_name_and_the_condition_note_is_separate():
+    """`[2026-10-26 x600 40231a56]` 「다른 안」 label 은 장소 이름만 — 조건 설명(`note`, 예: 「12:30으로 늦추면」)은 label 에 붙이지 않고 따로 싣는다.
+    저장한 선택지(`offered`)를 다시 만들어도 같은 모양이고, 누를 문장(`message`)은 그대로라 모델 없이 고른 안으로 간다."""
+    more = [{"key": "k1", "name": "하나면옥", "note": None},
+            {"key": "k2", "name": "지금 여기가 맨 앞"},
+            {"key": "k3", "name": "인사동 옥정", "note": "12:30으로 늦추면", "relaxed": "time"}]
+    offers = case_dispatch.alternate_offers({"to": "순라길비비", "kind": "dining", "more_options": more})
+    assert [c["label"] for c, _ in offers] == ["식당 하나면옥", "식당 지금 여기가 맨 앞", "식당 인사동 옥정"]
+    assert [c.get("note") for c, _ in offers] == [None, None, "12:30으로 늦추면"]
+    assert [c["message"] for c, _ in offers] == ["순라길비비 대신 하나면옥(으)로 바꿔 줘", "순라길비비 대신 지금 여기가 맨 앞(으)로 바꿔 줘",
+                                                 "순라길비비 대신 인사동 옥정(으)로 바꿔 줘"]
     state = {"trip_outcome": {"offered": [{**c, "choice": k} for c, k in offers]}}
     assert case_dispatch.offered_alternates(state) == offers

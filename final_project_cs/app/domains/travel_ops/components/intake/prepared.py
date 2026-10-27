@@ -429,8 +429,19 @@ def prepare(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, kakao
         picked = {id(x) for x in problems}
         settled = [x for x in review["items"] if id(x) not in picked and settled_target(x)] if prepare_scope() == "all" else []
         targets = [x for x in problems + settled if which == "all" or (x.get("kind") == "dining") == (which == "meals")]
+        # ★`[2026-10-27 서빙 속도]` 일정 하나를 **맡기 전에** 다른 고객의 「읽는 중」이 끝나기를 기다린다(상한 `prepare_yield_seconds`) —
+        #   x600 실측: 이 준비가 도는 동안 다른 접수의 읽기 p50 12.6초 vs 아무것도 안 돌 때 7.5초(`foreground.py`). 맡기 전이라 「바꾸기」는 기다리지 않는다
+        from app.core.settings import get_guardrails
+        from . import foreground
+
+        yield_limit = float(get_guardrails().get("travel.candidates.prepare_yield_seconds"))
+
+        def one_after_foreground(*args: Any, **kwargs: Any) -> str:
+            foreground.wait_idle(yield_limit)
+            return prepare_one(*args, **kwargs)
+
         with ThreadPoolExecutor(max_workers=max(1, min(WORKERS, len(targets) or 1)), thread_name_prefix="prepare-items") as workers:
-            jobs = [workers.submit(copy_context().run, prepare_one, connect, tenant_id=tenant_id, intake_id=intake_id, review=review,
+            jobs = [workers.submit(copy_context().run, one_after_foreground, connect, tenant_id=tenant_id, intake_id=intake_id, review=review,
                                    item=x, kakao=kakao, chat=chat if id(x) in picked else None) for x in targets]
             for job in jobs:
                 state = job.result()

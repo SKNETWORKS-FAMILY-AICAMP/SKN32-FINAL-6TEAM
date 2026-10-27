@@ -74,7 +74,9 @@ def test_adjusted_answer_with_other_options_carries_choices(monkeypatch):
     more = [{"name": "계림식당", "key": "a"}, {"name": "지금 여기가 맨 앞", "key": "b"}, {"name": "빠우", "key": "c", "note": "12:30으로 늦추면"}]
     got = _response(monkeypatch, {"itinerary": "customer_request", "to": "하나면옥", "kind": "dining", "more_options": more})
     assert got["status"] == "adjusted" and got["choices_title"] == "다른 안"
-    assert [c["label"] for c in got["choices"]] == ["식당 계림식당", "식당 지금 여기가 맨 앞", "식당 12:30으로 늦추면 빠우"]
+    # contract_correction `[2026-10-26 x600 40231a56]`: was 「식당 12:30으로 늦추면 빠우」 — the label is the place name only, the note is separate
+    assert [c["label"] for c in got["choices"]] == ["식당 계림식당", "식당 지금 여기가 맨 앞", "식당 빠우"]
+    assert [c.get("note") for c in got["choices"]] == [None, None, "12:30으로 늦추면"]
     assert got["choices"][0]["message"] == "하나면옥 대신 계림식당(으)로 바꿔 줘"
 
 

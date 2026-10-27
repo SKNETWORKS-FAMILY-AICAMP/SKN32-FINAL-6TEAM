@@ -283,12 +283,20 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
 
     # `[2026-10-15 ST4F-490]` 이미 숙소인 줄(수정 접수가 등록한 숙소에서 가져온 것 — 끝 날짜를 값 줄로 안다)은 합치지 않는다
     # `[2026-10-26 사용자 지시 — 호텔 종류 확인]` 체크인 말이 없어도 숙박으로 읽었거나 고객이 숙박을 고른 줄(끝 날을 모르는 숙박)도 체크인 줄과 같다
+    # `[2026-10-27 A 접수·읽기 전수검사]` 단 체크아웃 말만 있는 숙박 줄(읽기 에이전트는 「체크아웃」 줄도 숙박으로 읽는다 — 지시문 `lodging for
+    #   hotel stay/check-in/check-out`)은 새 숙박의 시작이 아니라 체크아웃이다. ☆이 갈래가 없어 마지막 날 11:00 에 시작하는 가짜 숙박이 생기고
+    #   진짜 숙박은 「체크아웃 줄이 없어」로 채워졌다
+    def leaving(row):
+        return bool(_CHECK_OUT.search(words(row))) and not _CHECK_IN.search(words(row))
+
     ins = [r for r in rows if r["date"] and ((r["kind"] not in ("dining", "lodging") and _CHECK_IN.search(words(r)))
-                                             or (r["kind"] == "lodging" and not r.get("end_date")
+                                             or (r["kind"] == "lodging" and not r.get("end_date") and not leaving(r)
                                                  and (r["claims"].get("kind") or {}).get("method") != "trip"))]
     if not ins:
         return rows
-    outs = [r for r in rows if r["date"] and r["kind"] != "lodging" and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]
+    outs = [r for r in rows if r["date"] and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)
+            and (r["kind"] != "lodging" or (leaving(r) and not r.get("end_date")
+                                            and (r["claims"].get("kind") or {}).get("method") != "trip"))]
     last_day = max(r["date"] for r in rows if r["date"])
     merged: list[int] = []
 

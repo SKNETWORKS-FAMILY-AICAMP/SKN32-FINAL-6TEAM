@@ -21,6 +21,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components import settings_hook
+from . import foreground as foreground_module
 from . import progress as progress_module
 from . import screen as screen_module
 from . import reading_prefs
@@ -222,6 +223,9 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             received_at = received_at.astimezone(KST)
         beat = _Heartbeat(connect, tenant_id, intake_id)
         beat.__enter__()
+        # ★`[2026-10-27 서빙 속도]` 확인 화면으로 넘길 때까지(먼저 채우기 · 해석 답 반영 포함) 앞단으로 센다 — 뒤의 대안 미리 준비가 이 동안 일정을 새로 맡지 않는다(`foreground.py`)
+        front = foreground_module.active()
+        front.__enter__()
         with connect() as conn:
             sources = _sources(conn, tenant_id, intake_id)
         for source in sources:
@@ -306,6 +310,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
             # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+        front.__exit__(None, None, None)                     # 확인 화면으로 넘겼다 — 여기부터는 뒤의 일이다
+        front = None
         # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
         #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
         # ★`[2026-10-24 사용자 결정 — ST4F-731]` 요식 판정보다 **먼저** 준비한다(전에는 판정 14~31초 뒤에야 시작해 멈춘 질문의 대안이 늦었다). 식사는 판정이
@@ -329,6 +335,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         _fatal(connect, tenant_id, intake_id, "reading_failed", READING_ERROR_TEXT)
         return "fatal"
     finally:
+        if locals().get("front") is not None:
+            front.__exit__(None, None, None)
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
@@ -1275,12 +1283,16 @@ def _require_lockable(conn, tenant_id: str, intake_id: UUID, revision: int, sour
 def draft(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int):
     """등록 직전 — (현재 상태, 이미 만든 여행 id, 조립 결과). ★판이 다르면 낡은 화면이라 막는다."""
     with conn.cursor() as cur:
-        cur.execute("SELECT status, revision, trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
+        cur.execute("SELECT status, revision, trip_id, stage FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
                     "AND customer_id=%s", (tenant_id, intake_id, customer_id))
         row = cur.fetchone()
         if row is None:
             raise LookupError("intake")
-        status, current, trip_id = row
+        status, current, trip_id, stage = row
+        if public_status(status, stage) == "reading" and status == "review":
+            # ★`[2026-10-27 A 접수·읽기 전수검사 A14]` 먼저 채우기 · 해석 답 반영이 아직 돈다(고객에게는 「읽는 중」) — 그 판으로 등록하지 않는다.
+            #   ☆예전에는 `status` 만 봐서, 일꾼이 곧 새 판을 쓰는 사이 1판으로 여행을 만들 수 있었다
+            raise IntakeConflict("intake_not_ready", "아직 계획을 읽고 있어요 — 끝나면 다시 눌러 주세요", status="reading")
         if status not in ("review", "confirmed"):
             raise IntakeConflict("intake_not_ready", f"아직 등록할 수 없습니다(상태 {status})", status=status)
         if revision != current:
@@ -1475,6 +1487,15 @@ def _model_side_failure(exc: BaseException) -> bool:
     return not (reasons and all(reason == "content" for reason in reasons))
 
 
+def _answer_side_failure(exc: BaseException) -> bool:
+    """에이전트 실패가 **답 내용 쪽**(모델은 답했지만 모양 · 스키마 · 인용 검사에서 떨어짐)인가 — 줄 읽기로 한 번 더 읽어도 되는 갈래.
+    `[2026-10-27 A 접수·읽기 전수검사 A03]` `ValueError`(모양 · JSON) · `OllamaError` 계열(내용 오류 · 넘김 장치가 「모양」 이유로 실패 — 모델 쪽은
+    `_model_side_failure` 가 먼저 가른다)만. 그 밖(`KeyError` · `TypeError` · `AttributeError` …)은 코드 결함이라 숨기지 않는다."""
+    from app.infrastructure.ollama_chat import OllamaError
+
+    return isinstance(exc, (ValueError, OllamaError))
+
+
 def _reading_stream(given: dict[str, Any] | None) -> dict[str, Any]:
     """남은 줄 모델 호출의 조금씩 받기 설정 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
     if given is not None:
@@ -1560,6 +1581,11 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             if isinstance(exc, agent_module.ReaderPolicyError) or (agent_mode == "on" and _model_side_failure(exc)):
                 log.warning("intake reading outcome=failed by=agent_model error=%s", agent_error)
                 raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
+            if agent_mode == "on" and not _answer_side_failure(exc):
+                # ★`[2026-10-27 A 접수·읽기 전수검사 A03]` 답 내용 쪽(모양 · 스키마 · 인용)도 모델 쪽도 아닌 **예상하지 못한 예외**(코드 결함)는
+                #   줄 읽기로 조용히 대체하지 않는다 — 그대로 올려 `process` 가 `reading_failed`(고객 문장만)로 끝낸다
+                log.warning("intake reading outcome=failed by=agent_unexpected error=%s", type(exc).__name__)
+                raise
             log.warning("intake agent read failed (answer side — reading lines instead): %s", agent_error)
     use_agent = agent_mode == "on" and agent_out is not None and (bool(agent_out.items) or not read.items)
     #: 어느 길로 읽었나 — `reading.agent` 값 줄과 로그에 남긴다(화면 · 관리 콘솔에서 본다). 줄 읽기가 실패하면 `failed` 로 로그만 남고 접수가 「읽기 실패」가 된다

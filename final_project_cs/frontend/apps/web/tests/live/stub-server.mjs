@@ -1773,7 +1773,11 @@ function profileView() {
     ...(scenario.discordConnect === "off" ? {} : { discord_connect: { available: true } }), ...telegramProfile(), updated_at: null };   // telegramProfile: 텔레그램 연결 (2026-10-05)
 }
 
-/** The intake reading stream, like `op_stream.watch`: the state, never what was read. The screen re-reads the intake on each event. */
+/**
+ * The intake reading stream, like `op_stream.watch`: the state, never what was read.
+ * `[2026-10-27]` The server reads on by itself while it streams: each tick moves this mock's reading on (`polls`), as a re-read did when the screen read the intake
+ * again on every beat. The screen now re-reads on a connection's first packet, a new stage and the end only (a beat every 3 s was a GET every 3 s on x600).
+ */
 function intakeEvents(request, response, origin) {
   const write = openStream(response, origin);
   const state = () => {
@@ -1788,6 +1792,7 @@ function intakeEvents(request, response, origin) {
   let ticks = 0;
   const timer = setInterval(() => {
     ticks += 1;
+    polls += 1;
     const now = state();
     if (now.status !== "reading") { write("result", { state: now }); clearInterval(timer); response.end(); return; }
     write(ticks === 1 ? "stage" : "beat", { elapsed: ticks * 0.3, stage: "reading", label: now.stage_label, stage_elapsed: ticks * 0.3, slow: false, state: now });

@@ -179,7 +179,7 @@ def _longest_gap(parts: list[Part], window_start: datetime, window_end: datetime
 def _fixed(part: Part) -> bool:
     """시간이 정해져 순서를 못 바꾸는 일정 — 예약 · 고객이 고정."""
     detail = part.detail or {}
-    return bool(detail.get("booking") or detail.get("reservation") or detail.get("customer_pinned"))
+    return bool(detail.get("booking") or detail.get("reservation") or detail.get("customer_pinned") or detail.get("rollback_hold"))
 
 
 def _zigzag(day: date, parts: list[Part], policy: Mapping[str, Any]) -> list[dict[str, Any]]:

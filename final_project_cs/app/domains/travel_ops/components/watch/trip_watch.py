@@ -84,7 +84,7 @@ class TripWatcher:
                 from app.domains.travel_ops.components.watch.monitoring import record
                 record('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title, report=skipped)
                 continue
-            if item.detail.get("customer_pinned"):
+            if item.detail.get("customer_pinned") or item.detail.get("rollback_hold"):
                 # ★`[2026-09-24]` 고객이 고정한 항목도 **점검은 한다** — 전에는 통째로 건너뛰어서 고정한
                 #   항목에는 안전 알림도 안 나갔다(코덱스 교차검토). 대신 **자동으로 바꾸지는 않는다** —
                 #   판정(`decide`)이 「돈이 걸린·고정한 일정」으로 묻게 한다. 되돌림 → 자동 변경 →

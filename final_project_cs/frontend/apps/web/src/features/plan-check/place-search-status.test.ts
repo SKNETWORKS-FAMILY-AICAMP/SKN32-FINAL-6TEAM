@@ -20,6 +20,13 @@ describe("explicit place search status", () => {
   it("keeps real results from another source when the map fails", () => {
     expect(() => assertPlaceSearchComplete({ results: [{}], notes: ["kakao:timeout"] }, t)).not.toThrow();
   });
+  it("says a place found only outside Seoul is outside the service area, not missing", () => {
+    expect(() => assertPlaceSearchComplete({ results: [], notes: ["outside_service_area:부산"] }, t)).toThrow("「부산」에 있는 장소로 보여요");
+    expect(() => assertPlaceSearchComplete({ results: [], notes: ["outside_service_area:부산"] }, t)).toThrow("서울 일정만");
+  });
+  it("keeps Seoul results even when an outside note is present", () => {
+    expect(() => assertPlaceSearchComplete({ results: [{}], notes: ["outside_service_area:부산"] }, t)).not.toThrow();
+  });
   it("leaves a completed empty search as an empty search", () => {
     expect(() => assertPlaceSearchComplete({ results: [], notes: [] }, t)).not.toThrow();
   });

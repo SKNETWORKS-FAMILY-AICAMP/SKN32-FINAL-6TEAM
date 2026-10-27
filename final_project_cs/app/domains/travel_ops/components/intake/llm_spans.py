@@ -193,9 +193,16 @@ def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime
         report["path"] = path.get("path")
         if path.get("reasons"):
             report["reasons"] = [list(r) for r in path["reasons"]]
+    spans = raw.get("spans") if isinstance(raw, dict) else None
+    if not isinstance(spans, list):
+        # ★`[2026-10-27 A 접수·읽기 전수검사]` 답은 왔지만 모양이 다르다(`{}` · `{"spans": null}` · 글자 · 배열) — 「읽을 것이 없음」으로 두지 않는다.
+        #   예전에는 받은 조각 0 으로 성공 처리돼 남은 줄이 조용히 「못 읽은 줄」로 남았다. 정상인 빈 답은 `{"spans": []}` 이다
+        shape = sorted(raw)[:5] if isinstance(raw, dict) else type(raw).__name__
+        raise ReadingFailed(f"모델 답의 모양이 다르다(spans 목록 없음 · {shape})"
+                            + (f" · 경로 {report.get('path')}" if report.get("path") else ""))
     accepted: dict[int, list[tuple[int, int, str, str]]] = {}
     cursors: dict[tuple[int, str, str], int] = {}
-    _accept(lines, list(unread), raw.get("spans") if isinstance(raw, dict) else None, report, accepted, cursors)
+    _accept(lines, list(unread), spans, report, accepted, cursors)
     if progress is not None:
         progress.emit(final=True)
     return _collect(lines, accepted, now, report)

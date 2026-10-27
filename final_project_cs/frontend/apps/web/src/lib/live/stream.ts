@@ -205,7 +205,8 @@ export function progressText(progress: OpProgress | null, t: Translate, waiting:
   return elapsed >= 1 ? t(`${ko}… (${elapsed}초)`, `${en}… (${elapsed} s)`) : t(`${ko}…`, `${en}…`);
 }
 
-export type IntakeWatchEvent = { type: "progress"; stage: string | null; elapsed: number; slow: boolean } | { type: "done" };
+/** `kind` — which packet it was: `accepted` (a connection's first) · `stage` (the server sends it only when the stage changes) · `beat` (every 3 s while nothing changes). */
+export type IntakeWatchEvent = { type: "progress"; kind: "accepted" | "stage" | "beat"; stage: string | null; elapsed: number; slow: boolean } | { type: "done" };
 /**
  * How a watch of an intake's reading ended: `done` (read — review, confirmed or fatal), `stalled` (the server says the
  * reading stopped: its worker died), `gone` (no such intake), `unsupported` (no stream here: 404/405, or the per-user
@@ -249,7 +250,7 @@ export async function watchIntake(intakeId: string, language: Language, onEvent:
       const body = parse(data);
       const state = body.state && typeof body.state === "object" ? body.state as Body : {};
       const stage = typeof body.stage === "string" ? body.stage : typeof state.stage === "string" ? state.stage : null;
-      if (name === "accepted" || name === "stage" || name === "beat") onEvent({ type: "progress", stage, elapsed: seconds(body.elapsed) ?? 0, slow: body.slow === true });
+      if (name === "accepted" || name === "stage" || name === "beat") onEvent({ type: "progress", kind: name, stage, elapsed: seconds(body.elapsed) ?? 0, slow: body.slow === true });
       else if (name === "result") { onEvent({ type: "done" }); end.value = "done"; }
       else if (INTAKE_CONTENT_EVENTS.has(name)) onContent?.(name, data);
       else if (name === "error") end.value = body.code === "stalled" ? "stalled" : body.code === "not_found" ? "gone" : "lost";

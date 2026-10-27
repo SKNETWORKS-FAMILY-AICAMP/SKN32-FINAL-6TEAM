@@ -429,6 +429,11 @@ def _handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message
 
                 offered = offered_decision(conn, tenant=tenant, trip_id=trip_id, items=items, message=message,
                                            selected=selected_item_id) if mode == "on" else None
+                if offered is None and mode == "on":
+                    # ★`[2026-10-27 B 채팅 전수검사]` 바로 앞 답의 종류 확인 선택지(숙소를 숙박 · 활동 · 식사 중 무엇으로)를 누른 문장이면 모델 없이 그 넣기로(`kind_choice`)
+                    from .kind_choice import decide as kind_decision
+
+                    offered = kind_decision(conn, tenant=tenant, trip_id=trip_id, version=int(trip["version"]), message=message)
                 decision, failure = ((offered, None) if offered is not None else
                                      _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
                                                  message=message, selected=selected_item_id, chat=chat, now=at))
@@ -863,6 +868,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     decision = edit_intent.ask_on_conflict(decision)
     # ★`[2026-10-26 묶음 L · 수용 X02]` 시각 바꾸기의 인용에 서로 다른 시각이 둘 이상이면(「1시로 … 동시에 12시로」) 하나를 골라 저장하지 않고 되묻는다
     decision = edit_intent.ask_on_clock_ambiguity(decision)
+    # ★`[2026-10-26 fix5 · 수용 T04]` 범위 경계 시각(「오후 2시 이전」)을 한 일정 시간 변경에 붙였으면 그 일정만 옮기지 않고 되묻는다
+    decision = edit_intent.ask_on_range_anchor(decision)
     # ★`[2026-10-20 x600 실서버 확인]` 근처 찾기는 식사만 바꾼다 — 활동 「북촌한옥마을 다른 데로」가 식사 되물음으로 끝나지 않게 먼저 맞춘다
     from .decision_unit import settle_near_search
     decision = settle_near_search(decision, context_items)
@@ -1158,7 +1165,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         if goal:
             chat_reply["edit_goal"] = goal
     kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version", "proposal_id",
-                                    "choices") if k in outcome}
+                                    "choices", "kind_offer") if k in outcome}
     if offers:
         kept["offered"] = [{**c, "choice": key} for c, key in offers]
     if basis.get("suspect_wrong_change"):
@@ -1426,8 +1433,9 @@ def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = No
     from app.domains.travel_ops.components.conversation.decision_unit import choice_message
     from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS
 
-    if (decision.raw or {}).get("clock_ambiguity"):
+    if (decision.raw or {}).get("clock_ambiguity") or (decision.raw or {}).get("range_anchor_conflict"):
         # ★`[2026-10-26 묶음 L · 수용 X02]` 어느 시각인지 묻는 것이다 — 다른 일정 「다른 곳으로」 목록을 붙이지 않는다(고객이 시각 하나를 말한다)
+        # ★`[2026-10-26 fix5 · 수용 T04]` 한 일정인지 기준 시각 전후 전부인지 묻는 것도 같다 — 장소 바꾸기 목록은 질문과 무관하다
         return {"status": "clarify", "text": decision.question}
     first = min((i.starts_at for i in items if i.kind != "mobility"), default=None)
     setting = _setting_swap(decision)

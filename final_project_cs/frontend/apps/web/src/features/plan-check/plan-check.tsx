@@ -345,7 +345,7 @@ function StepCells({ steps, small = false }: { steps: Steps; small?: boolean }) 
 
 /** The line under the bar — 「**2/7곳** · 북촌한옥마을 확인 중 · 9초째」, 「결과를 정리하는 중」 once every step is over, 「**정리 완료**」 at the end. */
 function progressLine(steps: Steps, quiet: number, t: Translate): { node: ReactNode; text: string } {
-  if (steps.finished) { const done = t("정리 완료", "Done"); return { node: <b>{done}</b>, text: done }; }
+  if (steps.finished) { const done = steps.unchecked ? t("읽기 완료 · 확인 결과 없음", "Read · no check result") : t("정리 완료", "Done"); return { node: <b>{done}</b>, text: done }; }
   if (!steps.current) { const text = steps.wrapping ? t("결과를 정리하는 중", "Putting the result together") : ""; return { node: text, text }; }
   const count = stepCount(steps.current, t), detail = stepDetail(steps.current, t), late = quietText(quiet, t);
   const parts: ReactNode[] = [count && <b key="count">{count}</b>, detail, late && <span key="late" className={styles.late}>{late}</span>].filter(Boolean);
@@ -354,7 +354,7 @@ function progressLine(steps: Steps, quiet: number, t: Translate): { node: ReactN
 
 /** 「이동 · 89% · 5/6구간 · …」 for a screen reader — 「정리 완료 · 100%」 once done. */
 function progressValueText(steps: Steps, value: number, line: string, t: Translate): string {
-  if (steps.finished) return `${t("정리 완료", "Done")} · 100%`;
+  if (steps.finished) return `${steps.unchecked ? t("읽기 완료 · 확인 결과 없음", "Read · no check result") : t("정리 완료", "Done")} · 100%`;
   const name = steps.current ? stepName(steps.current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
   return `${name} · ${value}%${line ? ` · ${line}` : ""}`;
 }
@@ -370,8 +370,8 @@ function HeaderProgress({ view }: { view: PlanCheckView }) {
   const { steps, quiet } = useServerSteps(view);
   const value = Math.round(steps.percent);
   const current = steps.current;
-  const label = steps.finished ? t("정리 완료", "Done") : current ? stepName(current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
-  const count = current ? stepCount(current, t) : steps.finished ? t(`${steps.steps.length}/${steps.steps.length}단계`, `${steps.steps.length}/${steps.steps.length} steps`) : "";
+  const label = steps.finished ? steps.unchecked ? t("읽기 완료 · 확인 결과 없음", "Read · no check result") : t("정리 완료", "Done") : current ? stepName(current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
+  const count = steps.unchecked ? "" : current ? stepCount(current, t) : steps.finished ? t(`${steps.steps.length}/${steps.steps.length}단계`, `${steps.steps.length}/${steps.steps.length} steps`) : "";
   const at = [current && current.key !== "reading" && current.key !== "places" ? stepDetail(current, t) : "", current ? quietText(quiet, t) : ""].filter(Boolean).join(" · ");
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={progressValueText(steps, value, [count, at].filter(Boolean).join(" · "), t)}>

@@ -191,9 +191,11 @@ class ItineraryApply:
                 if str(arguments.get("reason")) == "customer_request":
                     # ★`[2026-10-26 T16 · D-020]` 고객 요청 교체도 **지금 판**의 고정 · 예약 항목은 바꾸지 않는다 — 판정 문을 건너뛰는 것은
                     #   「고객이 고른 것」이라서지, 고정을 우회해도 된다는 뜻이 아니다(고른 보류 제안은 `customer_choice`). 마지막 안전망이다
+                    #   `[2026-10-27 B 채팅 전수검사 · Codex 2-1]` 고객 고정(`detail.customer_pinned`)도 고정이다
                     for item in current:
-                        if item.item_id in replacements and (item.locked or item.booking_id):
-                            raise ActionRejected(f"{'item_locked' if item.locked else 'item_booked'}: "
+                        pinned = bool(item.locked or (item.detail or {}).get("customer_pinned"))
+                        if item.item_id in replacements and (pinned or item.booking_id):
+                            raise ActionRejected(f"{'item_locked' if pinned else 'item_booked'}: "
                                                  f"customer_request cannot replace protected item {item.item_id}")
                 new_items = [replacements.get(item.item_id, item) for item in current]
                 # ☆`[2026-09-29 이동 계산기 문제목록 #44]` 여행 버전(ItineraryChange.new_items)과 같게 — 장소가 멀리 바뀐

@@ -815,7 +815,11 @@ def _dining_agent_judge():
     if kind == "openai" and (settings.openai_api_key or "").strip():
         chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna")
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
-        chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
+        shared = (model or settings.ollama_model) == settings.ollama_model
+        # 해석과 같은 모델이면 같은 문맥 길이 · 만료를 보낸다 — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다(G 실측 33 s + 31 s)
+        same = ({"num_ctx": int(getattr(settings, "ollama_num_ctx", 0) or 0),
+                 "keep_alive": str(getattr(settings, "ollama_keep_alive", "") or "")} if shared else {})
+        chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, **same)
     else:
         logging.getLogger(__name__).warning("dining agent judge enabled but model %s has no key/address — rule review only",
                                             judge_settings["model"])
