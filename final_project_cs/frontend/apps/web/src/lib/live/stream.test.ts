@@ -267,7 +267,7 @@ describe("following an intake while the server reads it (GET …/trip-intakes/{i
     const state = { status: "reading", stage: "reading", stage_label: "읽는 중", revision: 1, fatal_code: null, quiet_seconds: 0.2 };
     replies.push(() => stream([event("accepted", { op: "intake", state }), event("beat", { elapsed: 3, stage: "reading", slow: false }), event("result", { state: { ...state, status: "review" } })]));
     expect(await follow()).toEqual({ end: "done", events: [
-      { type: "progress", stage: "reading", elapsed: 0, slow: false }, { type: "progress", stage: "reading", elapsed: 3, slow: false }, { type: "done" }] });
+      { type: "progress", kind: "accepted", stage: "reading", elapsed: 0, slow: false }, { type: "progress", kind: "beat", stage: "reading", elapsed: 3, slow: false }, { type: "done" }] });
   });
 
   it("tells a stopped reading (`stalled`), a missing intake, a server without the stream and a silent line apart", async () => {

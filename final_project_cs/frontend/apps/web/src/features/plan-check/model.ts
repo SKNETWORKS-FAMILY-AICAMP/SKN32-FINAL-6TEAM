@@ -250,6 +250,11 @@ export interface PlanCheckView {
   /** `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` The last packet of each step the server has sent (`server-steps.ts` draws one cell per step from these). */
   serverPhases?: Partial<Record<ProgressPhase, ServerProgress>> | null;
   /**
+   * `[2026-10-27]` The server's reading is over (the intake is no longer `reading`) but there is no finished check to draw (`review: null` — the check failed — or an older server):
+   * the last counts are history, so the bar is full and counts no seconds. ☆Before, 「일정 읽기 8/9줄 · 15초째」 went on under 「계획을 다 읽었어요」.
+   */
+  ended?: boolean;
+  /**
    * `[2026-10-16 D-025]` What the server filled in first and what it understood beyond the stops — drawn as a short note above the list.
    * `questions`: what only the traveller knows. `understood`: the traveller's own words the server read as a move, a condition or a preference.
    */

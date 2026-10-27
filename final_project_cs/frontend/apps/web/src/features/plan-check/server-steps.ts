@@ -44,9 +44,9 @@ const over = (key: StepKey, packet: ServerProgress | null) =>
  * The cells from the view. `withAnswers` shows the 「답 반영」 cell: there are questions read while it read (the server puts their answers in at the end), or the
  * server already sent that step. Without it the cell is left out — a plan with no such question never has that step.
  */
-export function planSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "lines">, withAnswers: boolean): Steps {
+export function planSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "lines"> & Pick<Partial<PlanCheckView>, "ended">, withAnswers: boolean): Steps {
   const keys = STEP_KEYS.filter((key) => key !== "answers" || withAnswers || packetOf(view, "answers"));
-  const finished = view.stage === "done";
+  const finished = view.stage === "done" || view.ended === true;
   let at = view.stage === "received" ? -1 : view.stage === "checking" ? 1 : 0;      // an older server sends no counts: the stage says reading or the check
   keys.forEach((key, index) => { if (packetOf(view, key)) at = Math.max(at, index); });
   while (at >= 0 && at < keys.length && over(keys[at], packetOf(view, keys[at]))) at += 1;

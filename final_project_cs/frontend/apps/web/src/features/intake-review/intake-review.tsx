@@ -16,7 +16,7 @@ import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-
 import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
 import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
 import { assumedYear, candidatesOf, readingOf, resultOf, sendingOf, tripIssuesOf } from "@/features/plan-check/from-intake";
-import { reviewResultOf, serverProgressOf, streamingViewOf } from "@/features/plan-check/from-review";
+import { readingScreenOf, reviewResultOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
@@ -38,6 +38,7 @@ import { draftOf, editsFor, rows } from "./model";
 import type { BusToast } from "@/lib/toast-bus";
 import { useQuiet } from "@/lib/use-quiet";
 import { useIntakeEvents } from "./use-intake-events";
+import { followPolls } from "./follow";
 import styles from "./intake-review.module.css";
 
 /**
@@ -105,9 +106,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     if (event?.type === "done") reread();
   }, [reread]);
   const follow = useIntakeEvents(intakeId, query.data?.status === "reading" || (arriving && !query.data && !query.error), language, reread, onContent);
-  // ★`[2026-10-03]` A stream that goes silent (`lost`) is not waited for alone: the intake is asked for every 1.5 s as well, until the read ends —
+  // ★`[2026-10-03]` A stream that goes silent (`lost`) is not waited for alone: the intake is asked for every 1.5 s as well —
   //   the server keeps no pace for a dead line, and the customer must not sit on a screen that never moves. (The stream still reconnects.)
-  if ((follow.follow === "polling" || follow.follow === "lost") && !polling) setPolling(true);
+  // `[2026-10-27]` Only while it is lost: once the stream is back (`live`) the timer stops. ☆Before, one lost moment polled every 1.5 s for the rest of the reading, beside the stream.
+  if (followPolls(follow.follow) !== polling) setPolling(followPolls(follow.follow));
   // ★`[2026-10-06 사용자 지적 — 서버가 1분 넘게 답이 없는데 아무 알림이 없다]` The stream stays open and says nothing of its own when the server is slow: how long NOTHING changed in the reading
   //   (no new line read, no new stage, no new check) is counted here, and the screen says so from 30 s on.
   const linesRead = query.data?.sources.reduce((count, source) => count + source.lines.filter((line) => line.read).length, 0) ?? 0;
@@ -174,13 +176,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const previewed = useMemo(() => server.preview && server.preview.status !== "reading" ? reviewResultOf(server.preview, readingOf(server.preview), server.infos) : null, [server.preview, server.infos]);
   // ★`[2026-10-03]` While the screen still draws what the server did (the intake is already `review` but the rows are being caught up), the last
   //   count the server sent stays on the bar — it would otherwise vanish the moment the server finishes, however many rows are left to draw.
-  const reading = useMemo(() => {
-    if (!query.data) return null;
-    if (query.data.status === "reading") return streamingViewOf(query.data, stream, server.infos);
-    const base = reviewed ?? readingOf(query.data);
-    const served = serverProgressOf(stream);
-    return served ? { ...base, ...served } : base;
-  }, [query.data, stream, reviewed, server.infos]);
+  //   `[2026-10-27]` Without a finished check (`review: null`) the bar is full (`ended`) — the last reading count is not where the server is.
+  const reading = useMemo(() => query.data ? readingScreenOf(query.data, stream, reviewed, server.infos) : null, [query.data, stream, reviewed, server.infos]);
   const result = useMemo(() => {
     if (!query.data || query.data.status === "reading" || query.data.status === "fatal") return null;
     return reviewed ? { ...reviewed, dirty: server.dirty, rechecking: server.rechecking } : resultOf(query.data);

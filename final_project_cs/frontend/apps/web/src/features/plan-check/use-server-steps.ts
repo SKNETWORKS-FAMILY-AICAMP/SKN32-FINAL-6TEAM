@@ -9,7 +9,7 @@ import { planSteps, type Steps } from "./server-steps";
  * (counted every second while a step is running; it starts again at 0 each time a count comes in — `quietText` shows it past 8 s).
  * The 「답 반영」 cell, once there (questions read while it read), stays: answering them takes the question away before the server puts the answers in.
  */
-export function useServerSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "asks" | "lines">): { steps: Steps; quiet: number } {
+export function useServerSteps(view: Pick<PlanCheckView, "stage" | "serverPhases" | "asks" | "lines" | "ended">): { steps: Steps; quiet: number } {
   const asked = Boolean(view.asks?.length);
   const [withAnswers, setWithAnswers] = useState(asked);
   if (asked && !withAnswers) setWithAnswers(true);

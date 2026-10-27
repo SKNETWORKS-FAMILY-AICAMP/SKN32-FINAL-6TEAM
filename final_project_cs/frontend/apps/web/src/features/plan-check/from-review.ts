@@ -242,6 +242,19 @@ export function streamingViewOf(intake: IntakeView, stream: StreamState, infos?:
 }
 
 /**
+ * The reading screen's view: while the server reads, what the stream has brought (`streamingViewOf`); once it is over, the finished check (`reviewed`) or the read
+ * values, with the last count the server sent kept on the bar while the rows are caught up. Without a finished check the reading is marked `ended`: its last packet
+ * (「8/9줄」) is not the step the server is at any more.
+ */
+export function readingScreenOf(intake: IntakeView, stream: StreamState, reviewed: PlanCheckView | null, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView {
+  if (intake.status === "reading") return streamingViewOf(intake, stream, infos);
+  const base = reviewed ?? readingOf(intake);
+  const served = serverProgressOf(stream);
+  const view = served ? { ...base, ...served } : base;
+  return reviewed ? view : { ...view, ended: true };
+}
+
+/**
  * The server's own counts as the view carries them: the furthest packet (`serverProgress`) and ★`[2026-10-24 ST4F-732]` the last one of every step (`serverPhases`).
  * Null until the server has sent one.
  */
