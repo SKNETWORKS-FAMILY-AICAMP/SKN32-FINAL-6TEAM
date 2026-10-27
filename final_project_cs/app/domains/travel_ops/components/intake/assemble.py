@@ -587,12 +587,26 @@ def _day_for(line, marks) -> tuple[int | None, str | None]:
 def _title(trip: dict[str, dict[str, Any]], sources: list[dict[str, Any]]) -> str:
     if trip.get("title") and str(trip["title"]["value"] or "").strip():
         return str(trip["title"]["value"]).strip()[:80]
-    from .rules import TIME, _date_in
+    from .rules import TIME, _date_in, read_plan
 
+    fallback = "내 여행"
     for source in sources:
-        for line in (source.get("transcript") or "").splitlines():
+        transcript = source.get("transcript") or ""
+        # ★`[2026-10-28 ST4F-631]` 제목은 일정이 시작되기 **앞**(머리)에 적힌 줄이다. 판단 근거는 규칙 읽기(`rules.read_plan`)
+        #   결과의 구조 — 일정 항목 claim(`items[*]`)이 있는 줄 · 읽은 날짜/일차 머리줄의 줄 번호 — 와 원문 순서뿐이다.
+        #   그 줄에 닿으면 일정 본문이 시작된 것이라 그 줄과 뒤 줄(다음 원문 포함)은 제목으로 쓰지 않고 기본값을 둔다.
+        #   날짜 · 시각 줄만 건너뛰던 때는 일정 사이 메모 「도착일이라 가볍게」(시험 원문 test20)가 첫 「다른 줄」이 되어
+        #   여행 제목이 됐다(x600 실서버). 줄의 말 뜻은 보지 않는다. 기본값은 확인 화면에서 고친다
+        #   「10월 5일 서울 가족여행」처럼 날짜 머리줄에 일정 항목 없이 제목을 함께 쓴 경우는 그 줄이 제목이다
+        read = read_plan(transcript)
+        item_lines = {claim.span.line for claim in read.claims if claim.field.startswith("items[")}
+        for number, line in enumerate(transcript.splitlines(), start=1):
+            if number in item_lines:
+                return fallback                     # 일정 항목 줄(시각 없는 화살표 나열 포함)부터는 본문
             text = line.strip()
             if not text or _DAY_HEADING.match(text) or re.match(r"^\d{1,2}[:시]", text):
+                if number in read.read_lines:
+                    return fallback
                 continue
             # ★`[2026-09-28]` 날짜로 시작하고 뒤에 날짜 말고 쓴 것이 없거나 시각이 오면 제목이 아니다 —
             #   「2026-10-05」·「10월 5일 (월)」·「2026-10-05 09:00 경복궁」이 제목이 됐다(ui 세션 실서버 시험)
@@ -600,9 +614,11 @@ def _title(trip: dict[str, dict[str, Any]], sources: list[dict[str, Any]]) -> st
             if found is not None and found.start() == 0:
                 rest = re.sub(r"^[\s·,()（）월화수목금토일요]*", "", text[found.end():])
                 if not rest or TIME.match(rest):
+                    if number in read.read_lines:
+                        return fallback
                     continue
             return text[:80]
-    return "내 여행"
+    return fallback
 
 
 def _date_value(claim: dict[str, Any] | None) -> date | None:
