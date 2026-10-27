@@ -689,8 +689,12 @@ def _ledger_details(conn, uids: list[str]) -> dict[str, tuple[str | None, str | 
         return {}
 
 
+#: 관광공사 목록 이름 검색 한 번에 받는 곳 수 — 이보다 적게 왔으면 이름이 맞는 곳 전부다(`search` 가 이름순 목록에 다시 쓴다)
+CATALOG_NAME_LIMIT = 10
+
+
 def _db_places_by_name(conn, tenant_id: str, query: str, ref: tuple[float, float] | None, now: datetime,
-                       limit: int = 10, *, area_hint: str | None = None,
+                       limit: int = CATALOG_NAME_LIMIT, *, area_hint: str | None = None,
                        area: dict[str, Any] | None = None, branch_hint: str | None = None) -> list[dict[str, Any]]:
     """검색어가 이름에 든 관광공사 목록 장소(서울)."""
     order, args = ("(latitude - %s)^2 + ((longitude - %s) * 0.8)^2", [ref[0], ref[1]]) if ref else ("length(title)", [])
@@ -1512,7 +1516,8 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     if branch_hint:
         area_kwargs["branch_hint"] = branch_hint
     stay_item = item["kind"] == "lodging"          # ★`[2026-10-15]` 숙소 항목 — 후보는 지도 · 목록의 숙소만(종류는 활동 쪽으로 읽힌다)
-    found = _db_places_by_name(conn, tenant_id, name_q, ref, now, **area_kwargs)
+    catalog_rows = _db_places_by_name(conn, tenant_id, name_q, ref, now, **area_kwargs)
+    found = list(catalog_rows)
     if not lodging and not stay_item:
         found += _ledger_places(conn, tenant_id, ref, query=name_q, radius_m=None, **area_kwargs)
     if not found and not name_hint and not area_hint and len(q.split()) > 1:
@@ -1529,7 +1534,8 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
             area_kwargs = {"area_hint": area_hint, "area": hint_area}
             if branch_hint:
                 area_kwargs["branch_hint"] = branch_hint
-            found = _db_places_by_name(conn, tenant_id, name_q, ref, now, **area_kwargs)
+            catalog_rows = _db_places_by_name(conn, tenant_id, name_q, ref, now, **area_kwargs)
+            found = list(catalog_rows)
             if not lodging and not stay_item:
                 found += _ledger_places(conn, tenant_id, ref, query=name_q, radius_m=None, **area_kwargs)
     kakao_kind = "activity" if lodging else place_kind_of(item)
@@ -1613,7 +1619,12 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
         #   거리순 호출에서 받은 카카오 결과를 다시 쓴다(하루 1,000건 예산 `travel.kakao_budget`). 없을 때만 한 번 더 부른다 — `relevance_kakao` 가 어느 쪽인지 적는다
         said: list[str] = []
         exact_near = any(normalize_full(p["name"]) == key for p in found)
-        pool = _db_places_by_name(conn, tenant_id, name_q, None, now, **area_kwargs)
+        # ★`[2026-10-27]` 거리순으로 받은 관광공사 목록이 한도(`CATALOG_NAME_LIMIT`)보다 적으면 그것이 이름이 맞는 **전부**다 — 같은 조건을
+        #   이름 길이순으로 한 번 더 묻지 않고 그대로 길이순으로 다시 세운다(SQL `ORDER BY length(title)` 과 같은 순서, 한 번에 약 17~30 ms 절약)
+        if len(catalog_rows) < CATALOG_NAME_LIMIT:
+            pool = sorted((dict(p) for p in catalog_rows), key=lambda p: len(p["name"]))
+        else:
+            pool = _db_places_by_name(conn, tenant_id, name_q, None, now, **area_kwargs)
         if not lodging and not stay_item:
             pool += _ledger_places(conn, tenant_id, None, query=name_q, radius_m=None, **area_kwargs)
         if exact_near:

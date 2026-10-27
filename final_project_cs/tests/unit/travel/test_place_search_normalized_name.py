@@ -121,3 +121,37 @@ def test_second_query_prefilters_on_hangul_edge_characters_only():
     c._db_places_by_name(conn, "demo", "N 서울타워", None, NOW)
     sql, args = conn.calls[1]
     assert "%n%" not in args and "%N%" not in args and "%워%" in args and "%n서울타워%" in args
+
+
+def _search_with_counted_catalog(monkeypatch, rows):
+    calls = []
+
+    def by_name(conn, tenant_id, query, ref, now, *a, **kw):
+        calls.append(ref)
+        return [dict(r) for r in rows]
+    monkeypatch.setattr(c, "_db_places_by_name", by_name)
+    monkeypatch.setattr(c, "_ledger_places", lambda *a, **kw: [])
+    monkeypatch.setattr(c, "_alias_places", lambda *a, **kw: [])
+    monkeypatch.setattr(c, "assess", lambda *a, **kw: {"status": "ok", "fits": True})
+    monkeypatch.setattr(c, "_present", lambda p, *a, **kw: {"place": p})
+    item = {"id": "i1", "kind": "activity", "parts": {}, "place": {"name": "경복궁", "latitude": 37.58, "longitude": 126.977},
+            "date": "2026-11-03"}
+    out = c.search(None, tenant_id="demo", review={"items": [item]}, item=item, query="공원", kakao=None,
+                   by_relevance=True, around_self=True)
+    return out, calls
+
+
+def test_relevance_list_reuses_a_complete_catalog_answer(monkeypatch):
+    """`[2026-10-27]` 거리순으로 받은 관광공사 목록이 한도보다 적으면 이름이 맞는 전부다 — 이름순 목록을 위해 같은 조건을 다시 묻지 않는다(로컬 실측 17~30 ms/회)."""
+    rows = [c._place("도산공원", 37.524, 127.035, "tour_api", kind="activity", content_id="1"),
+            c._place("공원", 37.50, 127.0, "tour_api", kind="activity", content_id="2")]
+    out, calls = _search_with_counted_catalog(monkeypatch, rows)
+    assert len(calls) == 1 and calls[0] is not None
+    assert [r["place"]["name"] for r in out["relevance"]] == ["공원", "도산공원"]      # 이름순(정확 → 길이)
+
+
+def test_relevance_list_queries_again_when_the_catalog_answer_was_cut(monkeypatch):
+    rows = [c._place(f"공원{i}", 37.5 + i / 1000, 127.0, "tour_api", kind="activity", content_id=str(i))
+            for i in range(c.CATALOG_NAME_LIMIT)]
+    _out, calls = _search_with_counted_catalog(monkeypatch, rows)
+    assert len(calls) == 2 and calls[1] is None                                       # 잘렸으면 이름순으로 다시 묻는다
