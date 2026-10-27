@@ -92,3 +92,17 @@ describe("the address", () => {
     expect(openingOf("nonsense", "nowhere")).toEqual({ tab: "start", screen: "input" });
   });
 });
+
+// `[2026-10-28 사용자 결정]` 계획 읽기(사진 한 장) 예상 안내는 「2분쯤 걸릴 수 있어요」다 — 옛 「1분쯤 걸려요」를 바꿨다. 시간 제한 · 실제 속도는 바꾸지 않았다.
+describe("「이용 방법」 reading estimate (2026-10-28)", () => {
+  it("says a photo can take about two minutes, in both languages, and no longer says one minute", () => {
+    const reading = SCREENS.find((screen) => screen.id === "reading")!;
+    expect(ko(reading.note!)).toContain("2분쯤 걸릴 수 있어요");
+    expect(en(reading.note!)).toContain("can take about two minutes");
+    const files = FAQ.find((faq) => faq.id === "files")!;
+    expect(ko(files.a)).toContain("2분쯤 걸릴 수 있어요");
+    expect(en(files.a)).toContain("can take about two minutes to read");
+    const all = [reading.note!, files.a].flat().join(" ");
+    expect(all).not.toMatch(/1분쯤|about a minute/);
+  });
+});
