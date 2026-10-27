@@ -21,6 +21,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components import settings_hook
+from . import foreground as foreground_module
 from . import progress as progress_module
 from . import screen as screen_module
 from . import reading_prefs
@@ -222,6 +223,9 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             received_at = received_at.astimezone(KST)
         beat = _Heartbeat(connect, tenant_id, intake_id)
         beat.__enter__()
+        # ★`[2026-10-27 서빙 속도]` 확인 화면으로 넘길 때까지(먼저 채우기 · 해석 답 반영 포함) 앞단으로 센다 — 뒤의 대안 미리 준비가 이 동안 일정을 새로 맡지 않는다(`foreground.py`)
+        front = foreground_module.active()
+        front.__enter__()
         with connect() as conn:
             sources = _sources(conn, tenant_id, intake_id)
         for source in sources:
@@ -306,6 +310,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
             # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+        front.__exit__(None, None, None)                     # 확인 화면으로 넘겼다 — 여기부터는 뒤의 일이다
+        front = None
         # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
         #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
         # ★`[2026-10-24 사용자 결정 — ST4F-731]` 요식 판정보다 **먼저** 준비한다(전에는 판정 14~31초 뒤에야 시작해 멈춘 질문의 대안이 늦었다). 식사는 판정이
@@ -329,6 +335,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         _fatal(connect, tenant_id, intake_id, "reading_failed", READING_ERROR_TEXT)
         return "fatal"
     finally:
+        if locals().get("front") is not None:
+            front.__exit__(None, None, None)
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
