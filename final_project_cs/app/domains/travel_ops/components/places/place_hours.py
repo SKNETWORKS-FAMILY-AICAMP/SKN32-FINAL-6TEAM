@@ -152,6 +152,8 @@ _RANGE = re.compile(r"(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})")
 _LAST = re.compile(r"(?:입장\s*마감|입장마감|마감)\s*[:：]?\s*(\d{1,2}):(\d{2})")
 _WEEKLY = re.compile(r"^매주\s*([월화수목금토일](?:요일)?(?:\s*[,·/~]\s*[월화수목금토일](?:요일)?)*)\s*(?:휴무|휴관|정기휴무|정기휴관)?\.?$")
 _NONE = ("연중무휴", "없음", "휴무없음", "무휴")
+#: 「평일·금·토·일·휴일 」 — 모든 요일 묶음과 휴일을 다 적은 머리(브랜드 매장 원문). 뒤에 시간대가 하나면 매일 그 시간이다 `[2026-10-27]`
+_ALL_DAY_GROUPS = re.compile(r"^평일\s*·\s*금\s*·\s*토\s*·\s*일\s*·\s*휴일\s+(?=\d)")
 #: 조건 원문 앞머리의 「매주 X요일」 — 뒤에 예외(「(단, 공휴일이면 …)」)가 붙어도 앞은 매주 쉬는 요일이다
 _WEEKLY_HEAD = re.compile(r"^매주\s*[월화수목금토일](?:요일)?(?:\s*[,·/~]\s*[월화수목금토일](?:요일)?)*")
 
@@ -184,8 +186,11 @@ def read_by_rule(usetime: str | None, restdate: str | None) -> HoursRead | None:
     use, rest = clean(usetime), clean(restdate)
     if not use:
         return None
-    one = _RANGE.fullmatch(_LAST.sub("", use).strip(" ()\n")) if _RANGE.search(use) else None
-    if one is None or len(_RANGE.findall(use)) != 1 or re.search(r"\d+월|\[|평일|주말|공휴일|하절기|동절기", use):
+    # ★`[2026-10-27]` 「평일·금·토·일·휴일 A ~ B」 — 다섯 묶음이 모두 적혀 매일(휴일 포함) 같은 시간이라는 뜻. 묶음 머리만 떼고 같은 규칙으로 읽는다
+    #   (인용은 머리 포함 원문). 묶음 하나라도 빠지거나 묶음마다 시간이 다르면 아래 「평일」 거절에 그대로 걸린다.
+    plain = _ALL_DAY_GROUPS.sub("", use, count=1)
+    one = _RANGE.fullmatch(_LAST.sub("", plain).strip(" ()\n")) if _RANGE.search(plain) else None
+    if one is None or len(_RANGE.findall(plain)) != 1 or re.search(r"\d+월|\[|평일|주말|공휴일|하절기|동절기", plain):
         return None
     closed: set[str] = set()
     if rest and _norm(rest) not in _NONE:
@@ -193,7 +198,7 @@ def read_by_rule(usetime: str | None, restdate: str | None) -> HoursRead | None:
         if weekly is None:
             return None
         closed = days_in(weekly.group(1))
-    last = _LAST.search(use)
+    last = _LAST.search(plain)
     window = {"open": _hm(*one.groups()[:2]), "close": _hm(*one.groups()[2:]),
               "last_entry": _hm(*last.groups()) if last else None}
     week = {day: ("closed" if day in closed else dict(window)) for day in DAYS}
