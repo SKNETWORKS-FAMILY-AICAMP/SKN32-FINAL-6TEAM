@@ -24,6 +24,14 @@ class DeployError(RuntimeError):
     pass
 
 
+class DockerFailed(DeployError):
+    """Nonzero Docker exit. stdout stays on the object only; the message never echoes it."""
+
+    def __init__(self, returncode, stdout):
+        super().__init__(f"Docker command failed (exit {returncode})")
+        self.stdout = stdout
+
+
 class RecoveryFailed(DeployError):
     """Rollout and exact-image recovery both failed (exit 3): the service may be down."""
 
@@ -41,7 +49,7 @@ class Docker:
             raise DeployError(f"Docker command timed out after {timeout}s") from exc
         if result.returncode:
             # Docker stderr/config may contain credentials; do not echo it.
-            raise DeployError(f"Docker command failed (exit {result.returncode})")
+            raise DockerFailed(result.returncode, result.stdout)
         return result.stdout
 
 
@@ -248,6 +256,32 @@ def rollout(docker, command, directory, timeout=300, settle=30):
     return images
 
 
+_CAUSE_KEYS = {"migration", "error", "sqlstate", "attempts"}
+
+
+def migration_cause(stdout):
+    """The migration job's own sanitized failure line (app.infrastructure.db.migrate) — or None.
+
+    [2026-10-27] Two x600 deploys (2026-10-26 13:26/13:33) failed on a deadlock and deploy.log said only
+    "Migration failed". Only an exact, well-formed line is trusted: exception class name, SQLSTATE, attempts.
+    """
+    import re
+    for line in reversed((stdout or "").splitlines()):
+        try:
+            value = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(value, dict) or set(value) != _CAUSE_KEYS or value["migration"] != "failed":
+            continue
+        error, state, attempts = value["error"], value["sqlstate"], value["attempts"]
+        if (isinstance(error, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", error)
+                and (state is None or (isinstance(state, str) and re.fullmatch(r"[0-9A-Z]{5}", state)))
+                and type(attempts) is int and 0 < attempts < 100):
+            return f"{error} sqlstate={state} attempts={attempts}"
+        return None
+    return None
+
+
 def migrate(docker, command, timeout=180):
     """Bound the one-shot job; do not retry an uncertain database result."""
     images, _ = image_check(docker, command)
@@ -262,14 +296,16 @@ def migrate(docker, command, timeout=180):
             docker.run([*compose([path]), "run", "--rm", "--no-deps", "--pull", "never", "--name", name,
                         "tripilot-api", "python", "-m", "app.infrastructure.db.migrate"], timeout=timeout)
         except (DeployError, KeyboardInterrupt) as original:
+            cause = migration_cause(getattr(original, "stdout", None))
+            reason = f" ({cause})" if cause else ""
             # Killing the CLI alone does not stop its Docker-side job.
             try:
                 ids = docker.run(["ps", "-a", "-q", "--filter", "name=^/" + name + "$"]).split()
                 if ids:
                     docker.run(["rm", "-f", *ids], timeout=30)
             except DeployError as cleanup:
-                raise DeployError("Migration failed; job cleanup unconfirmed; no automatic retry") from cleanup
-            raise DeployError("Migration failed; job stopped; DB result must be checked before retry") from original
+                raise DeployError(f"Migration failed{reason}; job cleanup unconfirmed; no automatic retry") from cleanup
+            raise DeployError(f"Migration failed{reason}; job stopped; DB result must be checked before retry") from original
 
 
 def main():

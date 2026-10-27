@@ -305,3 +305,42 @@ def test_rollout_exit_code_separates_kept_previous_from_recovery_failed(tmp_path
     with pytest.raises(SystemExit) as caught:
         guard.main()
     assert caught.value.code == code
+
+
+def test_migration_failure_cause_reaches_the_deploy_log_without_other_output():
+    # ★`[2026-10-27 C 전수검사]` 2026-10-26 x600 교착 두 번은 deploy.log 에 「Migration failed; job stopped」만 남아 원인을 DB 로그에서 찾았다.
+    #   이제 마이그레이션이 남긴 **정해진 한 줄**(종류 · SQLSTATE · 시도 횟수)만 골라 오류에 싣는다 — 다른 출력(설정 · 비밀)은 싣지 않는다.
+    class Failing(DockerSimulation):
+        def run(self, args, timeout=60):
+            if 'run' in args and '--name' in args:
+                self.calls.append((args, timeout))
+                self.job_name = args[args.index('--name') + 1]
+                stdout = ('DATABASE_URL=postgresql://u:secret@db/x\n'
+                          '{"migration": "retry", "attempt": 1, "attempts": 3, "error": "DeadlockDetected", '
+                          '"sqlstate": "40P01", "wait_seconds": 2}\n'
+                          '{"migration": "failed", "error": "DeadlockDetected", "sqlstate": "40P01", "attempts": 3}\n')
+                raise guard.DockerFailed(1, stdout)
+            return super().run(args, timeout)
+
+    docker = Failing()
+    with pytest.raises(guard.DeployError, match='before retry') as error:
+        guard.migrate(docker, guard.compose(), timeout=1)
+    message = str(error.value)
+    assert 'DeadlockDetected' in message and '40P01' in message and 'attempts=3' in message
+    assert 'secret' not in message and 'postgresql' not in message
+    assert any(a == ['rm', '-f', 'job-id'] for a, _ in docker.calls)
+
+
+@pytest.mark.parametrize('line', ['{"migration": "failed", "error": "Deadlock; rm -rf", "sqlstate": "40P01", "attempts": 3}',
+                                  '{"migration": "failed", "error": "X", "sqlstate": "secret-pw", "attempts": 3}',
+                                  '{"migration": "failed", "error": "X", "sqlstate": "40P01", "attempts": 3, "dsn": "p"}',
+                                  'not json at all'])
+def test_only_a_well_formed_failure_line_is_trusted(line):
+    assert guard.migration_cause(line + '\n') is None
+
+
+def test_docker_failure_keeps_stdout_only_on_the_exception_object(monkeypatch):
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **k: subprocess.CompletedProcess(a, 1, 'out-secret', 'err-secret'))
+    with pytest.raises(guard.DockerFailed) as error:
+        guard.Docker().run(['info'])
+    assert 'secret' not in str(error.value) and error.value.stdout == 'out-secret'

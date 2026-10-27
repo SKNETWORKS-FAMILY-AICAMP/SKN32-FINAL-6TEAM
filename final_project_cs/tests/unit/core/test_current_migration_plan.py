@@ -2,12 +2,16 @@
 import json
 import re
 from contextlib import contextmanager
+from types import SimpleNamespace
 import pytest
+from psycopg.pq import TransactionStatus
 from app.infrastructure.db.migration_plan import migration_files
 from app.infrastructure.db import migrate
 
 def test_actual_runner_excludes_historical_tables_and_keeps_travel_schema():
     class Connection:
+        # `[2026-10-27]` 맨 바깥 호출인지(`transaction_status`) 보고 잠금 대기 제한 · 재시도를 건다 — 실제 psycopg 연결과 같은 칸
+        info = SimpleNamespace(transaction_status=TransactionStatus.IDLE)
         sql = None
         active = False
         @contextmanager
