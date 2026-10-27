@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import uuid
 
 CODEX = shutil.which('codex')
 DROP = {'maxItems', 'minItems', 'minLength', 'maxLength', 'minimum', 'maximum', 'default'}
@@ -29,7 +30,9 @@ def call(model, prompt, schema, work=None, timeout=600, retries=1):
     """(값 dict 또는 None, 걸린 초, 오류 문구). schema 는 strictify 를 거쳐 파일로 넘긴다."""
     work = work or tempfile.mkdtemp(prefix='codex_pc_')
     os.makedirs(work, exist_ok=True)
-    uid = f'{os.getpid()}_{time.time_ns()}'
+    # ★파일 이름은 호출마다 uuid — 예전 (pid, time_ns) 는 Windows 시계 눈금(약 15.6ms) 안에 같이 시작한 스레드끼리 같은 이름을 받아
+    #  work 를 함께 쓰면 프롬프트 · 스키마 · 출력이 서로 덮였다(2026-10-16 확인: 다른 문제의 답이 섞임). 시험: test_codex_percall.py
+    uid = uuid.uuid4().hex
     sp, of, pf = (os.path.join(work, f'{uid}.{s}') for s in ('schema.json', 'out.json', 'prompt.md'))
     json.dump(strictify(schema), open(sp, 'w', encoding='utf-8'))
     open(pf, 'w', encoding='utf-8').write(prompt)
