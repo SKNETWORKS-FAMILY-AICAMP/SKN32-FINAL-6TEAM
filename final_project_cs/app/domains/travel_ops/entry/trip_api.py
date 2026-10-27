@@ -1649,41 +1649,64 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             error = _error(429, "too_many_streams", "열어 둔 실시간 연결이 너무 많다 — 다른 화면을 닫고 다시 시도한다")
             error.headers = {"Retry-After": "5"}
             raise error
-        guard = settings_module.get_guardrails()
-        from app.domains.travel_ops.components.intake.stream import Feed, sse_chunks
+        # ★`[2026-10-28 Codex 검토]` 슬롯은 여기서부터 이 요청의 것 — 정확히 한 번 돌려준다(`give_back`). 본문이 돌면 watch 의 `settle` 이
+        #   (그 연결의 조회 · 내용 계산이 다 끝날 때), 본문이 한 번도 돌지 않으면(응답을 만들다 실패 · 첫 순회 전에 브라우저가 떠남)
+        #   아래 `except` · `_SlotStream` 이 곧바로 돌려준다 — 전에는 이 두 길에서 슬롯이 프로세스 끝까지 남아 그 사용자를 429 로 막았다.
+        slot = {"held": True, "flow": False}
 
-        feed = Feed(tenant, customer, intake_id)
+        def give_back() -> None:
+            if slot["held"]:
+                slot["held"] = False
+                op_stream.release(tenant, customer)
 
-        def content(state: dict[str, Any]) -> list[str]:
-            with get_connection() as conn:
-                return sse_chunks(feed.poll(conn, state))
+        try:
+            guard = settings_module.get_guardrails()
+            from app.domains.travel_ops.components.intake.stream import Feed, sse_chunks
 
-        async def extra(state: dict[str, Any]) -> list[str]:
-            return await run_in_threadpool(content, state)
+            feed = Feed(tenant, customer, intake_id)
 
-        async def flow():
-            # ★`[2026-10-28 독립 검토 후속]` 슬롯은 응답이 끝날 때가 아니라 **이 연결이 시작한 DB 조회 · 내용 계산이 모두 끝날 때** 돌려준다(`settle`).
-            #   끊긴 뒤에도 스레드 · psycopg 연결은 끝까지 도므로, 먼저 돌려주면 사용자당 상한이 실제 열린 연결 수를 묶지 못한다. 응답은 기다리지 않고 곧바로 끝난다.
-            try:
-                stream = op_stream.watch(
-                    read, op="intake", cfg=cfg, is_disconnected=http.is_disconnected,
-                    done=lambda s: s["status"] in ("review", "confirmed", "fatal"),
-                    stage_of=lambda s: s["stage"], label_of_state=lambda s: s["stage_label"],
-                    quiet_for=lambda s: s["quiet_seconds"],
-                    stalled_after=float(guard.get("travel.op_stream.intake_stalled_seconds")),
-                    poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds")),
-                    extra=extra, settle=lambda: op_stream.release(tenant, customer))
-            except BaseException:
-                op_stream.release(tenant, customer)       # 흐름을 만들지도 못했다 — 돌릴 조회도 없다
-                raise
-            try:
-                async for chunk in stream:
-                    yield chunk
-            finally:
-                await stream.aclose()                     # 응답 쪽이 이 흐름을 닫아도(GeneratorExit) watch 의 뒷정리 · settle 이 곧바로 돈다
+            def content(state: dict[str, Any]) -> list[str]:
+                with get_connection() as conn:
+                    return sse_chunks(feed.poll(conn, state))
 
-        return StreamingResponse(flow(), media_type="text/event-stream",
-                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+            async def extra(state: dict[str, Any]) -> list[str]:
+                return await run_in_threadpool(content, state)
+
+            async def flow():
+                slot["flow"] = True
+                # ★`[2026-10-28 독립 검토 후속]` 슬롯은 응답이 끝날 때가 아니라 **이 연결이 시작한 DB 조회 · 내용 계산이 모두 끝날 때** 돌려준다(`settle`).
+                #   끊긴 뒤에도 스레드 · psycopg 연결은 끝까지 도므로, 먼저 돌려주면 사용자당 상한이 실제 열린 연결 수를 묶지 못한다. 응답은 기다리지 않고 곧바로 끝난다.
+                try:
+                    stream = op_stream.watch(
+                        read, op="intake", cfg=cfg, is_disconnected=http.is_disconnected,
+                        done=lambda s: s["status"] in ("review", "confirmed", "fatal"),
+                        stage_of=lambda s: s["stage"], label_of_state=lambda s: s["stage_label"],
+                        quiet_for=lambda s: s["quiet_seconds"],
+                        stalled_after=float(guard.get("travel.op_stream.intake_stalled_seconds")),
+                        poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds")),
+                        extra=extra, settle=give_back)
+                except BaseException:
+                    give_back()                               # 흐름을 만들지도 못했다 — 돌릴 조회도 없다
+                    raise
+                try:
+                    async for chunk in stream:
+                        yield chunk
+                finally:
+                    await stream.aclose()                     # 응답 쪽이 이 흐름을 닫아도(GeneratorExit) watch 의 뒷정리 · settle 이 곧바로 돈다
+
+            class _SlotStream(StreamingResponse):
+                async def __call__(self, scope, receive, send) -> None:
+                    try:
+                        await super().__call__(scope, receive, send)
+                    finally:
+                        if not slot["flow"]:
+                            give_back()                       # 본문이 한 번도 돌지 않았다 — 돌린 조회도 없다
+
+            return _SlotStream(flow(), media_type="text/event-stream",
+                               headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+        except BaseException:
+            give_back()
+            raise
 
     def _rejudge_later(background: BackgroundTasks, tenant: str, intake_id: UUID, shown: dict[str, Any] | None) -> None:
         """확인 화면의 검사가 새로 계산된 판(고치기 · 자동 추천 · 복원 · 재검증)의 식사를 **뒤에서** 다시 판정한다(`pipeline.rejudge`).
