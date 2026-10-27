@@ -7,6 +7,8 @@ import re
 from typing import Any
 
 TIME = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d\Z")
+#: 생성 문법의 비어 있지 않은 HH:MM(`TIME` 과 같은 값 범위)
+_CLOCK = "^([01][0-9]|2[0-3]):[0-5][0-9]$"
 
 
 def schemas(aliases: list[str]) -> dict[str, Any]:
@@ -153,6 +155,27 @@ def generation_variants(variants, aliases, query_schema, message, *, quoted_days
                         edit["cascade"] = {"type": "boolean", "enum": [False]}
                         edit["continue_previous"] = {"type": "boolean", "enum": [False]}
                 result.append(branch)
+                if boundary == "shift" and edit["scope"]["enum"] == ["item"]:
+                    # ★`[2026-10-28 x600 4fee819c]` 한 일정 shift 는 인용된 절대 시각을 낼 수도 있다 — `time_ops` 가 그 시각을 새 시작으로
+                    #   실행한다(c286b906). 위 갈래만 두면 time 이 빈 문자열로 묶여, 「오후 5시 30분으로 옮겨줘」에 shift 를 고른 로컬 E4B 가
+                    #   시각을 어디에도 못 내고 minutes=30 만 냈다(Case 10108fc5 · 14dd1f31 · 5a96697a → need_time 3/3).
+                    #   상대 이동 크기와 함께 내지는 못한다(minutes=0). 시각 값은 `validate` 가 인용으로 재계산해 확인한다.
+                    clock = deepcopy(branch)
+                    clock["properties"]["time_edit"]["properties"]["time"] = {"type": "string", "pattern": _CLOCK}
+                    clock["properties"]["minutes"] = {"type": "integer", "enum": [0]}
+                    result.append(clock)
+                    # 같은 뜻의 맨 위 시작 시각 칸(anchor_kind=time · relation=at · anchor_time) — SYSTEM(decision_unit) 「새 시각을 말하면
+                    #   anchor_kind=time · anchor_time=새 시작 시각」. ☆실 E4B(로컬 2/2)는 shift 를 고른 뒤 time 을 계속 빈 문자열로 냈다 —
+                    #   time_edit 이 먼저 생성되므로 시각을 낼 다음 자리가 이 칸이다. `chat_edit.ops_for` 가 이 칸을 새 시작으로 쓰고(옛 경로 그대로),
+                    #   `validate` 가 time 과 같은 인용 재계산으로 확인한다(`_shift_start_clock`). before/after(범위 경계)는 내지 못한다.
+                    top = deepcopy(branch)
+                    fields = top["properties"]
+                    fields["anchor_kind"] = {"type": "string", "enum": ["time"]}
+                    fields["anchor_item"] = {"type": "string", "enum": ["none"]}
+                    fields["anchor_time"] = {"type": "string", "pattern": _CLOCK}
+                    fields["relation"] = {"type": "string", "enum": ["at"]}
+                    fields["minutes"] = {"type": "integer", "enum": [0]}
+                    result.append(top)
     if template is not None and message.strip():
         for kind in ("none", "time", "item"):
             branch = deepcopy(template)
@@ -228,7 +251,11 @@ def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
                     or value.get("time") or value.get("duration_minutes")
                     or value.get("cascade") or value.get("continue_previous")):
                 raise ValueError("inconsistent temporal scope")
-            clock = raw.get("anchor_time", "") if value.get("scope") == "range" else value.get("time", "")
+            clock = (raw.get("anchor_time", "") if value.get("scope") == "range" or _shift_start_clock(value, raw)
+                     else value.get("time", ""))
+            if _shift_start_clock(value, raw) and raw.get("minutes") not in (0, None):
+                # 새 시작 시각과 상대 이동 크기를 함께 냈다 — 생성 문법은 막고(minutes=0), 문법 없는 유료 답도 조용히 한쪽으로 실행하지 않는다(Codex 검토)
+                raise ValueError("inconsistent temporal scope")
             if not isinstance(clock, str) or (clock and not TIME.fullmatch(clock)):
                 raise ValueError("invalid temporal clock")
             if clock:
@@ -256,6 +283,14 @@ def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
 
 #: 장소를 바꾸는 행동 — 이 행동의 time_edit 은 실행되지 않는다(`time_ops` 는 change_time 만 읽는다)
 PLACE_ACTIONS = frozenset({"apply_change", "propose_alternatives", "replace_named"})
+
+
+def _shift_start_clock(value: dict[str, Any], raw: dict[str, Any]) -> bool:
+    """한 일정 shift 의 새 시작 시각이 맨 위 칸(anchor_kind=time · relation=at · anchor_time)에 있다 — time_edit.time 이 비었을 때만.
+    `[2026-10-28 x600 4fee819c]` 그 시각은 `chat_edit.ops_for` 가 새 시작으로 쓰므로 time 과 같은 인용 재계산 검증을 받는다(칸 구조만 본다)."""
+    return (value.get("boundary") == "shift" and value.get("scope") == "item" and not value.get("time")
+            and raw.get("anchor_kind") == "time" and raw.get("relation") == "at" and bool(raw.get("anchor_time"))
+            and _executes_time_edit(raw))
 
 
 def _inconsistent(value: dict[str, Any]) -> bool:
