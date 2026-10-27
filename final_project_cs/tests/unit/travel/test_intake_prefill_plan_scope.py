@@ -184,7 +184,7 @@ def test_prefill_run_plans_only_the_gap_item_and_logs_timing_without_names(monke
 
     def fake_plan(conn, *, tenant_id, review, kakao=None, item_ids=None, **kw):
         planned.append(item_ids)
-        assert not kw, kw
+        assert kw == {"keep_times": True}, kw                   # 장소만 저장하는 쪽 — 이웃 빈칸 기준(`test_intake_prefill_adjacent_blanks.py`)
         return {"changes": [{"id": "0-1", "source_id": "s", "index": 1, "title": "성수 식당", "from": {}, "hours_known": True,
                              "to": {"place": {"name": "성수가든"}}, "edits": [{"field": "place", "value": _place("성수가든")}]}],
                 "kept": []}

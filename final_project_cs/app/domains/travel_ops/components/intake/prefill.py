@@ -285,7 +285,9 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         # ★`[2026-10-28 서빙 속도]` 빈칸 일정만 계산한다(`autofix_owner` 의 `targets`) — 다른 일정의 추천은 먼저 채우기가 버리는 값이었다
         at = time.monotonic()
         try:
-            return autofix_module.plan(conn, tenant_id=tenant_id, review=state["review"], kakao=kakao, item_ids=item_ids)
+            # `keep_times` — 먼저 채우기는 장소만 저장한다(`apply`). 이웃한 빈칸은 저장되는 앞 일정(새 장소 · 고객 시각)을 기준으로 맞춘다
+            return autofix_module.plan(conn, tenant_id=tenant_id, review=state["review"], kakao=kakao, item_ids=item_ids,
+                                       keep_times=True)
         finally:
             timing["plan_seconds"] += time.monotonic() - at
             timing["plan_runs"] += 1
