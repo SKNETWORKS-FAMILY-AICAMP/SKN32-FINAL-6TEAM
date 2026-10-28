@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime, timedelta
-from typing import Any, Callable
+from typing import Any, Callable, Collection
 
 from . import candidates as cand_module
 from . import lodging_context as stay_context
@@ -104,9 +104,22 @@ def latest_end(engine: Any, place: dict[str, Any], next_place: dict[str, Any], n
 
 
 def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, engine: Callable[..., Any] | None = None,
-         use_engine: bool = True, now: datetime | None = None, item_id: str | None = None) -> dict[str, Any]:
+         use_engine: bool = True, now: datetime | None = None, item_id: str | None = None,
+         item_ids: Collection[str] | None = None, keep_times: bool = False) -> dict[str, Any]:
     """검증을 끝낸 대체 일정. `{changes:[{id, source_id, index, title, from, to, reason, edits}], kept:[{id, title, reason}]}`.
-    DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다."""
+    DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다.
+
+    `item_ids` `[2026-10-28 서빙 속도]` 이 일정들(과 그 일정이 낀 공통 숙소 묶음)만 맞춰 본다 — `item_id` 하나와 같은 거르기를 여럿으로.
+      먼저 채우기(`prefill.run`)가 **빈칸 일정만** 넘긴다: 그 밖의 일정 결과는 먼저 채우기가 쓰지 않고 버리는데, 계산기 시간과 요청 한도만 써 왔다.
+      빈 모음이면 아무것도 계산하지 않는다. `item_id` 와 함께 주면 `TypeError`. 안 주면(None) 전과 같다(고객이 누르는 전체 자동 추천).
+    `keep_times` `[2026-10-28 이웃한 두 빈칸]` 부르는 쪽이 바꾼 일정의 **장소만** 저장하고 시각은 고객 값 그대로 둔다(먼저 채우기 — `prefill.run` 의 `apply`).
+      그때는 바꾼 일정의 새 장소만 다음 일정의 기준에 넣고 시각은 지금 값으로 둔다 — 저장되지 않을 옮긴 시각(예: 12:00 → 12:40) 뒤에
+      다음 빈칸을 맞춰 「맞는 안 없음」으로 남기지 않게. 각 일정의 제안(`changes` · `kept`)을 만드는 방법은 같다. 기본 False = 전과 같다(옮긴 시각도 저장하는 전체 자동 추천)."""
+    if item_id is not None and item_ids is not None:
+        raise TypeError("plan: item_id 와 item_ids 는 함께 줄 수 없다")
+    only: set[Any] | None = {item_id} if item_id is not None else set(item_ids) if item_ids is not None else None
+    if only is not None and not only:
+        return {"changes": [], "kept": []}
     defaulted = engine is None and use_engine
     if defaulted:
         engine = default_engine(None)
@@ -141,19 +154,20 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
         return engine_for(a_id, b_id, scope=("lodging", dates.get(b_id) or dates.get(a_id)))
 
     for members in stay_context.groups(items):
-        if len(members) < 2 or (item_id is not None and not any(x["id"] == item_id for x in members)):
+        if len(members) < 2 or (only is not None and not any(x["id"] in only for x in members)):
             continue
         if not any(x["status"] == "review" or x["id"] in late_into for x in members):
             continue
         handled.update(x["id"] for x in members)
-        group_changes, group_kept = _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, stay_engine_for)
+        group_changes, group_kept = _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, stay_engine_for,
+                                                 keep_times=keep_times)
         changes.extend(group_changes)
         kept.extend(group_kept)
     last_changed = -2
     for i, item in enumerate(items):
         if item["id"] in handled:
             continue
-        if item_id is not None and item["id"] != item_id:
+        if only is not None and item["id"] not in only:
             continue
         placed_bad = item["status"] == "review"
         late = item["id"] in late_into
@@ -269,13 +283,13 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
                         # 운영시간을 확인했나 — 모르는 곳은 장소 문제(이름 모호함 · 늦음)를 푸는 추천에는 쓰이지만 「열려 있다」고 하지 않는다(결과 줄에 `unknown`)
                         "hours_known": hours_known, "edits": edits, **({"note": note} if note else {})})
         last_changed = i
-        # 다음 일정을 맞출 기준을 갱신한다
-        items[i] = {**item, "place": after["place"], "starts_at": after["starts_at"], "ends_at": after["ends_at"],
-                    "place_state": "customer", "status": "adjusted"}
+        # 다음 일정을 맞출 기준을 갱신한다 — 장소만 저장하는 쪽(`keep_times`)이면 시각은 저장되는 지금 값
+        items[i] = {**item, "place": after["place"], "place_state": "customer", "status": "adjusted",
+                    **({} if keep_times else {"starts_at": after["starts_at"], "ends_at": after["ends_at"]})}
     return {"changes": changes, "kept": kept}
 
 
-def _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, engine_for):
+def _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, engine_for, *, keep_times=False):
     """후보 하나를 모든 날짜에서 검증하고, 모두 맞을 때만 함께 바꾼다."""
     picked, conflict = stay_context.anchor(members)
     movable = [x for x in members if not stay_context.protected(x)]
@@ -336,7 +350,8 @@ def _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, en
         else:
             for change in proposed:
                 at = next(i for i, x in enumerate(items) if x["id"] == change["id"])
-                items[at] = {**items[at], **change["to"], "place_state": "customer", "status": "adjusted"}
+                to = {k: v for k, v in change["to"].items() if not keep_times or k not in ("starts_at", "ends_at")}
+                items[at] = {**items[at], **to, "place_state": "customer", "status": "adjusted"}
             return proposed, []
     return [], [{"id": x["id"], "title": x["title"], "reason": "no_fitting_time" if places else "no_candidates"}
                 for x in members]

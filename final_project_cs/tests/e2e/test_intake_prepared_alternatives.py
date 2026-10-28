@@ -29,8 +29,14 @@ from app.infrastructure.db.session import get_connection
 
 from .test_intake_review import OPEN_ALL, TUE_CLOSED, _catalog, _client, _edit, _hours, _item, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
 
-PLAN = "2026-10-13\n10시 경복궁\n13:30 광장시장"          # 화요일 — 경복궁을 화요일 휴무로 읽어 둔다
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_13 = reldate.day("2026-10-13")
+D_2026_10_15 = reldate.day("2026-10-15")
+
+PLAN = f"{D_2026_10_13}\n10시 경복궁\n13:30 광장시장"          # 화요일 — 경복궁을 화요일 휴무로 읽어 둔다
 
 
 @pytest.fixture(autouse=True)
@@ -274,9 +280,21 @@ def test_while_the_preparation_still_runs_the_change_screen_shows_guesses_and_ta
     key = prepared._item_key(view["intake_id"], item)
     running: Future = Future()
     prepared._preparing[key] = running                                  # 준비가 도는 중인 상태를 만든다
+    # ☆`[2026-10-28]` 전에는 준비를 「1초 뒤」에 끝냈다. 8일꾼 부하에서 「바꾸기」 요청이 1초 안에 저장분을 읽지 못하면 그사이 준비가 끝나
+    #   저장분(fresh)을 바로 돌려줘(['accepted', 'result']) 실패했다. 이제 「바꾸기」가 준비 중임을 실제로 본 뒤(`_claim` → None)에 끝낸다.
+    busy_seen = threading.Event()
+    real_claim = prepared._claim
+
+    def claim(intake_id, claimed):
+        mine = real_claim(intake_id, claimed)
+        if mine is None:
+            busy_seen.set()
+        return mine
+
+    monkeypatch.setattr(prepared, "_claim", claim)
 
     def finish_later():
-        time.sleep(1.0)
+        busy_seen.wait(60)                                              # 안전 상한 — 못 보면 아래 단언이 실패한다
         try:
             prepared._prepare_one(get_connection, tenant_id=rv["tenant"], intake_id=view["intake_id"], review={**found, "revision": view["revision"]},
                                   item=item, chat=None, started=time.monotonic())
@@ -293,7 +311,9 @@ def test_while_the_preparation_still_runs_the_change_screen_shows_guesses_and_ta
     monkeypatch.setattr(prepared, "judge_in_turn", lambda *a, **k: live.append(1) or real(*a, **k))
     got = client.get(_path(view, palace), headers={**headers, "Accept": "text/event-stream"})
     worker.join()
-    events = _events(got.text)
+    assert busy_seen.is_set(), "「바꾸기」가 준비 중인 것을 보지 못했다"
+    # 생존 신호(`beat`)는 계산이 `beat_seconds` 보다 길면 어디에나 끼일 수 있다 — 부하에서 어림 카드 앞에 끼어 실패했다(['accepted', 'beat']). 순서는 그 밖의 글로 본다
+    events = [e for e in _events(got.text) if e[0] != "beat"]
     names = [n for n, _b in events]
     assert names[:2] == ["accepted", "candidates"] and names[-1] == "result"
     assert events[1][1]["waiting"] == "prepare" and all(c["pending"]["after"] for c in events[1][1]["candidates"])     # 어림 먼저 · 계산 중
@@ -329,7 +349,7 @@ def test_a_risky_activity_is_not_prepared_and_takes_the_safety_path_first(rv, mo
     _world(rv)
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n13:30 광장시장")
     palace = _item(view, "경복궁")
     assert (palace.get("risk") or {}).get("status") == "problem"
     assert (palace["source_id"], palace["index"]) not in {(s, i) for s, i, _r, _b in _rows(rv, view["intake_id"])}     # 미리 준비하지 않았다

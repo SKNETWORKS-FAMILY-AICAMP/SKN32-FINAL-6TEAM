@@ -162,3 +162,13 @@ domain: travel
 - 로컬 생성 문법(`decision_unit._schema(message=…)` → `_shape_generation`)에서 `reads[]` 항목은 `anchor_kind` 로 갈래를 나눈다. none: `anchor_item=none` · `anchor_time=""` · `relation=at` · `steps=1` / item: `anchor_item` 은 일정 별칭(none 아님) · `anchor_time=""` / time: `anchor_item=none` · `anchor_time` HH:MM / now · previous: `anchor_item=none` · `anchor_time=""`. 위 「앞뒤 · 시각 질문」 지시문 계약을 문법으로 강제한 것이다 — 새 뜻이 없고, 「다음 일정」(지금 기준 앞뒤)은 now, 「그 전에」(앞 답 기준)는 previous 로 낸다.
 - 왜: 칸이 서로 독립한 필수 enum 이라 실 E4B 가 기준 없음(none)에 대상 별칭 · before 를 채웠다(수용 F02 · 개발 문장). 서버가 그 칸으로 이웃 일정을 계산했다. **받은 답은 고쳐 쓰지 않는다** — 문법 밖 답은 해석 실패다. `time_anchor.clean`(none+anchor_item → item) · `relation_dropped` 는 옛 기록 · 유료 답 해석용으로 그대로 둔다.
 - 유료 넘김(plain) 스키마와 최상위 기준 칸은 바꾸지 않았다(최상위는 읽기 항목이 없을 때만 쓰이고, 갈래를 곱하면 문법 비용이 커진다 — 측정 후 별도 판단). [보고서](../records/reports/2026-10-27_G_모델품질_해석문법_속도_설계.md)
+
+## 2026-10-28 한 일정 shift 의 절대 시각 갈래 (x600 4fee819c · 생성 문법)
+
+- 결함: x600 로컬 E4B 경로에서 「오후 5시 30분으로 옮겨줘」 2회와 「17:30으로 옮겨줘」 1회가 모두 `need_time`(「몇 시로(또는 몇 분) 옮길지 알려 주세요」)이었다. 원출력(`customer_cases.state_json->decision->raw`, Case 10108fc5 · 14dd1f31 · 5a96697a) 3/3이 `change_time` · `time_edit.boundary=shift` · `scope=item` · `time=""` · `anchor_kind=none` · `anchor_time=""` · `minutes=30`이었다. 시각을 낼 칸이 비어 있었고, 시각 안의 「30분」은 이동 크기가 아니므로(`spoken_minutes`) 서버가 되물었다. 서버가 칸을 못 읽은 것이 아니다.
+- 원인: L05 생성 문법(`edit_intent.generation_variants`)이 한 일정 `shift` 갈래의 `time`과 `anchor_time`을 빈 문자열로, `anchor_kind`를 `none`으로 묶었다. 그래서 2026-10-26의 「shift·item·검증된 time은 새 시작」 계약(`time_ops`)과 맨 위 시작 시각 칸(`anchor_kind=time` · `anchor_time`, `chat_edit.ops_for`)에 갈 답을 생성할 수 없었다.
+- 계약: 한 일정 `shift` 갈래 옆에 두 갈래를 더 둔다. 둘 다 `minutes=0`이라 상대 이동 크기와 절대 시각을 함께 낼 수 없다.
+  - (a) `time_edit.time=HH:MM`: `time_ops`가 새 시작으로 실행한다.
+  - (b) `anchor_kind=time` · `anchor_item=none` · `relation=at` · `anchor_time=HH:MM`: `chat_edit.ops_for`가 새 시작으로 실행한다. before/after(범위 경계)는 낼 수 없다.
+- (b)의 `anchor_time`도 `validate`가 `time`과 같은 인용 재계산(`fact_check.recompute_time`)으로 확인한다(`edit_intent._shift_start_clock`). 인용과 다르거나 인용에 시각이 없으면 해석 실패로 끝나고 일정은 그대로다. 문장 낱말 규칙은 없다.
+- 실 E4B(로컬, `decide` 직접 호출): (a)만 열었을 때 「오후 5시 30분」 2/2가 여전히 `time=""` · `minutes=30`이었다. (b)를 연 뒤 1/1이 `anchor_time=17:30`으로 17:30에 옮겼다. 유료 넘김 스키마(`plain=True`)는 바뀌지 않는다. 시험은 `tests/unit/travel/test_chat_absolute_clock_move_grammar.py`, 보고서는 `wiki/records/reports/2026-10-28_timemove_로컬E4B_절대시각.md`다.

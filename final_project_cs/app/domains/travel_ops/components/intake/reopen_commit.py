@@ -145,6 +145,7 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
     - `before_write` — 새 판을 쓰기 직전에 한 번(웹의 비싼 작업 횟수 세기). `cause_extra` — 변경 이유에 덧붙일 값(채팅이면 `via: chat` · 고객 문장)
     """
     from app.domains.travel_ops.components.actions.itinerary_actions import introduced_violations
+    from app.domains.travel_ops.components.itinerary.itinerary_checks import refusal_message
     from app.domains.travel_ops.components.intake import reopen
     from app.domains.travel_ops.components.itinerary.itinerary import StaleItinerary, fill_weather_sensitive
     from app.domains.travel_ops.components.itinerary.itinerary_changes import with_request
@@ -206,8 +207,7 @@ def _commit_locked(*, store: Any, connect: Callable[[], Any], tenant: str, intak
                     item.place = placed.get(item.place_id)
             violations = introduced_violations(trip, base_items, plan.items)
             if violations:
-                raise CommitRefused(422, "itinerary_infeasible",
-                                    "이 일정은 그대로 수행할 수 없습니다: " + " / ".join(v.reason for v in violations),
+                raise CommitRefused(422, "itinerary_infeasible", refusal_message(violations),
                                     violations=[v.as_dict() for v in violations])
             try:
                 version = store.append_version(conn, trip_id=trip_id, base_version=base_version, items=plan.items,

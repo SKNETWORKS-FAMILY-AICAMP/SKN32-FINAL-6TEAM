@@ -11,6 +11,11 @@ from __future__ import annotations
 
 from .test_intake_review import Kakao, Tour, _client, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
 
 
 class SeoulTour(Tour):
@@ -42,8 +47,8 @@ class NearKakao(Kakao):
         return super().search(query, size=size, near=near)
 
 
-TIGHT = "2026-10-15\n10:00~12:00 국립중앙박물관 관람\n12:10~13:00 광장시장 점심\n13:10~15:00 전쟁기념관 관람"
-ROOMY = "2026-10-15\n10:00~11:30 국립중앙박물관 관람\n11:40~13:00 광장시장 점심\n16:00 경복궁 관람"
+TIGHT = f"{D_2026_10_15}\n10:00~12:00 국립중앙박물관 관람\n12:10~13:00 광장시장 점심\n13:10~15:00 전쟁기념관 관람"
+ROOMY = f"{D_2026_10_15}\n10:00~11:30 국립중앙박물관 관람\n11:40~13:00 광장시장 점심\n16:00 경복궁 관람"
 
 
 def _autofix(client, headers, view):

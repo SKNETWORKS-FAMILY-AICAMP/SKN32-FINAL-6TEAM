@@ -44,12 +44,19 @@ def test_rule_rows_map_to_checks_and_days_without_meals_are_skipped():
 def test_judge_records_agreement_and_disagreement_in_the_dining_table(conn, place, monkeypatch):
     from app.domains.travel_ops.components.intake import review as review_module
 
-    monkeypatch.setattr(review_module, "load", lambda *a: None)                     # 요식 시험 DB 에는 접수 표가 없다 — 줄 합치기는 e2e 가 본다
+    # 요식 시험 DB 에는 접수 표가 없다 — 접수 경계(잠금 · 저장본 읽기 · 저장)만 대역으로 둔다. 줄 합치기 내용은 e2e 가 본다.
+    # ☆`[2026-10-28]` 82eecd6b2(10-20)가 옛 독립 호출도 **잠금(`intake_state`) 뒤에 읽게** 순서를 바꿨는데 이 시험은 `load` 만 갈아 끼워
+    #   `trip_intakes` 없음(UndefinedTable)으로 실패했다(기준 main 도 같다). 지금 판 그대로인 접수(`("review", 1)` · 저장본 있음 · 요식 판정 없음)를 준다.
+    stored = {}
+    monkeypatch.setattr(review_module, "intake_state", lambda conn, tenant_id, intake_id: ("review", 1))
     uid = place("판정국밥", lat=37.57, lng=126.99)
     _real(conn, uid)
     add_hours(conn, uid, 1, [(660, 1320, None)])
     add_closure(conn, uid, pattern_kind="weekly", weekday=1)                        # 월요일 휴무 — 규칙 검사(가짜)는 ok 라고 했다
     name = conn.execute("SELECT name_ko FROM dining.dn_place WHERE place_uid = %s", (uid,)).fetchone()[0]
+    monkeypatch.setattr(review_module, "load", lambda conn, tenant_id, intake_id, revision: _review(name))
+    monkeypatch.setattr(review_module, "store",
+                        lambda conn, tenant_id, intake_id, revision, payload: stored.update({(str(intake_id), revision): payload}))
     final = {"items": [{"item_id": "0-1", "place": {"place_uid": uid, "call_id": "c1"}, "checks": [
         {"check": "found", "verdict": "ok", "reason": "찾음", "evidence": [{"call_id": "c1", "path": "verdict", "value": "ok"}]},
         {"check": "open_at", "verdict": "bad", "reason": "월요일 휴무",
@@ -68,6 +75,8 @@ def test_judge_records_agreement_and_disagreement_in_the_dining_table(conn, plac
         got = run(connect, tenant_id="test", intake_id=intake_id, revision=1, review=_review(name), notes="", chat=chat,
                   model="fake")
         assert got["days"] == 1 and got["checks"] == 2 and got["used"] == 2 and got["failures"] == 0
+        assert got["stale"] == 0 and list(stored) == [(str(intake_id), 1)]                 # 지금 판이라 합쳐 저장했다
+        assert stored[(str(intake_id), 1)]["agent_judged"]["model"] == "fake"
         rows = conn.execute("SELECT check_code, agent_verdict, rule_verdict, agree FROM dining.dn_agent_judge "
                             "WHERE intake_id = %s ORDER BY judge_id", (intake_id,)).fetchall()
         assert rows == [("_run", None, None, None), ("found", "ok", "ok", True), ("open_at", "bad", "ok", False)]

@@ -4,11 +4,16 @@ from uuid import uuid4
 from app.infrastructure.db.session import get_connection
 from .test_decision_unit_web import decided, _say as _decision_say  # noqa: F401
 from .test_web_api import api, _fresh_limit_cache, _h  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_09_23 = reldate.day("2026-09-23")
 
 
 def _say(decided, text, request_id, **fields):
     return _decision_say(decided, text, request_id,
-                         **{"at": "2026-09-23T12:30:00+09:00", **fields})
+                         **{"at": f"{D_2026_09_23}T12:30:00+09:00", **fields})
 
 
 def _delay(decided):
@@ -154,7 +159,7 @@ def test_delayed_protected_meal_keeps_itinerary_and_answers_with_actual_question
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("UPDATE itinerary_items SET locked=true WHERE trip_id=%s AND version=1 AND title LIKE '성수 점심%%'",
                     (decided["trip"]["trip_id"],))
-    first = _say(decided, "식당에 늦어요", "resume-protected-start", at="2026-09-23T13:00:00+09:00")
+    first = _say(decided, "식당에 늦어요", "resume-protected-start", at=f"{D_2026_09_23}T13:00:00+09:00")
     reply = _say(decided, "70분이요", "resume-protected-answer", case_id=first["case_id"])
     assert reply["status"] == "asked" and reply["case_status"] == "resolved", reply
     assert "바꿨" not in reply["answer"] and "바꾸지 않았어요" in reply["answer"] and "어떻게 할까요?" in reply["answer"], reply

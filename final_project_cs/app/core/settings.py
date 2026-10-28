@@ -191,6 +191,14 @@ class Settings(BaseSettings):
     llm_failover_failures: int = 3
     #:  서킷이 열려 있는 시간(초) — 지나면 한 번만 시험해서(반쯤 열림) 성공하면 닫는다
     llm_failover_open_seconds: float = 60.0
+    #:  ★`[2026-10-28 x600 05:26:35]` 로컬 runner 하나에 이 프로세스가 동시에 보내는 호출 수(0 = 상한 없음). x600 runner 는 `-np 1`(한 번에 1건)이라 1.
+    #:    자리를 못 얻은 호출은 서킷을 건드리지 않고(`local_busy`) 다음 경로로 간다. ☆전에는 줄이 runner 안에 서서 기다린 시간까지 로컬 제한시간에 들어갔고,
+    #:    적재 직후 동시 `structured` 3건이 모두 `timeout` 으로 세어져 로컬 회로가 60초 열렸다(그동안 모두 유료). runner `-np` 를 바꾸면 이 값도 같이 바꾼다.
+    llm_failover_local_concurrency: int = Field(default=1, ge=0)
+    #:  바쁜 로컬 자리를 기다리는 시간의 상한(초). 기본 0 — 기다리지 않고 바로 다음 경로로. 실제 대기는 이 값과 뒤 유료 몫 중 작은 쪽이다
+    #:    (채팅 등: 전체 시간 − 지난 시간 − 로컬 제한시간 − 유료 제한시간, 계획 읽기: 시한 − `travel.intake_reading.api_reserve_seconds`).
+    #:    대기는 첫 조각 · 조각 사이 감시(5초 규칙) 바깥이다 — 자리를 얻어 요청을 보낸 때부터 센다.
+    llm_failover_local_queue_seconds: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     #:  API 로 넘긴 호출의 일 · 월 상한(`external_call_budget` 의 `openai_failover` 줄). 넘으면 더 안 부르고 실패로 올린다 — 비용 폭주 방어
     llm_failover_daily_cap: int = 2000
     llm_failover_monthly_cap: int = 30000

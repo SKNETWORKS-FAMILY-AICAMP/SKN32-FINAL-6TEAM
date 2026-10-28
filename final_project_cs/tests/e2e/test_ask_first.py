@@ -24,6 +24,10 @@ from app.domains.travel_ops.components.planning.pending import (CONSENT_KEY, CON
 from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_trip_api import SCENARIO, _create, _detail, _slot, api  # noqa: F401 — 픽스처를 그대로 쓴다
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
 
 ANSWER_LINE = "답이 없으면 원래 일정을 그대로 둡니다"
 
@@ -170,7 +174,7 @@ def _item(**kw) -> Item:
     from uuid import uuid4
 
     base = dict(item_id=uuid4(), seq=1, kind="activity", title="한강 공원 산책", place_id=uuid4(),
-                starts_at=datetime(2026, 10, 5, 10), ends_at=datetime(2026, 10, 5, 11))
+                starts_at=reldate.moved(datetime(2026, 10, 5, 10)), ends_at=reldate.moved(datetime(2026, 10, 5, 11)))
     return Item(**{**base, **kw})
 
 

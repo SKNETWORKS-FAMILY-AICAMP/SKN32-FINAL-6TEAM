@@ -18,6 +18,10 @@
 ★**거절은 「무엇이·왜·무엇을 바꾸면 되는지」를 같이 낸다.** 완화 조건(`remedy`)이 없는 위반은
   만들지 않는다 — 고칠 방법을 안 주면 거절이 벽이 된다.
 
+★`[2026-10-28 x600 e78e038b]` `reason` · `remedy` 는 **고객이 읽는 문장**이다(채팅 거절 답 · 422 메시지 · 응답 `violations`).
+  해요체로 끝내고, 시각 · 숫자 뒤 조사는 붙여 쓰며(19:00까지), 이름 뒤 조사는 받침에 맞춘다(`particle`). 항목 순번(`items`)은
+  공개 필드에만 있고 문장에는 넣지 않는다. 「항목 이름: 설명」 모양은 그대로다 — `itinerary_delay.Knock.sentence` 가 이름 머리를 뗀다.
+
 ★모름을 위반으로 세지 않는다. 값이 없는 칸은 **판정 대상이 아니다**(v11 §0-4 결정 15 — 모르는
   상태를 지어내지 않는다). 그 자리는 감시 루프가 실제 소스로 다시 본다.
 """
@@ -123,6 +127,40 @@ def _hm(moment: datetime) -> str:
     return _seoul(moment).strftime("%H:%M")
 
 
+def _md(moment: datetime) -> str:
+    """「10월 9일」 — 고객 문장의 날짜(앞자리 0 없이)."""
+    moment = _seoul(moment)
+    return f"{moment.month}월 {moment.day}일"
+
+
+#: 숫자로 끝나는 말의 읽는 소리 — 받침이 있는 숫자(영 · 일 · 삼 · 육 · 칠 · 팔)와 그중 ㄹ 받침(일 · 칠 · 팔)
+_DIGIT_FINAL, _DIGIT_RIEUL = frozenset("013678"), frozenset("178")
+
+
+def particle(word: str, pair: str) -> str:
+    """`[2026-10-28]` 받침에 맞는 조사 — `pair` 는 「을/를」 「이/가」 「은/는」 「과/와」 「으로/로」(받침 있을 때/없을 때).
+    끝 글자가 한글이면 받침으로, 숫자면 읽는 소리로 고른다. 그 밖(영문 · 괄호)은 읽는 소리를 모르니 겸용 표기(「을(를)」 「(으)로」)로 둔다 —
+    틀리게 붙이지 않는다(`itinerary_changes.object_particle` 과 같은 약속. 그 모듈이 이 모듈을 읽어 거꾸로 가져올 수 없다)."""
+    with_final, without = pair.split("/")
+    last = word.strip()[-1:]
+    if "가" <= last <= "힣":
+        jong = (ord(last) - 0xAC00) % 28
+        final, rieul = jong != 0, jong == 8
+    elif last.isdigit():
+        final, rieul = last in _DIGIT_FINAL, last in _DIGIT_RIEUL
+    else:
+        return "(으)로" if pair == "으로/로" else f"{with_final}({without})"
+    if pair == "으로/로":
+        return "으로" if final and not rieul else "로"
+    return with_final if final else without
+
+
+def refusal_message(violations: Iterable["Violation"]) -> str:
+    """등록 · 고친 일정 확정의 422 `itinerary_infeasible` 메시지 — 해요체 한 문장(웹 `error-text.ts` 는 해요체 서버 문장을 그대로 보인다).
+    ★`[2026-10-28]` 전에는 「이 일정은 그대로 수행할 수 없습니다: …닫는다」로 끝나 웹이 서버 문장을 버리고 일반 문구를 보였다."""
+    return "이 일정은 그대로 진행할 수 없어요 — " + " / ".join(v.reason for v in violations)
+
+
 def _clock(value: Any) -> time | None:
     try:
         hour, minute = str(value).split(":")
@@ -157,8 +195,8 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
                 and not ((part.detail or {}).get("execution", {}).get("state") == "completed"
                          and (part.detail or {}).get("execution", {}).get("start_unknown") is True)):
             found.append(Violation("time_order", (part.seq,),
-                                   f"{part.title}: 끝나는 시각({_hm(part.ends_at)})이 시작({_hm(part.starts_at)})보다 빠르다",
-                                   "끝나는 시각을 시작 뒤로 보내거나 비워 둔다"))
+                                   f"{part.title}: 끝나는 시각({_hm(part.ends_at)})이 시작 시각({_hm(part.starts_at)})보다 빨라요",
+                                   "끝나는 시각을 시작 시각 뒤로 옮기거나 비워 주세요"))
         found += _place_violations(part)
         day_end = ((constraints or {}).get("day_hours") or {}).get("end")
         if day_end and part.kind not in STAY_KINDS:
@@ -166,8 +204,8 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
             deadline = datetime.combine(_seoul(part.starts_at).date(), time.fromisoformat(day_end), tzinfo=KST)
             if until > deadline:
                 found.append(Violation("day_deadline", (part.seq,),
-                    f"{part.title}: 고객이 정한 하루 마감 {day_end} 뒤에 끝난다",
-                    "체류·이동을 줄이거나 다른 날로 옮긴다"))
+                    f"{part.title}: 정하신 하루 마감({day_end})보다 늦게 끝나요",
+                    "머무는 시간이나 이동을 줄이거나 다른 날로 옮겨 주세요"))
 
     # ★`[2026-10-13 사용자 결정 — 숙소 항목 B안]` 숙소는 체크인부터 체크아웃까지 며칠에 걸친다(한 항목 = 한 숙박) — 그 사이 낮 일정과
     #   시간이 겹치는 것이 정상이다. 그래서 앞뒤 일정끼리의 겹침 · 이동 시간 검사에서 빼고, 숙소끼리만 겹치지 않는지 본다(같은 밤 두 곳)
@@ -179,9 +217,9 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
         out = earlier.ends_at or earlier.starts_at
         if later.starts_at < out:
             found.append(Violation("stay_overlap", (earlier.seq, later.seq),
-                                   f"{earlier.title}(체크아웃 {seoul(out):%m-%d %H:%M})과 {later.title}"
-                                   f"(체크인 {seoul(later.starts_at):%m-%d %H:%M}) 숙박 기간이 겹친다",
-                                   f"{earlier.title} 체크아웃을 {later.title} 체크인 전으로 맞추거나 한 곳을 뺀다"))
+                                   f"{later.title}: 체크인({_md(later.starts_at)} {_hm(later.starts_at)})이 앞 숙소({earlier.title})의 "
+                                   f"체크아웃({_md(out)} {_hm(out)})보다 빨라 숙박 기간이 겹쳐요",
+                                   f"{earlier.title} 체크아웃을 {later.title} 체크인 전으로 맞추거나 한 곳을 빼 주세요"))
 
     found += _trip_violations(items, constraints, party_size)
     return found
@@ -195,11 +233,11 @@ def _place_violations(part: Part) -> list[Violation]:
     # ★`[2026-10-02]` 식당은 요식 원장의 그 시각 판정(`with_ledger`)이 있으면 그것을 본다. None 은 모름 — 거르지 않는다
     ledger = (part.place or {}).get("ledger") or {}
     if ledger.get("open_at_slot") is False:
-        when = f"{_seoul(part.starts_at):%m월 %d일} {_hm(part.starts_at)}"
+        when = f"{_md(part.starts_at)} {_hm(part.starts_at)}"
         found.append(Violation("dining_closed_at_slot", (part.seq,),
-                               f"{part.title}: 폐업한 곳이다(요식 원장)" if ledger.get("closed") else
-                               f"{part.title}: {when} 에는 영업하지 않는다(요식 원장 — 휴무 · 브레이크 · 영업시간)",
-                               "그 시각에 여는 다른 식당으로 바꾸거나 영업하는 시각으로 옮긴다"))
+                               f"{part.title}: 폐업한 곳이에요" if ledger.get("closed") else
+                               f"{part.title}: {when}에는 영업하지 않아요(휴무 · 브레이크 타임 · 영업시간 밖)",
+                               "그 시각에 여는 다른 식당으로 바꾸거나 영업하는 시각으로 옮겨 주세요"))
     # ★`[2026-09-28]` 그날의 영업시간 — 요일별 칸(`hours_week`, 관광공사 원문을 옮긴 것)이 먼저, 없으면 하루 한 칸
     #   (`hours`). 전에는 하루 한 칸만 봐서 **쉬는 요일**을 몰랐다(월요일 휴무인 곳이 월요일에 들어갔다)
     start = _seoul(part.starts_at)                 # ★서울 시각 — 날짜 · 시계 숫자 모두(`_seoul`)
@@ -210,31 +248,31 @@ def _place_violations(part: Part) -> list[Violation]:
     today = hours_on(attributes, start.date())
     if today == "closed":
         found.append(Violation("closed_day", (part.seq,),
-                               f"{part.title}: {start:%m월 %d일}은 쉬는 날이다",
-                               "그날 여는 다른 곳으로 바꾼다"))
+                               f"{part.title}: {_md(start)}은 쉬는 날이에요",
+                               "그날 여는 다른 곳으로 바꿔 주세요"))
     elif today is not None:
         opens, closes = today.opens.strftime("%H:%M"), today.closes.strftime("%H:%M")
         if start.time() < today.opens:
             found.append(Violation("before_opening", (part.seq,),
-                                   f"{part.title}: {_hm(part.starts_at)} 시작인데 {opens} 에 연다",
-                                   f"{opens} 이후로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다"))
+                                   f"{part.title}: {opens}에 문을 여는데 {_hm(part.starts_at)}에 시작해요",
+                                   f"{opens} 이후로 옮기거나 그 시각에 여는 다른 곳으로 바꿔 주세요"))
         if end.time() > today.closes or (crosses_midnight and today.closes != time(23, 59)):
             found.append(Violation("after_closing", (part.seq,),
-                                   f"{part.title}: {_hm(end)} 까지인데 {closes} 에 닫는다",
-                                   f"{closes} 이전에 끝나게 줄이거나 앞당긴다"))
+                                   f"{part.title}: {closes}에 문을 닫는데 {_hm(end)}까지 머물게 돼요",
+                                   f"{closes} 전에 끝나도록 줄이거나 앞당겨 주세요"))
         if today.last_entry and start.time() > today.last_entry:
             last = today.last_entry.strftime("%H:%M")
             found.append(Violation("after_last_entry", (part.seq,),
-                                   f"{part.title}: {_hm(part.starts_at)} 시작인데 입장·주문 마감이 {last} 다",
-                                   f"{last} 전에 들어가게 앞당기거나 다른 곳으로 바꾼다"))
+                                   f"{part.title}: 입장·주문 마감이 {last}인데 {_hm(part.starts_at)}에 시작해요",
+                                   f"{last} 전에 들어가도록 앞당기거나 다른 곳으로 바꿔 주세요"))
     found += _activity_violations(part, (part.place or {}).get("activity") or {}, {v.code for v in found}, start)
     span = break_span(attributes)
     if span is not None:
         starts, ends = span
         if start.time() < ends and (crosses_midnight or end.time() > starts):
             found.append(Violation("break_time", (part.seq,),
-                                   f"{part.title}: {starts:%H:%M}~{ends:%H:%M} 은 브레이크 타임인데 그 시간에 걸친다",
-                                   f"{ends:%H:%M} 이후로 옮기거나 {starts:%H:%M} 전에 끝낸다"))
+                                   f"{part.title}: 브레이크 타임({starts:%H:%M}~{ends:%H:%M})에 걸쳐요",
+                                   f"{ends:%H:%M} 이후로 옮기거나 {starts:%H:%M} 전에 끝내 주세요"))
     return found
 
 
@@ -246,20 +284,21 @@ def _activity_violations(part: Part, verdict: Mapping[str, Any], seen: set[str],
     if verdict.get("closed") is True:
         if "closed_day" in seen:
             return []
-        why = f" — {verdict['quote']}" if verdict.get("quote") else ""
-        return [Violation("closed_day", (part.seq,), f"{part.title}: {start:%m월 %d일}은 쉬는 날이다(활동 원장{why})",
-                          "그날 여는 다른 곳으로 바꾼다")]
+        # 안내 원문은 문장 가운데 「」로 싣는다 — 끝 괄호에 넣으면 원문의 괄호가 겹쳐 웹이 해요체 문장으로 못 알아본다(Codex 검토)
+        why = f"안내 문구 「{verdict['quote']}」에 따라 " if verdict.get("quote") else ""
+        return [Violation("closed_day", (part.seq,), f"{part.title}: {why}{_md(start)}은 쉬는 날이에요",
+                          "그날 여는 다른 곳으로 바꿔 주세요")]
     if verdict.get("cut_short") is True and verdict.get("closes_at"):
         closes, minutes = verdict["closes_at"], verdict.get("usable_minutes")
-        stay = f" {minutes}분만 머물 수 있다" if minutes else ""
-        reason = f"{part.title}: {closes} 에 닫아{stay}"
-        remedy = f"{closes} 이전에 끝나게 줄이거나 앞당긴다"
+        reason = (f"{part.title}: {closes}에 문을 닫아 {minutes}분만 머물 수 있어요" if minutes
+                  else f"{part.title}: {closes}에 문을 닫아요")
+        remedy = f"{closes} 전에 끝나도록 줄이거나 앞당겨 주세요"
         if "after_closing" in seen:
             return []
         return [Violation("after_closing", (part.seq,), reason, remedy)]
     if verdict.get("within_hours") is False and verdict.get("closed") is False and             not seen & {"before_opening", "after_closing", "after_last_entry"}:
-        return [Violation("outside_hours", (part.seq,), f"{part.title}: {_hm(part.starts_at)} 에는 운영시간 밖이다(활동 원장)",
-                          "운영시간 안으로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다")]
+        return [Violation("outside_hours", (part.seq,), f"{part.title}: {_hm(part.starts_at)}에는 운영시간이 아니에요",
+                          "운영시간 안으로 옮기거나 그 시각에 여는 다른 곳으로 바꿔 주세요")]
     return []
 
 
@@ -268,16 +307,16 @@ def _pair_violations(earlier: Part, later: Part) -> list[Violation]:
     gap = _minutes(end, later.starts_at)
     if gap < 0:
         return [Violation("overlap", (earlier.seq, later.seq),
-                          f"{earlier.title}({_hm(end)} 종료)와 {later.title}({_hm(later.starts_at)} 시작)이 겹친다",
-                          f"{later.title} 를 {_hm(end)} 뒤로 옮기거나 앞 항목을 줄인다")]
+                          f"{later.title}: {_hm(later.starts_at)}에 시작하는데 앞 일정({earlier.title})이 {_hm(end)}에 끝나 시간이 겹쳐요",
+                          f"{later.title}{particle(later.title, '을/를')} {_hm(end)} 뒤로 옮기거나 앞 일정을 줄여 주세요")]
     if later.kind == "mobility" and later.route:
         planned = _planned_eta(later.route, (later.detail or {}).get("option"))
         length = _minutes(later.starts_at, later.ends_at) if later.ends_at else None
         if planned and length is not None and length < planned[1]:
             label, eta = planned
             return [Violation("move_too_short", (later.seq,),
-                              f"{later.title}: {length}분으로 잡혔는데 계획한 수단({label})은 {eta}분 걸린다",
-                              f"{eta}분 이상으로 늘리거나 더 빠른 수단을 고른다")]
+                              f"{later.title}: {length}분으로 잡혀 있는데 계획한 수단({label})으로는 {eta}분 걸려요",
+                              f"{eta}분 이상으로 늘리거나 더 빠른 수단을 골라 주세요")]
         return []
     if earlier.kind != "mobility" and later.kind != "mobility" and gap == 0:
         here, there = _district(earlier), _district(later)
@@ -285,9 +324,9 @@ def _pair_violations(earlier: Part, later: Part) -> list[Violation]:
         #   (확정 시나리오의 성수동 쇼핑 → 성수 점심이 그렇다), 몇 분 걸리는지는 여기서 모른다.
         if here and there and here != there:
             return [Violation("no_transfer_time", (earlier.seq, later.seq),
-                              f"{earlier.title}({here}) 와 {later.title}({there}) 은 지역이 다른데 "
-                              f"이동할 시간이 0분이다",
-                              "사이에 이동 항목을 넣거나 여유를 둔다")]
+                              f"{later.title}: 앞 일정({earlier.title} · {here})과 지역({there})이 다른데 "
+                              f"사이에 이동할 시간이 없어요",
+                              "사이에 이동 일정을 넣거나 여유 시간을 두세요")]
     return []
 
 
@@ -305,16 +344,16 @@ def _trip_violations(items: list[Part], constraints: Mapping[str, Any],
             accepted = ((part.place or {}).get("attributes") or {}).get("payment")
             if accepted and str(wanted) not in [str(value) for value in accepted]:
                 found.append(Violation("payment_not_accepted", (part.seq,),
-                                       f"{part.title}: 결제 조건은 {wanted} 인데 이곳은 {', '.join(accepted)} 만 받는다",
-                                       f"{wanted} 을(를) 받는 곳으로 바꾸거나 여행 제약에서 결제 조건을 뺀다"))
+                                       f"{part.title}: 정하신 결제 수단은 {wanted}인데 이곳은 {', '.join(accepted)}만 받아요",
+                                       f"{wanted}{particle(str(wanted), '을/를')} 받는 곳으로 바꾸거나 여행 조건에서 결제 수단을 빼 주세요"))
     budget = constraints.get("budget_krw")
     if budget is not None:
         heads = party_size or 1
         total = sum(int(((part.place or {}).get("attributes") or {}).get("price_krw") or 0) for part in items) * heads
         if total > int(budget):
             found.append(Violation("over_budget", tuple(part.seq for part in items),
-                                   f"예산은 {int(budget):,}원인데 입장·식사 비용 합이 {total:,}원이다({heads}인 기준)",
-                                   f"{total - int(budget):,}원만큼 항목을 빼거나 더 싼 곳으로 바꾼다"))
+                                   f"예산은 {int(budget):,}원인데 입장·식사 비용 합이 {total:,}원이에요({heads}명 기준)",
+                                   f"{total - int(budget):,}원만큼 일정을 빼거나 더 저렴한 곳으로 바꿔 주세요"))
     return found
 
 

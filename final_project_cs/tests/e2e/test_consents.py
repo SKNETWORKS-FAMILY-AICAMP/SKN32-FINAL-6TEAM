@@ -30,6 +30,11 @@ from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_agent_keys import _agent, _make_key, _member
 from .test_web_api import _h
 from .test_web_cookie_session import WEB, _guest, cookies  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_12_01 = reldate.day("2026-12-01")
 
 SHA = "a" * 64
 SHA2 = "b" * 64
@@ -114,14 +119,14 @@ def test_the_gate_does_not_ask_for_optional_items(gate):
 def test_a_new_terms_version_asks_everyone_again(gate, monkeypatch):
     _guest(gate)
     _agree_required(gate["client"])
-    monkeypatch.setattr(consents, "current_version", lambda *_args, **_kwargs: "2026-12-01")
+    monkeypatch.setattr(consents, "current_version", lambda *_args, **_kwargs: D_2026_12_01)
     state = gate["client"].get("/v1/web/consents").json()
-    assert state["ok"] is False and state["current_version"] == "2026-12-01"
+    assert state["ok"] is False and state["current_version"] == D_2026_12_01
     assert gate["client"].get("/v1/web/trips").status_code == 403
     stale = _post(gate["client"], [_item("service_terms"), _item("privacy")], version=VERSION)
     assert stale.status_code == 409 and stale.json()["error"]["code"] == "terms_version_changed"
-    assert stale.json()["error"]["current_version"] == "2026-12-01"
-    assert _post(gate["client"], [_item("service_terms"), _item("privacy")], version="2026-12-01").json()["ok"] is True
+    assert stale.json()["error"]["current_version"] == D_2026_12_01
+    assert _post(gate["client"], [_item("service_terms"), _item("privacy")], version=D_2026_12_01).json()["ok"] is True
     assert gate["client"].get("/v1/web/trips").status_code == 200
 
 

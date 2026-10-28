@@ -12,9 +12,15 @@ from app.infrastructure.db.session import get_connection
 
 from .test_trip_api import api  # noqa: F401
 from .test_intake_review import rv, _client, _key, _send, _field  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
+D_2026_10_22 = reldate.day("2026-10-22")
 
 
-PLAN = "2026-10-15\n09:00 경복궁 관람 1시간\n10:05 광장시장 관람 1시간\n13:00 N서울타워 관람 1시간"
+PLAN = f"{D_2026_10_15}\n09:00 경복궁 관람 1시간\n10:05 광장시장 관람 1시간\n13:00 N서울타워 관람 1시간"
 HOTEL = {"name": "시험 호텔", "latitude": 37.57, "longitude": 126.98, "source": "map"}
 
 
@@ -66,7 +72,7 @@ def test_hotel_change_immediately_updates_next_time_in_same_revision(direct):
 def new_fields(view, **overrides):
     source = view["sources"][0]
     index = max((i["index"] for i in source["items"]), default=-1) + 1
-    values = {"title": "새 일정", "date": "2026-10-15", "starts_at": "11:30", "ends_at": "12:30",
+    values = {"title": "새 일정", "date": D_2026_10_15, "starts_at": "11:30", "ends_at": "12:30",
               "kind": "activity", "place": HOTEL, **overrides}
     return [{"source_id": source["source_id"], "field": f"items[{index}].{name}", "value": value}
             for name, value in values.items()]
@@ -84,7 +90,7 @@ def test_add_during_validation_uses_edits_and_get_returns_it(direct):
 
 
 @pytest.mark.parametrize("values,code", [({"starts_at": "12:30", "ends_at": "11:30"}, "invalid_value"),
-                                         ({"date": "2026-10-22"}, "trip_too_long")])
+                                         ({"date": D_2026_10_22}, "trip_too_long")])
 def test_bad_added_item_preserves_previous_revision(direct, values, code):
     client, headers, before = direct
     response = request(client, headers, before, new_fields(before, **values))
@@ -152,7 +158,7 @@ def test_booked_and_pinned_anchors_preserve_original_on_conflict(direct):
 
 def test_hotel_breakfast_pick_preserves_next_visit_and_records_derived_end(direct):
     client, headers, _ = direct
-    before = _send(client, headers, "2026-10-15\n09:00 호텔 조식\n10:05 경복궁 관람 1시간\n13:00 N서울타워 관람 1시간")
+    before = _send(client, headers, f"{D_2026_10_15}\n09:00 호텔 조식\n10:05 경복궁 관람 1시간\n13:00 N서울타워 관람 1시간")
     first = before["review"]["items"][0]
     response = request(client, headers, before, [_field(first, "place", {**HOTEL, "kind":"dining"})])
     assert response.status_code == 200, response.text

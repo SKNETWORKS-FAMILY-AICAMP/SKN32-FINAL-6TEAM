@@ -1,0 +1,6 @@
+{
+  "active_deadline_seconds": 600,
+  "attempt_timeout": "2min",
+  "start_reserve_seconds": 120,
+  "result_wait_margin_seconds": 120
+}

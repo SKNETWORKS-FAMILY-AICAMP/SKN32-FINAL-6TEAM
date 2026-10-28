@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import importlib.util
 from datetime import datetime, timezone
 import json
 import os
@@ -19,10 +20,67 @@ CI_NAMES = ("CI (main)", "CI (web)", "CI (admin)")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 REVISION = "guguroute.io/source-sha"
+# The migration Job runs while the current API keeps serving. A DDL statement that waits for a table
+# lock queues every later query on that table behind it, so the wait is bounded well inside the Job
+# deadline and the whole transaction rolls back instead of stalling customer requests.
+# The lock wait itself (lock_timeout, deadlock/lock-wait retries) belongs to migration-plan.json
+# lock_policy, which apply_all applies per attempt. The Job adds one bound per attempt: apply_all
+# restarts it for every retry and cancels (rolls back) an attempt that outruns it. statement_timeout
+# alone cannot be that bound - PostgreSQL 13+ applies it to each statement of the one multi-statement
+# migration message separately. The same value is also the session statement_timeout (backstop).
+# Worst case = lock_policy attempts x attempt bound + retry waits; it plus the start reserve (pod
+# scheduling, new image pull, interpreter start) must fit the Job deadline, or no Job is created.
+# The four Job timing values live in deploy/aws/migration-job.json (one place, no code defaults; a
+# missing or malformed file stops the CD before any cluster call). Why each value is what it is:
+# final_project_cs/wiki/operations/aws-main-cd.md.
+MIGRATION_JOB_SETTINGS_PATH = Path(__file__).resolve().parent / "aws" / "migration-job.json"
+MIGRATION_JOB_SETTING_KEYS = ("active_deadline_seconds", "attempt_timeout", "start_reserve_seconds",
+                              "result_wait_margin_seconds")
+MIGRATION_PLAN_DIR = Path(__file__).resolve().parents[1] / "app" / "infrastructure" / "db" / "migrations"
+# Kubernetes copies this file into the terminated container status (at most 4 KiB), so the
+# deployment can name the migration outcome without reading container logs.
+MIGRATION_RESULT_PATH = "/dev/termination-log"
+MIGRATION_OUTCOMES = ("committed", "failed_before_commit", "commit_unknown")
+DURATION_RE = re.compile(r"^([1-9][0-9]*)(s|min)$")
+FAILURE_FILE = "aws-deploy-failure.json"
 
 
 class DeploymentError(RuntimeError):
     pass
+
+
+def migration_job_settings(path=MIGRATION_JOB_SETTINGS_PATH):
+    """Read the migration Job timing values; refuse anything but the exact keys with positive values."""
+    try:
+        settings = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise DeploymentError("deploy/aws/migration-job.json is missing or not JSON") from exc
+    if not isinstance(settings, dict) or tuple(sorted(settings)) != tuple(sorted(MIGRATION_JOB_SETTING_KEYS)):
+        raise DeploymentError("deploy/aws/migration-job.json must define exactly "
+                              + ", ".join(MIGRATION_JOB_SETTING_KEYS))
+    for key in MIGRATION_JOB_SETTING_KEYS:
+        value = settings[key]
+        if key == "attempt_timeout":
+            if not isinstance(value, str) or not DURATION_RE.fullmatch(value):
+                raise DeploymentError("migration-job.json attempt_timeout must be a duration such as 2min")
+        elif type(value) is not int or value <= 0:
+            raise DeploymentError(f"migration-job.json {key} must be a positive integer")
+    return settings
+
+
+_JOB = migration_job_settings()
+MIGRATION_DEADLINE_SECONDS = _JOB["active_deadline_seconds"]
+MIGRATION_ATTEMPT_TIMEOUT = _JOB["attempt_timeout"]
+MIGRATION_START_RESERVE_SECONDS = _JOB["start_reserve_seconds"]
+MIGRATION_RESULT_WAIT_MARGIN_SECONDS = _JOB["result_wait_margin_seconds"]
+
+
+def seconds(value):
+    """Return seconds for an explicit PostgreSQL duration such as ``5s`` or ``5min``."""
+    match = DURATION_RE.fullmatch(value)
+    if not match:
+        raise DeploymentError("A positive duration with an explicit unit (s or min) is required")
+    return int(match[1]) * (60 if match[2] == "min" else 1)
 
 
 def command(args, *, capture=True, data=None, timeout=120):
@@ -56,8 +114,14 @@ def github(path):
         return json.load(response)
 
 
-def checked_runs(runs, sha):
-    """Require main; optional path-filtered checks must pass whenever scheduled."""
+def checked_runs(runs, sha, required=None):
+    """Require main; optional path-filtered checks must pass whenever scheduled.
+
+    ``required`` narrows which checks must have finished (image publication may start once CI (main)
+    passes). Any check that already finished without success still stops the run.
+    """
+    wait_for_all = required is None
+    required = ("CI (main)",) if required is None else tuple(required)
     latest = {}
     for run in runs:
         if (run.get("head_sha") != sha or run.get("head_branch") != "main"
@@ -67,17 +131,19 @@ def checked_runs(runs, sha):
         name = run["name"]
         if name not in latest or run["id"] > latest[name]["id"]:
             latest[name] = run
-    if "CI (main)" not in latest:
+    if any(name not in latest for name in required):
         return False
     for run in latest.values():
         if run["status"] != "completed":
-            return False
+            if wait_for_all or run["name"] in required:
+                return False
+            continue
         if run["conclusion"] != "success":
             raise DeploymentError(f"{run['name']} did not succeed")
     return True
 
 
-def gate(timeout=2400, interval=10):
+def gate(timeout=2400, interval=10, main_only=False):
     repo = os.environ["GITHUB_REPOSITORY"]
     sha = command(["git", "rev-parse", "HEAD"]).strip()
     if not SHA_RE.fullmatch(sha):
@@ -86,6 +152,7 @@ def gate(timeout=2400, interval=10):
     if trigger and trigger != sha:
         output("ready", "false")
         return
+    required = ("CI (main)",) if main_only else None
     deadline = time.monotonic() + timeout
     while True:
         head = github(f"/repos/{repo}/branches/main")["commit"]["sha"]
@@ -96,10 +163,11 @@ def gate(timeout=2400, interval=10):
         result = github(f"/repos/{repo}/actions/runs?head_sha={sha}&per_page=100")
         if result.get("total_count", 0) > 100:
             raise DeploymentError("Too many check runs; refusing an incomplete gate")
-        if checked_runs(result["workflow_runs"], sha):
+        if checked_runs(result["workflow_runs"], sha, required):
             output("sha", sha)
             output("ready", "true")
-            print("The current main and every scheduled CI check succeeded.")
+            print("CI (main) succeeded for the current main; images may be published." if main_only
+                  else "The current main and every scheduled CI check succeeded.")
             return
         if time.monotonic() >= deadline:
             raise DeploymentError("Timed out waiting for CI")
@@ -225,22 +293,87 @@ def patch_for(document, image, sha):
             {"op": "replace", "path": "/spec/template", "value": spec}]
 
 
+MIGRATION_SCRIPT = """\
+import json
+from pathlib import Path
+import sys
+
+result_path, statement_timeout, attempt_seconds = sys.argv[1:4]
+
+
+def record(document):
+    Path(result_path).write_text(json.dumps(document), encoding="utf-8")
+
+
+import psycopg
+from psycopg.pq import TransactionStatus
+from app.infrastructure.db.migrate import apply_all, safety_manifest
+from app.infrastructure.db.session import get_connection
+
+safety_manifest()
+applied = False
+try:
+    with get_connection() as conn:
+        name = "statement_timeout"
+        accepted = conn.execute("SELECT set_config(%s, %s, false)", (name, statement_timeout)).fetchone()[0]
+        shown = conn.execute("SELECT current_setting(%s)", (name,)).fetchone()[0]
+        if shown != accepted or shown in ("0", "", None):
+            raise RuntimeError(name + " was not applied")
+        # End the check transaction (the session setting stays) so apply_all runs at the outermost
+        # level and applies migration-plan.json lock_policy with its deadlock/lock-wait retries.
+        conn.commit()
+        if conn.info.transaction_status != TransactionStatus.IDLE:
+            raise RuntimeError("connection is not idle before the migration")
+        apply_all(conn, attempt_timeout_s=int(attempt_seconds))
+        applied = True
+except Exception as exc:
+    uncertain = applied or getattr(exc, "migration_commit_uncertain", False) is True
+    failure = {"migration": "commit_unknown" if uncertain else "failed_before_commit", "error": type(exc).__name__}
+    if isinstance(getattr(exc, "sqlstate", None), str):
+        failure["sqlstate"] = exc.sqlstate
+    attempts = getattr(exc, "attempts", getattr(exc, "migration_attempts", None))
+    if type(attempts) is int:
+        failure["attempts"] = attempts
+    record(failure)
+    raise
+record({"migration": "committed"})
+print(json.dumps({"migration": "committed"}))
+"""
+
+
+def migration_lock_policy():
+    """Load lock_policy through the migration package's own validator (no second copy of the values)."""
+    spec = importlib.util.spec_from_file_location("migration_plan_for_cd", MIGRATION_PLAN_DIR.parent / "migration_plan.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.lock_policy(MIGRATION_PLAN_DIR)
+
+
+def migration_worst_case_seconds():
+    """Longest the migration can run: every lock_policy attempt at its full bound plus the waits between."""
+    policy = migration_lock_policy()
+    attempt = seconds(MIGRATION_ATTEMPT_TIMEOUT)
+    if policy["lock_timeout_ms"] >= attempt * 1000:
+        raise DeploymentError("lock_policy lock_timeout must be shorter than one migration attempt")
+    return policy["attempts"] * attempt + sum(policy["retry_wait_seconds"])
+
+
 def migration_job(baseline, image, sha, run_id):
     pod = copy.deepcopy(baseline["spec"]["template"]["spec"])
     if len(pod["containers"]) != 1:
         raise DeploymentError("Unexpected API sidecar")
+    if migration_worst_case_seconds() + MIGRATION_START_RESERVE_SECONDS > MIGRATION_DEADLINE_SECONDS:
+        raise DeploymentError("Every lock_policy attempt at its bound plus the retry waits and start reserve "
+                              "must end before the Job deadline")
     c = pod["containers"][0]
     c["image"] = immutable_image(image)
-    c["command"] = ["python", "-c", (
-        "import json\nfrom app.infrastructure.db.migrate import apply_all,safety_manifest\n"
-        "from app.infrastructure.db.session import get_connection\n"
-        "safety_manifest()\n"
-        "with get_connection() as conn:\n    apply_all(conn)\n"
-        "print(json.dumps({'migration':'committed'}))\n"
-    )]
+    c["command"] = ["python", "-c", MIGRATION_SCRIPT, MIGRATION_RESULT_PATH, MIGRATION_ATTEMPT_TIMEOUT,
+                    str(seconds(MIGRATION_ATTEMPT_TIMEOUT))]
     c.pop("args", None)
     for key in ("readinessProbe", "livenessProbe", "startupProbe", "lifecycle", "ports"):
         c.pop(key, None)
+    c["terminationMessagePath"] = MIGRATION_RESULT_PATH
+    c["terminationMessagePolicy"] = "File"
     c["resources"] = {"requests": {"cpu": "100m", "memory": "128Mi"},
                       "limits": {"cpu": "500m", "memory": "768Mi"}}
     pod["restartPolicy"] = "Never"
@@ -248,15 +381,54 @@ def migration_job(baseline, image, sha, run_id):
     name = f"guguroute-cd-migrate-{sha[:12]}-{run_id}"
     return {"apiVersion": "batch/v1", "kind": "Job",
             "metadata": {"name": name, "labels": {"app.kubernetes.io/managed-by": "guguroute-cd"}},
-            "spec": {"backoffLimit": 0, "activeDeadlineSeconds": 600, "ttlSecondsAfterFinished": 86400,
+            "spec": {"backoffLimit": 0, "activeDeadlineSeconds": MIGRATION_DEADLINE_SECONDS,
+                     "ttlSecondsAfterFinished": 86400,
                      "template": {"metadata": {"labels": {"app.kubernetes.io/managed-by": "guguroute-cd"}},
                                   "spec": pod}}}
 
 
-def require_clean_jobs(jobs):
+def job_outcome(namespace, job_name):
+    """Read the migration's own bounded termination record; never container logs."""
+    pods = kubectl(namespace, "get", "pods", "-l", f"job-name={job_name}", "-o", "json")["items"]
+    statuses = [s for p in pods for s in p.get("status", {}).get("containerStatuses", [])]
+    if not statuses:
+        return {"migration": "unknown", "reason": "no-pod"}
+    terminated = statuses[-1].get("state", {}).get("terminated")
+    if not terminated:
+        return {"migration": "unknown", "reason": "not-terminated"}
+    try:
+        message = json.loads(terminated.get("message", ""))
+    except ValueError:
+        message = {}
+    if not isinstance(message, dict):
+        message = {}
+    outcome = {"migration": message.get("migration") if message.get("migration") in MIGRATION_OUTCOMES else "unknown"}
+    if re.fullmatch(r"[0-9A-Z]{5}", str(message.get("sqlstate", ""))):
+        outcome["sqlstate"] = message["sqlstate"]
+    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", str(message.get("error", ""))):
+        outcome["error"] = message["error"]
+    if type(message.get("attempts")) is int and 0 <= message["attempts"] <= 100:
+        outcome["attempts"] = message["attempts"]
+    if isinstance(terminated.get("exitCode"), int):
+        outcome["exit_code"] = terminated["exitCode"]
+    if re.fullmatch(r"[A-Za-z]{1,40}", str(terminated.get("reason", ""))):
+        outcome["reason"] = terminated["reason"]
+    return outcome
+
+
+def describe_outcome(outcome):
+    return ", ".join(f"{k}={outcome[k]}" for k in ("migration", "error", "sqlstate", "attempts", "reason", "exit_code")
+                     if k in outcome)
+
+
+def require_clean_jobs(jobs, outcomes=None):
     for job in jobs:
         if not job.get("status", {}).get("succeeded"):
-            raise DeploymentError("A previous migration is failed or uncertain; inspect it before another deployment")
+            name = job.get("metadata", {}).get("name", "unnamed")
+            state = "active" if job.get("status", {}).get("active") else "unknown"
+            outcome = (outcomes or {}).get(name, {"migration": state})
+            raise DeploymentError(f"A previous migration is failed or uncertain ({name}: {describe_outcome(outcome)}); "
+                                  "inspect it before another deployment")
 
 
 def check_database_backup(identifier):
@@ -339,7 +511,36 @@ def verify(namespace, images, sha):
     return result
 
 
+def failure_record(sha, stage, exc, timings, migration, recovery):
+    """Sanitized failure facts: our own DeploymentError text, otherwise only the exception type."""
+    error = f"DeploymentError: {exc}" if isinstance(exc, DeploymentError) else type(exc).__name__
+    return {"sha": sha, "stage": stage, "error": error, "recovery": recovery, "migration": migration,
+            "timings": timings, "failed_at": datetime.now(timezone.utc).isoformat()}
+
+
 def deploy(sha, namespace, images, public_url, database, settle=30):
+    timings = {}
+    clock = {"stage": "preflight", "started": time.monotonic()}
+    facts = {"migration": None, "recovery": "not-needed"}
+
+    def enter(stage):
+        now = time.monotonic()
+        timings[clock["stage"]] = round(now - clock["started"], 3)
+        clock.update(stage=stage, started=now)
+
+    try:
+        _deploy(sha, namespace, images, public_url, database, settle, enter, timings, facts)
+    except BaseException as exc:
+        if clock["stage"] not in timings:
+            timings[clock["stage"]] = round(time.monotonic() - clock["started"], 3)
+        record = failure_record(sha, clock["stage"], facts.get("cause", exc), timings, facts["migration"],
+                                facts["recovery"])
+        Path(FAILURE_FILE).write_text(json.dumps(record, indent=2), encoding="utf-8")
+        print(json.dumps(record), file=sys.stderr)
+        raise
+
+
+def _deploy(sha, namespace, images, public_url, database, settle, enter, timings, facts):
     if not SHA_RE.fullmatch(sha):
         raise DeploymentError("Invalid revision")
     repo = os.environ["GITHUB_REPOSITORY"]
@@ -356,26 +557,34 @@ def deploy(sha, namespace, images, public_url, database, settle=30):
     with open(path, "x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
         json.dump(baselines, stream)
     recovery_point = check_database_backup(database)
-    prior = kubectl(namespace, "get", "jobs", "-l", "app.kubernetes.io/managed-by=guguroute-cd", "-o", "json")
-    require_clean_jobs(prior["items"])
+    prior = kubectl(namespace, "get", "jobs", "-l", "app.kubernetes.io/managed-by=guguroute-cd", "-o", "json")["items"]
+    unfinished = [j["metadata"]["name"] for j in prior
+                  if not j.get("status", {}).get("succeeded") and j.get("status", {}).get("failed")]
+    require_clean_jobs(prior, {name: readable_outcome(namespace, name) for name in unfinished})
+    enter("migration")
     job = migration_job(baselines["tripilot-api"], images["tripilot-api"], sha, os.environ["GITHUB_RUN_ID"])
     created = kubectl(namespace, "create", "-f", "-", "-o", "json", data=json.dumps(job))
     job_name = created["metadata"]["name"]
-    deadline = time.monotonic() + 720
+    deadline = time.monotonic() + MIGRATION_DEADLINE_SECONDS + MIGRATION_RESULT_WAIT_MARGIN_SECONDS
     while True:
         current = kubectl(namespace, "get", "job", job_name, "-o", "json")
         status = current.get("status", {})
         if status.get("succeeded"):
+            facts["migration"] = {"migration": "committed"}
             break
         if status.get("failed") or time.monotonic() >= deadline:
-            raise DeploymentError("Migration failed or is uncertain; application images were not changed")
+            facts["migration"] = readable_outcome(namespace, job_name)
+            raise DeploymentError(f"Migration failed or is uncertain ({describe_outcome(facts['migration'])}); "
+                                  "application images were not changed")
         time.sleep(5)
     changed = ["tripilot-worker"]
     try:
+        enter("worker-pause")
         # A single small node cannot fit two API pods plus the worker. Keep the
         # existing API serving while releasing only the worker's reserved memory.
         pause_worker(namespace, {baselines["tripilot-worker"]["spec"]["template"]["spec"]["containers"][0]["image"]})
         for name in APPS:
+            enter(f"rollout:{name}")
             current = deployment(namespace, name)
             if current["spec"]["template"] != baselines[name]["spec"]["template"]:
                 raise DeploymentError(f"{name}: configuration changed during publication")
@@ -387,12 +596,15 @@ def deploy(sha, namespace, images, public_url, database, settle=30):
             kubectl(namespace, "patch", "deployment", name, "--type=json",
                     "-p", json.dumps(patch), "-o", "json")
             wait_for_rollout(namespace, name)
+        enter("verify")
         result = verify(namespace, images, sha)
         health = public_health(public_url)
         time.sleep(settle)
         result = verify(namespace, images, sha)
         health = public_health(public_url)
-    except BaseException:
+        enter("done")
+    except BaseException as exc:
+        facts["cause"] = exc
         recovery_errors = []
         try:
             pause_worker(namespace, {images["tripilot-worker"], baselines["tripilot-worker"]["spec"]["template"]["spec"]["containers"][0]["image"]})
@@ -415,23 +627,34 @@ def deploy(sha, namespace, images, public_url, database, settle=30):
             except Exception:
                 recovery_errors.append(name)
         if recovery_errors:
+            facts["recovery"] = "failed:" + ",".join(recovery_errors)
             raise DeploymentError("Deployment and image recovery failed; operator action required") from None
+        facts["recovery"] = "restored"
         raise DeploymentError("Deployment failed; previous application images restored; DB remains forward-only") from None
     document = {"sha": sha, "checked_at": datetime.now(timezone.utc).isoformat(),
                 "database_recovery_point": recovery_point, "applications": result,
-                "public_http": health, "migration_job": job_name}
+                "public_http": health, "migration_job": job_name, "timings": timings}
     Path("aws-deploy-result.json").write_text(json.dumps(document, indent=2), encoding="utf-8")
     print(json.dumps(document))
+
+
+def readable_outcome(namespace, job_name):
+    try:
+        return job_outcome(namespace, job_name)
+    except (DeploymentError, KeyError, ValueError):
+        return {"migration": "unknown", "reason": "unreadable"}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("gate", "publish", "deploy"))
     parser.add_argument("--sha", default="")
+    parser.add_argument("--main-only", action="store_true",
+                        help="gate: open once CI (main) passed (image publication), never past a failed check")
     args = parser.parse_args()
     try:
         if args.action == "gate":
-            gate()
+            gate(main_only=args.main_only)
         elif args.action == "publish":
             publish(args.sha, os.environ["CD_NAMESPACE"], os.environ["CD_ECR_REGISTRY"])
         else:

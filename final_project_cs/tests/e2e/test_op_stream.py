@@ -28,6 +28,8 @@ from .test_trip_planner import START, api as plan_api  # noqa: F401
 from .test_web_api import _web_body  # noqa: F401
 
 FAST = {"beat_seconds": 0.05, "slow_seconds": 0.12, "max_seconds": 5.0, "max_per_user": 3}
+#: 운영 설정을 읽는 원래 함수 — 시험이 `op_stream.limits` 를 갈아 끼우기 전에 잡아 둔다
+REAL_LIMITS = op_stream.limits
 
 
 def _events(body: str) -> list[tuple[str, dict]]:
@@ -274,7 +276,14 @@ SSE = {"Accept": "text/event-stream"}
 
 @pytest.fixture()
 def fast_stream(monkeypatch):
-    monkeypatch.setattr(op_stream, "limits", lambda op="message": dict(FAST))
+    """실제 입구 시험 — 생존 신호 · 느림 알림은 빠른 값, **마감은 운영 값**(`travel.op_stream.max_seconds.<op>`).
+
+    ☆`[2026-10-28]` 전에는 마감도 FAST 의 5초였다. 이 픽스처를 쓰는 시험은 시간 초과가 아니라 결과 · 404 · 중복 · 연결 수를 보는데,
+      8일꾼 전체 시험에서 채팅 처리가 5초를 넘겨 `error{code: timeout, elapsed: 5.0}` 로 끝나 두 시험이 번갈아 실패했다
+      (`…marked_duplicate` · `…same_answer_as_json`, 단독은 통과 · CPU 부하에서 재현). 시간 초과 동작은 `_run(cfg=…)` 을 쓰는
+      `test_past_max_seconds_it_ends_with_a_timeout_error_and_the_worker_still_finishes` 가 따로 본다.
+    """
+    monkeypatch.setattr(op_stream, "limits", lambda op="message": {**FAST, "max_seconds": REAL_LIMITS(op)["max_seconds"]})
     op_stream._OPEN.clear()
     yield
     op_stream._OPEN.clear()
@@ -338,7 +347,7 @@ def test_chat_over_sse_ends_with_the_same_answer_as_json(trip_api, fast_stream):
     streamed = client.post(path, headers={**key, **SSE}, json={"request_id": "sse-1", **MESSAGE})
     assert streamed.status_code == 200 and streamed.headers["content-type"].startswith("text/event-stream")
     events = _events(streamed.text)
-    assert events[0][0] == "accepted" and events[-1][0] == "result"
+    assert events[0][0] == "accepted" and events[-1][0] == "result", events[-1]
     assert events[-1][1]["status"] == as_json.json()["status"] == "no_meal"
     assert events[-1][1]["answer"] == as_json.json()["answer"]
     assert "reading" in [d["stage"] for n, d in events if n == "stage"]
@@ -353,7 +362,7 @@ def test_chat_over_sse_for_someone_elses_trip_is_404_and_a_repeated_request_is_m
     body = {"request_id": "same-1", **MESSAGE}
     first = _events(client.post(path, headers={**mine, **SSE}, json=body).text)
     second = _events(client.post(path, headers={**mine, **SSE}, json=body).text)
-    assert first[-1][0] == "result" and second[-1][0] == "result"
+    assert first[-1][0] == "result" and second[-1][0] == "result", (first[-1], second[-1])
     assert second[-1][1]["status"] == "duplicate"               # 같은 request_id 는 두 번 처리되지 않는다 — 다시 연결해도 안전하다
 
 
@@ -385,8 +394,33 @@ def test_intake_events_end_at_once_for_a_review_intake_and_close_as_stalled_for_
     client = plan_api["client"]
     key = _key(plan_api)
     intake = client.post("/v1/web/trip-intakes", headers=key, data={"text": ""}).json()["intake_id"]
-    ended = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
-    assert [n for n, _ in ended] == ["accepted", "result"]
+    # ★`[2026-10-28 contract_correction]` 옛 단언 `[n for n, _ in ended] == ["accepted", "result"]` 은 첫 내용 계산(`Feed.poll`)이
+    #   beat 한 번(시험 0.05초)보다 빨리 끝난다는 **타이밍**에 기댔다. `watch` 는 이제 내용 계산을 기다리는 동안에도 beat(`pending: content`)를 낸다
+    #   (EKS 브라우저 시험의 거짓 「연결이 끊겼어요」 수정 — 재연결 때 첫 내용 계산이 전부를 다시 보내 가장 길다).
+    #   「곧바로 끝」의 뜻 = 상태를 **한 번만** 읽고(다시 읽기 · stage 없음) 첫 내용 뒤 `result`. 그것을 더 엄격히 본다.
+    reads = {"n": 0}
+    real_watch = op_stream.watch
+
+    def counting_watch(read, **kw):
+        def counted():
+            reads["n"] += 1
+            return read()
+        return real_watch(counted, **kw)
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(op_stream, "watch", counting_watch)
+        ended = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
+    assert ended[0][0] == "accepted" and ended[-1][0] == "result"
+    assert [n for n, _ in ended if n != "beat"] == ["accepted", "result"]
+    # ★`[2026-10-28 role-manager 관문 db11 — 시간 경쟁]` 사이의 beat 는 내용 계산 중(`pending: content`)이거나, 내용 계산이 막 끝나 `result` 가
+    #   큐에 들어가는 순간(끊김 확인 `is_disconnected` 를 기다리는 사이)에 나간 `pending: null` 이다. 둘 다 사실대로다 — 다시 읽기(`read`)는 없다.
+    for name, beat in ended[1:-1]:
+        assert name == "beat" and beat["pending"] in ("content", None) and beat["stage"] == "review"
+        if beat["pending"] is None:
+            assert beat["pending_seconds"] is None
+        else:
+            assert type(beat["pending_seconds"]) in (int, float) and beat["pending_seconds"] >= 0
+    assert reads["n"] == 1                                       # 다시 읽지 않았다(폴링 회차 없음)
     state = ended[-1][1]["state"]
     assert state["status"] == "review" and state["stage"] == "review" and set(state) >= {"stage_label", "revision", "quiet_seconds"}
     assert "claims" not in state and "sources" not in state     # 읽은 값은 싣지 않는다 — 웹이 GET 으로 읽는다
@@ -395,6 +429,7 @@ def test_intake_events_end_at_once_for_a_review_intake_and_close_as_stalled_for_
                     "WHERE intake_id=%s", (intake,))
     dead = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
     assert dead[0][0] == "accepted" and dead[-1][0] == "error" and dead[-1][1]["code"] == "stalled"
+    assert all(d["pending"] in ("read", "content", None) for n, d in dead if n == "beat")
     assert dead[-1][1]["retryable"] is True
 
 

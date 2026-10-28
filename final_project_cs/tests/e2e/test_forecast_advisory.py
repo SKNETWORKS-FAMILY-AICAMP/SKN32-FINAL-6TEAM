@@ -13,7 +13,7 @@ from app.domains.travel_ops.components.planning.pending import (
 from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 from tests.e2e.test_indoor_unknown_consent import _choose, _create_with, _proposals
 from tests.e2e.test_trip_api import _at, _detail, _slot, api  # noqa: F401
-from tests.scenario.test_case_version_day import case_world  # noqa: F401
+from tests.scenario.test_case_version_day import _at as _case_at, case_world  # noqa: F401
 
 ADVISORY = {"verdict": "clear", "disruptions": [], "advisories": [
     {"category": "forecast", "field": "precipitation_probability", "value": 80, "limit": 60},
@@ -124,7 +124,7 @@ def test_indoor_activity_is_not_offered_forecast_change(api):
 
 def test_default_case_watch_also_notifies_forecast_without_running_case(case_world):
     world = case_world
-    world["clock"].now = _at("09:00")
+    world["clock"].now = _case_at("09:00")       # ★`[2026-10-28]` Case 세계의 대본 시계 — 여기 `_at`(실행 날 기준으로 옮긴 대본)과 다른 날일 수 있다
     world["engine"].opener.check = _check
     tick = world["engine"].tick()
     assert tick.opened == [] and tick.ran == [] and len(tick.notified) == 1

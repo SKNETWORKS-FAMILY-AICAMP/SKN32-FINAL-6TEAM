@@ -78,7 +78,8 @@ def test_saying_no_names_the_time_the_distance_and_the_main_reason():
     plan = _plan(_item(home, 8), [home, closed])
     assert isinstance(plan, NoChange) and plan.status == "no_alternate"
     assert "08:00" in plan.detail["text"] and "3km" in plan.detail["text"], plan.detail
-    assert "살펴본 곳: 아침엔 닫는 식당 — 그 시각 영업하지 않는다" in plan.detail["text"] and plan.detail["radius_m"] == 3000
+    # contract_correction `[2026-10-28]`: 식당 영업 판정 이유(`replan.dining_fits`)는 고객에게 보이는 해요체로 바뀌었다(전 「그 시각 영업하지 않는다」)
+    assert "살펴본 곳: 아침엔 닫는 식당 — 그 시각에는 영업하지 않아요" in plan.detail["text"] and plan.detail["radius_m"] == 3000
 
 
 def test_an_activity_is_not_replaced_by_the_same_site_under_another_name():

@@ -12,6 +12,7 @@ from .test_nambu_progress_web import nambu_scene, latest, at  # noqa: F401
 from .test_decision_unit_web import decided  # noqa: F401
 from .test_chat_edit_web import _answer
 from .test_web_api import api, _h, _fresh_limit_cache  # noqa: F401
+from tests.helpers import relative_dates as reldate
 
 
 def seed_original(scene):
@@ -61,7 +62,7 @@ def test_original_23_turns_with_explicit_semantic_responses(nambu_scene, monkeyp
     turns=json.loads((Path(__file__).parents[1]/'fixtures/travel/nambu_field_chat.json').read_text(encoding='utf-8'))
     records=[]
     for index,turn in enumerate(turns,1):
-        scene['now']=datetime.fromisoformat(turn['at'])
+        scene['now']=datetime.fromisoformat(reldate.shift_iso(turn['at']))   # 녹화 시각도 같은 폭으로 옮긴다(`nambu_scene`)
         _,items=latest(scene)
         meal=next((i for i in items if i.kind=='dining'),None)
         meal_name=meal.title if meal else None
@@ -103,8 +104,8 @@ def test_original_23_turns_with_explicit_semantic_responses(nambu_scene, monkeyp
             action,target='finish_day', ('이마트' if index==22 else None)
         _answer(scene,action,target=target,**raw)
         response=scene['client'].post(f"/v1/web/trips/{trip_id}/messages",headers=_h(scene['key']),json={
-            'request_id':f'original-{index}','message':turn['message'],
-            'at':datetime.fromisoformat(turn['at']).isoformat()})
+            'request_id':f'original-{index}','message':reldate.shift_text(turn['message']),
+            'at':datetime.fromisoformat(reldate.shift_iso(turn['at'])).isoformat()})
         assert response.status_code==200,response.text
         body=response.json()
         trip,items=latest(scene)

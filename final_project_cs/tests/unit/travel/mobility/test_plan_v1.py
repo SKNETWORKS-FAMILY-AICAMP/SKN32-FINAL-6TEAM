@@ -189,7 +189,18 @@ def test_contract_keys():
         assert context["schema_version"] == 1 and context["timing_unit"] == "model_minutes"
         assert datetime.fromisoformat(context["captured_at"]).utcoffset() is not None
         route = got["routes"][it["route"]]
-        assert set(context["options"]) == {o["id"] for o in route["options"]}
+        # ☆`[2026-10-28]` 2b22b09ff(10-23)부터 문맥은 계획 출발 후보(`options`)에 더해 「조금 일찍 떠나면 닿는」 후보(`more_options`)도 싣는다 —
+        #   고객이 그 경로를 고르면 `selected_context` 가 그 id 의 문맥을 꺼낸다(intake/moves · registered_moves). 이 시험은 자료 기기에서만 돌아
+        #   그때 「== options」 기대가 갱신되지 않았다. options 는 모두 들어 있고, 나머지는 더 보기 상한 안의 온전한 후보여야 한다.
+        from app.domains.travel_ops.instances.mobility.engine.plan import MORE_MAX
+        planned_ids = {o["id"] for o in route["options"]}
+        assert planned_ids <= set(context["options"]), (planned_ids, set(context["options"]))
+        extra_ids = set(context["options"]) - planned_ids
+        assert len(extra_ids) <= MORE_MAX, extra_ids
+        for extra in extra_ids:
+            saved = context["options"][extra]
+            assert saved["option_id"] == extra and isinstance(saved["eta_min"], int) and saved["eta_min"] > 0
+            assert isinstance(saved["start_min"], int) and saved["path_kind"] in {"vehicle", "direct_walk", "direct_taxi"}
         for option in route["options"]:
             saved = context["options"][option["id"]]
             assert saved["option_id"] == option["id"] and saved["eta_min"] == option["eta_min"]

@@ -28,39 +28,57 @@ from .test_trip_api import api  # noqa: F401 — `rv` 가 쓰는 픽스처
 
 #: 다른 연결이 접수 행을 쥐는 시간(초) — 기다리는 요청은 이만큼 걸린다(우리가 고른 값)
 HOLD_S = 3.0
+#: 읽기 시험에서 잠금을 쥐는 최대 시간(초) — 읽기가 끝나면 바로 놓는다. 읽기가 잠금을 기다리면 이 시간이 다 지나서야 끝나고 실패한다(우리가 고른 값)
+HOLD_MAX_S = 30.0
 
 
-def _hold(intake_id: UUID, seconds: float) -> threading.Thread:
-    """다른 화면의 긴 쓰기처럼 접수 행을 잠그고 `seconds` 뒤에 놓는다 — 시험 스레드가 막히지 않게 따로 돈다."""
+def _hold(intake_id: UUID, seconds: float, until: threading.Event | None = None) -> threading.Thread:
+    """다른 화면의 긴 쓰기처럼 접수 행을 잠그고 `seconds` 뒤에(`until` 이 있으면 그것이 켜지는 즉시) 놓는다 — 시험 스레드가 막히지 않게 따로 돈다.
+
+    ★`until` 을 줬는데 `seconds` 가 다 지나 놓았으면 `thread.released_by_timeout` 이 True 다.
+    """
     ready = threading.Event()
 
     def run() -> None:
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("SELECT 1 FROM trip_intakes WHERE intake_id=%s FOR UPDATE", (intake_id,))
             ready.set()
-            time.sleep(seconds)
+            if until is None:
+                time.sleep(seconds)
+            else:
+                thread.released_by_timeout = not until.wait(seconds)
 
     thread = threading.Thread(target=run, daemon=True)
+    thread.released_by_timeout = False
     thread.start()
     assert ready.wait(10), "접수 행을 잠그지 못했다"
     return thread
 
 
 def test_reading_the_check_and_its_alternatives_does_not_wait_for_a_write(rv):
+    """①: 잠금을 **쥔 채로** 두 읽기가 끝나야 한다.
+
+    ☆`[2026-10-28]` 전에는 「두 읽기 합계 < HOLD_S − 1(2초)」로 쟀다. 잠금 대기가 0건이어도 로컬 격리 실행에서 두 읽기가 각각 약 1초라
+      단독 실행에서도 2.0초로 실패했다(`pg_stat_activity` 잠금 대기 표본 0 — 계산 시간이지 잠금이 아니었다). 이제 읽기가 끝날 때까지 잠금을
+      쥐고 있다가 놓으므로, 읽기가 잠금을 기다리면 `HOLD_MAX_S` 가 다 지나야 끝나고 실패한다 — 읽기 속도와 무관하게 판정한다.
+    """
     client, _, _ = _client()
     headers = _key(client)
     view = _send(client, headers, ROOMY)
     item = view["review"]["items"][0]
-    holder = _hold(UUID(view["intake_id"]), HOLD_S)
+    done = threading.Event()
+    holder = _hold(UUID(view["intake_id"]), HOLD_MAX_S, until=done)
     started = time.monotonic()
     shown = client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers)
     found = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/candidates", headers=headers,
                        params={"source_id": item["source_id"], "index": item["index"]})
     waited = time.monotonic() - started
+    held_throughout = holder.is_alive() and not holder.released_by_timeout
+    done.set()
     holder.join()
     assert shown.status_code == 200 and found.status_code == 200, (shown.text, found.text)
     assert shown.json()["revision"] == view["revision"]
-    assert waited < HOLD_S - 1, f"읽기가 쓰기를 기다렸다 {waited:.1f}s"
+    assert held_throughout and not holder.released_by_timeout, f"읽기가 쓰기를 기다렸다 {waited:.1f}s"
 
 
 def test_a_write_still_waits_for_the_one_holding_the_intake(rv):

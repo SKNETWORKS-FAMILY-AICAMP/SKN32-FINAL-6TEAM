@@ -27,6 +27,7 @@ from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.domains.travel_ops.modules.mcp import mcp_server
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
+from tests.helpers import relative_dates as reldate
 from tests.helpers.plugin_bindings import publish_test_services
 
 from .test_mcp_server import _data, _error_text, _run
@@ -70,6 +71,18 @@ def _trip(api, client, me, request_id="risk-1") -> dict[str, Any]:
     made = client.post("/v1/web/trips", json=_web_body(api, request_id=request_id), headers=_h(me["user_key"]))
     assert made.status_code == 201, made.text
     return client.get(f"/v1/web/trips/{made.json()['trip_id']}", headers=_h(me["user_key"])).json()
+
+
+def _back_to_the_written_day(api, client, me, trip) -> dict[str, Any]:
+    """★`[2026-10-28]` 이 시험의 항목은 원래 **이미 지난** 대본 날(2026-09-23)이었다 — 그래서 6종을 모두 그 시각으로 점검했다.
+    대본은 이제 실행 날 기준 앞날로 옮겨 등록한다(전부-과거 가드). 등록 뒤 이 여행의 일정만 쓰인 날로 되돌려 같은 상태를 만든다
+    (멀리 남은 항목은 특보 · 교통 등이 `too_early` 가 된다 — `risk_report.judge_item`)."""
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE itinerary_items i SET starts_at = i.starts_at - make_interval(days => %s), "
+                    "ends_at = i.ends_at - make_interval(days => %s) FROM trips t WHERE t.trip_id=i.trip_id "
+                    "AND t.latest_version=i.version AND t.tenant_id=%s AND t.trip_id=%s",
+                    (reldate.epoch_shift(), reldate.epoch_shift(), api["tenant"], trip["trip_id"]))
+    return client.get(f"/v1/web/trips/{trip['trip_id']}", headers=_h(me["user_key"])).json()
 
 
 def _usage(api, action) -> int:
@@ -135,7 +148,7 @@ def test_cached_reads_have_their_own_daily_cap_when_the_limit_is_on(api):
 def test_unknown_stays_unknown_and_one_item_can_be_asked_outside_the_window(api):
     client = _client(FakeCheck(failed=("traffic_control",)), FakeCheck())
     me = _session(api)
-    trip = _trip(api, client, me)
+    trip = _back_to_the_written_day(api, client, me, _trip(api, client, me))
     target = next(i for i in trip["items"] if i["kind"] != "mobility" and i.get("place"))
     one = client.get(f"/v1/web/trips/{trip['trip_id']}/risks", params={"item_id": target["item_id"]}, headers=_h(me["user_key"]))   # at 없음 = 지금 — 범위 밖이어도 그 항목은 본다
     assert one.status_code == 200 and one.json()["scope"] == "item" and len(one.json()["items"]) == 1

@@ -71,7 +71,8 @@ def test_a_change_that_breaks_the_whole_itinerary_is_not_written_and_the_custome
     outcome = _run(case_world, item, change)
 
     assert outcome["status"] == "rechecked" and outcome["item"] == item.title
-    assert outcome["skipped"] and outcome["skipped"][0]["why"] == "schedule" and "겹친다" in outcome["skipped"][0]["reasons"][0]
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「겹친다」)
+    assert outcome["skipped"] and outcome["skipped"][0]["why"] == "schedule" and "시간이 겹쳐요" in outcome["skipped"][0]["reasons"][0]
     assert _trip(case_world)[0]["version"] == trip["version"]                       # ★아무것도 안 바뀌었다
     notices = _recheck_notices(case_world)
     assert len(notices) == 1

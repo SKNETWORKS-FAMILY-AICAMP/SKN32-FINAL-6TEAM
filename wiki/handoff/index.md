@@ -19,6 +19,8 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 ## 세션 정리 메모 (최근 것이 위)
 
+2026-10-28 「C12 저장 실패 + 2분 안내 통합」 세션(Claude): 격리 트리 `cache/scratch/integ-c12-wait-20261028`(브랜치 `integ/c12-wait-20261028`, 팀 · 개인 role-manager ffb5fb1b 위). 한 일: 제안 고르기 저장 실패 503(7f670774f · 리뷰 129741ec3)과 계획 읽기 · 짜기 「2분쯤 걸릴 수 있어요」(72c6a718f) cherry-pick 3/3, 충돌 0. 빠른 관문 10,549/0 · 실 DB 122/122 · vitest 1,219/1,219 · tsc · 브라우저 41/41 · 화면 캡처 한 · 영 확인. **push · 배포 안 함** — push 직전 두 원격 tip 재확인 뒤 fast-forward. [보고서](../../final_project_cs/wiki/records/reports/2026-10-28_C12_2분안내_통합_role-manager.md)
+
 2026-10-27 「전수검사 A~J 후보 통합」 세션(Claude, K): 격리 트리 `cache/scratch/integ-K-allaudit-20261027`(브랜치 `integ/K-allaudit-20261027`, 팀 · 개인 role-manager 064208bd 위). 한 일: F → C → B → G → A → D → E → H → J 9/9 후보 cherry-pick(문서 충돌 3곳 양쪽 보존), 통합 수정 2(저장 실패 계약 단락 정합 · 웹 문구표 intake_not_ready · over_price_limit). 빠른 관문 10,530/10,530 · vitest 1,217/1,217 · tsc · ruff · DB core 89/89 · 실 E4B 수용 49 엄격 39/49(기준 38). I(EKS)는 제외 — C lock_policy 와의 상충 분석은 보고서 §4. role-manager 팀 · 개인 fast-forward push(develop · main 미변경). [보고서](../../final_project_cs/wiki/records/reports/2026-10-27_K_전수검사후보_통합_role-manager.md)
 
 2026-10-27 「미통합 후보 통합」 세션(Claude, F): 격리 트리 `cache/scratch/integ-F-20261027/rm`(브랜치 `integ/F-20261027`, 팀 · 개인 role-manager 064208bd 위). 한 일: T04 범위 경계 되묻기(145367ee) · fix5 보고서 · 「일정 수정」 완료 저장 실패 503(7f19fe4cd) cherry-pick, 웹 문구표 `save_failed` 짝 추가, 관문 · DB · vitest 실패 0, 실 E4B 3행 재시험. **push 안 함 — 부모 승인 뒤 role-manager fast-forward 만**(develop · main 미변경). 남은 일: 승인 경로 `_apply_approved` 저장 실패(보고서 M), push 뒤 CI(main) 수동 실행. [보고서](../../final_project_cs/wiki/records/reports/2026-10-27_F_후보통합_T04_저장실패503_064208bd.md)
