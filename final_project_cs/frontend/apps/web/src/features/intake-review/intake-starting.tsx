@@ -35,7 +35,7 @@ export const SEND_WITHOUT_PAINT_MS = 300;
  *
  * A refusal sends the customer back to the entry page with the server's sentence and what they had chosen to send.
  */
-export function IntakeStarting() {
+export function IntakeStarting({ onReturn }: { onReturn?: () => void } = {}) {
   const t = useT();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -58,7 +58,7 @@ export function IntakeStarting() {
   const [planning, setPlanning] = useState<OpProgress | null>(null);
 
   useEffect(() => {
-    if (!start) { router.replace(routes.newTrip); return; }
+    if (!start) { onReturn?.(); router.replace(routes.newTrip); return; }
     let live = true;
     // 두 번의 그리기 프레임을 기다려 화면을 실제로 표시한 뒤 전송한다 — 그리기 신호가 안 오는 화면에서는 타이머로(`SEND_WITHOUT_PAINT_MS`). 전송은 한 번뿐이다(`send`).
     let secondFrame = 0;
@@ -66,8 +66,11 @@ export function IntakeStarting() {
     const noPaint = setTimeout(() => start.send(), SEND_WITHOUT_PAINT_MS);
     const fail = (error: unknown) => {
       if (!live || left.current) return;
-    rememberIntakeFailure(start, error);
+      rememberIntakeFailure(start, error);
       endIntakeStart(start);
+      // The entry page also renders us before navigation commits. A failed navigation
+      // can leave that URL unchanged: release its local sending state as well.
+      onReturn?.();
       router.replace(routes.newTrip);
     };
     start.result.then(async ({ intake_id }) => {
@@ -93,10 +96,10 @@ export function IntakeStarting() {
       router.replace(routes.intake(intake_id));
     }, fail);
     return () => { live = false; cancelAnimationFrame(firstFrame); cancelAnimationFrame(secondFrame); clearTimeout(noPaint); };
-  }, [start, router, queryClient]);
+  }, [start, router, queryClient, onReturn]);
 
   // Going back gives the entry page what the customer had chosen to send (the files, the planning conditions) — with no sentence of a refusal.
-  const goBack = () => { left.current = true; if (start) { start.cancel(); rememberIntakeFailure(start, ""); endIntakeStart(start); } router.push(routes.newTrip); };
+  const goBack = () => { left.current = true; if (start) { start.cancel(); rememberIntakeFailure(start, ""); endIntakeStart(start); } onReturn?.(); router.push(routes.newTrip); };
   // The slow notes are about the first answer only; once the server has given the intake an id, its own stage words take over.
   const waitingOnServer = phase === "sending";
   const note = waitingOnServer && slow === 2 ? t("서버가 많이 늦어요 · 계속 기다리거나, 뒤로 가서 다시 보낼 수 있어요", "The server is very slow · keep waiting, or go back and send again")
