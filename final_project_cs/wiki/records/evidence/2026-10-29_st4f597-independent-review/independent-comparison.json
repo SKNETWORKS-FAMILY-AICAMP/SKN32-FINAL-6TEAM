@@ -1,0 +1,28 @@
+{
+  "identical_test_set": 255,
+  "improvements": [
+    {
+      "test": "tests.integration.dining.test_cuisine_source_records::test_menu_after_unrelated_source_is_used",
+      "baseline": "failed",
+      "candidate": "passed"
+    },
+    {
+      "test": "tests.integration.dining.test_cuisine_source_records::test_latest_menu_replaces_old_tags",
+      "baseline": "failed",
+      "candidate": "passed"
+    },
+    {
+      "test": "tests.integration.dining.test_cuisine_source_records::test_explicitly_empty_latest_menu_stays_unknown",
+      "baseline": "failed",
+      "candidate": "passed"
+    },
+    {
+      "test": "tests.integration.dining.test_cuisine_source_records::test_similarity_axis_receives_available_menu_evidence",
+      "baseline": "failed",
+      "candidate": "passed"
+    }
+  ],
+  "new_failures": [],
+  "tag_rules_identical": true,
+  "patch_hash_verified": true
+}

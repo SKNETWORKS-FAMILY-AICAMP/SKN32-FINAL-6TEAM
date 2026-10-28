@@ -1,0 +1,61 @@
+{
+  "contract": {
+    "passed": 367,
+    "total": 367,
+    "skipped": 0
+  },
+  "security": {
+    "passed": 125,
+    "total": 125,
+    "skipped": 0
+  },
+  "dining": {
+    "passed": 258,
+    "total": 258,
+    "skipped": 0
+  },
+  "judge": {
+    "passed": 39,
+    "total": 39,
+    "skipped": 0
+  },
+  "dod": {
+    "passed": 26,
+    "total": 26,
+    "skipped": 0,
+    "pytest_cases": 216
+  },
+  "validated_upstream": "5ded90e99b180d6b9601c82fa3467c184cd879bc",
+  "candidate": "5b47b2e4",
+  "direct_sql": {
+    "baseline": null,
+    "twice": [
+      [
+        "면"
+      ],
+      [
+        "면"
+      ]
+    ],
+    "attributes_before": [
+      false,
+      "s",
+      "{=X/postgres,postgres=X/postgres,dining_loader=X/postgres}"
+    ],
+    "attributes_after": [
+      false,
+      "s",
+      "{=X/postgres,postgres=X/postgres,dining_loader=X/postgres}"
+    ],
+    "rollback_verified": true
+  },
+  "replay": {
+    "full_replays": 2,
+    "synthetic_place": "a94aa28a-dfc0-4203-b0a3-22e7ff8b49e7",
+    "synthetic_load": "b6348dcc-af5e-4923-8889-43713e98e236",
+    "menu_preserved": true,
+    "tags": [
+      "고기"
+    ]
+  }
+}

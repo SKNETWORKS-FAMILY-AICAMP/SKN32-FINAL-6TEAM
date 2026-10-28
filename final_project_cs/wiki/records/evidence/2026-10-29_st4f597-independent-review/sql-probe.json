@@ -1,0 +1,22 @@
+{
+  "baseline": null,
+  "twice": [
+    [
+      "면"
+    ],
+    [
+      "면"
+    ]
+  ],
+  "attributes_before": [
+    false,
+    "s",
+    "{=X/postgres,postgres=X/postgres,dining_loader=X/postgres}"
+  ],
+  "attributes_after": [
+    false,
+    "s",
+    "{=X/postgres,postgres=X/postgres,dining_loader=X/postgres}"
+  ],
+  "rollback_verified": true
+}

@@ -50,3 +50,12 @@ SQL inventory는 생성기의 render 결과 중 해당 문서만 갱신했습니
 전체 증거: `C:/_proj/final_workspace/scratch/st4f597-review-20261029/`. review.py의 baseline/dining/final-dining/contract/security/dod/migration-tests/probe/replay/judge-tests-ready로 조건을 확인할 수 있습니다. 기준·원후보 JUnit,각 로그,직접SQL JSON,재적용JSON,시험전 파일·문서 백업을 보존했습니다. 원후보 패치 SHA256은37c9610c88bfb9b6d342b96cad244de8df6cc7f9da64705ec917fbe0e3cd8841입니다.
 
 메뉴가 아예 없는 원장까지 해결한 것은 아닙니다. ST4F-597을 닫지 않습니다. 운영 메뉴 보유율·후보 해당 건수·운영 수락은 미확인입니다. 전체 잔여 업무의 분모는 모름입니다. 활성 자료·기존 DB·로그·사본 삭제0입니다.
+
+
+## 통합판 최종 검증 — 2026-10-29
+
+버스 담당의 반영·예약 해제 뒤 양쪽 role-manager `5ded90e99b180d6b9601c82fa3467c184cd879bc`를 읽었습니다. 버스 소스3e3b4b7과 문서 후속을 일반 merge로 보존했습니다. source 경계는 겹치지 않고 wiki 목차 충돌2개는 양쪽 추가 항목을 모두 보존했으며 충돌 원문도 백업했습니다. 후보 커밋은5b47b2e4입니다. 원격에 없는 다른 후보를 섞지 않았습니다.
+
+통합판 재실행은 dining258/258·판정 보호39/39·계약367/367·보안125/125·DoD26/26 =각100%,실패·건너뜀0입니다. mock provider를 명시한 실제 합성 PostgreSQL 검증입니다. 기존 제품 판정·잠금·감사 코드는 변경0입니다. DoD 개별 실행 로그/JUnit·요약도 보존했습니다. 기존 회귀 실패는 시험 경계와 기대값의 낡음이며 신규 메뉴 회귀가 아닙니다.
+
+[독립 비교·JUnit·SQL·최종 관문 manifest](../evidence/2026-10-29_st4f597-independent-review/manifest.json). 자동 x600 배포의 운영 수락은 확인하지 않았습니다. 운영DB에 직접 실행한 변경 명령은0이며 이슈 종결도0입니다. 양 원격 push readback과 자체PG 종료는 아래 후속 기록으로 구분합니다.
