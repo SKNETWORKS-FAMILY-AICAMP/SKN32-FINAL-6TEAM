@@ -8,6 +8,12 @@ from .test_intake_candidate_kinds import around  # noqa: F401
 from .test_intake_lodging_recommendation import LodgingMap
 from .test_intake_review import OPEN_ALL, _client, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_24 = reldate.day("2026-10-24")
+D_2026_10_25 = reldate.day("2026-10-25")
 
 
 
@@ -52,7 +58,7 @@ def test_first_read_fills_the_meal_place_but_asks_both_hotel_breakfasts(around, 
     monkeypatch.setattr(candidates, "alternatives", after_meal)
     client, _, _ = _client(kakao=LodgingMap())
     view = _send(client, _key(client),
-                 "2026-10-24\n09:00 호텔 조식\n10:00 경복궁\n12:00 점심 식당\n2026-10-25\n09:00 호텔 조식\n10:00 경복궁")
+                 f"{D_2026_10_24}\n09:00 호텔 조식\n10:00 경복궁\n12:00 점심 식당\n{D_2026_10_25}\n09:00 호텔 조식\n10:00 경복궁")
     assert view["status"] == "review" and view["stage"] == "review"
     assert any(f["owner"] == "dining_team" for f in view["prefill"]["filled"]), view["prefill"]
     assert any(i["kind"] == "dining" and not i.get("lodging_group") and i.get("place")

@@ -18,13 +18,18 @@ import pytest
 
 from .test_intake_review import _client, _item, _key, _send, rv  # noqa: F401 — 같은 환경 · 모방을 그대로 쓴다
 from .test_trip_api import api  # noqa: F401 — `rv` 가 쓰는 픽스처
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
 
 #: 경복궁에 끝이 없다 — 끝은 10:00 + 90분인데 10:30 광장시장에 끊겨 10:30
-NO_END = ("2026-10-15\n"
+NO_END = (f"{D_2026_10_15}\n"
           "10:00 경복궁 관람\n"
           "10:30 광장시장 빈대떡")
 #: 경복궁 끝을 고객이 적었다
-WITH_END = ("2026-10-15\n"
+WITH_END = (f"{D_2026_10_15}\n"
             "10:00~10:20 경복궁 관람\n"
             "10:30 광장시장 빈대떡")
 

@@ -32,8 +32,14 @@ from app.presentation import security
 from app.presentation.api.app import create_app
 from tests.helpers.plugin_bindings import publish_fixed_mobility
 from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
+from tests.helpers import relative_dates as reldate
 
-START = date(2026, 10, 5)
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_05 = reldate.day("2026-10-05")
+D_2026_10_06 = reldate.day("2026-10-06")
+
+START = reldate.moved(date(2026, 10, 5))
 
 #: 종로구 안에 모아 둔 시험용 장소. 좌표는 서로 수백 m 이내라 도보 환산이 현실적인 값이 된다.
 #: ★**이름을 일부러 갈랐다** — 선호가 없을 때의 규칙 순위는 동률이면 이름순이라, 야외가
@@ -738,7 +744,7 @@ def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_on
     done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body)
     assert done.status_code == 200, done.text
     trip = done.json()["trip"]
-    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {"2026-10-05", "2026-10-06"}
+    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {D_2026_10_05, D_2026_10_06}
     again = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body).json()
     assert again["trip"]["trip_id"] == trip["trip_id"] and again["trip"]["created"] is False
     after = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
@@ -763,7 +769,7 @@ def test_an_empty_intake_is_planned_from_the_review_screen_and_registered(api):
     done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body)
     assert done.status_code == 200, done.text
     trip = done.json()["trip"]
-    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {"2026-10-05", "2026-10-06"}
+    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {D_2026_10_05, D_2026_10_06}
     after = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
     assert after["status"] == "confirmed" and after["trip_id"] == trip["trip_id"]
 
@@ -775,14 +781,14 @@ def test_read_items_are_kept_and_the_planner_fills_only_the_rest(api):
 
     client = api["client"]
     key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
-    text = chr(10).join(["서울 2일 일정 짜 줘", "1일차 2026-10-05", "13:00 하늘 박물관"])
+    text = chr(10).join(["서울 2일 일정 짜 줘", f"1일차 {D_2026_10_05}", "13:00 하늘 박물관"])
     intake_id = client.post("/v1/web/trip-intakes", headers=key, data={"text": text}).json()["intake_id"]
     view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
     assert view["check"]["plan"]["requested"] is True and view["check"]["items"] == 1
     base = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
     # 날짜 밖이면(읽은 일정이 10-05 인데 10-06 부터 짜 달라면) 조용히 버리지 않고 거절한다
     outside = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
-                          json={**base, "start_date": "2026-10-06", "days": 1})
+                          json={**base, "start_date": D_2026_10_06, "days": 1})
     assert outside.status_code == 422 and outside.json()["error"]["code"] == "read_items_outside_days"
     done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=base)
     assert done.status_code == 200, done.text
@@ -794,11 +800,11 @@ def test_read_items_are_kept_and_the_planner_fills_only_the_rest(api):
     pinned_start = datetime.fromisoformat(fixed[0]["starts_at"])
     pinned_end = datetime.fromisoformat(fixed[0]["ends_at"])
     for other in stops:
-        if other is fixed[0] or other["starts_at"][:10] != "2026-10-05":
+        if other is fixed[0] or other["starts_at"][:10] != D_2026_10_05:
             continue
         start, end = datetime.fromisoformat(other["starts_at"]), datetime.fromisoformat(other["ends_at"] or other["starts_at"])
         assert end <= pinned_start or start >= pinned_end, other                # 겹치지 않는다
-    assert {i["starts_at"][:10] for i in stops} == {"2026-10-05", "2026-10-06"}
+    assert {i["starts_at"][:10] for i in stops} == {D_2026_10_05, D_2026_10_06}
 
 
 def test_a_place_the_customer_fixed_keeps_its_other_name_out_of_the_generated_part(api):
@@ -810,7 +816,7 @@ def test_a_place_the_customer_fixed_keeps_its_other_name_out_of_the_generated_pa
     from app.infrastructure.db.session import get_connection
 
     def activities(**extra):
-        ask = planner.PlanRequest(city="서울", start_date=date(2026, 10, 5), days=2, party_size=2, locale="ko")
+        ask = planner.PlanRequest(city="서울", start_date=reldate.moved(date(2026, 10, 5)), days=2, party_size=2, locale="ko")
         with get_connection() as conn:
             out = planner.plan_trip(conn=conn, tenant_id=api["tenant"], request=ask, chat=None, tour_api=None, **extra)
         body = out.draft.as_create_body(request_id="same-site", customer_id=api["customer"])
@@ -831,7 +837,7 @@ def test_a_place_the_customer_fixed_keeps_its_other_name_out_of_the_generated_pa
 def test_a_fresh_plan_ignores_the_read_items_when_asked(api):
     client = api["client"]
     key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
-    text = chr(10).join(["서울 1일 일정 짜 줘", "1일차 2026-10-05", "13:00 하늘 박물관"])
+    text = chr(10).join(["서울 1일 일정 짜 줘", f"1일차 {D_2026_10_05}", "13:00 하늘 박물관"])
     intake_id = client.post("/v1/web/trip-intakes", headers=key, data={"text": text}).json()["intake_id"]
     view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
     done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,

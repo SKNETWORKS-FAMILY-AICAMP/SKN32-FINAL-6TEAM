@@ -335,13 +335,18 @@ def _age(env, customer: UUID, days: float) -> None:
                     (int(days * 24), env["tenant"], customer))
 
 
-def _new_guest_with_trip(env, *, days_idle: float, trip: bool = True) -> UUID:
+def _new_guest_with_trip(env, *, days_idle: float, trip: bool = True, ended_days_ago: float | None = 30) -> UUID:
+    """★`[2026-10-28]` 대본 날짜(2026-09-23)가 지난 날이던 때는 이 여행이 늘 「이미 끝난 여행」이었다. 대본을 실행 날 기준 앞날로
+    옮긴 뒤에도(`tests/helpers/relative_dates.py`) 같은 상태가 되게 끝난 날을 오늘 기준으로 명시한다(기본 30일 전).
+    끝나는 날을 따로 재는 시험은 `_set_trip_end` 로 다시 정한다."""
     browser = TestClient(env["client"].app, follow_redirects=False)
     browser.post("/v1/web/auth/session", headers={"X-Forwarded-For": env["ip"]})
     env2 = {**env, "client": browser}
     customer = _customer_of(env2)
     if trip:
         assert _make_trip(env2)[0] == 201
+        if ended_days_ago is not None:
+            _set_trip_end(env, customer, days_from_now=-ended_days_ago)
     _age(env, customer, days_idle)
     return customer
 

@@ -394,8 +394,33 @@ def test_intake_events_end_at_once_for_a_review_intake_and_close_as_stalled_for_
     client = plan_api["client"]
     key = _key(plan_api)
     intake = client.post("/v1/web/trip-intakes", headers=key, data={"text": ""}).json()["intake_id"]
-    ended = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
-    assert [n for n, _ in ended] == ["accepted", "result"]
+    # ★`[2026-10-28 contract_correction]` 옛 단언 `[n for n, _ in ended] == ["accepted", "result"]` 은 첫 내용 계산(`Feed.poll`)이
+    #   beat 한 번(시험 0.05초)보다 빨리 끝난다는 **타이밍**에 기댔다. `watch` 는 이제 내용 계산을 기다리는 동안에도 beat(`pending: content`)를 낸다
+    #   (EKS 브라우저 시험의 거짓 「연결이 끊겼어요」 수정 — 재연결 때 첫 내용 계산이 전부를 다시 보내 가장 길다).
+    #   「곧바로 끝」의 뜻 = 상태를 **한 번만** 읽고(다시 읽기 · stage 없음) 첫 내용 뒤 `result`. 그것을 더 엄격히 본다.
+    reads = {"n": 0}
+    real_watch = op_stream.watch
+
+    def counting_watch(read, **kw):
+        def counted():
+            reads["n"] += 1
+            return read()
+        return real_watch(counted, **kw)
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(op_stream, "watch", counting_watch)
+        ended = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
+    assert ended[0][0] == "accepted" and ended[-1][0] == "result"
+    assert [n for n, _ in ended if n != "beat"] == ["accepted", "result"]
+    # ★`[2026-10-28 role-manager 관문 db11 — 시간 경쟁]` 사이의 beat 는 내용 계산 중(`pending: content`)이거나, 내용 계산이 막 끝나 `result` 가
+    #   큐에 들어가는 순간(끊김 확인 `is_disconnected` 를 기다리는 사이)에 나간 `pending: null` 이다. 둘 다 사실대로다 — 다시 읽기(`read`)는 없다.
+    for name, beat in ended[1:-1]:
+        assert name == "beat" and beat["pending"] in ("content", None) and beat["stage"] == "review"
+        if beat["pending"] is None:
+            assert beat["pending_seconds"] is None
+        else:
+            assert type(beat["pending_seconds"]) in (int, float) and beat["pending_seconds"] >= 0
+    assert reads["n"] == 1                                       # 다시 읽지 않았다(폴링 회차 없음)
     state = ended[-1][1]["state"]
     assert state["status"] == "review" and state["stage"] == "review" and set(state) >= {"stage_label", "revision", "quiet_seconds"}
     assert "claims" not in state and "sources" not in state     # 읽은 값은 싣지 않는다 — 웹이 GET 으로 읽는다
@@ -404,6 +429,7 @@ def test_intake_events_end_at_once_for_a_review_intake_and_close_as_stalled_for_
                     "WHERE intake_id=%s", (intake,))
     dead = _events(client.get(f"/v1/web/trip-intakes/{intake}/events", headers=key).text)
     assert dead[0][0] == "accepted" and dead[-1][0] == "error" and dead[-1][1]["code"] == "stalled"
+    assert all(d["pending"] in ("read", "content", None) for n, d in dead if n == "beat")
     assert dead[-1][1]["retryable"] is True
 
 

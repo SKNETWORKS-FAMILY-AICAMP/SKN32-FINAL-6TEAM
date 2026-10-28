@@ -37,7 +37,8 @@ def test_two_stays_on_the_same_night_are_refused_with_a_remedy():
     a = Part(1, "lodging", "호텔A", _at(6, 15), _at(8, 11), {"name": "A"})
     b = Part(6, "lodging", "호텔B", _at(7, 15), _at(9, 11), {"name": "B"})
     (found,) = check_itinerary([*DAY, a, b])
-    assert found.code == "stay_overlap" and "11-08 11:00" in found.reason and found.remedy
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「11-08 11:00」)
+    assert found.code == "stay_overlap" and "체크아웃(11월 8일 11:00)" in found.reason and found.remedy
 
 
 def test_back_to_back_stays_pass_and_day_overlaps_are_still_caught():

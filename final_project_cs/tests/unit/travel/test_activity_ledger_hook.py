@@ -101,7 +101,8 @@ def test_cut_short_says_how_long_you_can_stay():
                 place={"name": "경복궁", "attributes": facts.attributes, "activity": facts.activity})
     violations = check_itinerary([part])
     assert [v.code for v in violations] == ["after_closing"]
-    assert "19:00 에 닫아 60분만 머물 수 있다" in violations[0].reason
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「19:00 에 닫아 60분만 머물 수 있다」)
+    assert "19:00에 문을 닫아 60분만 머물 수 있어요" in violations[0].reason
 
     hours_line, closed = _hours_lines(_row(start, end), facts, violations)
     assert hours_line["result"] == "warn" and hours_line["text"] == "19:00에 닫아 60분만 머물 수 있어요"

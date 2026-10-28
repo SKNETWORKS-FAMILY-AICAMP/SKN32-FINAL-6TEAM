@@ -472,7 +472,7 @@ function Reading({ view, onBack, extras }: { view: PlanCheckView; onBack: () => 
   const t = useT();
   const head = <header className={styles.head}>
     <div className={styles.headRow}><BackButton onBack={onBack} /><h1 className={styles.title}>{t("계획을 확인하고 있어요", "Checking your plan")}</h1></div>
-    <p className={styles.desc}>{t("사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
+    <p className={styles.desc}>{t("사진 한 장은 2분쯤 걸릴 수 있어요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo can take about two minutes. Keep this page open and the result will appear.")}</p>
     <ProgressBar view={view} />
   </header>;
   const found = <p className={styles.found}>{t("찾은 일정", "Stops found")} <b>{foundCount(view)}</b>{t("개", "")}</p>;

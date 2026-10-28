@@ -21,6 +21,10 @@
   로컬이 멈추면 유료가 처음부터 다시 읽는다. 로컬 모델이 안 올라와 있으면 곧바로 유료로 간다(`ModelNotLoaded`). 다른 메서드의 동작은 그대로다.
 ★`[2026-10-26]` 첫 Ollama 가 안 올라와 있어 넘길 때는 **뒤에서 예열을 한 번 시작한다**(`register_warm_starter` — 조립 루트가 `model_warmup` 의 중복 억제를 꽂는다).
   고객 요청은 예열을 기다리지 않는다. 안 올리면 runner 가 내려간 동안 다음 요청도 계속 유료였다(x600 `not_loaded`).
+★`[2026-10-28 x600 05:26:35]` 로컬 runner 마다 **동시 호출 자리**(`llm_failover_local_concurrency`, x600 runner `-np 1` 에 맞춰 기본 1)를 둔다.
+  자리를 못 얻은 호출은 회로를 건드리지 않고(`local_busy`) 다음 경로로 간다. 자리 대기는 호출의 첫 조각 · 제한시간 **바깥**이고,
+  대기 상한은 `llm_failover_local_queue_seconds`(기본 0 — 기다리지 않는다)와 뒤 유료 몫 중 작은 쪽이다.
+  ☆전에는 줄이 runner 안에 섰고 기다린 시간까지 로컬 제한시간에 들어가, 적재 직후 동시 `structured` 3건이 모두 `timeout` 으로 세어져 회로가 60초 열렸다.
 """
 from __future__ import annotations
 
@@ -28,11 +32,13 @@ import base64
 import contextvars
 import json
 import logging
+import math
 import re
 import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 
@@ -95,6 +101,11 @@ class CircuitBreaker:
             self._probing = True
             return True
 
+    def cooling(self) -> bool:
+        """열려 있고 열림 시간이 아직 안 지났나 — 상태를 바꾸지 않고 본다(로컬 자리를 기다리기 전에 빨리 건너뛸 때). 최종 허가는 `allow`."""
+        with self._lock:
+            return self.state == "open" and self._clock() - self.opened_at < self.open_seconds
+
     def success(self) -> None:
         with self._lock:
             if self.state != "closed":
@@ -132,6 +143,64 @@ def breaker_for(name: str, *, threshold: int, open_seconds: float, clock: Callab
         return _breakers[key]
 
 
+# ─────────────────────────── 로컬 runner 동시 호출 자리 `[2026-10-28]` ───────────────────────────
+class LocalSlots:
+    """로컬 runner 하나에 이 프로세스가 동시에 보내는 호출 수 상한. runner 의 동시 처리 수(Ollama `-np`)에 맞춘다.
+    ★자리 대기는 호출의 첫 조각 · 제한시간 바깥이다 — 기다린 뒤 보낸 요청은 제 처리 시간만 제한시간에 든다.
+    ★프로세스 안 전역이다. 다른 프로세스(worker 컨테이너 등)가 같은 runner 를 쓰면 그 줄은 runner 안에 남는다."""
+
+    def __init__(self, key: str, size: int) -> None:
+        self.key, self.size = key, int(size)
+        self._sem = threading.BoundedSemaphore(self.size)
+        self._lock = threading.Lock()
+        self.active = self.peak = 0
+
+    def acquire(self, timeout: float) -> bool:
+        """빈 자리면 곧바로 얻는다(대기 상한이 0 이어도). 바쁘면 `timeout` 초까지만 기다린다."""
+        got = self._sem.acquire(blocking=False) or (timeout > 0 and self._sem.acquire(timeout=timeout))
+        if got:
+            with self._lock:
+                self.active += 1
+                self.peak = max(self.peak, self.active)
+        return bool(got)
+
+    def release(self) -> None:
+        with self._lock:
+            self.active -= 1
+        self._sem.release()
+
+    def snapshot(self) -> dict[str, Any]:
+        with self._lock:
+            return {"size": self.size, "active": self.active, "peak": self.peak}
+
+
+_slots: dict[str, LocalSlots] = {}
+_slot_sizes: dict[str, int] = {}
+_slots_lock = threading.Lock()
+
+
+def local_slots_for(key: str, size: int) -> LocalSlots | None:
+    """runner(주소) 하나의 자리 — 같은 runner 는 이름(`ollama` · `local`)이 달라도 한 자리를 나눠 쓴다. `size` 0 이면 상한 없음(`None`).
+    같은 runner 에 다른 크기를 주면 첫 값을 조용히 쓰지 않고 거부한다."""
+    size = int(size)
+    with _slots_lock:
+        known = _slot_sizes.setdefault(key, size)
+        if known != size:                                         # 0(상한 없음) ↔ 양수도 충돌 — 한쪽이 다른 쪽 자리를 우회하지 않게
+            raise ValueError(f"llm_failover local slot size conflict for one runner: {known} != {size}")
+        if size <= 0:
+            return None
+        slots = _slots.get(key)
+        if slots is None:
+            slots = _slots[key] = LocalSlots(key, size)
+        return slots
+
+
+def _runner_key(url: str) -> str:
+    """같은 runner 를 가리키는 주소를 하나로 — 끝 `/` 를 떼고 scheme · host 만 소문자로(경로는 그대로). 호스트 별칭(IP ↔ 이름)은 합치지 않는다."""
+    parts = urlsplit(url.strip().rstrip("/"))
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path, parts.query, parts.fragment))
+
+
 # ─────────────────────────── 지표 ───────────────────────────
 _stats_lock = threading.Lock()
 _counters: dict[str, int] = {}
@@ -148,14 +217,19 @@ def snapshot() -> dict[str, Any]:
     ★프로세스를 다시 띄우면 0 으로 돌아간다(영구 기록은 로그)."""
     with _breakers_lock:
         states = {f"{k[0]}": b.snapshot() for k, b in _breakers.items()}
+    with _slots_lock:
+        slots = {k: v.snapshot() for k, v in _slots.items()}
     with _stats_lock:
-        return {"counters": dict(_counters), "last_switch": dict(_last_switch), "breakers": states}
+        return {"counters": dict(_counters), "last_switch": dict(_last_switch), "breakers": states, "local_slots": slots}
 
 
 def reset_state() -> None:
     """시험용 — 서킷 · 지표를 비운다."""
     with _breakers_lock:
         _breakers.clear()
+    with _slots_lock:
+        _slots.clear()
+        _slot_sizes.clear()
     with _stats_lock:
         _counters.clear()
         _last_switch.clear()
@@ -527,6 +601,8 @@ class _Backend:
     #: 이 경로가 호출 하나에 최대로 쓰는 시간(초) — 다시 시도 · 넘김이 전체 시간 안에 드는지 가늠할 때 쓴다
     budget: Callable[[], bool] | None = field(default=None, repr=False)
     reader_budget: Callable[[], bool] | None = field(default=None, repr=False)
+    #: 로컬 runner 의 동시 호출 자리(`LocalSlots`) — 없으면 상한 없이 부른다(예전 그대로). 유료 경로에는 두지 않는다
+    slots: Any = field(default=None, repr=False)
 
 
 class FailoverChat:
@@ -534,10 +610,12 @@ class FailoverChat:
 
     def __init__(self, backends: list[_Backend], *, total_seconds: float = 15.0, vision: bool = False,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic,
-                 backoff_seconds: float = 0.4, warm_chat: Any = None) -> None:
+                 backoff_seconds: float = 0.4, warm_chat: Any = None, local_queue_seconds: float = 0.0) -> None:
         if not backends:
             raise ValueError("경로가 하나는 있어야 한다")
         self._backends, self.total_seconds, self.vision = backends, float(total_seconds), bool(vision)
+        #: 바쁜 로컬 자리를 기다리는 시간의 상한(초) — 뒤 유료 몫을 넘지 않는다(`_queue_wait`)
+        self.local_queue_seconds = float(local_queue_seconds)
         self._sleep, self._clock, self._backoff = sleep, clock, float(backoff_seconds)
         first = next((b.chat for b in backends if not b.is_api), backends[0].chat)
         self._primary = first
@@ -553,7 +631,25 @@ class FailoverChat:
         return getattr(self._primary, name)
 
     # ── 호출 ──
-    def _run(self, op: str, call: Callable[..., Any], *, image: bool = False, deadline: float | None = None, reader: bool = False, reader_external: bool = False) -> Any:
+    def _paid_after(self, index: int, reserve: float, external: bool) -> bool:
+        """reader 로컬 시도가 유료 몫(`reserve`)을 남겨야 하나 — 뒤에 쓸 수 있는 유료 경로(외부 대체 켜짐 · 서킷 열림 아님)가 있을 때만."""
+        return reserve > 0 and external and any(b.is_api and b.breaker.snapshot()["state"] != "open" for b in self._backends[index + 1:])
+
+    def _queue_wait(self, index: int, backend: _Backend, started: float, deadline: float | None, reserve: float, external: bool) -> float:
+        """바쁜 로컬 자리를 기다릴 수 있는 시간 — 설정 상한과 뒤 유료 몫 중 작은 쪽. `[2026-10-28]`
+        reader(절대 시한): 시한까지 남은 시간에서 유료 몫(`api_reserve_seconds`)을 뺀다. 그 밖: 다시 시도 조건과 같은 식
+        (전체 시간 − 지난 시간 − 이 경로 제한시간 − 뒤 유료 제한시간)."""
+        now = self._clock()
+        if deadline is not None:
+            room = deadline - now - (reserve if self._paid_after(index, reserve, external) else 0.0)
+        else:
+            later_api = any(b.is_api for b in self._backends[index + 1:])
+            tail = max((b.timeout for b in self._backends[index + 1:]), default=0.0) if later_api else 0.0
+            room = self.total_seconds - (now - started) - backend.timeout - tail
+        return max(0.0, min(self.local_queue_seconds, room))
+
+    def _run(self, op: str, call: Callable[..., Any], *, image: bool = False, deadline: float | None = None, reader: bool = False,
+             reader_external: bool = False, reserve: float = 0.0) -> Any:
         started = self._clock()
         reasons: list[tuple[str, str]] = []
         for index, backend in enumerate(self._backends):
@@ -565,83 +661,116 @@ class FailoverChat:
                 reasons.append((backend.name, "vision_off"))
                 _count(f"skip:{backend.name}:vision_off")
                 continue
-            if not backend.breaker.allow():
-                reasons.append((backend.name, "circuit_open"))
-                _count(f"skip:{backend.name}:circuit_open")
-                continue
-            if backend.is_api and not reader and backend.budget is not None and not backend.budget():
-                backend.breaker.release()
-                reasons.append((backend.name, "budget_exhausted"))
-                _count(f"skip:{backend.name}:budget_exhausted")
-                log.warning("llm_failover op=%s backend=%s skipped: call budget exhausted", op, backend.name)
-                continue
-            later_api = any(b.is_api for b in self._backends[index + 1:])
-            attempt = 0
-            while True:
-                if deadline is not None and deadline <= self._clock():
+            slots = backend.slots if not backend.is_api else None
+            held = False
+            if slots is not None:
+                # ★`[2026-10-28]` 자리 → 서킷 허가 → 호출 순서. 열려 있는 중이면 기다리지 않고 건너뛴다.
+                #   자리를 못 얻은 호출(`local_busy`)은 서버를 부르지 않았으므로 서킷의 성공 · 실패 · 반쪽 시험 어느 것도 건드리지 않는다.
+                if backend.breaker.cooling():
+                    reasons.append((backend.name, "circuit_open"))
+                    _count(f"skip:{backend.name}:circuit_open")
+                    continue
+                if not slots.acquire(self._queue_wait(index, backend, started, deadline, reserve, reader_external)):
+                    reasons.append((backend.name, "local_busy"))
+                    _count(f"skip:{backend.name}:local_busy")
+                    continue
+                held = True
+            try:
+                if not backend.breaker.allow():
+                    reasons.append((backend.name, "circuit_open"))
+                    _count(f"skip:{backend.name}:circuit_open")
+                    continue
+                if backend.is_api and not reader and backend.budget is not None and not backend.budget():
                     backend.breaker.release()
-                    reasons.append((backend.name, "deadline_exhausted"))
-                    break
-                if reader and backend.is_api and not isinstance(backend.chat, OpenAIChat):
-                    try:
-                        allowed = backend.reader_budget is not None and bool(backend.reader_budget())
-                    except Exception:
-                        allowed = False
-                    if not allowed:
-                        backend.breaker.release()
-                        reasons.append((backend.name, "reader_budget_unavailable"))
-                        break
+                    reasons.append((backend.name, "budget_exhausted"))
+                    _count(f"skip:{backend.name}:budget_exhausted")
+                    log.warning("llm_failover op=%s backend=%s skipped: call budget exhausted", op, backend.name)
+                    continue
+                later_api = any(b.is_api for b in self._backends[index + 1:])
+                attempt = 0
+                while True:
                     if deadline is not None and deadline <= self._clock():
                         backend.breaker.release()
                         reasons.append((backend.name, "deadline_exhausted"))
                         break
-                def authorize_sdk_attempt():
-                    if deadline is not None and deadline <= self._clock():
-                        raise ModelSkipped("reader deadline exhausted")
+                    if reader and backend.is_api and not isinstance(backend.chat, OpenAIChat):
+                        try:
+                            allowed = backend.reader_budget is not None and bool(backend.reader_budget())
+                        except Exception:
+                            allowed = False
+                        if not allowed:
+                            backend.breaker.release()
+                            reasons.append((backend.name, "reader_budget_unavailable"))
+                            break
+                        if deadline is not None and deadline <= self._clock():
+                            backend.breaker.release()
+                            reasons.append((backend.name, "deadline_exhausted"))
+                            break
+                    def authorize_sdk_attempt():
+                        if deadline is not None and deadline <= self._clock():
+                            raise ModelSkipped("reader deadline exhausted")
+                        try:
+                            allowed = backend.reader_budget is not None and bool(backend.reader_budget())
+                        except Exception:
+                            allowed = False
+                        if not allowed:
+                            raise ModelSkipped("reader strict budget unavailable")
+                        remaining = deadline - self._clock() if deadline is not None else self.total_seconds
+                        if remaining <= 0:
+                            raise ModelSkipped("reader deadline exhausted")
+                        return remaining
+                    token = _reader_attempt.set(authorize_sdk_attempt if reader and backend.is_api else None)
                     try:
-                        allowed = backend.reader_budget is not None and bool(backend.reader_budget())
-                    except Exception:
-                        allowed = False
-                    if not allowed:
-                        raise ModelSkipped("reader strict budget unavailable")
-                    remaining = deadline - self._clock() if deadline is not None else self.total_seconds
-                    if remaining <= 0:
-                        raise ModelSkipped("reader deadline exhausted")
-                    return remaining
-                token = _reader_attempt.set(authorize_sdk_attempt if reader and backend.is_api else None)
-                try:
-                    result = call(backend.chat, backend.is_api)
-                except OllamaError as exc:
-                    failure = classify(exc)
-                    _count(f"fail:{backend.name}:{failure.reason}")
-                    if backend.is_api:
-                        # ★`[2026-10-26 x600 40231a56]` 유료 시도의 실패는 그때마다 한 줄 — 이유 · 정해 둔 코드 · 예외 이름만(답 · 고객 문장 · 키 없음).
-                        #   ☆전에는 넘김이 **성공**할 때만 로그(`_record`)가 있어 「ollama=timeout, openai=content」가 Case 기록에만 남았다
-                        log.warning("llm_failover op=%s backend=%s failed reason=%s detail=%s error=%s attempt=%d", op, backend.name,
-                                    failure.reason, _log_code(exc), type(exc).__name__, attempt + 1)
-                    elapsed = self._clock() - started
-                    tail = max((b.timeout for b in self._backends[index + 1:]), default=0.0) if later_api else 0.0
-                    time_left = deadline - started if deadline is not None else self.total_seconds
-                    if failure.retryable and attempt == 0 and elapsed + self._backoff + backend.timeout + tail <= time_left:
-                        attempt += 1
-                        self._sleep(self._backoff)
-                        continue
-                    if failure.counts:
-                        backend.breaker.failure()
-                    else:
-                        backend.breaker.success()            # 서버는 답했다 — 모양만 틀렸다
-                    reasons.append((backend.name, failure.reason))
-                    break
-                except BaseException as exc:                         # 우리가 모르는 예외 — 시험(반쪽) 자리가 잠겨 서버가 영영 안 불리지 않게 돌려주고 그대로 올린다
-                    backend.breaker.release()
-                    if backend.is_api:
-                        log.warning("llm_failover op=%s backend=%s failed reason=unexpected error=%s", op, backend.name, type(exc).__name__)
-                    raise
-                finally:
-                    _reader_attempt.reset(token)
-                backend.breaker.success()
-                self._record(op, backend, reasons, self._clock() - started)
-                return result
+                        result = call(backend.chat, backend.is_api)
+                    except OllamaError as exc:
+                        failure = classify(exc)
+                        _count(f"fail:{backend.name}:{failure.reason}")
+                        if backend.is_api:
+                            # ★`[2026-10-26 x600 40231a56]` 유료 시도의 실패는 그때마다 한 줄 — 이유 · 정해 둔 코드 · 예외 이름만(답 · 고객 문장 · 키 없음).
+                            #   ☆전에는 넘김이 **성공**할 때만 로그(`_record`)가 있어 「ollama=timeout, openai=content」가 Case 기록에만 남았다
+                            log.warning("llm_failover op=%s backend=%s failed reason=%s detail=%s error=%s attempt=%d", op, backend.name,
+                                        failure.reason, _log_code(exc), type(exc).__name__, attempt + 1)
+                        elapsed = self._clock() - started
+                        tail = max((b.timeout for b in self._backends[index + 1:]), default=0.0) if later_api else 0.0
+                        time_left = deadline - started if deadline is not None else self.total_seconds
+                        if failure.retryable and attempt == 0 and elapsed + self._backoff + backend.timeout + tail <= time_left:
+                            attempt += 1
+                            if held:                                 # 쉬는 동안 자리를 잡고 있지 않는다
+                                slots.release()
+                                held = False
+                            self._sleep(self._backoff)
+                            if slots is not None and backend.breaker.cooling():   # 쉬는 동안 다른 호출이 이 runner 의 서킷을 열었다 — 다시 보내지 않는다
+                                backend.breaker.release()
+                                reasons.append((backend.name, "circuit_open"))
+                                _count(f"skip:{backend.name}:circuit_open")
+                                break
+                            if slots is not None:
+                                if not slots.acquire(self._queue_wait(index, backend, started, deadline, reserve, reader_external)):
+                                    backend.breaker.release()        # 다시 시도를 못 보냈다 — 시험 자리만 돌려준다
+                                    reasons.append((backend.name, "local_busy"))
+                                    _count(f"skip:{backend.name}:local_busy")
+                                    break
+                                held = True
+                            continue
+                        if failure.counts:
+                            backend.breaker.failure()
+                        else:
+                            backend.breaker.success()            # 서버는 답했다 — 모양만 틀렸다
+                        reasons.append((backend.name, failure.reason))
+                        break
+                    except BaseException as exc:                         # 우리가 모르는 예외 — 시험(반쪽) 자리가 잠겨 서버가 영영 안 불리지 않게 돌려주고 그대로 올린다
+                        backend.breaker.release()
+                        if backend.is_api:
+                            log.warning("llm_failover op=%s backend=%s failed reason=unexpected error=%s", op, backend.name, type(exc).__name__)
+                        raise
+                    finally:
+                        _reader_attempt.reset(token)
+                    backend.breaker.success()
+                    self._record(op, backend, reasons, self._clock() - started)
+                    return result
+            finally:
+                if held:
+                    slots.release()
         seconds = round(self._clock() - started, 2)
         _path_var.set({"path": None, "backend": None, "op": op, "reasons": reasons, "seconds": seconds})
         # ★`[2026-10-26 x600 40231a56]` 모든 경로가 실패해도 한 줄 남긴다(성공한 넘김 줄 `_record` 와 같은 모양, path=none)
@@ -710,7 +839,7 @@ class FailoverChat:
         if api or reserve <= 0 or not external:
             return remaining
         index = next((i for i, b in enumerate(self._backends) if b.chat is chat), len(self._backends))
-        if not any(b.is_api and b.breaker.snapshot()["state"] != "open" for b in self._backends[index + 1:]):
+        if not self._paid_after(index, reserve, external):
             return remaining
         window = remaining - reserve
         if window <= 0:
@@ -727,7 +856,8 @@ class FailoverChat:
                 return chat.json_stream(system, text, on_piece=relay, first_wait=min(first_wait, window),
                                         stall=min(stall, window), max_seconds=window, max_tokens=max_tokens)
             return self._streaming(stream, user, on_piece, api_only=False)(chat, api)
-        return self._run("reader_json_stream", call, deadline=deadline, reader=True, reader_external=external_fallback_enabled)
+        return self._run("reader_json_stream", call, deadline=deadline, reader=True, reader_external=external_fallback_enabled,
+                         reserve=float(api_reserve_seconds))
 
     def reader_structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
                                  on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
@@ -740,7 +870,8 @@ class FailoverChat:
                 return chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
                                               first_wait=min(first_wait, window), stall=min(stall, window), max_seconds=window)
             return self._streaming(stream, user, on_piece, api_only=api_only)(chat, api)
-        return self._run("reader_structured_stream", call, deadline=deadline, reader=True, reader_external=external_fallback_enabled)
+        return self._run("reader_structured_stream", call, deadline=deadline, reader=True, reader_external=external_fallback_enabled,
+                         reserve=float(api_reserve_seconds))
 
     def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
                                     validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
@@ -896,6 +1027,13 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     threshold = int(settings.llm_failover_failures)
     open_seconds = float(settings.llm_failover_open_seconds)
     primary_timeout = min(float(settings.ollama_timeout_seconds), float(settings.llm_failover_primary_timeout_seconds))
+    # ★`[2026-10-28]` 로컬 runner 동시 호출 자리 — 설정에 없으면(좁은 시험의 설정 대역) 상한 없음 · 대기 0(예전 그대로)
+    concurrency = getattr(settings, "llm_failover_local_concurrency", 0)
+    queue_seconds = float(getattr(settings, "llm_failover_local_queue_seconds", 0.0))
+    if isinstance(concurrency, bool) or not isinstance(concurrency, int) or concurrency < 0:
+        raise ValueError("llm_failover_local_concurrency must be an integer >= 0")
+    if not math.isfinite(queue_seconds) or queue_seconds < 0:
+        raise ValueError("llm_failover_local_queue_seconds must be a finite number >= 0")
     backends: list[_Backend] = []
     urls = ([primary.base_url] + [u.strip().rstrip("/") for u in extra_urls if u and u.strip()]
             + [u.strip().rstrip("/") for u in (getattr(settings, "ollama_fallback_base_urls", "") or "").split(",") if u.strip()])
@@ -905,7 +1043,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
                           transport=primary._post if (number == 0 and primary._injected) else None)
         name = "ollama" if number == 0 else f"ollama{number + 1}"
         backends.append(_Backend(name, chat, breaker_for(f"{name}@{url}", threshold=threshold, open_seconds=open_seconds, clock=clock),
-                                 timeout=primary_timeout))
+                                 timeout=primary_timeout, slots=local_slots_for(_runner_key(url), concurrency)))
     api_timeout = float(settings.llm_failover_api_timeout_seconds)
     model = (getattr(settings, "llm_failover_model", "") or settings.llm_model).strip()
     gate = budget or (_budget_provider(settings) if _budget_provider is not None else None)
@@ -923,9 +1061,10 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
         backends.append(_Backend("local", local_fallback,
                                  breaker_for(f"local@{local_fallback.base_url}", threshold=threshold,
                                              open_seconds=open_seconds, clock=clock),
-                                 timeout=float(local_fallback.timeout)))
+                                 timeout=float(local_fallback.timeout),
+                                 slots=local_slots_for(_runner_key(local_fallback.base_url), concurrency)))
     return FailoverChat(backends, total_seconds=float(settings.llm_failover_total_seconds), vision=bool(settings.llm_failover_vision),
-                        sleep=sleep, clock=clock, warm_chat=primary)
+                        sleep=sleep, clock=clock, warm_chat=primary, local_queue_seconds=queue_seconds)
 
 
 # ─────────────────────────── 규정 검색의 질문 임베딩 ───────────────────────────
@@ -963,5 +1102,5 @@ def record_fallback(op: str, reason: str, *, backend: str = "openai") -> None:
     log.warning("llm_failover op=%s path=api backend=%s reasons=ollama:%s", op, backend, reason)
 
 
-__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "ModelNotLoaded", "ModelSkipped", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "register_warm_starter", "reset_state",
+__all__ = ["CircuitBreaker", "FailoverChat", "LocalSlots", "ModelCallError", "ModelNotLoaded", "ModelSkipped", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "local_slots_for", "record_fallback", "register_budget_provider", "register_warm_starter", "reset_state",
            "snapshot", "wrap_from_settings"]

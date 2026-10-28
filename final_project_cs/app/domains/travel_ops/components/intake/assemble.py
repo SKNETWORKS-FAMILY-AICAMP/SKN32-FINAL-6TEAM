@@ -277,6 +277,7 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
     ★합친 체크아웃 줄은 항목이 되지 않는다 — 그 줄에 붙은 문제(장소를 못 정함 등)도 뺀다.
     ★적혀 있지 않은 값은 규칙으로 채우고 그렇게 적는다(`filled` — 화면이 「규칙으로 채움」 배지로 보인다):
       체크인 시각 없음 → 15:00 · 체크아웃 줄 없음 → 다음 체크인 날(없으면 여행 마지막 날, 같은 날이면 다음 날) 11:00 · 체크아웃 시각 없음 → 11:00.
+      ★`[2026-10-28 ST4F-710]` 체크아웃 줄이 **시각 없는데 체크인 날**이면 그 줄의 끝은 다음 날 11:00 — 같은 날로 두면 끝이 시작보다 앞선다.
     ★식사 줄(「호텔 조식」)은 숙소가 아니다 — 체크인 말이 있어도 건드리지 않는다."""
     def words(row):
         return f"{row['title'] or ''} {row['text'] or ''}"
@@ -317,11 +318,19 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
             fill(row, "starts_at", STAY_IN, f"체크인 시각이 없어 {STAY_IN} 에 두었다")
         if out is not None:
             merged.append(id(out))
-            row["end_date"], row["end"] = out["date"], out["start"] or STAY_OUT
+            end_date = out["date"]
+            if not out["start"] and out["date"] <= row["date"]:
+                # `[2026-10-28 ST4F-710 · LB-04]` 시각 없는 체크아웃 줄이 체크인 날이면 끝(11:00)이 시작(15:00)보다 앞선
+                # 거꾸로 숙박 — 체크아웃 줄이 없을 때(아래)와 같이 다음 날로 둔다
+                end_date = (date.fromisoformat(row["date"]) + timedelta(days=1)).isoformat()
+            row["end_date"], row["end"] = end_date, out["start"] or STAY_OUT
             row["provenance"]["ends_at"] = {"method": "rule", "rule": "intake.stay_checkout", "from": out["where"],
                                             "source_id": out["source_id"]}
             if not out["start"]:
-                fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없어 {STAY_OUT} 로 두었다")
+                if end_date != out["date"]:
+                    fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없는데 체크인 날에 붙어 있어 {end_date} {STAY_OUT} 으로 두었다")
+                else:
+                    fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없어 {STAY_OUT} 로 두었다")
         else:
             end_date = next_in or last_day
             if end_date <= row["date"]:
@@ -587,12 +596,26 @@ def _day_for(line, marks) -> tuple[int | None, str | None]:
 def _title(trip: dict[str, dict[str, Any]], sources: list[dict[str, Any]]) -> str:
     if trip.get("title") and str(trip["title"]["value"] or "").strip():
         return str(trip["title"]["value"]).strip()[:80]
-    from .rules import TIME, _date_in
+    from .rules import TIME, _date_in, read_plan
 
+    fallback = "내 여행"
     for source in sources:
-        for line in (source.get("transcript") or "").splitlines():
+        transcript = source.get("transcript") or ""
+        # ★`[2026-10-28 ST4F-631]` 제목은 일정이 시작되기 **앞**(머리)에 적힌 줄이다. 판단 근거는 규칙 읽기(`rules.read_plan`)
+        #   결과의 구조 — 일정 항목 claim(`items[*]`)이 있는 줄 · 읽은 날짜/일차 머리줄의 줄 번호 — 와 원문 순서뿐이다.
+        #   그 줄에 닿으면 일정 본문이 시작된 것이라 그 줄과 뒤 줄(다음 원문 포함)은 제목으로 쓰지 않고 기본값을 둔다.
+        #   날짜 · 시각 줄만 건너뛰던 때는 일정 사이 메모 「도착일이라 가볍게」(시험 원문 test20)가 첫 「다른 줄」이 되어
+        #   여행 제목이 됐다(x600 실서버). 줄의 말 뜻은 보지 않는다. 기본값은 확인 화면에서 고친다
+        #   「10월 5일 서울 가족여행」처럼 날짜 머리줄에 일정 항목 없이 제목을 함께 쓴 경우는 그 줄이 제목이다
+        read = read_plan(transcript)
+        item_lines = {claim.span.line for claim in read.claims if claim.field.startswith("items[")}
+        for number, line in enumerate(transcript.splitlines(), start=1):
+            if number in item_lines:
+                return fallback                     # 일정 항목 줄(시각 없는 화살표 나열 포함)부터는 본문
             text = line.strip()
             if not text or _DAY_HEADING.match(text) or re.match(r"^\d{1,2}[:시]", text):
+                if number in read.read_lines:
+                    return fallback
                 continue
             # ★`[2026-09-28]` 날짜로 시작하고 뒤에 날짜 말고 쓴 것이 없거나 시각이 오면 제목이 아니다 —
             #   「2026-10-05」·「10월 5일 (월)」·「2026-10-05 09:00 경복궁」이 제목이 됐다(ui 세션 실서버 시험)
@@ -600,9 +623,11 @@ def _title(trip: dict[str, dict[str, Any]], sources: list[dict[str, Any]]) -> st
             if found is not None and found.start() == 0:
                 rest = re.sub(r"^[\s·,()（）월화수목금토일요]*", "", text[found.end():])
                 if not rest or TIME.match(rest):
+                    if number in read.read_lines:
+                        return fallback
                     continue
             return text[:80]
-    return "내 여행"
+    return fallback
 
 
 def _date_value(claim: dict[str, Any] | None) -> date | None:

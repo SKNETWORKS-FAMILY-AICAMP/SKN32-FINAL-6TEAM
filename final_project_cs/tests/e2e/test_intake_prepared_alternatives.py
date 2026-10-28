@@ -29,8 +29,14 @@ from app.infrastructure.db.session import get_connection
 
 from .test_intake_review import OPEN_ALL, TUE_CLOSED, _catalog, _client, _edit, _hours, _item, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
 
-PLAN = "2026-10-13\n10시 경복궁\n13:30 광장시장"          # 화요일 — 경복궁을 화요일 휴무로 읽어 둔다
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_13 = reldate.day("2026-10-13")
+D_2026_10_15 = reldate.day("2026-10-15")
+
+PLAN = f"{D_2026_10_13}\n10시 경복궁\n13:30 광장시장"          # 화요일 — 경복궁을 화요일 휴무로 읽어 둔다
 
 
 @pytest.fixture(autouse=True)
@@ -343,7 +349,7 @@ def test_a_risky_activity_is_not_prepared_and_takes_the_safety_path_first(rv, mo
     _world(rv)
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n13:30 광장시장")
     palace = _item(view, "경복궁")
     assert (palace.get("risk") or {}).get("status") == "problem"
     assert (palace["source_id"], palace["index"]) not in {(s, i) for s, i, _r, _b in _rows(rv, view["intake_id"])}     # 미리 준비하지 않았다

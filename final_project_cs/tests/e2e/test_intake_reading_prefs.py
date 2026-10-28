@@ -30,8 +30,13 @@ from app.presentation.api.app import create_app
 
 from .test_intake_review import Kakao, Tour, _key, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
 
-PLAN = ("2026-10-15\n"
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
+
+PLAN = (f"{D_2026_10_15}\n"
         "10시 경복궁\n"
         "13:30 광장시장\n"
         "웬만하면 택시로 다니고 천천히 다닐래요. 비 오면 실내로 가고 9시까지는 숙소 들어가요. 맛집 위주로요")
@@ -40,9 +45,9 @@ ANSWER = {
     "guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
     "pieces": [{"kind": "plan_item", "quote": "10시 경복궁"}, {"kind": "plan_item", "quote": "13:30 광장시장"}],
     "items": [
-        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "start": "10:00", "end": None,
+        {"place_quote": "경복궁", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "start": "10:00", "end": None,
          "time_quote": "10시", "kind": "activity"},
-        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "start": "13:30", "end": None,
+        {"place_quote": "광장시장", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "start": "13:30", "end": None,
          "time_quote": "13:30", "kind": "dining"}],
     "moves": [],
     "conditions": [{"code": "if_rain_indoor", "quote": "비 오면 실내로"}, {"code": "finish_by:21:00", "quote": "9시까지는 숙소 들어가요"}],

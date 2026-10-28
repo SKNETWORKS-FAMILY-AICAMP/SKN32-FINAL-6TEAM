@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Callable, Mapping
+import time
+from typing import Any, Callable, Collection, Mapping
 from uuid import UUID
 
 from . import gaps as gaps_module
@@ -122,16 +123,29 @@ def check_gaps(review: Mapping[str, Any], *, trip: Mapping[str, Any] | None = No
     return out
 
 
-def autofix_owner(plan: Callable[[], Mapping[str, Any]]) -> Callable[[Gap, Mapping[str, Any]], Proposal]:
-    """식당 팀 · 활동 팀 · 이동 판정 — 회차마다 전체 자동 추천을 **한 번** 계산하고, 빈칸이 가리키는 일정의 바꿀 안을 제안으로 낸다."""
+def autofix_owner(plan: Callable[..., Mapping[str, Any]],
+                  targets: Callable[[], Collection[Any]] | None = None) -> Callable[[Gap, Mapping[str, Any]], Proposal]:
+    """식당 팀 · 활동 팀 · 이동 판정 — 회차마다 전체 자동 추천을 **한 번** 계산하고, 빈칸이 가리키는 일정의 바꿀 안을 제안으로 낸다.
+
+    `targets` `[2026-10-28 서빙 속도]` 이번 회차 빈칸 일정 id — 주면 추천을 **그 일정들만** 계산한다(`plan(item_ids=…)`). 안 쓰는 일정의 계산(후보 · 시간표 이동)을
+      빼서 먼저 채우기의 기다림을 줄이고, 빈칸 일정이 버려질 계산에 요청 한도를 빼앗기지 않게 한다. 묻는 빈칸의 일정이 계산한 모음에 없으면 그 일정을 더해 다시 계산한다
+      (같은 판에서도 — 빠뜨린 일정에 「바꿀 안 없음」이라고 답하지 않는다). 안 주면 전처럼 모든 일정을 계산한다."""
     cache: dict[str, Any] = {}
 
     def owner(gap: Gap, draft: Mapping[str, Any]) -> Proposal:
         key = draft.get("revision")
-        if cache.get("revision") != key:
-            cache.update(revision=key, plan=plan())
-        got = cache["plan"]
         item_id = gap.where.get("item")
+        same = "plan" in cache and cache.get("revision") == key
+        if targets is None:
+            if not same:
+                cache.update(revision=key, plan=plan())
+        else:
+            want = set(targets()) | ({item_id} if item_id is not None else set())
+            have = cache.get("ids", frozenset()) if same else frozenset()
+            if not same or not want <= have:
+                ids = frozenset(want | have)
+                cache.update(revision=key, ids=ids, plan=plan(item_ids=ids))
+        got = cache["plan"]
         change = next((c for c in got.get("changes") or [] if c.get("id") == item_id
                        and any(e.get("field") == "place" for e in c.get("edits") or [])), None)
         if change is None:
@@ -238,6 +252,15 @@ def ask_owner(gap: Gap, draft: Mapping[str, Any]) -> Proposal:
     return Proposal(gap, "ask_customer", [{"question": gap.reason}], reason="고객만 아는 값이라 묻는다")
 
 
+#: 전체 자동 추천(`autofix_owner`)으로 답하는 담당 — `run` 의 `owners` 와 같다
+TEAM_OWNERS = frozenset({"dining_team", "activity_team", "lodging_team", "mobility"})
+
+
+def _team_items(gaps: Any) -> set[Any]:
+    """`[2026-10-28 서빙 속도]` 전체 자동 추천이 계산할 일정 — 그 담당에게 가는 빈칸이 가리키는 일정 id. 일정을 가리키지 않는 빈칸(구간 · 여행 전체)은 없다."""
+    return {g.where.get("item") for g in gaps if g.owner in TEAM_OWNERS and g.where.get("item") is not None}
+
+
 def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None, kakao: Any = None,
         dining: Any = None, plan_slot: Callable[[Gap, Mapping[str, Any]], list[dict[str, Any]]] | None = None,
         max_rounds: int = gaps_module.MAX_ROUNDS,
@@ -250,21 +273,31 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
     from . import autofix as autofix_module
     from . import pipeline
 
+    started = time.monotonic()
+    timing = {"plan_seconds": 0.0, "plan_runs": 0, "planned_items": 0}
     _, found = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
     claims = pipeline._claims(conn, tenant_id, intake_id, revision)
     trip = {k: (v.get("value") if isinstance(v, dict) else v) for k, v in (pipeline._trip_fields(claims) or {}).items()}
-    state: dict[str, Any] = {"revision": revision, "review": found}
+    state: dict[str, Any] = {"revision": revision, "review": found, "targets": set()}
     not_added: set[Any] = set()                         # 계획 에이전트가 고른 새 일정 중 판에 넣지 못한 빈칸(`_add_item` 실패)
 
-    def plan() -> Mapping[str, Any]:
-        return autofix_module.plan(conn, tenant_id=tenant_id, review=state["review"], kakao=kakao)
+    def plan(item_ids: Collection[Any]) -> Mapping[str, Any]:
+        # ★`[2026-10-28 서빙 속도]` 빈칸 일정만 계산한다(`autofix_owner` 의 `targets`) — 다른 일정의 추천은 먼저 채우기가 버리는 값이었다
+        at = time.monotonic()
+        try:
+            # `keep_times` — 먼저 채우기는 장소만 저장한다(`apply`). 이웃한 빈칸은 저장되는 앞 일정(새 장소 · 고객 시각)을 기준으로 맞춘다
+            return autofix_module.plan(conn, tenant_id=tenant_id, review=state["review"], kakao=kakao, item_ids=item_ids,
+                                       keep_times=True)
+        finally:
+            timing["plan_seconds"] += time.monotonic() - at
+            timing["plan_runs"] += 1
+            timing["planned_items"] += len(item_ids)
 
-    team = autofix_owner(plan)
+    team = autofix_owner(plan, targets=lambda: state["targets"])
     if plan_slot is None:
         plan_slot = planner_slot(conn, tenant_id=tenant_id, tour=tour, review=lambda: state["review"],
                                  preferences=_preference_text(claims), party_size=_int(trip.get("party_size")))
-    owners = {"dining_team": team, "activity_team": team, "lodging_team": team, "mobility": team, "planner": planner_owner(plan_slot),
-              "ask_customer": ask_owner}
+    owners = {**{name: team for name in TEAM_OWNERS}, "planner": planner_owner(plan_slot), "ask_customer": ask_owner}
 
     def apply(draft: dict[str, Any], proposals: list[Proposal]) -> dict[str, Any]:
         edits: list[dict[str, Any]] = []
@@ -302,7 +335,11 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         return {**draft, "revision": new}
 
     def recheck(draft: dict[str, Any]) -> list[Gap]:
-        return check_gaps(state["review"], trip=trip)
+        remaining = check_gaps(state["review"], trip=trip)
+        # 다음 회차는 새 빈칸만 묻는다(`gaps.settle`) — 그 일정만 계산하게 모아 둔다. 다시 묻는 빈칸은 `autofix_owner` 가 더해 계산한다
+        state["targets"] = _team_items(g for g in remaining if g.key not in seen_keys)
+        seen_keys.update(g.key for g in remaining)
+        return remaining
 
     first = gaps_module.collect(model_gaps(claims, found.get("items") or []), check_gaps(found, trip=trip))
     keys, asked = {g.key for g in first}, set()
@@ -349,12 +386,19 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         return True
 
     first, refound, still_blocked = retry_blocked(first, claims=claims, items=found.get("items") or [], refind=refind)
+    state["targets"] = _team_items(first)
+    seen_keys = {g.key for g in first}
     # 다른 장소를 채우면 전체 동선과 숙소 후보도 바뀐다. 같은 판의 실패를 반복하지 않고 바뀐 판에서만 다시 본다.
     draft, used, rounds = gaps_module.settle({"revision": state["revision"]}, first, {name: counted(owner) for name, owner in owners.items()},
                                            applying, recheck, max_rounds=max_rounds,
                                            retry_unfilled=lambda p: p.gap.kind == "lodging_place" and p.owner == "lodging_team")
     if keys:
         note(final=True)
+    # ★`[2026-10-28 서빙 속도]` 계측 — 먼저 채우기는 확인 화면 공개(`stage=review`) 전의 기다림이다. 고객 글 · 장소 이름 없이 시간과 개수만.
+    #   채우기가 도중에 실패하면 이 줄은 없고, 단계 시각(`pipeline.process` 의 `intake stage timing`)의 `prefill_s` 가 그 시간을 남긴다
+    log.info("intake prefill timing intake=%s seconds=%.2f plan_seconds=%.2f plan_runs=%d planned_items=%d gaps_seen=%d rounds=%d",
+             intake_id, time.monotonic() - started, timing["plan_seconds"], timing["plan_runs"], timing["planned_items"],
+             len(seen_keys), len(rounds))
     latest = {p.gap.key: p for p in used}
     filled = refound + [_filled_line(p) for p in latest.values()
                         if p.owner != "ask_customer" and p.candidates and p.error is None and p.gap.key not in not_added]

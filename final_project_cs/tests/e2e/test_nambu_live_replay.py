@@ -13,6 +13,11 @@ import pytest
 from .test_nambu_progress_web import nambu_scene, latest  # noqa: F401
 from .test_decision_unit_web import decided  # noqa: F401
 from .test_web_api import api, _h, _fresh_limit_cache  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_17 = reldate.day("2026-10-17")
 
 
 @pytest.mark.skipif(os.environ.get('NAMBU_LIVE_MODEL') != '1', reason='명시적 실제 모델 재생에서만 실행')
@@ -60,14 +65,14 @@ def test_actual_customer_turns_in_order(nambu_scene, monkeypatch, _replay):
             failures.append(label)
     scene = nambu_scene
     for index, turn in enumerate(turns,1):
-        moment = datetime.fromisoformat(turn['at'])
+        moment = datetime.fromisoformat(reldate.shift_iso(turn['at']))   # 녹화 시각도 같은 폭으로 옮긴다(`nambu_scene`)
         scene['now']=moment
         response = scene['client'].post(f"/v1/web/trips/{scene['trip']['trip_id']}/messages",
             headers=_h(scene['key']),json={'request_id': f'nambu-replay-{index}',
-                'message':turn['message'],'at':moment.isoformat()})
+                'message':reldate.shift_text(turn['message']),'at':moment.isoformat()})
         body = response.json()
         trip, items = latest(scene)
-        records.append({'turn':index,'message':turn['message'],'at':moment.isoformat(),
+        records.append({'turn':index,'message':reldate.shift_text(turn['message']),'at':moment.isoformat(),
             'http':response.status_code,'status':body.get('status'),'decision':body.get('decision'),
             'answer':body.get('answer'),'outcome':body.get('outcome'), 'version':trip['version'],
             'items':[{'title':i.title,'kind':i.kind,'start':i.starts_at.isoformat(),
@@ -117,6 +122,6 @@ def test_actual_customer_turns_in_order(nambu_scene, monkeypatch, _replay):
         if index==22:
             expect(any('이마트' in i.title and (i.detail.get('execution') or {}).get('state')=='completed' for i in items),f'{index}:마지막 실제 방문 완료')
         if index in (22,23):
-            expect(not plan_reminders(items,now=datetime.fromisoformat('2026-10-17T21:58:00+09:00'),rules=ReminderRules()),f'{index}:하루 종료 후 안내 종료')
+            expect(not plan_reminders(items,now=datetime.fromisoformat(f'{D_2026_10_17}T21:58:00+09:00'),rules=ReminderRules()),f'{index}:하루 종료 후 안내 종료')
     print('NAMBU_REPLAY_JSON='+json.dumps({'turns':records,'checks':checks,'failures':failures,'kakao_calls':budget.count},ensure_ascii=False,default=str))
     assert not failures, failures

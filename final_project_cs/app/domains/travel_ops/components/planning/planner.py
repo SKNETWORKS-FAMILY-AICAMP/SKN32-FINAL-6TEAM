@@ -1521,7 +1521,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             pool_before_preference=len(pool),
             preference=pref.as_dict(),
             **({"recovery": {"avoid": area_note}} if area_note else {}),
-            remedy="장소 카탈로그를 더 받거나(TourAPI 동기화) 선호 조건을 줄인다")
+            remedy="선호 조건을 줄여서 다시 짜 보세요")
 
     mode, note = "rules", "모델을 쓰지 않았다"
     if chat is not None:
@@ -1613,7 +1613,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         raise PlanRefused("plan_short",
                           f"{request.days}일치는 항목 {want}개여야 하는데 {len(items)}개만 짜였다",
                           have=len(items), need=want,
-                          remedy="후보를 더 받거나 선호 조건을 줄인다")
+                          remedy="선호 조건을 줄여서 다시 짜 보세요")
 
     spares = [cand for cand in ranked if cand.key not in used]
     rounds, fixed = 0, []
@@ -1645,7 +1645,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             + " / ".join(violation.reason for violation in violations),
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
-            remedy="완화 조건을 하나 풀거나(예산·결제 조건) 후보를 더 받는다")
+            remedy="예산이나 결제 조건 중 하나를 풀고 다시 짜 보세요")
     _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니", day_end=day_bounds(request.constraints)[1],
                      day_ends={request.start_date.isoformat(): first_window[1]} if first_window else None)
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
@@ -1665,7 +1665,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             + " / ".join(violation.reason for violation in violations),
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
-            remedy="하루 항목을 줄이거나 가까운 장소로 바꾼다")
+            remedy="하루 일정 수를 줄이거나 서로 가까운 장소로 바꿔 보세요")
     _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니", day_end=day_bounds(request.constraints)[1],
                      day_ends={request.start_date.isoformat(): first_window[1]} if first_window else None)
     _remeasure_density_after_moves(fits, items, chosen, routes, request.constraints)
@@ -1888,7 +1888,7 @@ def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[st
                         for item in overflow),
             items=[item["seq"] for item in overflow],
             repair_rounds=rounds, repairs_applied=fixed,
-            remedy="하루 항목을 줄이거나 시작 시각을 앞당길 수 있는 장소로 바꾼다")
+            remedy="하루 일정 수를 줄이거나 더 일찍 시작할 수 있는 장소로 바꿔 보세요")
 
 
 def _available(shortlist: list[Cand], everything: list[Cand], used: set[str],

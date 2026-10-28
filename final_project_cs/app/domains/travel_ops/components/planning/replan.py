@@ -249,7 +249,7 @@ def _break_last_order(attributes: dict[str, Any], arrival: datetime, *, known_on
     last_order = rest_start - timedelta(minutes=margin or 0)
     if arrival < rest_end and arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
         left = max(0, int((last_order - arrival).total_seconds() // 60))
-        return f"{span[0]:%H:%M} 브레이크타임 전 라스트오더({_hm(last_order)})까지 {left}분 — 주문 가능한 시간이 촉박하다"
+        return f"{span[0]:%H:%M} 브레이크타임 전 라스트오더({_hm(last_order)})까지 {left}분뿐이라 주문 가능한 시간이 촉박해요"
     return None
 
 
@@ -263,7 +263,7 @@ def _closing_last_order(attributes: dict[str, Any], arrival: datetime) -> str | 
     last_order = _at_clock(arrival, day.last_entry)
     if arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
         left = max(0, int((last_order - arrival).total_seconds() // 60))
-        return f"라스트오더({_hm(last_order)})까지 {left}분 — 주문 여유 {ORDER_MARGIN_MIN}분이 안 된다"
+        return f"라스트오더({_hm(last_order)})까지 {left}분뿐이라 주문 여유 {ORDER_MARGIN_MIN}분이 안 돼요"
     return None
 
 
@@ -289,17 +289,18 @@ def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int, *,
         opened = state.get("open_at_slot")
         if opened is True:
             if state.get("order_ok") is False:
-                return False, f"라스트오더까지 주문 여유 {ORDER_MARGIN_MIN}분이 안 된다(요식 원장)"
+                # ★`[2026-10-28]` 이 이유는 대체 후보 「살펴본 곳」 · 확인 안내 `warnings` 로 고객에게 보인다 — 해요체, 내부 자료 이름(요식 원장) 없이
+                return False, f"라스트오더까지 주문 여유 {ORDER_MARGIN_MIN}분이 안 돼요"
             return True, ""
-        return opened, ("원장에서 방문 시간대의 영업을 확인할 수 없다" if opened is None
-                        else "원장 기준 그 시각 영업하지 않는다")
+        return opened, ("방문 시간대에 영업하는지 확인하지 못했어요" if opened is None
+                        else "그 시각에는 영업하지 않아요")
     arrival = _seoul(arrival)
     end = arrival + timedelta(minutes=minutes)
     opened = open_during(place, arrival, end)
     if opened is None:
-        return None, "영업시간을 확인할 수 없다"
+        return None, "영업시간을 확인하지 못했어요"
     if not opened:
-        return False, "그 시각 영업하지 않는다"
+        return False, "그 시각에는 영업하지 않아요"
     attributes = place.get("attributes") or {}
     span = break_span(attributes)
     if span is not None:
@@ -307,7 +308,7 @@ def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int, *,
         if why:
             return False, why
         if arrival < _at_clock(arrival, span[0]) < end:
-            return False, f"{span[0]:%H:%M} 브레이크타임에 걸린다"
+            return False, f"{span[0]:%H:%M} 브레이크타임에 걸려요"
     why = _closing_last_order(attributes, arrival)
     if why:
         return False, why

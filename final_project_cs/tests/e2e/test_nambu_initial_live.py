@@ -5,6 +5,11 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_17 = reldate.day("2026-10-17")
 
 
 @pytest.mark.skipif(os.environ.get('NAMBU_LIVE_MODEL')!='1',reason='명시적 외부 API 시험에서만 실행')
@@ -24,7 +29,7 @@ def test_now_origin_relative_meal_and_default_deadline_with_actual_model():
     budget=Budget()
     kakao=KakaoLocal(api_key=settings.kakao_rest_api_key,budget=budget,timeout=8)
     text='지금 남부터미널에서 8시에 시작해서 10분뒤에 거기서 밥먹고 다이소 갔다가 노래방 가는 일정 짜줘. 11시 전에는 일정을 마칠 거야.'
-    moment=datetime.fromisoformat('2026-10-17T19:50:00+09:00')
+    moment=datetime.fromisoformat(f'{D_2026_10_17}T19:50:00+09:00')
     # 이미 선택한 세 장소를 재사용한다. 식당은 실제 카카오 응답이다.
     our=[{'place_id':str(uuid4()),'name':name,'kind':'activity','latitude':lat,'longitude':lon}
          for name,lat,lon in [('남부터미널',37.4849,127.0162),('다이소 남부터미널점',37.4845,127.0155),
@@ -37,7 +42,7 @@ def test_now_origin_relative_meal_and_default_deadline_with_actual_model():
     items=built.body['items']
     assert len(items)==4,built.body
     assert items[0]['detail'].get('origin') is True and items[0]['ends_at'] is None
-    assert items[0]['starts_at']=='2026-10-17T20:00:00+09:00'
-    assert items[1]['kind']=='dining' and items[1]['starts_at']=='2026-10-17T20:10:00+09:00'
+    assert items[0]['starts_at']==f'{D_2026_10_17}T20:00:00+09:00'
+    assert items[1]['kind']=='dining' and items[1]['starts_at']==f'{D_2026_10_17}T20:10:00+09:00'
     assert items[1]['place'] is not None and '거기' not in items[1]['title']
-    assert items[-1]['ends_at']<='2026-10-17T23:00:00+09:00'
+    assert items[-1]['ends_at']<=f'{D_2026_10_17}T23:00:00+09:00'
