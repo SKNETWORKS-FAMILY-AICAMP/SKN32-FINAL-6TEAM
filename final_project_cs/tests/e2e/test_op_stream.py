@@ -28,6 +28,8 @@ from .test_trip_planner import START, api as plan_api  # noqa: F401
 from .test_web_api import _web_body  # noqa: F401
 
 FAST = {"beat_seconds": 0.05, "slow_seconds": 0.12, "max_seconds": 5.0, "max_per_user": 3}
+#: 운영 설정을 읽는 원래 함수 — 시험이 `op_stream.limits` 를 갈아 끼우기 전에 잡아 둔다
+REAL_LIMITS = op_stream.limits
 
 
 def _events(body: str) -> list[tuple[str, dict]]:
@@ -274,7 +276,14 @@ SSE = {"Accept": "text/event-stream"}
 
 @pytest.fixture()
 def fast_stream(monkeypatch):
-    monkeypatch.setattr(op_stream, "limits", lambda op="message": dict(FAST))
+    """실제 입구 시험 — 생존 신호 · 느림 알림은 빠른 값, **마감은 운영 값**(`travel.op_stream.max_seconds.<op>`).
+
+    ☆`[2026-10-28]` 전에는 마감도 FAST 의 5초였다. 이 픽스처를 쓰는 시험은 시간 초과가 아니라 결과 · 404 · 중복 · 연결 수를 보는데,
+      8일꾼 전체 시험에서 채팅 처리가 5초를 넘겨 `error{code: timeout, elapsed: 5.0}` 로 끝나 두 시험이 번갈아 실패했다
+      (`…marked_duplicate` · `…same_answer_as_json`, 단독은 통과 · CPU 부하에서 재현). 시간 초과 동작은 `_run(cfg=…)` 을 쓰는
+      `test_past_max_seconds_it_ends_with_a_timeout_error_and_the_worker_still_finishes` 가 따로 본다.
+    """
+    monkeypatch.setattr(op_stream, "limits", lambda op="message": {**FAST, "max_seconds": REAL_LIMITS(op)["max_seconds"]})
     op_stream._OPEN.clear()
     yield
     op_stream._OPEN.clear()
@@ -338,7 +347,7 @@ def test_chat_over_sse_ends_with_the_same_answer_as_json(trip_api, fast_stream):
     streamed = client.post(path, headers={**key, **SSE}, json={"request_id": "sse-1", **MESSAGE})
     assert streamed.status_code == 200 and streamed.headers["content-type"].startswith("text/event-stream")
     events = _events(streamed.text)
-    assert events[0][0] == "accepted" and events[-1][0] == "result"
+    assert events[0][0] == "accepted" and events[-1][0] == "result", events[-1]
     assert events[-1][1]["status"] == as_json.json()["status"] == "no_meal"
     assert events[-1][1]["answer"] == as_json.json()["answer"]
     assert "reading" in [d["stage"] for n, d in events if n == "stage"]
@@ -353,7 +362,7 @@ def test_chat_over_sse_for_someone_elses_trip_is_404_and_a_repeated_request_is_m
     body = {"request_id": "same-1", **MESSAGE}
     first = _events(client.post(path, headers={**mine, **SSE}, json=body).text)
     second = _events(client.post(path, headers={**mine, **SSE}, json=body).text)
-    assert first[-1][0] == "result" and second[-1][0] == "result"
+    assert first[-1][0] == "result" and second[-1][0] == "result", (first[-1], second[-1])
     assert second[-1][1]["status"] == "duplicate"               # 같은 request_id 는 두 번 처리되지 않는다 — 다시 연결해도 안전하다
 
 

@@ -274,9 +274,21 @@ def test_while_the_preparation_still_runs_the_change_screen_shows_guesses_and_ta
     key = prepared._item_key(view["intake_id"], item)
     running: Future = Future()
     prepared._preparing[key] = running                                  # 준비가 도는 중인 상태를 만든다
+    # ☆`[2026-10-28]` 전에는 준비를 「1초 뒤」에 끝냈다. 8일꾼 부하에서 「바꾸기」 요청이 1초 안에 저장분을 읽지 못하면 그사이 준비가 끝나
+    #   저장분(fresh)을 바로 돌려줘(['accepted', 'result']) 실패했다. 이제 「바꾸기」가 준비 중임을 실제로 본 뒤(`_claim` → None)에 끝낸다.
+    busy_seen = threading.Event()
+    real_claim = prepared._claim
+
+    def claim(intake_id, claimed):
+        mine = real_claim(intake_id, claimed)
+        if mine is None:
+            busy_seen.set()
+        return mine
+
+    monkeypatch.setattr(prepared, "_claim", claim)
 
     def finish_later():
-        time.sleep(1.0)
+        busy_seen.wait(60)                                              # 안전 상한 — 못 보면 아래 단언이 실패한다
         try:
             prepared._prepare_one(get_connection, tenant_id=rv["tenant"], intake_id=view["intake_id"], review={**found, "revision": view["revision"]},
                                   item=item, chat=None, started=time.monotonic())
@@ -293,7 +305,9 @@ def test_while_the_preparation_still_runs_the_change_screen_shows_guesses_and_ta
     monkeypatch.setattr(prepared, "judge_in_turn", lambda *a, **k: live.append(1) or real(*a, **k))
     got = client.get(_path(view, palace), headers={**headers, "Accept": "text/event-stream"})
     worker.join()
-    events = _events(got.text)
+    assert busy_seen.is_set(), "「바꾸기」가 준비 중인 것을 보지 못했다"
+    # 생존 신호(`beat`)는 계산이 `beat_seconds` 보다 길면 어디에나 끼일 수 있다 — 부하에서 어림 카드 앞에 끼어 실패했다(['accepted', 'beat']). 순서는 그 밖의 글로 본다
+    events = [e for e in _events(got.text) if e[0] != "beat"]
     names = [n for n, _b in events]
     assert names[:2] == ["accepted", "candidates"] and names[-1] == "result"
     assert events[1][1]["waiting"] == "prepare" and all(c["pending"]["after"] for c in events[1][1]["candidates"])     # 어림 먼저 · 계산 중
