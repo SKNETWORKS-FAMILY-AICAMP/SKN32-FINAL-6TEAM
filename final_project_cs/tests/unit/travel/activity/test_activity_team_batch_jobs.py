@@ -155,3 +155,24 @@ def test_refresh_places_on_without_a_key_fails_loudly(monkeypatch):
     monkeypatch.setattr(core_settings, "get_settings", lambda: type("S", (), {"tour_api_key": ""})())
     with pytest.raises(RuntimeError, match="ACOP_TOUR_API_KEY"):
         jobs.refresh_places_tick("demo", NOW, wired=_wired(), script=_RefreshScript())
+
+
+def test_refresh_places_without_a_tour_key_uses_the_common_public_data_key(monkeypatch):
+    """ST4F-574 — 서버에는 공공데이터포털 공통 키(`ACOP_DATA_GO_KR_KEY`)만 있다. 다른 관광공사 호출은
+    `Settings.public_data_key()`(서비스별 키 > 공통 키)로 그 키를 쓰는데, 장소 갱신만 `tour_api_key` 를
+    단독으로 읽어 켜도 「키 없음」으로 터졌다."""
+    from app.core import settings as core_settings
+
+    _guard(monkeypatch, True, calls=5)
+
+    class _S:
+        tour_api_key = ""
+
+        def public_data_key(self, override=""):
+            return override or "common"
+
+    monkeypatch.setattr(core_settings, "get_settings", lambda: _S())
+    fetched = []
+    jobs.refresh_places_tick("demo", NOW, wired=_wired(lambda conn, **kw: True), script=_RefreshScript(),
+                             fetch_listing=lambda key, cat: fetched.append(key) or [], fetch_intro=lambda c, t: None)
+    assert fetched and set(fetched) == {"common"}

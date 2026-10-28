@@ -103,9 +103,14 @@ def refresh_places_tick(tenant_id: str, now: datetime, *, wired: dict[str, Any] 
     wired = _wired if wired is None else wired
     if not wired:
         return {"not_wired": 1}
-    key = get_settings().tour_api_key
+    # ★ST4F-574 — 다른 관광공사 호출과 같은 규칙(서비스별 키 > 공통 키 `ACOP_DATA_GO_KR_KEY`)으로 고른다.
+    #   전에는 `tour_api_key` 만 읽어 공통 키만 있는 서버에서 켜면 「키 없음」으로 터졌다.
+    settings = get_settings()
+    override = getattr(settings, "tour_api_key", "") or ""
+    resolve = getattr(settings, "public_data_key", None)
+    key = resolve(override) if callable(resolve) else override
     if not key:
-        raise RuntimeError("travel.activity_batch.refresh_places_enabled 가 켜져 있는데 관광공사 키(ACOP_TOUR_API_KEY)가 없다")
+        raise RuntimeError("travel.activity_batch.refresh_places_enabled 가 켜져 있는데 관광공사 키(ACOP_TOUR_API_KEY 또는 공통 ACOP_DATA_GO_KR_KEY)가 없다")
     with wired["connection_factory"]() as conn:
         with conn.transaction():
             if not wired["claim"](conn, tenant_id=tenant_id, gate=REFRESH_GATE, min_seconds=REFRESH_EVERY_SECONDS):
