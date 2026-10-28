@@ -277,6 +277,7 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
     ★합친 체크아웃 줄은 항목이 되지 않는다 — 그 줄에 붙은 문제(장소를 못 정함 등)도 뺀다.
     ★적혀 있지 않은 값은 규칙으로 채우고 그렇게 적는다(`filled` — 화면이 「규칙으로 채움」 배지로 보인다):
       체크인 시각 없음 → 15:00 · 체크아웃 줄 없음 → 다음 체크인 날(없으면 여행 마지막 날, 같은 날이면 다음 날) 11:00 · 체크아웃 시각 없음 → 11:00.
+      ★`[2026-10-28 ST4F-710]` 체크아웃 줄이 **시각 없는데 체크인 날**이면 그 줄의 끝은 다음 날 11:00 — 같은 날로 두면 끝이 시작보다 앞선다.
     ★식사 줄(「호텔 조식」)은 숙소가 아니다 — 체크인 말이 있어도 건드리지 않는다."""
     def words(row):
         return f"{row['title'] or ''} {row['text'] or ''}"
@@ -317,11 +318,19 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
             fill(row, "starts_at", STAY_IN, f"체크인 시각이 없어 {STAY_IN} 에 두었다")
         if out is not None:
             merged.append(id(out))
-            row["end_date"], row["end"] = out["date"], out["start"] or STAY_OUT
+            end_date = out["date"]
+            if not out["start"] and out["date"] <= row["date"]:
+                # `[2026-10-28 ST4F-710 · LB-04]` 시각 없는 체크아웃 줄이 체크인 날이면 끝(11:00)이 시작(15:00)보다 앞선
+                # 거꾸로 숙박 — 체크아웃 줄이 없을 때(아래)와 같이 다음 날로 둔다
+                end_date = (date.fromisoformat(row["date"]) + timedelta(days=1)).isoformat()
+            row["end_date"], row["end"] = end_date, out["start"] or STAY_OUT
             row["provenance"]["ends_at"] = {"method": "rule", "rule": "intake.stay_checkout", "from": out["where"],
                                             "source_id": out["source_id"]}
             if not out["start"]:
-                fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없어 {STAY_OUT} 로 두었다")
+                if end_date != out["date"]:
+                    fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없는데 체크인 날에 붙어 있어 {end_date} {STAY_OUT} 으로 두었다")
+                else:
+                    fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없어 {STAY_OUT} 로 두었다")
         else:
             end_date = next_in or last_day
             if end_date <= row["date"]:

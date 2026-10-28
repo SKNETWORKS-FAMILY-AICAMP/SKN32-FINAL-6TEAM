@@ -71,6 +71,45 @@ def test_a_hotel_breakfast_is_still_a_meal_and_lines_without_check_in_are_untouc
     assert [row["kind"] for row in got.rows] == ["dining", "dining"]
 
 
+def test_a_same_day_check_out_line_without_a_time_runs_to_the_next_day_not_backwards():
+    """`[2026-10-28 ST4F-710 · LB-04]` 같은 날 15:00 체크인 + **시각 없는** 같은 날 체크아웃 줄 — 전에는 시작(15:00)보다
+    끝(같은 날 11:00)이 앞선 거꾸로 숙박이 됐다. 체크아웃 줄이 없는 때와 같이 다음 날 11:00 이다."""
+    source = [{"source_id": "s1", "position": 0, "kind": "text",
+               "transcript": "15:00 롯데호텔 체크인\n롯데호텔 체크아웃"}]
+    claims = _claims([(1, "롯데호텔 체크인", "2030-11-06", "15:00", HOTEL), (2, "롯데호텔 체크아웃", "2030-11-06", None, None)])
+    got = assemble(intake_id="i1", revision=1, sources=source, claims=claims)
+    stay = next(item for item in got.body["items"] if item["kind"] == "lodging")
+    assert (stay["starts_at"], stay["ends_at"]) == ("2030-11-06T15:00:00+09:00", "2030-11-07T11:00:00+09:00"), \
+        "시각 없는 체크아웃 줄이 체크인 날이면 다음 날 — 거꾸로 숙박이 아니다"
+    parts = [Part(seq=i["seq"], kind=i["kind"], title=i["title"],
+                  starts_at=datetime.fromisoformat(i["starts_at"]),
+                  ends_at=datetime.fromisoformat(i["ends_at"]) if i["ends_at"] else None)
+             for i in got.body["items"]]
+    assert check_itinerary(parts) == [], "등록 검사가 거꾸로 된 숙박으로 거절하지 않는다"
+
+
+def test_a_same_day_check_out_line_without_a_time_is_next_day_even_when_check_in_has_no_time():
+    """체크인 시각도 없으면 15:00 으로 채우고 — 끝은 같은 날 11:00 이 아니라 다음 날 11:00."""
+    source = [{"source_id": "s1", "position": 0, "kind": "text",
+               "transcript": "롯데호텔 체크인\n롯데호텔 체크아웃"}]
+    claims = _claims([(1, "롯데호텔 체크인", "2030-11-06", None, HOTEL), (2, "롯데호텔 체크아웃", "2030-11-06", None, None)])
+    got = collect(sources=source, claims=claims)
+    stay = next(row for row in got.rows if row["kind"] == "lodging")
+    assert (stay["date"], stay["start"], stay["end_date"], stay["end"]) == ("2030-11-06", "15:00", "2030-11-07", "11:00")
+    notes = {f["field"]: f["note"] for f in got.filled}
+    assert "2030-11-07 11:00" in notes["items[0].ends_at"], "규칙으로 다음 날로 둔 것을 화면에 적는다"
+
+
+def test_a_check_out_line_on_the_day_after_check_in_keeps_that_day_without_a_time():
+    """다음 날의 **시각 없는** 체크아웃 줄은 다음 날 그대로 — 이번 수정이 그쪽을 건드리지 않는다(회귀)."""
+    source = [{"source_id": "s1", "position": 0, "kind": "text",
+               "transcript": "15:00 롯데호텔 체크인\n롯데호텔 체크아웃"}]
+    claims = _claims([(1, "롯데호텔 체크인", "2030-11-06", "15:00", HOTEL), (2, "롯데호텔 체크아웃", "2030-11-07", None, None)])
+    got = collect(sources=source, claims=claims)
+    stay = next(row for row in got.rows if row["kind"] == "lodging")
+    assert (stay["date"], stay["start"], stay["end_date"], stay["end"]) == ("2030-11-06", "15:00", "2030-11-07", "11:00")
+
+
 def test_the_lookup_title_drops_the_check_in_and_check_out_words_but_never_empties_a_line():
     """`[2026-10-15 LB-01]` 장소는 동작 말을 뺀 말로 찾는다 — 제목은 그대로 두고(조립이 같은 말로 체크인 · 체크아웃 줄을 묶는다) 찾는 말만 다르다."""
     from app.domains.travel_ops.components.intake.line_parts import lookup_title, parse
