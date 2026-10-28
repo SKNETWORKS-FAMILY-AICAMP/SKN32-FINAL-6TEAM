@@ -91,6 +91,12 @@ def lodging(decided, api, monkeypatch):
     # 고르기 경로의 가격 재확인(`trip_api._stay_recheck`)은 소스를 따로 만든다 — 그것도 mock 으로
     monkeypatch.setattr(data_sources_base, "build_travel_sources", lambda *a, **k: mocked)
     _member(api, decided["key"])                      # 게스트 제한(여행 1개)과 섞지 않는다
+    # ☆`[2026-10-28]` `api` 준비물(test_trip_api)은 제안 만료 시계(`pending.wall_clock`)를 **대본 재생 시계**로 바꾼다. 4fee819ca 로 대본 날짜가
+    #   「오늘+7일 이후」로 옮겨진 뒤로는 그 시계가 이 시험의 숙소(실제 내일 · 모레, `NOW` 기준)보다 늦어 고르기가 `expired` 409 였다.
+    #   이 시험의 여행은 실제 시계 기준이므로 만료 판정도 실제 시계로 되돌린다(제품의 `wall_clock` 과 같은 값 — 만료 단언은 test_trip_api 가 본다).
+    from app.domains.travel_ops.components.planning import pending as pending_module
+
+    monkeypatch.setattr(pending_module, "wall_clock", lambda: datetime.now(KST))
     return {**decided, "tenant": api["tenant"], "source": source}
 
 
