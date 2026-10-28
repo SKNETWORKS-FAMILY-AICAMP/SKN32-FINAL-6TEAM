@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from types import SimpleNamespace
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
