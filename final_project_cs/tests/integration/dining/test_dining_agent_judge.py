@@ -44,7 +44,9 @@ def test_rule_rows_map_to_checks_and_days_without_meals_are_skipped():
 def test_judge_records_agreement_and_disagreement_in_the_dining_table(conn, place, monkeypatch):
     from app.domains.travel_ops.components.intake import review as review_module
 
-    monkeypatch.setattr(review_module, "load", lambda *a: None)                     # 요식 시험 DB 에는 접수 표가 없다 — 줄 합치기는 e2e 가 본다
+    # 독립 원장 시험에는 접수가 없다. 실제 접수 잠금·합치기는 e2e가 검증한다.
+    monkeypatch.setattr(review_module, "intake_state", lambda *a: None)
+    monkeypatch.setattr(review_module, "load", lambda *a: None)
     uid = place("판정국밥", lat=37.57, lng=126.99)
     _real(conn, uid)
     add_hours(conn, uid, 1, [(660, 1320, None)])
@@ -70,6 +72,10 @@ def test_judge_records_agreement_and_disagreement_in_the_dining_table(conn, plac
         assert got["days"] == 1 and got["checks"] == 2 and got["used"] == 2 and got["failures"] == 0
         rows = conn.execute("SELECT check_code, agent_verdict, rule_verdict, agree FROM dining.dn_agent_judge "
                             "WHERE intake_id = %s ORDER BY judge_id", (intake_id,)).fetchall()
-        assert rows == [("_run", None, None, None), ("found", "ok", "ok", True), ("open_at", "bad", "ok", False)]
+        assert got["stale"] == 1 and got["changed"] == 0
+        assert rows == [("_run", None, None, None), ("found", "ok", "ok", True),
+                        ("open_at", "bad", "ok", False), ("_stale", None, None, None)]
+        assert conn.execute("SELECT failure FROM dining.dn_agent_judge WHERE intake_id = %s AND check_code = '_stale'",
+                            (intake_id,)).fetchone() == ("intake_moved_on",)
     finally:
         conn.execute("DELETE FROM dining.dn_agent_judge WHERE intake_id = %s", (intake_id,))
