@@ -1,0 +1,14 @@
+{
+  "source_commit": "3e3b4b7b9f7424d66e1a6b0713883cf20d72f33e",
+  "parent": "3dd9bd70c9d1c598f70faad69cf755141cc4a041",
+  "remotes": {
+    "team": {
+      "push_exit_code": 0,
+      "verified_tip": "3e3b4b7b9f7424d66e1a6b0713883cf20d72f33e"
+    },
+    "origin": {
+      "push_exit_code": 0,
+      "verified_tip": "3e3b4b7b9f7424d66e1a6b0713883cf20d72f33e"
+    }
+  }
+}

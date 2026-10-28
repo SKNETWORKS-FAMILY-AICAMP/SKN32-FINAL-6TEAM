@@ -82,3 +82,12 @@ bootstrap20,000번, 회차를 표본 단위로 사용했습니다. 호출49,152�
 [검증 집계](../evidence/2026-10-29_bus-scalar-independent/summary.json) · [의미 동등성](../evidence/2026-10-29_bus-scalar-independent/semantics.json) · [실제 자료 집계](../evidence/2026-10-29_bus-scalar-independent/real-profile.json) · [원시 성능 회차](../evidence/2026-10-29_bus-scalar-independent/performance.json).
 
 공유 보안 XML의 parameter node id에 검사기 자체의 가짜 공개IP·웹훅·개인키 머리글 표본이 포함되어 추가 보안 스캔이 탐지했습니다. 실제 키 유출은 없으며 공유 XML의 parameter 이름만 fixture 번호로 바꿨습니다(시험 수·결과 유지). 원시 XML은 로컬 scratch에 보존했습니다. manifest는 Git의 줄바꿈 정규화 이후 staged blob SHA256이며, 위 소스 SHA256은 측정 당시 working-copy 바이트입니다.
+
+
+## 통합·양쪽 원격 확인 — 2026-10-29
+
+검증한 source+evidence 커밋 `3e3b4b7b9f7424d66e1a6b0713883cf20d72f33e`를 팀 SKN·개인 A-COP의 `role-manager`에 각각 fast-forward push했습니다. 양쪽 즉시 `ls-remote` 확인 **2/2 = 100%**, 동일 해시입니다. 직전 기준은 두 곳 모두 `3dd9bd70c9d1c598f70faad69cf755141cc4a041`였고 dry-run·직전 재조회 후에만 push했습니다. 강제 push·develop/main·원본 소스 반영·AWS/EKS 호출·수동 배포0입니다.
+
+이 절과 [원격 영수증](../evidence/2026-10-29_bus-scalar-independent/source-push-result.json)은 **문서 전용 후속 커밋**으로 보완합니다. source는 위 커밋 그대로입니다. role-manager의 x600 자동 배포 가능성을 인계했으며 배포 성공·실제 고객 경로 수락을 이번 결과로 주장하지 않습니다. EKS는 별도 릴리스가 필요하고 이번에는 변경하지 않았습니다.
+
+최초 저자 identity 미설정으로 commit이 한 번 실패했으며 전역 설정 대신 해당 명령에 Codex identity를 지정하여 커밋했습니다. 개인 원격의 실행 불가 gh credential helper는 기존 실행 가능한 gh를 명령별 helper로 지정해 복구했습니다. 토큰은 출력·파일·커밋에 기록하지 않았습니다.
