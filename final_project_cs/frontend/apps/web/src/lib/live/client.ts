@@ -287,8 +287,11 @@ export function ensureSession(language: Language, humanToken?: string | null): P
     }, language);
     const session = sessionOf(await response.json());
     if (!session) throw new LiveError("bad_session", translator(language)("서버가 세션 정보를 주지 않았어요.", "The server did not give the session details."));
-    // `[2026-10-23 F-07]` A sign-in completed while the guest request was waiting: keep the member session.
-    if (snapshot !== beganWith && snapshot.session) return snapshot.session;
+    // A late guest response must respect both sign-in and sign-out while it waited.
+    if (snapshot !== beganWith) {
+      if (snapshot.session) return snapshot.session;
+      throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
+    }
     setSnapshot({ probed: true, failed: false, session });
     return session;
   })().finally(() => { creating = null; });
