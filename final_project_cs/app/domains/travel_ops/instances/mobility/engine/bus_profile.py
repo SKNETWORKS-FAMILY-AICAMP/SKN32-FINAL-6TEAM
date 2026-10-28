@@ -118,7 +118,7 @@ class BusSegProfile:
         if not (n >= min_days):
             return None
         v = self.arr[i, j, Q[q], hour]
-        return None if np.isnan(v) else float(v)
+        return None if math.isnan(v) else float(v)
 
     def min_cell(self, i, q, min_days):
         """행 i 의 분위 q 칸 가운데 **가장 짧은 값(초)** — 요일형 · 시간 전부 중 `cell` 이 값을 내는 칸만. 없으면 None.

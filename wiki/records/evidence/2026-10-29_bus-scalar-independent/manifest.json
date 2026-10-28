@@ -1,0 +1,24 @@
+{
+  "format": "sha256 of Git staged bytes (line endings normalized by Git)",
+  "files": {
+    "baseline-focused.xml.gz": "0b2df754389b68dc5263540549884527121d7661b0a08cb3ccbcfe681f623b60",
+    "candidate-focused.xml.gz": "09c35ac0a1933259269222bd862e246bb27529e8274bf1e12a6fa6bce9f01064",
+    "candidate-integration.json": "ec88605f197322940c73e242e168f165d22793e221ea4f5d24060e3d5e3b7f8b",
+    "candidate_integration.py": "928430cb63dfcf15c0e5c30961940e255365ddd1c3a66229c2990cfbc7df5527",
+    "contract.xml.gz": "3b1d242bc95365790458187f05a6aba874331afbb2b1d1d977d52ba7f2b2904b",
+    "dod.log": "e501a9b5e1b6e87ec2189408da4c6a18170972b48fa9120c0f7dc7fa50dc123f",
+    "focused-results.json": "902abea99ff91b55ea5db16dd60f9004261212431cf6d4d7bf9e45aa85cf986f",
+    "gate-results.json": "e203453d7801086aeb69d25747d068d7791ba7856569568c12be7ac9a362f4fe",
+    "integration.xml.gz": "268ae876d074b78557467dcb1263cfcab348aab7abc86d63b323c7b6cbdb7150",
+    "mobility.xml.gz": "9fa2a3ae6ec67f0180e3d4eceb19c65880604ed6e34eac38b5278388de6f2140",
+    "performance.json": "d0bec552e5fe6615e4afe330a87aa801dddccfa0b6865219b32932c7d40b2bcf",
+    "performance.py": "bcef82d78915097e2e501066213476b138ab33376c6a2ad2fe16c19de0df1efa",
+    "real-profile.json": "ede20a4556ca194491b1b85790b954e4b4dfad2078ae82c1e14c3942d6fc7704",
+    "real_profile.py": "20aed10e546aaad8b79ca9b2ccbd37c822064f744fb23ae7cddc80cac9319f24",
+    "review.py": "e7f4ff4353133691937ab553acdc3dcce3b0de07025bafeeeb8072d53b2c90e7",
+    "security.xml.gz": "4e9062a75cbdcb33218bcec8182e60e044e61e39df734d17fce40e01271d7077",
+    "semantics.json": "56946abaa5409c7056f10f37e2ead61a2413dfa7e930d6fc4ec108578c54c205",
+    "summary.json": "b66f979598daf304434d3de9fda74885e4dd92df07d1ca9c1761e8aacb0bdded",
+    "valid-synthetic.jsonl.gz": "d0c6f4c25c7cbd8efd6ac90e7f59772859bc86953815007b90003706df4f98b7"
+  }
+}

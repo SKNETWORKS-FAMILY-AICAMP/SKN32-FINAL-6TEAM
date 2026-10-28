@@ -1,0 +1,18 @@
+{
+  "source_sha256_before": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+  "source_sha256_after": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+  "arr_shape": [
+    40776,
+    2,
+    4,
+    24
+  ],
+  "dtype": "float32",
+  "array_bytes_identical": true,
+  "metadata_and_endpoints_identical": true,
+  "sampled_cells_passed": 50000,
+  "actual_route_walks_passed": 480,
+  "failed": 0,
+  "seed": 102905,
+  "records_exported": 0
+}

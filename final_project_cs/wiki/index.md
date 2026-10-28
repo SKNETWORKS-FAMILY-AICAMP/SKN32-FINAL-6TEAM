@@ -145,3 +145,6 @@ domain: travel
 2026-10-27 G 모델 품질 — 해석 문법이 쓸모없는 기준 칸 · 날짜 인용을 비워 두지 못하게(F02 통과 · I05 날짜 해소, 수용 49 엄격 38→39/49 = 77.6→79.6%, 회귀 0) · 속도 병목은 GPU 경합 · num_ctx 재적재(33 s+31 s)가 주원인 · 후보 00aca1041→a7e6da518(push 전) · W1~W6 공개 response 계약 초안: [보고서](records/reports/2026-10-27_G_모델품질_해석문법_속도_설계.md)
 
 2026-10-29 ST4F-711: 실제 백엔드 필수3/3=100%·동시성41/41=100%, 최신 양쪽 role-manager 소스217da9ad0 반영; 운영/LB-09 원인 확인 별도. [검증·한계·인계](records/reports/2026-10-29_st4f711-backend-gates.md).
+
+
+[2026-10-29 버스 scalar 독립 검토](../../wiki/records/reports/2026-10-29_bus-scalar-independent-continuation.md): 필수3/3=100%, 기존 min_cell 보존·한 표현식 후보; 제외·운영 미검증·원격결과는 보고서 참조.
