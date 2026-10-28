@@ -1,0 +1,14 @@
+{
+  "counts": {
+    "loaded_cells": 18432,
+    "float32_bits": 10007,
+    "walks": 1500,
+    "helpers": 3000
+  },
+  "mismatches": [],
+  "python": "3.12.15 (main, Oct 21 2026, 17:48:33) [MSC v.1944 64 bit (AMD64)]",
+  "numpy": "1.26.4",
+  "baseline_sha256": "781db9b88a7c0965f42ce4abf02e460e4dcbb86cc0b5228d880c2b539952a799",
+  "candidate_sha256": "ab9196583f4444c61fe093dc87adafc4dd77ae4fc58703e1b71bbf0ebe3392db",
+  "fixture_sha256": "d0c6f4c25c7cbd8efd6ac90e7f59772859bc86953815007b90003706df4f98b7"
+}

@@ -148,3 +148,5 @@ domain: travel
 
 
 2026-10-29 ST4F-597 독립 검토: 메뉴 원문 선택·공통 stale 시험 진단,258/258=100%. [보고](records/reports/2026-10-29_st4f597-independent-review.md).
+
+[2026-10-29 버스 scalar 독립 검토](../../wiki/records/reports/2026-10-29_bus-scalar-independent-continuation.md): 필수3/3=100%, 기존 min_cell 보존·한 표현식 후보; 제외·운영 미검증·원격결과는 보고서 참조.

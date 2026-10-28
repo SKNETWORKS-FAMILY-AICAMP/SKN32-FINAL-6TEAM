@@ -1,0 +1,56 @@
+{
+  "mobility": {
+    "tests": "1607",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "126",
+    "time": "43.585"
+  },
+  "contract": {
+    "tests": "367",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "36.540"
+  },
+  "security": {
+    "tests": "125",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "70.714"
+  },
+  "integration": {
+    "tests": "39",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "16",
+    "time": "16.231"
+  },
+  "baseline-focused": {
+    "tests": "34",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "5.532"
+  },
+  "candidate-focused": {
+    "tests": "34",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.991"
+  },
+  "required_gates": {
+    "passed": 3,
+    "total": 3,
+    "dod_items_passed": 26,
+    "dod_items_total": 26
+  },
+  "data_and_runtime_limits": [
+    "Windows Python3.12.15 NumPy1.26.4; EKS image runtime not executed",
+    "Mobility126 skip: local public datasets/scripts unavailable in checkout",
+    "Extra integration16 skip: explicit unrelated fixed15544 synthetic DB and public-fact fixtures required",
+    "No EKS end-to-end speed claim; no production reads/writes or manual deployment"
+  ]
+}

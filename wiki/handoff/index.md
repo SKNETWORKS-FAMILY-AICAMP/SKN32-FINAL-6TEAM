@@ -217,3 +217,5 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 
 2026-10-29 ST4F-597 독립 재현·보안·회귀: 258/258=100%,종결 보류. [인계](2026-10-29_st4f597-independent-review.md).
+
+[2026-10-29 버스 scalar 독립 검토 인계](2026-10-29_bus-scalar-independent-continuation.md): 한 일·시험·제외·위험·통합 결과.

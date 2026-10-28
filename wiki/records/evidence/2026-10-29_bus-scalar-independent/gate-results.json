@@ -1,0 +1,14 @@
+{
+  "initdb": 0,
+  "pg-start": 0,
+  "createdb": 0,
+  "migrate": 0,
+  "prompts": 0,
+  "seed": 0,
+  "mobility": 0,
+  "contract": 0,
+  "security": 0,
+  "dod": 0,
+  "integration": 0,
+  "pg-stop": 0
+}

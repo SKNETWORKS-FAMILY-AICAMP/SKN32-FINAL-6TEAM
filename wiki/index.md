@@ -86,3 +86,6 @@ domain: travel
 2026-10-17 공개 계획서 선택 장소 표시9ebf1aec의 API·worker 배포30초 안정성 확인. 실제 내부HTTP에서3응답200·장소4/4표시·첨부헤더 확인. 공개 브라우저·수동 저장 최종 화면은 미확인. [최종 확인 기록](../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)
 
 - 2026-10-18 관리자 여행 상세 운영 반영·실제 5여행 검증 완료: [인계·확인 한계](handoff/2026-10-18_admin-trip-release.md).
+
+
+[2026-10-29 버스 scalar 독립 검토](records/reports/2026-10-29_bus-scalar-independent-continuation.md): 필수3/3=100%, 실제공공자료·최신코드 동등 확인, local 혼합walk 평균8.65% 감소; EKS 전체성능 미검증.
