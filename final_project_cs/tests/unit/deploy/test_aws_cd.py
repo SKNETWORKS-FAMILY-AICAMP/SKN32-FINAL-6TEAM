@@ -537,7 +537,7 @@ class PlanTests(unittest.TestCase):
 
 
 class RolloutTests(unittest.TestCase):
-    def exercise(self, *, health_failure=False, patch_reply_lost=False, migration_failure=False):
+    def exercise(self, *, health_failure=False, patch_reply_lost=False, migration_failure=False, health_exception=None, recovery_failure=False):
         state = {name: document() for name in cd.APPS}
         for name, d in state.items():
             d["metadata"]["name"] = name
@@ -556,6 +556,8 @@ class RolloutTests(unittest.TestCase):
             if action == "patch":
                 name = args[1]
                 operations = json.loads(args[args.index("-p") + 1])
+                if recovery_failure and any(o["path"] == "/spec/template" and o.get("value") == before[name]["spec"]["template"] for o in operations):
+                    raise RuntimeError("synthetic restoration failure")
                 for operation in operations:
                     if operation["op"] == "replace":
                         field = "template" if operation["path"] == "/spec/template" else "replicas"
@@ -584,7 +586,7 @@ class RolloutTests(unittest.TestCase):
              patch.object(cd, "job_outcome", return_value={"migration": "failed_before_commit", "sqlstate": "55P03"}), \
              patch.object(cd, "command", return_value=""), \
              patch.object(cd, "verify", side_effect=verify), \
-             patch.object(cd, "public_health", side_effect=cd.DeploymentError("HTTP failed") if health_failure else None,
+             patch.object(cd, "public_health", side_effect=(health_exception or cd.DeploymentError("HTTP failed")) if health_failure else None,
                           return_value={"/": 200, "/health": 200}), \
              patch.object(Path, "write_text", autospec=True, side_effect=written):
             if health_failure or patch_reply_lost or migration_failure:
@@ -651,6 +653,105 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("steps.gate.outputs.ready == 'true'", deploy_step)
         self.assertIn("steps.gate.outputs.sha == steps.publishable.outputs.sha", deploy_step)
 
+
+
+
+class FailureDiagnosticsTests(unittest.TestCase):
+    def test_network_reason_types_are_useful_without_private_text(self):
+        import socket
+        import ssl
+        private = "https://private.invalid/?token=do-not-log"
+        for reason in (TimeoutError(private), ConnectionRefusedError(private),
+                       socket.gaierror(private), ssl.SSLError(private), private):
+            with self.subTest(reason=type(reason).__name__):
+                exc = cd.urllib.error.URLError(reason)
+                record = cd.failure_record(SHA, "verify", exc, {}, None, "restored")
+                expected = "URLError" if isinstance(reason, str) else f"URLError({type(reason).__name__})"
+                self.assertEqual(record["error"], expected)
+                self.assertNotIn(private, json.dumps(record))
+
+    def test_failed_stage_excludes_recovery_time(self):
+        now = [0.0]
+
+        def failed_deploy(sha, namespace, images, url, database, settle, enter, timings, facts):
+            now[0] = 10.0
+            enter("verify")
+            facts["failed_monotonic"] = 13.0
+            facts["cause"] = cd.urllib.error.URLError(TimeoutError("private"))
+            facts["recovery"] = "restored"
+            now[0] = 143.0
+            raise cd.DeploymentError("Deployment failed")
+
+        writes = {}
+        def written(path, text, **kwargs):
+            writes[Path(path).name] = json.loads(text)
+        with patch.object(cd.time, "monotonic", side_effect=lambda: now[0]), \
+             patch.object(cd, "_deploy", side_effect=failed_deploy), \
+             patch.object(Path, "write_text", autospec=True, side_effect=written), \
+             self.assertRaises(cd.DeploymentError):
+            cd.deploy(SHA, "unit", {}, "https://example.invalid", "example")
+        record = writes["aws-deploy-failure.json"]
+        self.assertEqual(record["timings"], {"preflight": 10.0, "verify": 3.0, "recovery": 130.0})
+        self.assertEqual(record["error"], "URLError(TimeoutError)")
+        self.assertEqual(record["stage"], "verify")
+
+    def test_real_restoration_path_marks_recovery_separately(self):
+        exercise = RolloutTests()
+        exercise.exercise(health_failure=True)
+        record = exercise.writes["aws-deploy-failure.json"]
+        self.assertIn("recovery", record["timings"])
+        self.assertEqual(record["recovery"], "restored")
+
+
+class IndependentFailureReviewTests(unittest.TestCase):
+    def test_cli_does_not_disclose_network_or_key_error_text(self):
+        private = "https://private.invalid/?token=synthetic-do-not-log"
+        for error in (cd.urllib.error.URLError(TimeoutError(private)), KeyError(private), ValueError(private)):
+            with self.subTest(error=type(error).__name__), \
+                 patch.object(cd.sys, "argv", ["aws_cd.py", "gate"]), \
+                 patch.object(cd, "gate", side_effect=error), \
+                 patch.object(cd.sys, "stderr", new_callable=io.StringIO) as output, \
+                 self.assertRaises(SystemExit) as stopped:
+                cd.main()
+            self.assertEqual(stopped.exception.code, 1)
+            self.assertNotIn(private, output.getvalue())
+            self.assertIn(type(error).__name__, output.getvalue())
+
+    def test_failed_recovery_retains_original_cause_and_forward_db(self):
+        exercise = RolloutTests()
+        with patch.object(cd.time, "sleep"):
+            exercise.exercise(health_failure=True, recovery_failure=True,
+                              health_exception=cd.urllib.error.URLError(TimeoutError("synthetic-private")))
+        failure = exercise.writes["aws-deploy-failure.json"]
+        self.assertEqual(failure["error"], "URLError(TimeoutError)")
+        self.assertTrue(failure["recovery"].startswith("failed:"))
+        self.assertEqual(failure["migration"], {"migration": "committed"})
+        self.assertIn("recovery", failure["timings"])
+        self.assertNotIn("aws-deploy-result.json", exercise.writes)
+        self.assertNotIn("synthetic-private", json.dumps(failure))
+
+    def test_interrupt_remains_a_failure_and_restores_apps(self):
+        exercise = RolloutTests()
+        with patch.object(cd.time, "sleep"):
+            state, before, _ = exercise.exercise(health_failure=True, health_exception=KeyboardInterrupt())
+        failure = exercise.writes["aws-deploy-failure.json"]
+        self.assertEqual(state, before)
+        self.assertEqual(failure["error"], "KeyboardInterrupt")
+        self.assertEqual(failure["recovery"], "restored")
+        self.assertNotIn("aws-deploy-result.json", exercise.writes)
+
+    def test_preflight_failure_has_no_recovery_duration(self):
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "example/repo"}), \
+             patch.object(cd, "github", side_effect=KeyError("synthetic-private")), \
+             patch.object(Path, "write_text", autospec=True) as written, \
+             patch.object(cd.sys, "stderr", new_callable=io.StringIO), \
+             self.assertRaises(KeyError):
+            cd.deploy(SHA, "unit", {}, "https://example.invalid", "example")
+        failure = json.loads(written.call_args.args[1])
+        self.assertEqual(failure["stage"], "preflight")
+        self.assertEqual(failure["recovery"], "not-needed")
+        self.assertNotIn("recovery", failure["timings"])
+        self.assertNotIn("synthetic-private", json.dumps(failure))
 
 if __name__ == "__main__":
     unittest.main()
