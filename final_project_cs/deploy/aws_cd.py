@@ -511,10 +511,19 @@ def verify(namespace, images, sha):
     return result
 
 
+def failure_error(exc):
+    """Sanitized failure facts: our own DeploymentError text, otherwise only exception and network reason types."""
+    if isinstance(exc, DeploymentError):
+        error = f"DeploymentError: {exc}"
+    elif isinstance(exc, urllib.error.URLError) and isinstance(exc.reason, BaseException):
+        error = f"{type(exc).__name__}({type(exc.reason).__name__})"
+    else:
+        error = type(exc).__name__
+    return error
+
+
 def failure_record(sha, stage, exc, timings, migration, recovery):
-    """Sanitized failure facts: our own DeploymentError text, otherwise only the exception type."""
-    error = f"DeploymentError: {exc}" if isinstance(exc, DeploymentError) else type(exc).__name__
-    return {"sha": sha, "stage": stage, "error": error, "recovery": recovery, "migration": migration,
+    return {"sha": sha, "stage": stage, "error": failure_error(exc), "recovery": recovery, "migration": migration,
             "timings": timings, "failed_at": datetime.now(timezone.utc).isoformat()}
 
 
@@ -532,7 +541,12 @@ def deploy(sha, namespace, images, public_url, database, settle=30):
         _deploy(sha, namespace, images, public_url, database, settle, enter, timings, facts)
     except BaseException as exc:
         if clock["stage"] not in timings:
-            timings[clock["stage"]] = round(time.monotonic() - clock["started"], 3)
+            failed = facts.get("failed_monotonic")
+            if failed is None:
+                timings[clock["stage"]] = round(time.monotonic() - clock["started"], 3)
+            else:
+                timings[clock["stage"]] = round(failed - clock["started"], 3)
+                timings["recovery"] = round(time.monotonic() - failed, 3)
         record = failure_record(sha, clock["stage"], facts.get("cause", exc), timings, facts["migration"],
                                 facts["recovery"])
         Path(FAILURE_FILE).write_text(json.dumps(record, indent=2), encoding="utf-8")
@@ -605,6 +619,7 @@ def _deploy(sha, namespace, images, public_url, database, settle, enter, timings
         enter("done")
     except BaseException as exc:
         facts["cause"] = exc
+        facts["failed_monotonic"] = time.monotonic()
         recovery_errors = []
         try:
             pause_worker(namespace, {images["tripilot-worker"], baselines["tripilot-worker"]["spec"]["template"]["spec"]["containers"][0]["image"]})
@@ -662,7 +677,7 @@ def main():
                    json.loads(Path("aws-images.json").read_text("utf-8")),
                    os.environ["CD_PUBLIC_URL"], os.environ["CD_RDS_INSTANCE"])
     except (DeploymentError, urllib.error.URLError, KeyError, ValueError) as exc:
-        print(f"AWS deployment stopped: {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"AWS deployment stopped: {failure_error(exc)}", file=sys.stderr)
         raise SystemExit(1) from None
 
 

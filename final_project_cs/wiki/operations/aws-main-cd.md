@@ -50,3 +50,8 @@ API·작업 처리 앱·웹·관리자 모두 현재 커밋의 digest로 실행�
 - [자동화](../../../.github/workflows/cd-aws.yml)
 - [게시·배포·검증 코드](../../deploy/aws_cd.py)
 - [사실 자료 보존 이미지](../../deploy/aws/Dockerfile.api)
+
+
+## 2026-10-29 진단 후보 검토
+
+실패 단계의 `timings`는 예외를 잡은 monotonic 시각까지만 세고 이후 복구 시간을 `timings.recovery`로 분리합니다. preflight·migration 실패처럼 앱 복구에 진입하지 않은 경우 recovery 시간은 추가하지 않습니다. `failed_at`은 기존대로 실패 산출물 작성 시각이며 실제 최초 오류 UTC 시각으로 해석하지 않습니다. 외부 예외 본문·URL·키 값은 산출물과 CLI 로그 모두 제외하며, URLError 원인이 예외 객체이면 원인 종류 이름만 남깁니다. 종료 실패·DB forward-only·CAS 복구·timeout·재시도 정책은 유지합니다. 운영 속도 개선 주장이 아닙니다.
