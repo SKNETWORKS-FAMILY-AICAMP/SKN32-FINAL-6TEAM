@@ -28,7 +28,7 @@ _HEADING = re.compile(r"^\s*(?:\d+\s*일\s*차|DAY\s*\d+|첫째\s*날|둘째\s*�
 @dataclass
 class DayDate:
     value: str | None          # YYYY-MM-DD, 모르면 None
-    how: str                   # written · year_filled · day_offset · departure · relative · unknown
+    how: str                   # written · year_filled · day_offset · departure · relative · unknown (+ pipeline: agent_relative · agent_year)
     needs_review: bool
     note: str | None = None
 

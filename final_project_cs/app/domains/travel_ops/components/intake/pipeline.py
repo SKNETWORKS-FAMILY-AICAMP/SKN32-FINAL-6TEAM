@@ -2123,6 +2123,12 @@ def _agent_booking_rows(read: Any, item: Any, index: int) -> list[dict[str, Any]
     return rows
 
 
+def _year_written(year: str, quote: str) -> bool:
+    """`[2026-10-28 전수검사 A13]` 모델이 고른 해(`2027`)가 날짜 인용에 그대로 적혀 있나 — 「2027-10-30」 · 「2027년」 · 「'27년」 · 「27년」.
+    ★아무 네 자리 숫자(「1230 출발」 · 예약번호)는 해가 아니다. 다른 해(「1027년」)가 적혀 있으면 모델 값과 어긋나므로 적힌 것으로 보지 않는다"""
+    return bool(re.search(rf"(?<!\d){year}(?!\d)", quote) or re.search(rf"(?<!\d){year[2:]}\s*년", quote))
+
+
 def _agent_rows(read: Any, out: Any, *, position: int, today: date,
                 copied_cards: list[Any] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
     """읽기 에이전트 결과 → (값 줄, 항목, 날짜, 첫날 묻기). `[2026-10-16]`
@@ -2139,6 +2145,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
     rows: list[dict[str, Any]] = []
     items: list[dict[str, Any]] = []
     guessed_dates: set[int] = set()
+    yearless_dates: set[int] = set()
     by_line: dict[int, list[Any]] = {}
     for it in out.items:
         by_line.setdefault(it.title.line, []).append(it)
@@ -2246,6 +2253,9 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
                          "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})
         if it.date_guessed:
             guessed_dates.add(index)
+        elif it.date and it.date_quote is not None and not _year_written(it.date[:4], it.date_quote.text):
+            # `[2026-10-28 전수검사 A13]` 인용(「10월 30일」)에 해가 없는데 모델이 해를 붙였다 — 값은 두고 확인 표시만 붙인다
+            yearless_dates.add(index)
         # ★`[2026-10-19 진단 포인트 2]` 에이전트가 「숙소」라고 읽은 항목은 장소를 숙소 자료에서만 찾는다(`_place_kind_hint`) — 전에는 식사만 넘기고 숙소를 버렸다
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
                       "meal": it.kind == "dining", "lodging": it.kind == "lodging", "booked": booked, "segment": segment(it),
@@ -2307,6 +2317,9 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
     for index, day_date in enumerate(dated):
         if index in guessed_dates and day_date.value:
             dated[index] = DayDate(day_date.value, "agent_relative", True, "읽기 에이전트가 오늘 기준으로 정한 날짜 — 다르면 고쳐 주세요")
+        elif index in yearless_dates and day_date.how == "written" and day_date.value:
+            dated[index] = DayDate(day_date.value, "agent_year", True,
+                                   f"해가 적혀 있지 않아 읽기 에이전트가 {day_date.value[:4]}년으로 두었어요 — 다르면 고쳐 주세요")
     for index, day_date in enumerate(dated):
         rows.append({"field": f"items[{index}].date", "value": day_date.value, "method": "llm_agent" if index < agent_count else "rule",
                      "evidence": {"source": "rule", "how": day_date.how, "line": items[index]["line"]},
