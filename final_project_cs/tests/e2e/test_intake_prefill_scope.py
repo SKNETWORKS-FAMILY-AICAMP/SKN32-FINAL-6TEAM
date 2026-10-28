@@ -23,8 +23,13 @@ from app.domains.travel_ops.components.intake import review as review_module
 from .test_intake_prefill import filled  # noqa: F401 — 성수 장소 · 요식 원장 · 지명 사전
 from .test_intake_review import _client, _item, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
 
-PLAN = ("2026-10-15\n"
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`). 이 파일은 상대 날짜 전환(4fee819ca)과 따로 들어와 빠졌다.
+D_2026_10_15 = reldate.day("2026-10-15")
+
+PLAN = (f"{D_2026_10_15}\n"
         "10시 경복궁 관람 1시간 반\n"
         "11시 올리브영\n"
         "12시 반 광장시장 빈대떡\n"
