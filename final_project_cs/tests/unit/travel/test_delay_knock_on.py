@@ -57,7 +57,8 @@ def test_a_later_item_pushed_past_its_closing_time_is_reported_with_the_reason()
     meal, museum = lunch(), item(2, "activity", "박물관", "13:00", "15:00", closes="15:10")
     [knock] = delay_knock_on([meal, museum], meal, 30)                       # 13:30~15:30 — 15:10 에 닫는다
     assert knock.item is museum and knock.new_start == at("13:30") and knock.new_end == at("15:30")
-    assert any("15:10" in reason and "닫는다" in reason for reason in knock.reasons)
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 위반 문장이 해요체·붙여쓰기로 바뀌었다(옛 단언 「닫는다」)
+    assert any("15:10에 문을 닫는데" in reason for reason in knock.reasons)
 
 
 def test_the_push_cascades_through_the_move_and_stops_where_nothing_is_pushed():
@@ -86,7 +87,8 @@ def test_a_booked_or_pinned_item_cannot_be_moved_so_it_is_late():
 def test_the_sentence_says_the_schedule_was_not_changed_and_promises_no_human():
     meal, museum = lunch(), item(2, "activity", "박물관", "13:00", "15:00", closes="15:10")
     text = knock_on_text(meal, 30, delay_knock_on([meal, museum], meal, 30))
-    assert "점심 식사은(는) 30분 늦어도 괜찮지만" in text and "박물관(13:30 시작) — 15:30 까지인데 15:10 에 닫는다" in text and "일정은 바꾸지 않았어요" in text
+    # contract_correction `[2026-10-28 x600 e78e038b]`: 받침에 맞는 조사 · 해요체 위반 문장(옛 단언 「점심 식사은(는)」 「15:30 까지인데 15:10 에 닫는다」)
+    assert "점심 식사는 30분 늦어도 괜찮지만" in text and "박물관(13:30 시작) — 15:10에 문을 닫는데 15:30까지 머물게 돼요" in text and "일정은 바꾸지 않았어요" in text
     assert "사람" not in text and "담당자" not in text
 
 

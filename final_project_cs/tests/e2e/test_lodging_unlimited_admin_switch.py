@@ -17,9 +17,15 @@ from app.domains.travel_ops.ports.data_sources import operator_modes
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_guard import _client
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_11_06 = reldate.day("2026-11-06")
+D_2026_11_07 = reldate.day("2026-11-07")
 
 LODGING, UNLIMITED = settings_hook.LODGING_MODE, settings_hook.UNLIMITED_MODE
-QUERY = {"keyword": "명동", "check_in": "2026-11-06", "check_out": "2026-11-07", "adults": 2}
+QUERY = {"keyword": "명동", "check_in": D_2026_11_06, "check_out": D_2026_11_07, "adults": 2}
 
 
 @pytest.fixture(autouse=True)

@@ -32,10 +32,14 @@ from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 from app.presentation import security
 from app.presentation.api.app import create_app
 from tests.helpers.plugin_bindings import publish_fixed_mobility
+from tests.helpers.relative_dates import clock_class, shifted
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
-                       / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
+_SCENARIO_AS_WRITTEN = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
+                                   / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
+#: ★`[2026-10-28]` 대본 날짜(2026-09-23)는 지났다 — 전부-과거 가드가 등록을 막는다. 대본 전체(일정 · 사건 시각)를
+#:   실행 날 기준 같은 요일로 옮겨 쓴다(`tests/helpers/relative_dates.py` `shifted` — 모든 시험 자료와 같은 폭).
+SCENARIO = shifted(_SCENARIO_AS_WRITTEN)
 DAY = SCENARIO["trip"]["date"]
 REPORTS = {report["type"]: report for report in SCENARIO["customer_reports"]}
 
@@ -105,6 +109,12 @@ def api(monkeypatch):
     from app.domains.travel_ops.components.planning import pending as pending_module
 
     monkeypatch.setattr(pending_module, "wall_clock", lambda: clock.now)
+    # ★`[2026-10-28]` 대기질은 「방문 시각이 지금부터 예보 범위(72시간) 안」일 때만 본다(`disruptions.FORECAST_HOURS`).
+    #   그 「지금」은 벽시계가 아니라 재생 시각이어야 한다(`ReplayTimeline` 과 같은 시간축) — 위 `pending.wall_clock` 과 같이 대본 시계로.
+    #   (모듈은 `datetime.now(UTC)` 로만 읽는다)
+    from app.domains.travel_ops.ports.data_sources import disruptions as disruptions_module
+
+    monkeypatch.setattr(disruptions_module, "datetime", clock_class(lambda: clock.now))
 
     def classifier(_message):
         return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}

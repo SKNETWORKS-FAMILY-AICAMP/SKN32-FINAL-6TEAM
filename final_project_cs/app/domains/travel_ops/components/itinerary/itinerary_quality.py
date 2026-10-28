@@ -24,7 +24,7 @@ from zoneinfo import ZoneInfo
 
 from app.core.settings import get_guardrails
 
-from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary, seoul_part
+from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary, particle, seoul_part
 
 log = logging.getLogger(__name__)
 KST = ZoneInfo("Asia/Seoul")
@@ -108,8 +108,9 @@ def _same_place(day: date, parts: list[Part]) -> list[dict[str, Any]]:
         if twin is not None:
             found.append(_warning(
                 "same_place_twice", day,
-                f"{twin.title} 와 {part.title} 은(는) 같은 곳이다 — 그날 두 번 들어 있다",
-                "한 번으로 줄이거나 둘 중 하나를 다른 곳으로 바꾼다(일부러 다시 가는 것이면 그대로 둔다)", (twin.seq, part.seq)))
+                # ★`[2026-10-28]` 고객 문장(해요체 · 받침 조사) — 전에는 「경복궁 와 경복궁 다시 은(는) 같은 곳이다」였다
+                f"{twin.title}{particle(twin.title, '과/와')} {part.title}{particle(part.title, '은/는')} 같은 곳이에요. 그날 일정에 두 번 들어 있어요",
+                "한 번으로 줄이거나 둘 중 하나를 다른 곳으로 바꿔 주세요. 일부러 다시 가는 거라면 그대로 두셔도 돼요", (twin.seq, part.seq)))
         seen.append(part)
     return found
 
@@ -158,8 +159,8 @@ def _meals(day: date, parts: list[Part], policy: Mapping[str, Any]) -> list[dict
         label = _MEAL_LABEL.get(name, name)
         found.append(_warning(
             "meal_missing", day,
-            f"{label} 시간대({opens}~{closes})에 식사 일정이 없고 식사할 틈도 {int(gap.total_seconds() // 60)}분뿐이다 — 다른 일정이 그 시간을 채운다",
-            "그 시간대에 식사 항목을 넣거나 일정 사이에 식사할 틈을 둔다(일부러 거르는 일정이면 그대로 둔다)",
+            f"{label} 시간대({opens}~{closes})에 식사 일정이 없어요. 다른 일정이 그 시간을 채워 식사할 틈도 {int(gap.total_seconds() // 60)}분뿐이에요",
+            "그 시간대에 식사 일정을 넣거나 일정 사이에 식사할 틈을 두세요. 일부러 거르는 거라면 그대로 두셔도 돼요",
             [p.seq for p in parts if p.starts_at <= window_end and (p.ends_at or p.starts_at) >= window_start]))
     return found
 
@@ -204,8 +205,8 @@ def _zigzag(day: date, parts: list[Part], policy: Mapping[str, Any]) -> list[dic
         return []
     return [_warning(
         "route_zigzag", day,
-        f"그날 활동 {count}곳을 도는 길이가 약 {current / 1000:.1f}km 인데, 순서를 바꾸면 약 {best / 1000:.1f}km 로 돌 수 있다",
-        "시간이 정해진 예약이 아니면 가까운 곳끼리 묶어 순서를 바꾼다",
+        f"그날 활동 {count}곳을 지금 순서로 돌면 약 {current / 1000:.1f}km인데, 순서를 바꾸면 약 {best / 1000:.1f}km로 돌 수 있어요",
+        "시간이 정해진 예약이 아니라면 가까운 곳끼리 묶어 순서를 바꿔 보세요",
         [p.seq for p in stops], better_order=[stops[i].seq for i in best_order])]
 
 
@@ -265,8 +266,8 @@ def _day_end(day: date, parts: list[Part], limit_text: str | None = None) -> lis
     names = ", ".join(p.title for p in late)
     return [_warning(
         "past_day_end", day,
-        f"{names} — {finishes:%H:%M}에 끝나 하루 마감({limit_text})을 넘는다",
-        "마감 안에 끝나게 앞당기거나 줄인다(일부러 늦게까지 가는 일정이면 그대로 둔다)", [p.seq for p in late])]
+        f"{names}: {finishes:%H:%M}에 끝나서 하루 마감({limit_text})을 넘겨요",
+        "마감 전에 끝나도록 앞당기거나 줄여 주세요. 일부러 늦게까지 있는 일정이라면 그대로 두셔도 돼요", [p.seq for p in late])]
 
 
 # ── O4 식당 라스트오더 ───────────────────────────────────────
@@ -292,9 +293,9 @@ def _last_order(day: date, parts: list[Part]) -> list[dict[str, Any]]:
         if why:
             found.append(_warning(
                 "last_order_tight", day, f"{part.title}: {why}",
-                "더 일찍 도착하게 앞당기거나 마지막 주문 시각을 미리 확인한다", [part.seq]))
+                "더 일찍 도착하도록 앞당기거나 마지막 주문 시각을 미리 확인해 주세요", [part.seq]))
         for note in dining_warnings(place, arrival, minutes):
-            found.append(_warning("last_order_unknown", day, f"{part.title}: {note}", "방문 전에 마지막 주문 시각을 확인한다", [part.seq]))
+            found.append(_warning("last_order_unknown", day, f"{part.title}: {note}", "방문 전에 마지막 주문 시각을 확인해 주세요", [part.seq]))
     return found
 
 

@@ -60,7 +60,7 @@ export const SCREENS: readonly HelpScreen[] = [
     ] },
   { id: "reading", name: ["읽는 중", "Reading"], shot: "2-reading",
     where: ["「계획 확인하기」를 누른 바로 다음", "Right after “Check my plan”"],
-    note: ["사진 한 장은 1분쯤 걸려요. 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep the screen open and you see it as soon as it is done."],
+    note: ["사진 한 장은 2분쯤 걸릴 수 있어요. 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo can take about two minutes. Keep the screen open and you see it as soon as it is done."],
     points: [
       { at: [594, 75], needs: "guardian", label: ["항로 지킴이 아이콘", "Course Keeper icon"], desc: ["항로 지킴이를 켜고 꺼요. 끄면 「되돌리기」가 함께 떠요.", "Turns the Course Keeper on and off. Turning it off shows “Undo”."] },
       { at: [390, 380], label: ["「일정 읽기」 · 「장소」 · 「운영시간」 · 「이동」 · 「날씨·도로」 · 「빈칸 채우기」", "“Reading” · “Places” · “Hours” · “Routes” · “Weather & roads” · “Filling gaps”"], desc: ["서버가 하는 일을 단계마다 한 칸으로 보여 줘요. 지금 단계의 이름은 그 칸 아래에, 지금 확인 중인 일정은 맨 아래 줄에 있어요. 한 단계에서 8초 넘게 새 소식이 없으면 몇 초째인지 함께 보여 줘요.", "One cell for each step the server works through. The step it is at is named under its cell, and the line below says which stop it is checking. When one step has had no news for over 8 seconds, it also says for how long."] },
@@ -219,7 +219,7 @@ export const FAQ: readonly Faq[] = [
   { id: "format", category: "register", screens: ["input"], q: ["계획은 어떤 형식으로 적어야 하나요?", "How should I write my plan?"],
     a: ["정해진 형식은 없어요. 일차 제목에 날짜를 적고(‘1일차 · 2026-10-29’), 그 아래에 시작 시간과 장소를 한 줄씩 적으면(‘09:00 경복궁’) 가장 잘 읽어요. 예약한 일정은 ‘예약 있음’으로 표시해 주세요. 「예시 불러오기」를 누르면 예시가 채워져요.", "Any way you like. It reads best with the date in each day’s heading (‘Day 1 · 2026-10-29’) and one line per stop with its start time and place (‘09:00 Gyeongbokgung’). Mark booked stops ‘booked’. “Load example” fills in an example."] },
   { id: "files", category: "register", screens: ["input", "reading"], needs: "planInputExtras", q: ["사진이나 파일로 된 계획도 올릴 수 있나요?", "Can I upload a photo or a file?"],
-    a: ["「파일 선택」 칸에서 사진 · PDF · 워드 · 엑셀 · 텍스트 파일을 최대 5개, 한 개 10MB까지 올릴 수 있어요. 다시 고르면 앞의 선택에 더해지지 않고 바뀌니 한 번에 골라 주세요. 사진 한 장은 읽는 데 1분쯤 걸려요.", "In “Choose files”: photos, PDF, Word, Excel or text — up to 5, 10 MB each. Choosing again replaces the earlier choice, so pick them all at once. A photo takes about a minute to read."] },
+    a: ["「파일 선택」 칸에서 사진 · PDF · 워드 · 엑셀 · 텍스트 파일을 최대 5개, 한 개 10MB까지 올릴 수 있어요. 다시 고르면 앞의 선택에 더해지지 않고 바뀌니 한 번에 골라 주세요. 사진 한 장은 읽는 데 2분쯤 걸릴 수 있어요.", "In “Choose files”: photos, PDF, Word, Excel or text — up to 5, 10 MB each. Choosing again replaces the earlier choice, so pick them all at once. A photo can take about two minutes to read."] },
   { id: "which-box", category: "register", screens: ["input"], needs: "planInputExtras", q: ["세 칸에 모두 적으면 어느 것을 보내나요?", "I filled in more than one box. Which is sent?"],
     a: ["마지막에 누르거나 쓴 칸 하나만 보내요. 그 칸에 「보낼 칸」 표시가 붙어 있어요. 다른 칸에 적은 내용은 지워지지 않고 남아 있어요.", "Only the one you touched last — it is marked “Will be sent”. The others keep what you wrote."] },
   { id: "plan-for-me", category: "register", screens: ["input"], needs: "planInputExtras", q: ["일정을 대신 짜 주기도 하나요?", "Can you plan the trip for me?"],

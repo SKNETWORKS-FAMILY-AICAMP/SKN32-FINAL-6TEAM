@@ -17,12 +17,17 @@ from app.infrastructure.db.session import get_connection
 
 from .test_intake_review import _client, _edit, _field, _item, _key, _send, rv  # noqa: F401 — 같은 환경 · 모방을 그대로 쓴다
 from .test_trip_api import api  # noqa: F401 — `rv` 가 쓰는 픽스처
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
 
 
 def test_a_place_the_customer_picked_names_the_registered_stop_and_the_written_name_stays_in_the_evidence(rv):
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n11시 올리브영\n14시 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n11시 올리브영\n14시 광장시장")
     oy = _item(view, "올리브영")
     pick = {"name": "올리브영 명동 플래그십", "latitude": 37.5637, "longitude": 126.9851, "source": "kakao", "kind": "activity"}
     done = _edit(client, headers, view, _field(oy, "place", pick))

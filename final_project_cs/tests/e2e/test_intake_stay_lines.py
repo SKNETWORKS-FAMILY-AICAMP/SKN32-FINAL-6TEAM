@@ -28,6 +28,15 @@ from app.domains.travel_ops.components.intake import candidates
 
 from .test_intake_review import Tour, _catalog, _client, _edit, _field, _item, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_12_06 = reldate.day("2026-12-06")
+D_2026_12_07 = reldate.day("2026-12-07")
+D_2030_11_06 = reldate.day("2030-11-06")
+D_2030_11_07 = reldate.day("2030-11-07")
+D_2030_11_08 = reldate.day("2030-11-08")
 
 PLAZA = {"id": "31", "name": "더 플라자 호텔 서울", "category": "여행 > 숙박 > 호텔", "category_group": "AD5",
          "address": "서울 중구 소공로 119", "latitude": 37.5655, "longitude": 126.9780}
@@ -77,7 +86,7 @@ def _search(client, headers, view, item, q):
 
 def test_a_named_hotel_check_in_line_resolves_its_place_without_the_check_in_word(hotels):
     client, headers, tour, kakao, view = _send_plan(
-        "2030-11-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2030-11-07\n11:00 체크아웃")
+        f"{D_2030_11_06}\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n{D_2030_11_07}\n11:00 체크아웃")
     stay = _item(view, "더 플라자 호텔 서울")
     assert stay["kind"] == "lodging", stay
     assert stay["place_state"] == "found" and stay["place"]["name"] == "더 플라자 호텔 서울", stay
@@ -87,7 +96,7 @@ def test_a_named_hotel_check_in_line_resolves_its_place_without_the_check_in_wor
 
 def test_a_nameless_hotel_check_in_line_is_asked_from_lodging_candidates_and_never_a_meal_pair(hotels):
     # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 먼저 채우기는 이름 없는 호텔을 채우지 않는다(후보가 하나여도) — 그 일정 카드가 후보에서 고르게 묻는다
-    client, headers, tour, kakao, view = _send_plan("2030-11-06\n15:00 호텔 체크인\n17:00 경복궁\n2030-11-07\n11:00 호텔 체크아웃")
+    client, headers, tour, kakao, view = _send_plan(f"{D_2030_11_06}\n15:00 호텔 체크인\n17:00 경복궁\n{D_2030_11_07}\n11:00 호텔 체크아웃")
     stay = _item(view, "호텔")
     assert stay["kind"] == "lodging" and stay["place_state"] == "needs_choice" and stay["place"] is None, stay
     asked = [q for q in view["prefill"]["questions"] if q["kind"] == "lodging_place"]
@@ -102,7 +111,7 @@ def test_a_nameless_hotel_check_in_line_is_asked_from_lodging_candidates_and_nev
 
 
 def test_the_place_search_of_an_unresolved_stay_finds_lodgings_on_the_map(hotels):
-    client, headers, _tour, _kakao, view = _send_plan("2030-11-06\n15:00 무명 게스트하우스 체크인\n17:00 경복궁\n2030-11-07\n11:00 체크아웃")
+    client, headers, _tour, _kakao, view = _send_plan(f"{D_2030_11_06}\n15:00 무명 게스트하우스 체크인\n17:00 경복궁\n{D_2030_11_07}\n11:00 체크아웃")
     stay = _item(view, "무명 게스트하우스")
     assert stay["kind"] == "lodging" and stay["place_state"] == "unresolved", stay                    # 이름으로는 못 찾았다 → 고객이 검색으로 고친다
     got = _search(client, headers, view, stay, "게스트하우스")
@@ -111,7 +120,7 @@ def test_the_place_search_of_an_unresolved_stay_finds_lodgings_on_the_map(hotels
 
 
 def test_an_unresolved_stay_gets_lodging_candidates_from_the_map_not_no_same_kind(hotels):
-    client, headers, _tour, kakao, view = _send_plan("2030-11-06\n15:00 무명 게스트하우스 체크인\n17:00 경복궁\n2030-11-07\n11:00 체크아웃")
+    client, headers, _tour, kakao, view = _send_plan(f"{D_2030_11_06}\n15:00 무명 게스트하우스 체크인\n17:00 경복궁\n{D_2030_11_07}\n11:00 체크아웃")
     stay = _item(view, "무명 게스트하우스")
     got = _candidates(client, headers, view, stay)
     assert "no_same_kind" not in got["notes"], got
@@ -119,10 +128,10 @@ def test_an_unresolved_stay_gets_lodging_candidates_from_the_map_not_no_same_kin
 
 
 def test_first_fill_and_repeated_auto_fix_preserve_a_stays_check_in_and_check_out(hotels):
-    client, headers, _tour, _kakao, view = _send_plan("2030-11-06\n15:00 호텔 체크인\n17:00 경복궁\n2030-11-08\n11:00 호텔 체크아웃")
+    client, headers, _tour, _kakao, view = _send_plan(f"{D_2030_11_06}\n15:00 호텔 체크인\n17:00 경복궁\n{D_2030_11_08}\n11:00 호텔 체크아웃")
     # `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 먼저 채우기는 이름 없는 호텔을 채우지 않는다(후보가 하나여도) — 그 일정 카드가 후보에서 고르게 묻는다
     stay = _item(view, "호텔")
-    assert stay["place_state"] == "needs_choice" and stay["ends_at"] == "11:00" and stay["end_date"] == "2030-11-08", stay
+    assert stay["place_state"] == "needs_choice" and stay["ends_at"] == "11:00" and stay["end_date"] == D_2030_11_08, stay
     assert stay["starts_at"] == "15:00" and stay["place"] is None, stay
     # 고객이 누른 「전체 자동 추천」은 숙소를 채우고, 체크인 · 체크아웃은 그대로 둔다
     got = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/autofix", headers=headers, json={"revision": view["revision"]})
@@ -130,8 +139,8 @@ def test_first_fill_and_repeated_auto_fix_preserve_a_stays_check_in_and_check_ou
     body = got.json()
     new = _item(body["view"], "호텔")
     assert new["place"] and new["place"]["name"] in ("광화문호텔", "광화문스테이호텔"), new
-    assert (new["starts_at"], new["ends_at"], new["end_date"]) == ("15:00", "11:00", "2030-11-08"), new
-    assert (new["starts_at"], new["ends_at"], new["end_date"]) == ("15:00", "11:00", "2030-11-08"), "체크아웃 날과 시각이 그대로다"
+    assert (new["starts_at"], new["ends_at"], new["end_date"]) == ("15:00", "11:00", D_2030_11_08), new
+    assert (new["starts_at"], new["ends_at"], new["end_date"]) == ("15:00", "11:00", D_2030_11_08), "체크아웃 날과 시각이 그대로다"
 
 
 def test_a_plan_with_a_named_hotel_goes_all_the_way_to_a_registered_trip(hotels):
@@ -142,13 +151,13 @@ def test_a_plan_with_a_named_hotel_goes_all_the_way_to_a_registered_trip(hotels)
     publish_fixed_mobility(client.app, source="stay_lines")
     headers = _key(client)
     # ★`[2026-10-20]` N서울타워는 대표 장소 운영시간 표(`config/seoul_landmarks.yaml`, 7c255f38)대로 10:30 에 연다 — 09:30 이면 「일러요」 경고로 준비가 안 된다
-    view = _send(client, headers, "2026-12-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2026-12-07\n10:30 N서울타워\n11:00 체크아웃")
+    view = _send(client, headers, f"{D_2026_12_06}\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n{D_2026_12_07}\n10:30 N서울타워\n11:00 체크아웃")
     assert view["review"]["ready"] is True, [(i["title"], i["place_state"]) for i in view["review"]["items"]]
     done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
     assert done.status_code == 200, done.text
     items = done.json()["trip"]["items"]
     [stay] = [i for i in items if i["kind"] == "lodging"]
-    assert stay["title"] == "더 플라자 호텔 서울" and (stay["starts_at"][:16], stay["ends_at"][:16]) == ("2026-12-06T15:00", "2026-12-07T11:00"), stay
+    assert stay["title"] == "더 플라자 호텔 서울" and (stay["starts_at"][:16], stay["ends_at"][:16]) == (f"{D_2026_12_06}T15:00", f"{D_2026_12_07}T11:00"), stay
     assert stay["place"], stay                                                                  # 장소가 있다 — 지도 핀 자리
     assert [i["title"] for i in items if i["kind"] == "activity"] == ["경복궁", "N서울타워"], "체크아웃 줄은 따로 일정이 되지 않는다"
 
@@ -159,7 +168,7 @@ def test_a_found_hotel_gets_its_other_stays_from_the_lodging_team_first_and_a_pi
     from app.domains.travel_ops.components.team_hooks import lodging_alternatives
 
     _catalog(hotels, "920002", "12", "서울광장", 37.5658, 126.9779, "서울특별시 중구 세종대로 110")   # 검색어의 구(「서울 중구」)는 가장 가까운 목록 행 주소에서
-    client, headers, _tour, kakao, view = _send_plan("2명\n2030-11-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2030-11-08\n11:00 체크아웃")
+    client, headers, _tour, kakao, view = _send_plan(f"2명\n{D_2030_11_06}\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n{D_2030_11_08}\n11:00 체크아웃")
     asked = {}
 
     def rank(**query):
@@ -173,7 +182,7 @@ def test_a_found_hotel_gets_its_other_stays_from_the_lodging_team_first_and_a_pi
     assert "team_ranked" in got["notes"], got
     assert [c["place"]["name"] for c in got["candidates"]] == ["명동 팀 호텔", "을지로 팀 호텔"], got     # 관광공사 · 지도 숙소로 채우지 않는다
     assert all(c["basis"] == "lodging" and c["place"]["content_type_id"] == "32" for c in got["candidates"]), got
-    assert (asked["keyword"], asked["check_in"], asked["check_out"]) == ("서울 중구", "2030-11-06", "2030-11-08") and asked["adults"] == 2, asked
+    assert (asked["keyword"], asked["check_in"], asked["check_out"]) == ("서울 중구", D_2030_11_06, D_2030_11_08) and asked["adults"] == 2, asked
     assert asked["anchor"] == (37.5655, 126.978) and "더 플라자 호텔 서울" in asked["exclude_names"], asked
     pick = got["candidates"][0]["place"]
     _edit(client, headers, view, _field(stay, "place", pick))                                   # 화면이 보내는 그대로(출처 `search`) — 서버가 받는다
@@ -184,7 +193,7 @@ def test_a_found_hotel_gets_its_other_stays_from_the_lodging_team_first_and_a_pi
 def test_without_a_lodging_team_answer_a_found_hotel_falls_back_to_the_lodging_list(hotels, monkeypatch):
     from app.domains.travel_ops.components.team_hooks import lodging_alternatives
 
-    client, headers, _tour, kakao, view = _send_plan("2030-11-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2030-11-07\n11:00 체크아웃")
+    client, headers, _tour, kakao, view = _send_plan(f"{D_2030_11_06}\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n{D_2030_11_07}\n11:00 체크아웃")
     monkeypatch.setattr(lodging_alternatives, "ranked", lambda **_: None)            # 팀이 답하지 못함(바깥 한도 소진 · 키 없음) — 자체 고르기로 간다
     got = _candidates(client, headers, view, _item(view, "더 플라자 호텔 서울"))
     assert "team_ranked" not in got["notes"], got

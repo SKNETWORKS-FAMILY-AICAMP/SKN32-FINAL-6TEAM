@@ -32,7 +32,10 @@ MESSAGE = "합성박물관 일정을 한 시간 뒤로 미뤄줘"
 #: 이 고정 일정 · 문장으로 만든 로컬 생성 문법의 sha256 — 기준 922d628df 에서 잰 값(유료 갈래 추가 전)은 681483c6…947948a.
 #: `[2026-10-27 G]` 읽기 항목 기준 칸 갈래(`decision_unit._shape_generation`)로 바뀐 값. 그 갈래를 빼면(항등) 옛 값 그대로임을 확인했다
 #:  (보고서 2026-10-27 G · `ev/pincheck.py`) — 유료 갈래가 로컬 문법에 섞이지 않았다는 이 시험의 뜻은 그대로다.
-GRAMMAR_SHA256 = "b36b43eac3cf57ddabd99322117ca3b82b59d209159750853bbc3c5259447833"
+#: `[2026-10-28 x600 4fee819c]` contract_correction: 한 일정 shift 의 절대 시각 갈래 2개(`edit_intent.generation_variants` — time_edit.time ·
+#:  맨 위 anchor_time, 갈래 14개 중 2개)로 바뀐 값. 그 두 갈래를 빼면 옛 값 b36b43ea…259447833 그대로임을 확인했다
+#:  (보고서 2026-10-28 timemove · `pincheck.py`) — 유료 갈래가 로컬 문법에 섞이지 않았다는 이 시험의 뜻은 그대로다.
+GRAMMAR_SHA256 = "4be6948ec6ace1f9d93208e75063f2141fe244c6957e6ec8adac88d8172fdc89"
 
 
 @pytest.fixture(autouse=True)

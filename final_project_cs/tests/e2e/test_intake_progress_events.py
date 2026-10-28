@@ -26,6 +26,11 @@ from app.domains.travel_ops.components.intake import review as review_module
 
 from .test_intake_review import PLAN, ROOMY, Kakao, Tour, _client, _key, _send, rv  # noqa: F401 — 같은 환경 · 모방을 그대로 쓴다
 from .test_trip_api import api  # noqa: F401 — `rv` 가 쓰는 픽스처
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
 
 
 def _build(rv_env, view, events):
@@ -140,7 +145,7 @@ def test_the_reading_worker_reports_lines_read_while_the_model_writes(rv, monkey
     """`[2026-10-16 2회차 합의]` 남은 줄을 한 번에 보내고 답을 조금씩 받는다 — 「읽는 중 n/m 줄」(`phase: reading`)이 장소 찾기보다 먼저 쌓인다.
     `done` 은 원문 검사를 통과한 서로 다른 줄 수, `total` 은 보낸 줄 수다(지어낸 진행률이 아니다)."""
     tour, kakao = Tour(), Kakao()
-    text = "\n".join(["2026-10-15", *[f"오후엔 {p} 가 보고 싶어" for p in _Pointer.PLACES]])
+    text = "\n".join([D_2026_10_15, *[f"오후엔 {p} 가 보고 싶어" for p in _Pointer.PLACES]])
     with get_connection() as conn:
         intake_id = pipeline.open_intake(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], text=text, files=[])
     kept: list[tuple[str, dict]] = []

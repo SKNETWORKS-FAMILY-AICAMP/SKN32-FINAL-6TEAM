@@ -175,7 +175,7 @@ def test_the_same_event_does_not_stop_or_notify_twice(api, near):
 
 def test_an_event_from_yesterday_does_not_stop_today(api, near):
     trip_id = _trip(api)
-    yesterday = {**_quake(5.1), "at": _iso("10:05").replace("09-23", "09-22")}
+    yesterday = {**_quake(5.1), "at": (_at("10:05") - timedelta(days=1)).isoformat()}   # 대본 날의 전날(대본은 실행 날 기준으로 옮겨진다)
     assert _sweep(api, FakeCheck(_report(yesterday))).tick().counts()["opened"] == 0
     assert _pauses(trip_id) == []
 

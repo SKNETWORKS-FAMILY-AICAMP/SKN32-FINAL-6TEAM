@@ -14,10 +14,15 @@ from .test_decision_unit_web import decided  # noqa: F401
 from .test_chat_edit_web import _answer
 from .test_trip_reopen import _member, _trip_of
 from .test_web_api import api, _h, _fresh_limit_cache  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_17 = reldate.day("2026-10-17")
 
 
 def at(clock):
-    return datetime.fromisoformat('2026-10-17T'+clock+':00+09:00')
+    return datetime.fromisoformat(f'{D_2026_10_17}T'+clock+':00+09:00')
 
 
 def say(scene, message, action, target=None, **raw):

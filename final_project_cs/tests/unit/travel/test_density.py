@@ -156,8 +156,11 @@ def test_presets_and_direct_preferences_have_different_warning_basis():
     config["density"].pop("level")
     config["density"]["target_density"] = 0.6
     explicit = measure_density([part()], config)["warnings"][0]
-    assert preset["policy_basis"] == "research_calibrated" and "연구" in preset["reason"]
-    assert explicit["policy_basis"] == "user_preference" and "사용자" in explicit["reason"]
+    # contract_correction `[2026-10-28]`: 경고 문장은 화면 「살펴볼 점」에 보이는 고객 말이다 — 「연구 보정 프리셋」 · 「사용자가 지정한」 대신
+    #   「고르신 여유 정도」(프리셋) · 「정하신 여유 목표」(직접 준 값). 근거가 다르면 문장도 다르다는 단언은 그대로 둔다.
+    assert preset["policy_basis"] == "research_calibrated" and "고르신 여유 정도" in preset["reason"]
+    assert explicit["policy_basis"] == "user_preference" and "정하신 여유 목표" in explicit["reason"]
+    assert preset["reason"] != explicit["reason"]
 
 
 def test_research_buffers_use_q95_mobility_rest_and_reservation_sources():

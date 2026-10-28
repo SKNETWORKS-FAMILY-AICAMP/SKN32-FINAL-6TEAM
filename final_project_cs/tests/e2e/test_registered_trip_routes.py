@@ -6,6 +6,11 @@ from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.instances.mobility import route_shape
 from .test_trip_api import api  # noqa: F401
 from .test_trip_intake_api import CHAT_PLAN, _confirm, _full_client, _key, _send, _stored
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_18 = reldate.day("2026-10-18")
 
 
 class Router:
@@ -72,7 +77,7 @@ def test_booking_declared_without_a_number_stays_booked_after_registration(api):
 
     client, _, _ = _full_client()
     headers = _key(client)
-    view = _send(client, headers, text="1일차 2026-10-18\n09:00 경복궁 · 예약 있음")
+    view = _send(client, headers, text=f"1일차 {D_2026_10_18}\n09:00 경복궁 · 예약 있음")
     trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
     assert trip["items"][0]["booked"] is True
     saved = _stored(api, trip)[0]

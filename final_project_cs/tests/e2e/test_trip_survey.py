@@ -19,6 +19,12 @@ from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, apply_survey, on_disruption
 
 from .test_trip_api import DAY, _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_01 = reldate.day("2026-10-01")
+D_2026_10_02 = reldate.day("2026-10-02")
 
 
 def _stored_constraints(trip_id: str) -> dict:
@@ -132,6 +138,6 @@ def test_no_item_days_means_no_invented_window():
 
 def test_the_filled_window_uses_every_item_day_once():
     out = apply_survey({"survey": {"version": SURVEY_VERSION, "pace": "moderate"}},
-                       [date(2026, 10, 1), date(2026, 10, 2), date(2026, 10, 1)])
-    assert sorted(out["density"]["days"]) == ["2026-10-01", "2026-10-02"]
-    assert out["density"]["days"]["2026-10-01"]["starts_at"] == "2026-10-01T08:00:00+09:00"
+                       [reldate.moved(date(2026, 10, 1)), reldate.moved(date(2026, 10, 2)), reldate.moved(date(2026, 10, 1))])
+    assert sorted(out["density"]["days"]) == [D_2026_10_01, D_2026_10_02]
+    assert out["density"]["days"][D_2026_10_01]["starts_at"] == f"{D_2026_10_01}T08:00:00+09:00"

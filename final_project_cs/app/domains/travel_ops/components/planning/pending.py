@@ -22,8 +22,10 @@
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
+import logging
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -34,6 +36,8 @@ from zoneinfo import ZoneInfo
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleItinerary, TripStore
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, plan_swap
 from app.domains.travel_ops.components.planning.survey import on_disruption
+
+logger = logging.getLogger(__name__)
 
 #: 안전 사건 — 몸이 다칠 수 있는 것만. 기상특보는 「경보」만(주의보 제외). 사용자와 합의(2026-09-24).
 SAFETY_CATEGORIES = frozenset({"earthquake", "disaster_msg"})
@@ -474,6 +478,59 @@ class PendingStore:
             return [dict(zip(("proposal_id", "trip_id", "item_id"), row)) for row in cur.fetchall()]
 
 
+#: `[2026-10-27 C 전수검사 결함 12]` 제안 고르기가 저장소 쓰기 실패로 끝났고, 다시 읽어 제안이 그대로임을 확인했을 때의 말(채팅 `SAVE_FAILED_TEXT` 와 같은 모양)
+CHOOSE_SAVE_FAILED_TEXT = "지금 고른 안을 저장하지 못했어요(저장 오류) — 아무것도 바뀌지 않았어요. 잠시 뒤 다시 골라 주세요."
+
+
+class SnapshotPendingStore(PendingStore):
+    """`choose` 가 제안을 잠근(`FOR UPDATE`) 그 순간의 행을 기억한다 — 저장 실패 뒤 다시 읽기(`proposal_unchanged_after_failure`)의 기준.
+
+    ★깊은 사본이다 — `choose` 는 고른 안(`options_json` 안의 dict)에 다시 본 값을 써 넣는다. 얕게 두면 기준이 같이 바뀐다."""
+
+    def __init__(self, tenant_id: str) -> None:
+        super().__init__(tenant_id)
+        self.locked: dict[str, Any] | None = None
+
+    def get(self, conn, trip_id: UUID, proposal_id: UUID, *, lock: bool = False) -> dict[str, Any] | None:
+        row = super().get(conn, trip_id, proposal_id, lock=lock)
+        if lock and self.locked is None and row is not None:
+            self.locked = copy.deepcopy(row)
+        return row
+
+
+def proposal_unchanged_after_failure(connect: Callable[[], Any], tenant: str, trip_id: UUID, proposal_id: UUID,
+                                     before: dict[str, Any] | None) -> bool:
+    """제안 고르기의 저장 실패 뒤 **새 연결로** 그 제안 행을 다시 읽는다 — 이 요청이 잠근 때(`before`)와 그대로면 True. 모르면 False.
+
+    ★`[2026-10-27 C 전수검사 결함 12 · Codex Q3]` 판 번호만으로는 모자란다 — 「그대로 둘게요」(`kept`) · 「바꿔 줘」(안 채우기 `set_options`) ·
+      끝난 일정(`expired`)은 판을 올리지 않고 **제안 행만** 바꾼다. 고른 안 적용(`append_version`)은 같은 트랜잭션에서 제안을 `chosen` 으로
+      닫으므로 제안 행이 그대로면 판도 그대로다.
+    ★`FOR SHARE` — 끊긴 연결의 COMMIT 이 서버에서 아직 끝나지 않았으면(그 트랜잭션이 제안을 `FOR UPDATE` 로 잡고 있다) 끝날 때까지
+      기다린 뒤 읽는다. 한도(`reopen_commit.SETTLE_LOCK_TIMEOUT`) 안에 안 끝나면 모른다.
+    ★`before` 가 None 이면 제안을 잠그기 전(연결 · 여행 읽기)에 실패했다 — 이 요청은 아무것도 쓰지 않았다. 다만 「다시 골라 주세요」가
+      참이려면 제안이 아직 열려 있어야 한다(그 사이 다른 요청이 정했으면 원래 예외 — Codex 검토 P2).
+    ★「바꿔 줘」(`_consented`)는 늘 사유를 `{사유}_options` 로 바꾸거나 제안을 `kept` 로 닫는다 — 저장된 쓰기 길은 모두 제안 행을 바꾼다.
+    ☆다시 읽기 실패 로그에는 여행 id 와 예외 종류 이름만 — 메시지 · SQL 인자는 고객 값을 담을 수 있다."""
+    from app.domains.travel_ops.components.intake.reopen_commit import SETTLE_LOCK_TIMEOUT
+
+    try:
+        with connect() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute(f"SET LOCAL lock_timeout = '{SETTLE_LOCK_TIMEOUT}'")
+            cur.execute("SELECT status, reason, options_json, decided_at FROM pending_changes "
+                        "WHERE tenant_id=%s AND trip_id=%s AND proposal_id=%s FOR SHARE", (tenant, trip_id, proposal_id))
+            row = cur.fetchone()
+    except Exception as exc:                                     # noqa: BLE001 — 모르면 「안 바뀜」이라 말하지 않는다(부르는 쪽이 원래 예외를 올린다)
+        logger.warning("proposal choice readback failed trip=%s error=%s", trip_id, type(exc).__name__)
+        return False
+    if row is None:
+        return False
+    status, reason, options, decided_at = row
+    if before is None:
+        return status == "open"
+    return (status == before.get("status") and reason == before.get("reason")
+            and (options or []) == (before.get("options_json") or []) and decided_at == before.get("decided_at"))
+
+
 def wall_clock() -> datetime:
     """지금 — 제안 고르기의 만료 검사(`choose`)가 쓴다. ★시험이 대본의 시계(재생 날짜)로 갈아 끼운다 — 실시간으로 보면 지난 대본 날짜의 제안이 전부 끝난 것이 된다."""
     return datetime.now(UTC)
@@ -731,6 +788,8 @@ def _with_alternates(item: Item, options: list[dict[str, Any]]) -> Item:
                 place=item.place)
 
 
-__all__ = ["CONSENT_KEY", "CONSENT_REASON", "Decision", "PendingStore", "ProposalRefused", "SAFETY_CATEGORIES",
+__all__ = ["CHOOSE_SAVE_FAILED_TEXT", "CONSENT_KEY", "CONSENT_REASON", "Decision", "PendingStore", "ProposalRefused",
+           "SAFETY_CATEGORIES", "SnapshotPendingStore",
            "apply_or_ask", "ask_consent", "choose", "consent_notice", "decide",
-           "is_safety", "needs_consent", "options_for", "options_from", "proposal_notice", "protected_reason"]
+           "is_safety", "needs_consent", "options_for", "options_from", "proposal_notice", "proposal_unchanged_after_failure",
+           "protected_reason"]

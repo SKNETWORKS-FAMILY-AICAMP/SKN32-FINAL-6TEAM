@@ -123,7 +123,7 @@ def _hm(value: datetime) -> str:
     return value.astimezone(KST).strftime("%H:%M")
 
 
-def _refusal(code: str, message: str) -> str:
+def _refusal(code: str, message: str, violations: Any = None) -> str:
     """접수 · 「완료」의 거절 → 고객 말. 웹 화면이 보이는 문장과 같은 뜻으로 쓴다."""
     if code == "place_not_found" and ("budget_exhausted" in message or "조회가 막혀" in message):
         # 찾는 쪽(관광 정보 조회)의 오늘 한도가 찼거나 막힌 것 — 없는 곳이라는 뜻이 아니다(실서버 확인 10-15: 안내가 「고객이 고친다」로 샜다)
@@ -133,7 +133,11 @@ def _refusal(code: str, message: str) -> str:
     if code == "item_in_past":
         return f"이미 지난 일정은 바꿀 수 없어 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}."
     if code == "itinerary_infeasible":
-        return f"그렇게 바꾸면 일정이 맞지 않아 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}"
+        # ★`[2026-10-28 x600 e78e038b]` 위반마다의 고객 문장(`violations[].reason`)을 문장으로 잇는다. 전에는 개발용 메시지를 「:」에서 잘라
+        #   「— 북촌한옥마을: 19:00 까지인데 17:00 에 닫는다 / …」로 붙였다. 위반 목록이 없으면 메시지를 되풀이하지 않는다
+        reasons = [str(v["reason"]).strip() for v in (violations or []) if isinstance(v, dict) and str(v.get("reason") or "").strip()]
+        head = "그렇게 바꾸면 일정이 맞지 않아 일정은 바꾸지 않았어요."
+        return " ".join([head, *(reason if reason.endswith((".", "?", "!")) else f"{reason}." for reason in reasons)])
     if code == "stale_itinerary":
         return "그 사이 일정이 바뀌어 바꾸지 않았어요. 최신 일정에서 다시 말씀해 주세요."
     if code in ("lock_with_changes", "locked_item", "item_locked"):
@@ -395,7 +399,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
     except pipeline.IntakeConflict as exc:
         raise EditRefused(exc.code, _refusal(exc.code, exc.message)) from None
     except CommitRefused as exc:
-        raise EditRefused(exc.code, _refusal(exc.code, exc.message), **exc.detail) from None
+        raise EditRefused(exc.code, _refusal(exc.code, exc.message, exc.detail.get("violations")), **exc.detail) from None
     except psycopg.OperationalError as exc:
         # ★`[2026-10-26 묶음 L · 수용 F03]` 저장소 운영 실패 — 전에는 그대로 올라가 일반 500(대화 기록 · 답 없음)이었다.
         #   「일정은 바꾸지 않았어요」라고 답하려면 **새 연결로 다시 읽어 판이 그대로임을 확인**해야 한다(COMMIT 도중 끊기면

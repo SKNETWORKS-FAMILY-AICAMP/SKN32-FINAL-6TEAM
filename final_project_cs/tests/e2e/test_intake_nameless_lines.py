@@ -32,11 +32,16 @@ from app.domains.travel_ops.components.intake.areas import AreaIndex
 
 from .test_intake_review import OPEN_ALL, _catalog, _client, _edit, _field, _hours, _item, _key, _row, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_15 = reldate.day("2026-10-15")
 
 ROWS = [("hub", "성수", 37.5449, 127.0512), ("hub", "서울역", 37.5569, 126.9749), ("dong", "성수동", 37.5440, 127.0560),
         ("district", "성동구", 37.5630, 127.0370)]
 
-PLAN = ("2026-10-15\n"
+PLAN = (f"{D_2026_10_15}\n"
         "09:00 호텔 조식\n"
         "11:00 성수동 쇼핑\n"
         "13:00 성수 예약 식당 · 예약 있음\n"

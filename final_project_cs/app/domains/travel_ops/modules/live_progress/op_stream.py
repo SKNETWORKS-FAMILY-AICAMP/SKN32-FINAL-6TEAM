@@ -9,7 +9,7 @@
 
   accepted  `{op, at}`                                 받았다 — **첫 바이트**. 이게 안 오면 서버·연결 문제다
   stage     `{stage, label, waiting_on, elapsed}`      서버가 **실제로 그 단계에 들어갔을 때만**(지어낸 진행률 없음)
-  beat      `{elapsed, stage, label, waiting_on, stage_elapsed, slow, server_time}`
+  beat      `{elapsed, stage, label, waiting_on, stage_elapsed, slow, server_time}` (접수 `watch` 는 `waiting_on` 대신 `pending` · `pending_seconds`)
                                                        `beat_seconds` 마다 — ★일꾼이 멈춰 있어도 **이벤트 루프가** 낸다
   result    `{…}`                                      끝 — 기존 JSON 응답과 **같은 본문**
   error     `{code, message, retryable, status?, …}`   실패 · 시간 초과(`max_seconds`) — 매달려 있지 않고 끝낸다
@@ -266,97 +266,216 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
                 is_disconnected: Callable[[], Any], cfg: dict[str, float] | None = None,
                 poll_seconds: float = 1.0, stalled_after: float | None = None,
                 extra: Callable[[dict[str, Any]], Awaitable[list[str]]] | None = None,
+                settle: Callable[[], None] | None = None,
                 clock: Callable[[], float] = time.monotonic) -> AsyncIterator[str]:
     """**DB 에 적히는 진행**(접수 읽기 — 뒤에서 도는 일꾼이 `stage` 를 갱신한다)을 흘린다.
 
     `extra(state)` — **내용 이벤트**(읽은 줄 · 찾은 일정 · 검사 · 이동, `intake/stream.py`)를 만드는 훅. 연결 직후 · 단계 이벤트 뒤 · 끝내기 전에 불러
     돌려준 SSE 조각을 그대로 흘린다. 훅이 실패해도 흐름은 끊기지 않는다(단계 이벤트는 계속 나가고 실패는 로그에 남는다).
 
-    `accepted` `{op, state}` → 단계가 바뀔 때마다 `stage` → 조용하면 `beat`(`state` 포함) → `done(state)` 가 참이면 `result{state}` 후 끝.
+    `accepted` `{op, state}` → 단계가 바뀔 때마다 `stage` → 조용하면 `beat`(마지막으로 확인한 `stage` · `label` — `state` 는 싣지 않는다) → `done(state)` 가 참이면 `result{state}` 후 끝.
     `read()` 가 None 이면(없어졌다) `error{not_found}`. 읽기가 연속으로 실패하면 `error{code: unavailable, retryable}` 로 끝낸다.
     ★`quiet_for(state)` = 그 상태가 **마지막으로 갱신된 뒤 지난 초**. 이것이 `stalled_after` 를 넘으면 뒤에서 읽던 일꾼이 죽은 것이다
       (서버 재시작 · 프로세스 종료) — `error{code: stalled, retryable}` 로 끝낸다. 사용자가 영원히 기다리지 않게.
+
+    ★`[2026-10-28]` **조회는 뒤의 작업, 생존 신호는 이 루프**(`run` 의 원칙 ①과 같다). 전에는 beat 를 `read()` + `extra()` 가 끝난 **뒤에만** 냈다 —
+      한 회차의 DB 조회 · 내용 계산이 막히면 서버가 살아 있어도 이벤트가 끊겨, 웹의 7초 감시(`STREAM_TIMING.watchdogMs`)가
+      「연결이 끊겼어요」를 띄울 수 있었다(EKS 브라우저 시험 약 58초 — 원인 미확정. `wiki/records/reports/2026-10-28_접수SSE_beat_분리_후보.md`).
+      - 조회 · 내용 계산은 **한 작업이 차례로** 돈다(연결 하나에 진행 중인 조회는 하나뿐, 겹쳐 시작하지 않는다). 그 결과는 순서대로 흘린다 —
+        `stage` 는 본 즉시, 그 상태의 내용 조각, 끝(`result` · `error`)의 순서는 그대로다. beat 는 그 사이에만 끼어든다.
+      - 기다리는 동안의 beat 는 **「서버는 살아 있지만 상태를 아직 새로 읽지 못했다」**를 숨기지 않는다:
+        `pending` = `read`(상태 조회 중) · `content`(내용 계산 중) · `null`(기다리는 것 없음), `pending_seconds` = 그 기다림이 지난 초(`null` 이면 `null`).
+        `stage` · `slow` · `stage_elapsed` 는 **마지막으로 확인한** 상태 기준이다(지어낸 진행 없음).
+      - ☆**첫 조회(`accepted` 전)에는 beat 를 내지 않는다** — `accepted` 가 상태를 싣는 계약이라 확인하지 않은 상태를 지어내지 않는다.
+        이 구간의 거짓 끊김은 이번 변경이 막지 못한다(첫 조회는 아래 `max_seconds` 로만 끝난다).
+      - 끝나지 않는 조회는 따로 시한을 만들지 않는다 — 기존 `max_seconds`(진입부터 잰다 — 첫 조회도 포함)에서 `error{timeout}` 으로 끝난다.
+        끝나지 않는 조회를 「읽기 실패」로 세지 않는다(`stalled` · `unavailable` 판정은 실제로 읽은 결과로만 한다).
+      - 끝 · 연결 끊김 · 닫힘(`aclose`)에는 뒤의 작업을 취소하고 회수한다. 이미 스레드에서 도는 조회는 멈출 수 없으니 **늦게 온 결과는 버린다**.
+      - 콜백(`stage_of` · `done` · `quiet_for`)의 버그는 전처럼 그대로 올라간다(삼키지 않는다).
+
+    ★`[2026-10-28 독립 검토 후속]` `settle()` — 이 흐름이 **끝났고 그 흐름이 시작한 조회 · 내용 계산이 하나도 돌고 있지 않을 때** 정확히 한 번 부른다
+      (부르는 쪽은 여기서 `release` 한다 — 사용자당 상한 `max_per_user` 이 끊긴 뒤에도 실제로 열린 DB 연결 수를 묶게).
+      - 끊김 · 닫힘 · 시한에도 **응답은 곧바로 끝낸다**. 스레드에서 도는 조회는 멈출 수 없으므로, 그 조회를 기다리는 뒤의 작업(`asyncio.shield` 로 감싼 작업)만
+        살려 두고 끝나면 `settle` 한다. 그래서 `starlette.run_in_threadpool` 의 전역 스레드 상한(anyio limiter) 토큰도 스레드가 끝날 때까지 반납되지 않는다.
+        전에는 바깥 취소가 그 대기를 뚫어 슬롯 · 토큰이 먼저 돌아오고 스레드 · psycopg 연결만 상한 밖에 남았다.
+      - 바깥에서 온 취소는 그대로 올라간다(삼키지 않는다). 늦게 끝난 조회의 결과 · 예외는 버린다(이벤트로 내지 않는다).
+      - 첫 `__anext__` 전에 버린 생성기는 몸체가 돌지 않으므로 `settle` 도 부르지 않는다 — 부르는 쪽이 이 경우를 따로 돌려준다.
     """
-    cfg = cfg or limits(op)
+    stage: str | None = None
+    #: 뒤의 작업이 지금 무엇을 기다리나 — beat 가 그대로 싣는다
+    pending: dict[str, Any] = {"what": None, "since": None}
+    #: 뒤의 작업 → 이 루프. 크기 1 — 받는 쪽(연결)이 느리면 뒤의 작업도 멈춘다(조회가 쌓이지 않는다)
+    queue: asyncio.Queue[tuple[str, Any]] = asyncio.Queue(maxsize=1)
+    #: 지금 기다리는 조회 · 내용 계산(스레드를 붙든 작업) — 흐름이 끝나도 이것들이 끝날 때까지 `settle` 하지 않는다
+    inflight: set[asyncio.Future[Any]] = set()
+    worker: asyncio.Task[None] | None = None
+    ended = {"closing": False, "settled": False}
+
+    def settle_when_idle(_: Any = None) -> None:
+        if ended["settled"] or not ended["closing"] or inflight or (worker is not None and not worker.done()):
+            return
+        ended["settled"] = True
+        if settle is not None:
+            settle()
+
+    def landed(call: asyncio.Future[Any]) -> None:
+        inflight.discard(call)
+        if not call.cancelled():
+            call.exception()                       # 늦게 끝난 조회의 실패는 버린다(받는 쪽이 이미 떠났다) — 「꺼내지 않은 예외」 경고를 막는다
+        settle_when_idle()
+
+    async def waiting(what: str, call: Callable[[], Awaitable[Any]]) -> Any:
+        pending["what"], pending["since"] = what, clock()
+        try:
+            running = asyncio.ensure_future(call())
+            inflight.add(running)
+            running.add_done_callback(landed)
+            # 바깥 취소가 스레드 대기를 뚫지 않게 — 뚫으면 anyio 토큰 · 사용자 슬롯이 스레드보다 먼저 돌아온다
+            return await asyncio.shield(running)
+        finally:
+            pending["what"] = pending["since"] = None
 
     async def snapshot() -> dict[str, Any] | None:
-        return await asyncio.to_thread(read)
+        return await waiting("read", lambda: asyncio.to_thread(read))
 
-    try:
-        state = await snapshot()
-    except Exception:                              # noqa: BLE001
-        log.warning("op_stream.watch: first read failed op=%s", op, exc_info=True)
-        yield sse("error", {"code": "unavailable", "retryable": True, "message": "상태를 읽지 못했어요 — 다시 연결해 주세요"})
-        return
-    if state is None:
-        yield sse("error", {"code": "not_found", "retryable": False, "message": "찾을 수 없어요", "status": 404})
-        return
-    started = last_beat = stage_started = clock()
-    stage = stage_of(state)
-
-    async def content() -> list[str]:
+    async def content(state: dict[str, Any]) -> list[str]:
         if extra is None:
             return []
         try:
-            return await extra(state)
+            return await waiting("content", lambda: extra(state))
         except Exception:                          # noqa: BLE001 — 내용 이벤트의 실패가 단계 이벤트를 막지 않는다
             log.warning("op_stream.watch: extra failed op=%s", op, exc_info=True)
             return []
 
-    yield sse("accepted", {"op": op, "state": state, "at": datetime.now(KST).isoformat(timespec="seconds")})
-    for chunk in await content():
-        yield chunk
-    if done(state):
-        yield sse("result", {"state": state})
-        return
-    failures = 0
-    while True:
-        await asyncio.sleep(poll_seconds)
-        if await is_disconnected():
-            return
-        now = clock()
-        if now - started >= cfg["max_seconds"]:
-            yield sse("error", {"code": "timeout", "retryable": True, "elapsed": round(now - started, 1),
-                                "message": "오래 걸려 기다리기를 멈췄어요 — 다시 연결하면 지금 상태부터 이어서 보여 드려요"})
-            return
+    async def produce() -> None:
         try:
-            fresh = await snapshot()
-            failures = 0
-        except Exception:                          # noqa: BLE001 — 읽기 한 번의 실패는 다음 틱에 다시. 연속이면 닫는다
-            failures += 1
-            log.warning("op_stream.watch: read failed (%s) op=%s", failures, op, exc_info=failures == 1)
-            if failures >= 5:
-                yield sse("error", {"code": "unavailable", "retryable": True,
-                                    "message": "상태를 읽지 못하고 있어요 — 다시 연결해 주세요"})
+            try:
+                state = await snapshot()
+            except Exception:                      # noqa: BLE001
+                log.warning("op_stream.watch: first read failed op=%s", op, exc_info=True)
+                await queue.put(("end", sse("error", {"code": "unavailable", "retryable": True,
+                                                      "message": "상태를 읽지 못했어요 — 다시 연결해 주세요"})))
                 return
-            fresh = None
-        if fresh is None and failures == 0:
-            yield sse("error", {"code": "not_found", "retryable": False, "message": "찾을 수 없어요", "status": 404})
-            return
-        if fresh is not None:
-            state = fresh
-            new_stage = stage_of(state)
-            if new_stage != stage:
-                stage, stage_started, last_beat = new_stage, now, now
-                yield sse("stage", {"stage": stage, "label": (label_of_state(state) if label_of_state else stage),
-                                    "elapsed": round(now - started, 1), "state": state})
-            for chunk in await content():
-                yield chunk
+            if state is None:
+                await queue.put(("end", sse("error", {"code": "not_found", "retryable": False, "message": "찾을 수 없어요",
+                                                      "status": 404})))
+                return
+            seen = stage_of(state)
+            await queue.put(("accepted", state))
+            for chunk in await content(state):
+                await queue.put(("chunk", chunk))
             if done(state):
-                yield sse("result", {"state": state})
+                await queue.put(("end", sse("result", {"state": state})))
                 return
-            quiet = quiet_for(state) if quiet_for else None
-            if stalled_after is not None and quiet is not None and quiet >= stalled_after:
-                yield sse("error", {"code": "stalled", "retryable": True, "stage": stage,
-                                    "message": "읽는 일이 멈춘 것 같아요 — 다시 올려 주세요", "quiet_seconds": round(quiet, 1)})
+            failures = 0
+            while True:
+                await asyncio.sleep(poll_seconds)
+                try:
+                    fresh = await snapshot()
+                    failures = 0
+                except Exception:                  # noqa: BLE001 — 읽기 한 번의 실패는 다음 틱에 다시. 연속이면 닫는다
+                    failures += 1
+                    log.warning("op_stream.watch: read failed (%s) op=%s", failures, op, exc_info=failures == 1)
+                    if failures >= 5:
+                        await queue.put(("end", sse("error", {"code": "unavailable", "retryable": True,
+                                                              "message": "상태를 읽지 못하고 있어요 — 다시 연결해 주세요"})))
+                        return
+                    fresh = None
+                if fresh is None and failures == 0:
+                    await queue.put(("end", sse("error", {"code": "not_found", "retryable": False, "message": "찾을 수 없어요",
+                                                          "status": 404})))
+                    return
+                if fresh is None:
+                    continue
+                state = fresh
+                new_stage = stage_of(state)
+                if new_stage != seen:
+                    seen = new_stage
+                    await queue.put(("stage", state))
+                else:
+                    await queue.put(("state", state))  # 같은 단계라도 마지막으로 확인한 상태(이름표 등)를 beat 가 싣게
+                for chunk in await content(state):
+                    await queue.put(("chunk", chunk))
+                if done(state):
+                    await queue.put(("end", sse("result", {"state": state})))
+                    return
+                quiet = quiet_for(state) if quiet_for else None
+                if stalled_after is not None and quiet is not None and quiet >= stalled_after:
+                    await queue.put(("end", sse("error", {"code": "stalled", "retryable": True, "stage": new_stage,
+                                                          "message": "읽는 일이 멈춘 것 같아요 — 다시 올려 주세요",
+                                                          "quiet_seconds": round(quiet, 1)})))
+                    return
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:                   # noqa: BLE001 — 콜백의 버그는 이 루프에서 다시 올린다(삼키지 않는다)
+            await queue.put(("raise", exc))
+
+    state: dict[str, Any] | None = None
+    try:
+        cfg = cfg or limits(op)
+        started = last_beat = stage_started = clock()
+        worker = asyncio.create_task(produce())
+        while True:
+            now = clock()
+            left = cfg["max_seconds"] - (now - started)
+            wait = left if state is None else min(left, cfg["beat_seconds"] - (now - last_beat))
+            item: tuple[str, Any] | None = None
+            if wait > 0:
+                try:
+                    item = await asyncio.wait_for(queue.get(), timeout=wait)
+                except asyncio.TimeoutError:
+                    item = None
+            elif not queue.empty():
+                item = queue.get_nowait()
+            if item is not None and item[0] == "end":
+                yield item[1]                      # 이미 도착한 끝(result · error)이 시한 판정보다 먼저다
                 return
-        if now - last_beat >= cfg["beat_seconds"]:
-            last_beat = now
-            label = label_of_state(state) if (label_of_state and state) else stage
-            yield sse("beat", {"elapsed": round(now - started, 1), "stage": stage, "label": label,
-                               "stage_elapsed": round(now - stage_started, 1),
-                               "slow": (now - stage_started) >= cfg["slow_seconds"],
-                               "server_time": datetime.now(KST).isoformat(timespec="seconds")})
+            if state is not None and await is_disconnected():
+                return
+            now = clock()
+            if now - started >= cfg["max_seconds"]:
+                yield sse("error", {"code": "timeout", "retryable": True, "elapsed": round(now - started, 1),
+                                    "message": "오래 걸려 기다리기를 멈췄어요 — 다시 연결하면 지금 상태부터 이어서 보여 드려요"})
+                return
+            if item is not None:
+                kind, data = item
+                if kind == "raise":
+                    raise data
+                if kind == "chunk":
+                    yield data
+                elif kind == "accepted":
+                    state, stage = data, stage_of(data)
+                    stage_started = last_beat = now
+                    yield sse("accepted", {"op": op, "state": state, "at": datetime.now(KST).isoformat(timespec="seconds")})
+                elif kind == "state":
+                    state = data
+                elif kind == "stage":
+                    state, stage = data, stage_of(data)
+                    stage_started = last_beat = now
+                    yield sse("stage", {"stage": stage, "label": (label_of_state(state) if label_of_state else stage),
+                                        "elapsed": round(now - started, 1), "state": state})
+                continue
+            if state is not None and now - last_beat >= cfg["beat_seconds"]:
+                last_beat = now
+                label = label_of_state(state) if label_of_state else stage
+                what, since = pending["what"], pending["since"]
+                yield sse("beat", {"elapsed": round(now - started, 1), "stage": stage, "label": label,
+                                   "stage_elapsed": round(now - stage_started, 1),
+                                   "slow": (now - stage_started) >= cfg["slow_seconds"],
+                                   "server_time": datetime.now(KST).isoformat(timespec="seconds"),
+                                   "pending": what,
+                                   "pending_seconds": (round(now - since, 1) if what is not None and since is not None else None)})
+    finally:
+        ended["closing"] = True
+        try:
+            if worker is not None:
+                worker.cancel()
+                worker.add_done_callback(settle_when_idle)
+                # 취소된 뒤의 작업을 회수한다 — `asyncio.wait` 는 그 작업의 취소 · 예외를 올리지 않고, 바깥에서 온 취소는 삼키지 않는다.
+                # 뒤의 작업은 스레드를 `shield` 너머로 기다리므로 곧바로 끝난다(스레드를 기다리지 않는다)
+                await asyncio.wait({worker})
+        finally:
+            settle_when_idle()                     # 돌고 있는 조회가 없으면 지금, 있으면 마지막 조회가 끝날 때(`landed`)
 
 
 __all__ = ["STAGES", "Progress", "acquire", "error_payload", "label_of", "limits", "release", "run", "sse", "watch"]

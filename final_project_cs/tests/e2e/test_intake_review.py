@@ -26,6 +26,14 @@ from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation.api.app import create_app
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
+from tests.helpers import relative_dates as reldate
+
+# ★`[2026-10-28]` 박아 둔 날짜는 실행 날 기준으로 옮긴다 — 전부-과거 가드(`all_dates_before_today`)가 실제 시계를 읽는다.
+#   요일 · 순서 · 간격은 원래 자료와 같다(`tests/helpers/relative_dates.py`).
+D_2026_10_13 = reldate.day("2026-10-13")
+D_2026_10_14 = reldate.day("2026-10-14")
+D_2026_10_15 = reldate.day("2026-10-15")
+D_2026_10_16 = reldate.day("2026-10-16")
 
 
 class Tour:
@@ -87,15 +95,15 @@ class Kakao:
         return []
 
 
-PLAN = ("2026-10-15\n"
+PLAN = (f"{D_2026_10_15}\n"
         "10시 경복궁 관람 1시간 반\n"
         "11시 올리브영\n"
         "12시 반 광장시장 빈대떡\n"
-        "2026-10-16\n"
+        f"{D_2026_10_16}\n"
         "15시 N서울타워")
 
 #: 올리브영 뒤에 여유를 둔 계획 — 전체 자동 추천이 시각을 맞출 수 있는 모양
-ROOMY = ("2026-10-15\n"
+ROOMY = (f"{D_2026_10_15}\n"
          "10시 경복궁 관람 1시간 반\n"
          "11시 올리브영\n"
          "13:30 광장시장 빈대떡")
@@ -255,18 +263,18 @@ def test_opening_hours_and_closing_days_come_from_what_is_stored_and_use_the_reg
     _hours(rv, "126508", TUE_CLOSED)
     client, _, _ = _client()
     headers = _key(client)
-    thursday = _send(client, headers, "2026-10-15\n10시 경복궁")
+    thursday = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁")
     palace = thursday["review"]["items"][0]
     assert _row(palace, "hours") == {"row": "hours", "result": "ok", "text": "09:00–18:00 안에 머물러요",
                                      "open_at": "ok"}            # `[2026-10-15]` 비교용 — 시작 시각에 열려 있나(요식 판정 그림자가 읽는다)
     assert _row(palace, "closed") == {"row": "closed", "result": "ok", "text": "화요일 휴무 · 방문은 목요일"}
     # 화요일 — 쉬는 날이면 고쳐야 하는 항목이다
-    tuesday = _send(client, headers, "2026-10-13\n10시 경복궁")
+    tuesday = _send(client, headers, f"{D_2026_10_13}\n10시 경복궁")
     palace = tuesday["review"]["items"][0]
     assert _row(palace, "closed")["result"] == "bad" and "쉬는 날" in _row(palace, "closed")["text"]
     assert palace["status"] == "review" and tuesday["review"]["needs"]["items"] == 1
     # 열기 전 — 주의(등록 판정기의 before_opening 과 같은 판정)
-    early = _send(client, headers, "2026-10-15\n7시 반 경복궁")
+    early = _send(client, headers, f"{D_2026_10_15}\n7시 반 경복궁")
     row = _row(early["review"]["items"][0], "hours")
     assert row["result"] == "warn" and row["text"].startswith("09:00에 열어요") and row["open_at"] == "bad"
     assert early["review"]["items"][0]["status"] == "review"
@@ -274,7 +282,7 @@ def test_opening_hours_and_closing_days_come_from_what_is_stored_and_use_the_reg
 
 def test_unknown_hours_are_said_to_be_unknown_not_open(rv):
     client, _, _ = _client()
-    view = _send(client, _key(client), "2026-10-15\n10시 경복궁")
+    view = _send(client, _key(client), f"{D_2026_10_15}\n10시 경복궁")
     palace = view["review"]["items"][0]
     assert _row(palace, "hours")["result"] == "unknown" and "읽지 못했어요" in _row(palace, "hours")["text"]
     assert _row(palace, "closed")["result"] == "unknown"
@@ -289,7 +297,7 @@ def test_a_bad_review_never_blocks_reading_it_and_says_why(rv, monkeypatch):
         raise RuntimeError("검사 장애")
 
     monkeypatch.setattr(review_module, "build", boom)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁")
     assert view["status"] == "review" and view["review"] is None and view["review_error"] == "review_failed"
     assert view["check"]["ready"] is True                    # 읽은 값 · 등록은 그대로 된다
 
@@ -298,7 +306,7 @@ def test_an_overlap_that_no_move_catches_still_needs_a_look_so_the_plan_is_not_r
     """겹침은 보통 앞 구간이 「늦게 닿는다」로 잡히지만, 한쪽 장소가 없어 구간을 못 재면 이동이 확인 필요를 세지 못한다 — 그래도 겹친 일정은 확인 필요다."""
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁 1시간\n10시 반 광장시장 1시간")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁 1시간\n10시 반 광장시장 1시간")
     assert view["review"]["needs"]["moves"] == 1                       # 두 곳 다 장소가 있으면 구간이 늦게 닿는다고 센다
     second = _item(view, "광장시장")
     nothing = _edit(client, headers, view, _field(second, "place", {"none": True}))
@@ -339,7 +347,7 @@ def test_lock_pins_a_confirmed_item_and_blocks_changes_until_it_is_unlocked(rv):
 def test_a_locked_item_is_registered_as_customer_pinned(rv):
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n13:30 광장시장")
     palace = view["review"]["items"][0]
     locked = _edit(client, headers, view, _field(palace, "locked", True))
     done = client.post(f"/v1/web/trip-intakes/{locked['intake_id']}/confirm", headers=headers,
@@ -358,7 +366,7 @@ def test_a_locked_item_is_registered_as_customer_pinned(rv):
 def test_only_existing_items_can_be_edited_and_locking_is_sent_alone(rv):
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n13:30 광장시장")
     palace = view["review"]["items"][0]
     # 없는 번호를 보내 일정을 새로 만들지 못한다 — 날짜·장소 없는 항목이 끼어들어 등록 준비를 깨뜨리지 못하게
     ghost = {"source_id": palace["source_id"], "field": "items[500].title", "value": "새 일정"}
@@ -377,7 +385,7 @@ def test_a_tour_number_the_customer_sends_is_kept_only_when_the_catalog_says_it_
     _catalog(rv, "900050", "12", "덕수궁", 37.5658, 126.9751)
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n13:30 광장시장")
     palace = view["review"]["items"][0]
 
     def placed(current, content_id, lat, lon):
@@ -408,7 +416,7 @@ def test_removing_an_item_can_be_undone(rv):
 def test_a_place_the_customer_picked_is_taken_as_shown_and_stays_private_to_the_trip(rv):
     client, _, kakao = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n11시 올리브영\n14시 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n11시 올리브영\n14시 광장시장")
     oy = _item(view, "올리브영")
     pick = {"name": "올리브영 명동 플래그십", "latitude": 37.5637, "longitude": 126.9851, "source": "kakao", "kind": "activity"}
     done = _edit(client, headers, view, _field(oy, "place", pick))
@@ -486,7 +494,7 @@ def test_alternatives_for_an_activity_come_from_the_stored_catalog_with_their_ho
     _hours(rv, "900002", OPEN_ALL)
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-13\n10시 경복궁\n13:30 광장시장")           # 화요일
+    view = _send(client, headers, f"{D_2026_10_13}\n10시 경복궁\n13:30 광장시장")           # 화요일
     palace = view["review"]["items"][0]
     got = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/candidates?source_id={palace['source_id']}&index={palace['index']}",
                      headers=headers).json()
@@ -524,7 +532,7 @@ def test_search_puts_places_that_fit_the_schedule_before_closed_ones_and_keeps_t
     _hours(rv, "900061", OPEN_ALL)
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-13\n13:30 광장시장\n15시 N서울타워")           # 화요일
+    view = _send(client, headers, f"{D_2026_10_13}\n13:30 광장시장\n15시 N서울타워")           # 화요일
     market = _item(view, "광장시장")
     base = f"/v1/web/trip-intakes/{view['intake_id']}/place-search?source_id={market['source_id']}&index={market['index']}"
     found = client.get(base + "&q=별빛", headers=headers).json()["results"]
@@ -539,7 +547,7 @@ def test_alternatives_never_offer_another_kind_of_place_as_a_replacement(rv):
     _catalog(rv, "900070", "39", "시장 옆 식당", 37.5700, 126.9990)             # 음식점뿐
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁\n13:30 광장시장")
     palace = view["review"]["items"][0]
     got = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/candidates?source_id={palace['source_id']}&index={palace['index']}",
                      headers=headers).json()
@@ -571,7 +579,7 @@ def test_no_response_shows_the_internal_place_row_number_and_the_reason_a_fix_wa
                     (rv["tenant"], json.dumps({"hours": ["09:00", "18:00"]})))
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n7시 반 경복궁 1시간\n13:30 광장시장")
+    view = _send(client, headers, f"{D_2026_10_15}\n7시 반 경복궁 1시간\n13:30 광장시장")
     palace = view["review"]["items"][0]
     assert palace["place"]["name"] == "경복궁" and "place_id" not in palace["place"]                    # 응답에 장소 행 번호가 없다
     assert _row(palace, "hours")["result"] == "warn"                                                 # 그래도 번호로 운영시간(장소 행 속성)은 찾았다
@@ -582,7 +590,7 @@ def test_no_response_shows_the_internal_place_row_number_and_the_reason_a_fix_wa
     assert fixed["applied"] and "place_id" not in fixed["changed"][0]["from"]["place"]
     assert "place_id" not in json.dumps(fixed["view"]["review"], ensure_ascii=False)
     # 후보가 아예 없던 것과 후보를 맞추지 못한 것을 구별한다 — 이름을 못 찾았고 이웃도 없으면 후보 자체가 없다
-    lost = _send(client, headers, "2026-10-15\n10시 정체불명장소")
+    lost = _send(client, headers, f"{D_2026_10_15}\n10시 정체불명장소")
     out = client.post(f"/v1/web/trip-intakes/{lost['intake_id']}/autofix", headers=headers, json={"revision": lost["revision"]}).json()
     assert out["applied"] is False and [k["reason"] for k in out["kept"]] == ["no_candidates"]
 
@@ -689,10 +697,10 @@ def test_a_worker_that_was_given_up_on_stops_writing_and_a_live_worker_keeps_its
 def test_a_reused_move_takes_the_current_day_numbers(rv):
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁 1시간\n13:30 광장시장\n2026-10-16\n15시 N서울타워")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁 1시간\n13:30 광장시장\n{D_2026_10_16}\n15시 N서울타워")
     assert [m["day"] for m in view["review"]["moves"]] == [1]
     tower = _item(view, "N서울타워")
-    moved = _edit(client, headers, view, _field(tower, "date", "2026-10-14"))                       # 더 이른 날이 생겨 앞의 두 일정이 둘째 날이 된다
+    moved = _edit(client, headers, view, _field(tower, "date", D_2026_10_14))                       # 더 이른 날이 생겨 앞의 두 일정이 둘째 날이 된다
     assert [i["day"] for i in moved["review"]["items"]] == [1, 2, 2]
     assert [m["day"] for m in moved["review"]["moves"]] == [2]                                      # 같은 구간(좌표·시각 그대로)이지만 일차는 지금 판의 것
 
@@ -763,7 +771,7 @@ def test_auto_fix_moves_the_time_into_the_opening_hours_before_it_swaps_the_plac
     _hours(rv, "126508", OPEN_ALL)                             # 09:00–18:00, 입장 마감 17:30
     client, _, _ = _client()
     headers = _key(client)
-    early = _send(client, headers, "2026-10-15\n7시 반 경복궁 1시간")
+    early = _send(client, headers, f"{D_2026_10_15}\n7시 반 경복궁 1시간")
     palace = early["review"]["items"][0]
     assert palace["status"] == "review" and _row(palace, "hours")["result"] == "warn"
     got = client.post(f"/v1/web/trip-intakes/{early['intake_id']}/autofix", headers=headers, json={"revision": early["revision"]}).json()
@@ -772,13 +780,13 @@ def test_auto_fix_moves_the_time_into_the_opening_hours_before_it_swaps_the_plac
     assert (change["to"]["starts_at"], change["to"]["ends_at"]) == ("09:00", "10:00")            # 여는 시각으로 미루고 머무는 시간은 그대로
     assert got["view"]["review"]["needs"]["total"] == 0 and got["view"]["review"]["ready"] is True
     # 닫기 전에 끝나게 줄인다 — 17:30 부터 1시간 반은 18:00 에 닫는다 → 30분
-    late = _send(client, headers, "2026-10-15\n17시 경복궁 1시간 반")
+    late = _send(client, headers, f"{D_2026_10_15}\n17시 경복궁 1시간 반")
     [shrunk] = client.post(f"/v1/web/trip-intakes/{late['intake_id']}/autofix", headers=headers,
                            json={"revision": late["revision"]}).json()["changed"]
     assert shrunk["to"]["ends_at"] == "18:00" and shrunk["to"]["starts_at"] == "17:00"
     # 쉬는 날은 시각을 옮겨도 못 맞춘다 — 같은 곳에 머물지 않고 다른 후보를 본다(후보가 없으면 그대로 두고 이유)
     _hours(rv, "264570", TUE_CLOSED)
-    closed = _send(client, headers, "2026-10-13\n10시 광장시장")
+    closed = _send(client, headers, f"{D_2026_10_13}\n10시 광장시장")
     out = client.post(f"/v1/web/trip-intakes/{closed['intake_id']}/autofix", headers=headers, json={"revision": closed["revision"]}).json()
     assert out["applied"] is False and [k["reason"] for k in out["kept"]] == ["no_candidates"]          # 쉬는 날이고 대신할 곳도 없다
 
@@ -786,7 +794,7 @@ def test_auto_fix_moves_the_time_into_the_opening_hours_before_it_swaps_the_plac
 def test_revalidate_recomputes_the_same_revision_without_making_a_new_one(rv):
     client, _, _ = _client()
     headers = _key(client)
-    view = _send(client, headers, "2026-10-15\n10시 경복궁")
+    view = _send(client, headers, f"{D_2026_10_15}\n10시 경복궁")
     assert _row(view["review"]["items"][0], "hours")["result"] == "unknown"
     _hours(rv, "126508", OPEN_ALL)                       # 그 사이 새벽 작업이 운영시간을 읽어 두었다
     stale = client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers).json()
@@ -856,7 +864,7 @@ def test_the_feed_works_on_half_read_values_and_never_repeats_what_it_already_se
         batches.append(len(batch))
         poll()                                                       # 한 묶음이 적힐 때마다 — 중간 상태에서도 터지지 않는다
 
-    pipeline.read_source(PLAN, tour=tour, kakao=kakao, our_places=[], today=date(2026, 10, 3), on_rows=write)
+    pipeline.read_source(PLAN, tour=tour, kakao=kakao, our_places=[], today=reldate.moved(date(2026, 10, 3)), on_rows=write)
     assert len(batches) >= 5 and poll() == []                        # 끝난 뒤 다시 물어도 새 것이 없다
     names = [n for n, _ in seen]
     assert len({d["no"] for n, d in seen if n == "line"}) == 6 and "check" not in names and "done" not in names     # 검사 전이라 검사 줄은 없다
@@ -892,7 +900,7 @@ def test_content_events_are_made_while_reading_not_at_the_end(rv):
 
     tour, kakao = Tour(), Kakao()
     batches: list[list[dict]] = []
-    rows = read_source(PLAN, tour=tour, kakao=kakao, our_places=[], today=date(2026, 10, 3), on_rows=batches.append)
+    rows = read_source(PLAN, tour=tour, kakao=kakao, our_places=[], today=reldate.moved(date(2026, 10, 3)), on_rows=batches.append)
     flat = [r for batch in batches for r in batch]
     assert len(flat) == len(rows) and {id(r) for r in flat} == {id(r) for r in rows}      # 한 줄도 두 번 알리지 않고 빠짐도 없다
     first_fields = [r["field"] for r in batches[0]]
