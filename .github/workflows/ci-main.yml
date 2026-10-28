@@ -152,6 +152,20 @@ jobs:
           context: final_project_cs
           file: final_project_cs/deploy/Dockerfile.api
           push: false
-          load: false
+          load: true
+          tags: tripilot-validation:checking
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Execute checking regression in deployment AMD64 image
+        run: >-
+          docker run --rm --platform linux/amd64 --network none
+          -e ACOP_LLM_PROVIDER=mock
+          -e ACOP_SECRET_KEY=dummy-secret-key-for-ci-0123456789abcdef
+          -e PYTHONPATH=/srv:/reference
+          -v "$PWD/final_project_cs/tests:/srv/tests:ro"
+          -v "$PWD/final_project_cs/pytest.ini:/srv/pytest.ini:ro"
+          -v "$PWD/final_project_sample:/reference:ro"
+          --entrypoint python tripilot-validation:checking
+          -c 'import platform,subprocess,sys; assert platform.machine()=="x86_64", platform.machine(); print(platform.platform()); sys.exit(subprocess.call([sys.executable,"-m","pytest","tests/unit/travel/test_intake_risk_query_selection.py","tests/unit/travel/test_intake_risks.py","tests/unit/travel/test_intake_risks_parallel.py","tests/unit/travel/test_intake_its_snapshot.py","tests/unit/travel/test_response_cache.py","tests/unit/intake/test_intake_risks_trip_date.py","-q","--override-ini=cache_dir=/tmp/pytest-cache"]))'

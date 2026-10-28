@@ -106,7 +106,7 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
             checked += same[1].get("status") != "not_applicable" and same[1].get("code") != "no_time"   # 한도는 앞 판과 같은 일정에 걸리게 센다
             plan.append((shown, item, ("reused", same[1])))
             continue
-        parsed = to_item(conn, tenant_id, item)
+        parsed = to_item(conn, tenant_id, item, resolve_sensitivity=False)
         if parsed is None:
             plan.append((shown, item, ("done", _unknown(item, "no_time", "방문 날짜·시각을 정하면 위험을 확인해요"))))
         elif parsed.ends_at is not None and parsed.ends_at <= now:
@@ -116,6 +116,8 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
             plan.append((shown, item, ("done", _unknown(item, "item_limit",
                                                         "한 번에 확인할 수 있는 일정 수에 닿았어요 · 이 일정은 아직 확인하지 못했어요"))))
         else:
+            if parsed.place is not None:
+                _sensitivity(conn, tenant_id, parsed.place)
             plan.append((shown, item, ("judge", parsed)))
             checked += 1
 
@@ -160,7 +162,8 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
             "risk_checked_at": now.isoformat(timespec="seconds")}
 
 
-def to_item(conn, tenant_id: str, item: dict[str, Any], *, seq: int | None = None) -> Item | None:
+def to_item(conn, tenant_id: str, item: dict[str, Any], *, seq: int | None = None,
+            resolve_sensitivity: bool = True) -> Item | None:
     from .review import _dt
 
     start = _dt(item.get("date"), item.get("starts_at"))
@@ -171,7 +174,8 @@ def to_item(conn, tenant_id: str, item: dict[str, Any], *, seq: int | None = Non
     if place is not None:
         place.setdefault("place_id", str(uuid5(NAMESPACE_URL, "intake-place:" + str(item.get("id")))))
         place.setdefault("kind", item.get("kind"))
-        _sensitivity(conn, tenant_id, place)
+        if resolve_sensitivity:
+            _sensitivity(conn, tenant_id, place)
     return Item(item_id=uuid5(NAMESPACE_URL, "intake-item:" + str(item.get("id"))), seq=seq or 1,
                 kind=item["kind"], title=item.get("title") or "일정", starts_at=start, ends_at=end,
                 place_id=place.get("place_id") if place else None, place=place,
