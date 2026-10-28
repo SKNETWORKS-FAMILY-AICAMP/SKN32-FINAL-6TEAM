@@ -127,7 +127,7 @@ def test_refresh_places_when_on_fetches_each_category_refreshes_with_the_cap_and
     from app.core import settings as core_settings
 
     _guard(monkeypatch, True, calls=123)
-    monkeypatch.setattr(core_settings, "get_settings", lambda: type("S", (), {"tour_api_key": "k"})())
+    monkeypatch.setattr(core_settings, "get_settings", lambda: type("S", (), {"tour_api_key": "k", "public_data_key": lambda self, override="": override})())
     claims = iter([True, False])
 
     def claim(conn, **kw):
@@ -152,7 +152,7 @@ def test_refresh_places_on_without_a_key_fails_loudly(monkeypatch):
     from app.core import settings as core_settings
 
     _guard(monkeypatch, True)
-    monkeypatch.setattr(core_settings, "get_settings", lambda: type("S", (), {"tour_api_key": ""})())
+    monkeypatch.setattr(core_settings, "get_settings", lambda: type("S", (), {"tour_api_key": "", "public_data_key": lambda self, override="": override})())
     with pytest.raises(RuntimeError, match="ACOP_TOUR_API_KEY"):
         jobs.refresh_places_tick("demo", NOW, wired=_wired(), script=_RefreshScript())
 
