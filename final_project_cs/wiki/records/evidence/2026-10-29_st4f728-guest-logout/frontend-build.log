@@ -1,0 +1,52 @@
+▲ Next.js 16.4.2 (Turbopack)
+✓ Running next.config.ts took 22ms
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.5s
+  Running TypeScript ...
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next-st4f728-v3/types/**/*.ts'
+  	- include was updated to add '.next-st4f728-v3/dev/types/**/*.ts'
+
+  Finished TypeScript in 7.9s ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/18) ...
+  Generating static pages using 19 workers (4/18) 
+  Generating static pages using 19 workers (8/18) 
+  Generating static pages using 19 workers (13/18) 
+✓ Generating static pages using 19 workers (18/18) in 427ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /auth/done
+├ ƒ /help
+├ ƒ /intakes/[intakeId]
+├ ○ /intakes/starting
+├ ○ /mypage
+├ ○ /mypage/account
+├ ○ /mypage/agents
+├ ○ /mypage/alerts
+├ ○ /mypage/consents
+├ ○ /mypage/edit
+├ ○ /notices
+├ ƒ /notices/[noticeId]
+├ ƒ /start
+├ ƒ /support
+├ ƒ /support/[inquiryId]
+├ ○ /support/new
+├ ○ /trips
+├ ƒ /trips/[tripId]
+├ ƒ /trips/[tripId]/results
+├ ƒ /trips/[tripId]/verification
+└ ○ /trips/new
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -1,0 +1,61 @@
+{
+  "recorded_at": "2026-10-29T03:36:53.545252+09:00",
+  "files": [
+    {
+      "name": "browser-results.json",
+      "sha256": "3b0bf583b031e058edb1b20009ba40a7671b24dcc0ae2731e82b223574e85d4d"
+    },
+    {
+      "name": "browser.cjs",
+      "sha256": "10c5c04ec7b632bf201369d99e416eac7a6de512c681cbf48bcc04e75161d4f0"
+    },
+    {
+      "name": "contract-ready.xml",
+      "sha256": "9fd5d5e6df2e68067c643806d6f478d25ff20ccb19a9e4572fd6d1a8d2224578"
+    },
+    {
+      "name": "dod-ready.log",
+      "sha256": "2d0305994216abe2420f9ccbd31be492b07f9d21d8a9e5cdb07f49e0ab0e510b"
+    },
+    {
+      "name": "frontend-build.log",
+      "sha256": "9e5f09ef212bb2eba7f783f96468fae4a24db7be3735414d9b88fcc62a7d735a"
+    },
+    {
+      "name": "frontend-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "frontend-live.log",
+      "sha256": "f89223fdbaef0c05775172bd58495ca0e5901ba316cd3ddf235ab62422aea040"
+    },
+    {
+      "name": "frontend-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "green.json",
+      "sha256": "6e01e35b93a41b67b251d08d63afae04ffd0551549a14fb6ea08f77a6139c1bc"
+    },
+    {
+      "name": "red.json",
+      "sha256": "990ad1fc8323652443a32adcdedacaacb88f8e5b878c2279999f8aa67cf6cda7"
+    },
+    {
+      "name": "security-ready.xml",
+      "sha256": "4139dd065887867094dd053a5e9de007697efe039a57a64b200dd15584bd3a0a"
+    },
+    {
+      "name": "ST4F-728.patch",
+      "sha256": "7446234a59a18b745031a9f3744d87d0bfb10116eea6f3dad210ce63af29789b"
+    },
+    {
+      "name": "validation-summary.json",
+      "sha256": "47ab389daa5e239578d176fe94a0d7fb7a851252ecb5923aa0af94c8725db411"
+    },
+    {
+      "name": "web-final.json",
+      "sha256": "6ea5d287616e30180969c906bf901f7b0f7c08db32e00b0ae0307b894829e477"
+    }
+  ]
+}

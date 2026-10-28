@@ -1,0 +1,91 @@
+From d574ad9fa91d5320f8bf0c744c365314aa947502 Mon Sep 17 00:00:00 2001
+From: Codex <codex@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 03:35:53 +0900
+Subject: [PATCH] fix(web): stop pending guest requests after logout (ST4F-728)
+
+---
+ .../src/lib/live/client-guest-logout.test.ts  | 54 +++++++++++++++++++
+ .../frontend/apps/web/src/lib/live/client.ts  |  7 ++-
+ 2 files changed, 59 insertions(+), 2 deletions(-)
+ create mode 100644 final_project_cs/frontend/apps/web/src/lib/live/client-guest-logout.test.ts
+
+diff --git a/final_project_cs/frontend/apps/web/src/lib/live/client-guest-logout.test.ts b/final_project_cs/frontend/apps/web/src/lib/live/client-guest-logout.test.ts
+new file mode 100644
+index 00000000..d6d87fe7
+--- /dev/null
++++ b/final_project_cs/frontend/apps/web/src/lib/live/client-guest-logout.test.ts
+@@ -0,0 +1,54 @@
++import { afterEach, describe, expect, it, vi } from "vitest";
++import { api, currentSession, ensureSession, logout, resetSessionState, takeSession } from "./client";
++import { sessionBody } from "./session-kit";
++
++const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
++
++describe("ST4F-728 guest response after logout", () => {
++  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
++
++  it.each(["session", "write"])("stops a pending %s when logout finishes before guest creation replies", async (kind) => {
++    let release!: (response: Response) => void;
++    let started!: () => void;
++    const waiting = new Promise<void>((resolve) => { started = resolve; });
++    const writes: string[] = [];
++    vi.stubGlobal("fetch", async (url: string) => {
++      const path = new URL(url).pathname;
++      if (path.endsWith("/auth/me")) return json({ error: { code: "unauthenticated" } }, 401);
++      if (path.endsWith("/auth/session")) {
++        started();
++        return new Promise<Response>((resolve) => { release = resolve; });
++      }
++      if (path.endsWith("/auth/logout")) return json({ status: "signed_out" });
++      writes.push(path);
++      return json({ saved: true });
++    });
++    const pending = (kind === "session" ? ensureSession("ko") : api("/v1/web/trip-intakes", "ko", { method: "POST", body: "{}" }))
++      .then((value) => ({ value }), (error: unknown) => ({ error }));
++    await waiting;
++    await logout("ko");
++    expect(currentSession()).toBeNull();
++    release(json(sessionBody(), 201));
++    expect(await pending).toMatchObject({ error: { code: "session_changed" } });
++    expect(currentSession()).toBeNull();
++    expect(writes).toEqual([]);
++  });
++
++  it("keeps a member who signed in while guest creation waited", async () => {
++    let release!: (response: Response) => void;
++    let started!: () => void;
++    const waiting = new Promise<void>((resolve) => { started = resolve; });
++    vi.stubGlobal("fetch", async (url: string) => {
++      if (new URL(url).pathname.endsWith("/auth/me")) return json({ error: { code: "unauthenticated" } }, 401);
++      started();
++      return new Promise<Response>((resolve) => { release = resolve; });
++    });
++    const pending = ensureSession("ko");
++    await waiting;
++    const member = { kind: "member" as const, csrf: "new-member", guestIdleHours: null, idleExpiresAt: null, absoluteExpiresAt: null };
++    takeSession(member);
++    release(json(sessionBody(), 201));
++    expect(await pending).toBe(member);
++    expect(currentSession()).toBe(member);
++  });
++});
+diff --git a/final_project_cs/frontend/apps/web/src/lib/live/client.ts b/final_project_cs/frontend/apps/web/src/lib/live/client.ts
+index ff7be170..7b2b8368 100644
+--- a/final_project_cs/frontend/apps/web/src/lib/live/client.ts
++++ b/final_project_cs/frontend/apps/web/src/lib/live/client.ts
+@@ -287,8 +287,11 @@ export function ensureSession(language: Language, humanToken?: string | null): P
+     }, language);
+     const session = sessionOf(await response.json());
+     if (!session) throw new LiveError("bad_session", translator(language)("서버가 세션 정보를 주지 않았어요.", "The server did not give the session details."));
+-    // `[2026-10-23 F-07]` A sign-in completed while the guest request was waiting: keep the member session.
+-    if (snapshot !== beganWith && snapshot.session) return snapshot.session;
++    // A late guest response must respect both sign-in and sign-out while it waited.
++    if (snapshot !== beganWith) {
++      if (snapshot.session) return snapshot.session;
++      throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
++    }
+     setSnapshot({ probed: true, failed: false, session });
+     return session;
+   })().finally(() => { creating = null; });
+-- 
+2.56.0.windows.4

@@ -1,0 +1,28 @@
+{
+  "browser": "156.0.4314.50",
+  "results": [
+    {
+      "kind": "session",
+      "code": "session_changed",
+      "sessionKind": null,
+      "writes": 0,
+      "pass": true
+    },
+    {
+      "kind": "write",
+      "code": "session_changed",
+      "sessionKind": null,
+      "writes": 0,
+      "pass": true
+    },
+    {
+      "kind": "member",
+      "code": null,
+      "sessionKind": "member",
+      "writes": 0,
+      "pass": true
+    }
+  ],
+  "network": "all routes aborted; fetch controlled in isolated page",
+  "fullApp": false
+}

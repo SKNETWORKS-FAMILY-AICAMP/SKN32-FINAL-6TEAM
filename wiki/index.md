@@ -8,6 +8,8 @@ domain: travel
 
 # guguroute wiki
 
+2026-10-29 ST4F-728 로그아웃 경합 재현·차단: 웹1227/1227·화면11/11·필수3/3=100%,트래커종결0. [보고](../final_project_cs/wiki/records/reports/2026-10-29_st4f728-guest-logout.md).
+
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
 
 2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.

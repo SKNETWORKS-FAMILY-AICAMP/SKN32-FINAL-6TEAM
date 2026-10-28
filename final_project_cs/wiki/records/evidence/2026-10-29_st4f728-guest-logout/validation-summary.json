@@ -1,0 +1,61 @@
+{
+  "contract-ready": {
+    "passed": 367,
+    "total": 367
+  },
+  "security-ready": {
+    "passed": 125,
+    "total": 125
+  },
+  "source": {
+    "base": "006268853c0d52c8ff926727f4243230738beb98",
+    "source_commit": "d574ad9fa91d5320f8bf0c744c365314aa947502",
+    "paths": [
+      "final_project_cs/frontend/apps/web/src/lib/live/client.ts",
+      "final_project_cs/frontend/apps/web/src/lib/live/client-guest-logout.test.ts"
+    ]
+  },
+  "browser": {
+    "browser": "156.0.4314.50",
+    "results": [
+      {
+        "kind": "session",
+        "code": "session_changed",
+        "sessionKind": null,
+        "writes": 0,
+        "pass": true
+      },
+      {
+        "kind": "write",
+        "code": "session_changed",
+        "sessionKind": null,
+        "writes": 0,
+        "pass": true
+      },
+      {
+        "kind": "member",
+        "code": null,
+        "sessionKind": "member",
+        "writes": 0,
+        "pass": true
+      }
+    ],
+    "network": "all routes aborted; fetch controlled in isolated page",
+    "fullApp": false
+  },
+  "tracker_writes": 0,
+  "independent_reviewer": false,
+  "production_writes": 0,
+  "tracker": {
+    "total": 688,
+    "remaining": 102,
+    "selected": [
+      {
+        "key": "ST4F-728",
+        "status": "review",
+        "priority": "high",
+        "assignee": ""
+      }
+    ]
+  }
+}

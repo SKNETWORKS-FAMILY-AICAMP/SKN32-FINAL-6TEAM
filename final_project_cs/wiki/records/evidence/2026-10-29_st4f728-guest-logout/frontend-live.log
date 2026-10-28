@@ -1,0 +1,458 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Users\\kcxsz\\AppData\\Local\\hermes\\tools\\node-26.7.0-win32-arm64\\node.exe",
+      "C:\\_proj\\final_workspace\\scratch\\teamflow-unowned-20261029\\repo\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/session.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "C:\\_proj\\final_workspace\\scratch\\teamflow-unowned-20261029\\repo\\final_project_cs\\frontend\\apps\\web\\playwright.live.config.ts",
+    "rootDir": "C:/_proj/final_workspace/scratch/teamflow-unowned-20261029/repo/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/_proj/final_workspace/scratch/teamflow-unowned-20261029/repo/final_project_cs/frontend/apps/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/_proj/final_workspace/scratch/teamflow-unowned-20261029/repo/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [
+          "**/_backup/**"
+        ],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "session.spec.ts",
+      "file": "session.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 그 여행으로 간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1506,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:44.545Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-81d81c3c35e0a9bb8ee3",
+          "file": "session.spec.ts",
+          "line": 13,
+          "column": 1
+        },
+        {
+          "title": "여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 세션이 없으면 목록을 묻느라 새 사용자를 만들지도 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1173,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:46.290Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-bc6eb9f6567f16ea6897",
+          "file": "session.spec.ts",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "게스트의 마이페이지: 「로그인 상태」 칸이 사라지는 때와 제한을 말하고, 토큰은 보여 주지도 받지도 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 799,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:47.480Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-9277523c792556249520",
+          "file": "session.spec.ts",
+          "line": 42,
+          "column": 1
+        },
+        {
+          "title": "회원의 로그인 · 계정 화면: 로그아웃은 확인 창을 거치고(취소하면 아무것도 보내지 않는다), 로그아웃하면 보안 토큰과 함께 서버에 알리고, 그 뒤로는 세션이 없는 모습이 된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 908,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:48.292Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-15eb87464c70fca8d080",
+          "file": "session.spec.ts",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "로그아웃하면 이전 계정의 여행이 화면 캐시에 남지 않는다: 앱 안에서 뒤로 가도 옛 일정이 먼저 보이지 않고 다시 읽는 동안은 읽는 중이다 (`[2026-10-05 · 팀 develop 점검]`)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2275,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:49.211Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-1c49f47f1870f7cc2913",
+          "file": "session.spec.ts",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "옛 키만 있는 브라우저: 처음 열 때 키 하나로 세션으로 옮겨지고(쿠키 없이), 키는 지워지고, 여행 목록이 그대로 열린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 571,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:51.500Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-50438605dc89aa23100a",
+          "file": "session.spec.ts",
+          "line": 123,
+          "column": 1
+        },
+        {
+          "title": "서버가 모르는 세션(끝났거나 지워진 쿠키)이면 조용히 새 사용자가 되지 않는다: 목록은 비어 보이고, 여행을 직접 열면 어떻게 하면 되는지 알려 준다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 656,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:52.082Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-efbe989fb17254f18bcb",
+          "file": "session.spec.ts",
+          "line": 140,
+          "column": 1
+        },
+        {
+          "title": "쓰기가 보안 토큰 때문에 거절되면(403 csrf_failed) 세션을 다시 받고, 같은 요청은 다시 보내지 않으며 화면은 하지 못했다고 알린다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1501,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:52.756Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-90561460a5d37aa2e61f",
+          "file": "session.spec.ts",
+          "line": 154,
+          "column": 1
+        },
+        {
+          "title": "게스트의 제한에 걸리면(403 guest_trip_limit · login_required) 서버 문장 그대로 알리고, 계정을 연결하러 가는 길을 보인다 — 읽은 계획은 그대로다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6303,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:34:54.269Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-71b58ef52c95b09a88f1",
+          "file": "session.spec.ts",
+          "line": 167,
+          "column": 1
+        },
+        {
+          "title": "메뉴에는 토큰 화면이 없고 설정으로 가는 길이 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 601,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:35:00.584Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-7852277daa8e5fccc459",
+          "file": "session.spec.ts",
+          "line": 195,
+          "column": 1
+        },
+        {
+          "title": "내 여행 목록을 읽지 못해도(서버 500) 첫 화면은 그대로 쓸 수 있고, 못 읽었다고 알린다(여행이 없다는 말이 아니다)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 571,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T18:35:01.195Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6fa1842ca325e3ffbb00-20681d15b92d87252b98",
+          "file": "session.spec.ts",
+          "line": 205,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-28T18:34:41.671Z",
+    "duration": 21025.363,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
