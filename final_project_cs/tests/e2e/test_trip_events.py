@@ -27,6 +27,8 @@ from .test_web_api import _fresh_limit_cache, _h, _session, _web_body  # noqa: F
 
 ROOT = Path(__file__).resolve().parents[2]
 FAST = {"poll_seconds": 0.1, "ping_seconds": 0.3, "max_seconds": 1.6, "max_per_user": 4, "max_failures": 2}
+#: 신호 · 생존 신호를 다 본 뒤 닫는 시험의 안전 상한(초) — 정상이면 그 전에 닫힌다(우리가 고른 값)
+SAFETY_MAX_S = 20.0
 
 
 @pytest.fixture()
@@ -82,7 +84,12 @@ def _snapshot_barriers(monkeypatch):
 
 
 def test_a_change_after_connecting_sends_a_signal_with_no_content(api, fast, monkeypatch):
-    """①: 연결 직후 `ready`, 알림이 생기면 `notice`, 새 판이 생기면 `itinerary` — 내용 · 키는 싣지 않는다."""
+    """①: 연결 직후 `ready`, 알림이 생기면 `notice`, 새 판이 생기면 `itinerary` — 내용 · 키는 싣지 않는다.
+
+    ☆`[2026-10-28]` 전에는 연결을 `max_seconds`(1.6초)에 닫아 그 안에 두 변경과 0.3초 넘는 조용한 틈이 다 들어가야 했다. 8일꾼 부하에서
+      쓰기 · 조회가 늦어지면 두 번째 변경 뒤 조용한 틈이 1.6초 안에 안 생겨 `: ping` 이 없이 닫혔다(단독은 통과). 이제 스트림이 실제로 낸
+      글을 기록해, 두 변경 신호와 그 뒤 생존 신호가 나온 다음 틱에 여행이 없어진 것처럼 닫는다 — 시간 창 대신 일어난 순서로 판정한다.
+    """
     me = _session(api)
     trip_id = _trip(api, me)
     tenant = api["tenant"]
@@ -101,6 +108,23 @@ def test_a_change_after_connecting_sends_a_signal_with_no_content(api, fast, mon
                                  reason="customer_request", causes=[])
 
     ready, _ = _snapshot_barriers(monkeypatch)
+    monkeypatch.setattr(trip_events, "limits", lambda: {**FAST, "max_seconds": SAFETY_MAX_S})
+    sent: list[tuple[str | None, tuple[str, ...]]] = []          # 스트림이 실제로 낸 순서 — (이벤트 · 종류)
+    real_sse, observed = trip_events.sse, trip_events.snapshot
+
+    def recorded(event, data=None):
+        sent.append((event, tuple(data["kinds"]) if event == "trip.changed" else ()))
+        return real_sse(event, data)
+
+    def until_seen(conn, tenant_id, trip):
+        changes = [n for n, (event, _) in enumerate(sent) if event == "trip.changed"]
+        kinds = {kind for event, found in sent if event == "trip.changed" for kind in found}
+        if {"notice", "itinerary"} <= kinds and any(event is None for event, _ in sent[changes[-1]:]):
+            return None                                     # 다 봤다 — 여행이 없어진 것처럼 닫는다(스트림의 정상 종료 길)
+        return observed(conn, tenant_id, trip)
+
+    monkeypatch.setattr(trip_events, "sse", recorded)
+    monkeypatch.setattr(trip_events, "snapshot", until_seen)
     failures = []
 
     def after_ready(delay, work):
