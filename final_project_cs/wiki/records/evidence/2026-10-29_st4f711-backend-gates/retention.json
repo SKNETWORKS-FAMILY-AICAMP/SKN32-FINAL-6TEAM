@@ -1,0 +1,12 @@
+{
+  "time": "2026-10-29T02:12:40.064775+09:00",
+  "files": 21191,
+  "bytes": 2310984468,
+  "GiB": 2.152,
+  "disk_free_GiB": 314.393,
+  "junctions_excluded": [
+    "C:\\Users\\kcxsz\\AppData\\Local\\hermes\\profiles\\guguroute\\cache\\scratch\\st4f711-backend-20261029-v1\\repo\\final_project_cs\\frontend\\apps\\web\\node_modules"
+  ],
+  "deleted_files": 0,
+  "retention": "All scratch files, clone, dependencies and stopped PostgreSQL data retained."
+}

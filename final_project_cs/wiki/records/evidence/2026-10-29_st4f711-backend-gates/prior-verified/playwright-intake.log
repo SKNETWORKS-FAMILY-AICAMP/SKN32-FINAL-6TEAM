@@ -1,0 +1,17 @@
+
+Running 10 tests using 1 worker
+
+(node:29940) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\intake-start.spec.ts:51:1 › 「직접 입력」: 누르면 입력 화면에 머문 채 입력칸을 잠그고 「보내는 중」을 보이다가, 서버가 받으면 항로 지킴이 카드 뒤 그 접수의 진행 화면으로 넘어가 실시간 진행으로 결과가 나온다 (6.7s)
+  ok  2 tests\live\intake-start.spec.ts:75:1 › 「직접 입력」: 빠른 거름에 걸리면(여행 단서가 없는 글) 화면을 넘기지 않고 「일정을 찾지 못했어요 …」를 보이며 입력칸에 초점을 준다 — 글은 그대로, 카드도 진행 화면도 없다 (2.2s)
+  ok  3 tests\live\intake-start.spec.ts:100:1 › 「직접 입력」을 서버가 거절하면 화면을 넘기지 않고 그 자리에서 서버의 문장을 보이며, 입력칸이 다시 열리고 글은 그대로다 (900ms)
+  ok  4 tests\live\intake-start.spec.ts:111:1 › 파일 칸: 서버가 계획을 거절하면 등록 화면으로 돌아와 서버의 문장을 보이고, 올리려던 파일이 그대로 있어 다시 보낼 수 있다 (3.7s)
+  ok  5 tests\live\intake-start.spec.ts:130:1 › 파일 칸: 보내는 중에 뒤로 가기 화살표를 누르면 등록 화면으로 돌아가 파일이 그대로 있고, 오류 문장은 뜨지 않는다 (6.3s)
+  ok  6 tests\live\intake-start.spec.ts:147:1 › 「직접 입력」: 기다리는 동안 「이전」으로 떠나면, 서버가 늦게 답해도 화면이 끌려가지 않는다 (5.9s)
+  ok  7 tests\live\intake-start.spec.ts:159:1 › 「직접 입력」: 기다리는 동안 새로고침하면 등록 화면 그대로이고 쓴 글도 그대로다 — 늦은 답이 화면을 끌고 가지 않는다 (5.7s)
+  ok  8 tests\live\intake-start.spec.ts:172:1 › 세션이 없는 첫 방문도 입력 화면에서 기다리는 사이 게스트 세션이 만들어지고, 서버가 받으면 진행 화면으로 넘어간다 (5.1s)
+  ok  9 tests\live\intake-start.spec.ts:188:1 › 서버가 몇 초 넘게 답이 없으면 입력 화면의 「보내는 중」이 「서버가 답하는 데 시간이 걸리고 있어요」로 바뀌고, 답이 오면 그대로 이어진다 (9.2s)
+  ok 10 tests\live\intake-start.spec.ts:201:1 › 파일 칸: 그리기 신호가 오지 않는 화면(숨은 브라우저 창 · 뒤쪽 탭)에서도 계획이 나가고 접수 화면으로 넘어간다 — 옛: 「보내는 중」에서 요청 없이 멈춤 (ST4F-596) (1.8s)
+
+  10 passed (49.7s)

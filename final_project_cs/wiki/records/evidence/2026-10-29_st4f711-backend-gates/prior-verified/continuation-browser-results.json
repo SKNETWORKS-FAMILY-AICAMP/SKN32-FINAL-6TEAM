@@ -1,0 +1,42 @@
+[
+  {
+    "mode": "inline-network",
+    "passed": true,
+    "recoveryMs": 2191,
+    "retried": true,
+    "postCount": 2,
+    "url": "http://127.0.0.1:32272/intakes/starting",
+    "message": "서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
+    "pageErrors": []
+  },
+  {
+    "mode": "route-network",
+    "passed": true,
+    "recoveryMs": 1908,
+    "retried": true,
+    "postCount": 2,
+    "url": "http://127.0.0.1:32272/intakes/starting",
+    "message": "서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
+    "pageErrors": []
+  },
+  {
+    "mode": "direct-network",
+    "passed": true,
+    "recoveryMs": 1860,
+    "retried": true,
+    "postCount": 2,
+    "url": "http://127.0.0.1:32272/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "message": "서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
+    "pageErrors": []
+  },
+  {
+    "mode": "inline-plan",
+    "passed": true,
+    "recoveryMs": 1885,
+    "retried": false,
+    "postCount": 1,
+    "url": "http://127.0.0.1:32272/trips/new",
+    "message": "서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
+    "pageErrors": []
+  }
+]

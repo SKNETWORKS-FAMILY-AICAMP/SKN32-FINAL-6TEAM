@@ -1,0 +1,9 @@
+.........................................                                [100%]
+============================== warnings summary ===============================
+..\..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51
+  C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\st4f711-backend-20261029-v1\concurrency-intake.xml -
+41 passed, 1 warning in 125.87s (0:02:05)

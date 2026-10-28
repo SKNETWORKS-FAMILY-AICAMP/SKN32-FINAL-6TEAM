@@ -1,0 +1,12 @@
+[
+  {
+    "name": "ddgs",
+    "required": "9.16.1",
+    "installed": null
+  },
+  {
+    "name": "primp",
+    "required": "2.0.1",
+    "installed": null
+  }
+]
