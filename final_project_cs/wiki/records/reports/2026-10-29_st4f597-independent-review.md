@@ -59,3 +59,8 @@ SQL inventory는 생성기의 render 결과 중 해당 문서만 갱신했습니
 통합판 재실행은 dining258/258·판정 보호39/39·계약367/367·보안125/125·DoD26/26 =각100%,실패·건너뜀0입니다. mock provider를 명시한 실제 합성 PostgreSQL 검증입니다. 기존 제품 판정·잠금·감사 코드는 변경0입니다. DoD 개별 실행 로그/JUnit·요약도 보존했습니다. 기존 회귀 실패는 시험 경계와 기대값의 낡음이며 신규 메뉴 회귀가 아닙니다.
 
 [독립 비교·JUnit·SQL·최종 관문 manifest](../evidence/2026-10-29_st4f597-independent-review/manifest.json). 자동 x600 배포의 운영 수락은 확인하지 않았습니다. 운영DB에 직접 실행한 변경 명령은0이며 이슈 종결도0입니다. 양 원격 push readback과 자체PG 종료는 아래 후속 기록으로 구분합니다.
+
+
+## 양 원격 소스 반영 영수증
+
+팀·개인 role-manager 모두 `07e79f1987d6f3c635d4877231191e508dc98107` readback 일치(**2/2 =100%**),직전 양원격5ded90e99에서 비강제 fast-forward입니다. 원후보5b47b2e4·버스 소스·후속 문서 이력을 보존했습니다. [실제 push/readback](../evidence/2026-10-29_st4f597-independent-review/source-push-result.json). 자체PG55617은 pg_ctl stop exit0,데이터 보존입니다. x600 자동 배포 수락·운영 메뉴 보유율은 미확인,직접 운영DB 변경·수동배포·develop/main·TeamFlow 상태 변경·삭제는0입니다. 이 문서 후속은 같은 app tree를 유지합니다.

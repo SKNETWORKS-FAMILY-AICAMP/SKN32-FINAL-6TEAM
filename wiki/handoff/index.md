@@ -9,6 +9,8 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 # 세션 인계 안내 목차
 
+2026-10-29 ST4F-597 독립 검토·통합: Dining258/258·판정39/39·필수3/3=100%,팀·개인 role-manager `07e79f1987` 양쪽 반영. 운영 메뉴/수락 미확인·종결0. [인계](2026-10-29_st4f597-independent-review.md).
+
 2026-10-29 ST4F-711 백엔드 복구: 필수3/3=100%·PG동시성41/41=100%·웹1224/1224=100%, 팀·개인 role-manager 소스217da9ad0 양쪽 반영. 운영 인수·LB-09 원인 미확정. [인계](2026-10-29_st4f711-backend-gates.md).
 
 2026-10-23 — [Dining 모호한 조건 질문·답 저장·재검증 3단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-clarifications.md): 원문과 현재 식사 선택지로 질문, 본인 접수·revision·run_id·서명 대조 뒤 선택/취소 저장과 새 검사 연결. 조건 정정은 해당 조건 행만 갱신하고 독립 영업 불가 보존, 늦은 웹 응답의 최신 상태 덮어쓰기 차단. 새 서버 29/29 = 100%, 관련 Python 212/214 = 99.1%(기존 실패 2), 웹 79/79 = 100%, 브라우저 모형 부품 6/6 = 100%, 타입·수정 파일 정적 검사 통과. 선택 구조·계약·인증 304/305 = 99.7%(Composer 미설치 1), 전체 계약 수집·전체 웹 lint·실DB 확인은 환경 한계 별도 기록. 백업 `_backup/2026-10-23_dining-clarifications/`. 세 보완 로컬 3/3 = 100%, 커밋·푸시·배포 안 함.
@@ -216,6 +218,5 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 - 2026-10-23 Dining 커밋·푸시 준비: 원격 `7284c42ad` 위 통합, Python 204/204·웹 79/79 통과. [최신 통합 검증](../../final_project_cs/wiki/records/reports/2026-10-23_dining-publish-validation.md).
 
 
-2026-10-29 ST4F-597 독립 재현·보안·회귀: 258/258=100%,종결 보류. [인계](2026-10-29_st4f597-independent-review.md).
 
 [2026-10-29 버스 scalar 독립 검토 인계](2026-10-29_bus-scalar-independent-continuation.md): 한 일·시험·제외·위험·통합 결과.
