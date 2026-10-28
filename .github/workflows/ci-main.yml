@@ -162,6 +162,13 @@ jobs:
         run: >-
           docker run --rm --platform linux/amd64 --network none
           -e ACOP_LLM_PROVIDER=mock
+          -e ACOP_OPENAI_API_KEY=sk-dummy-for-ci
+          -e ACOP_LLM_MODEL=gpt-4o-mini
+          -e ACOP_EMBEDDING_MODEL=text-embedding-3-small
+          -e ACOP_TENANT_ID=demo
+          -e ACOP_COMPOSER_JWT_SECRET=dummy-composer-jwt-secret-for-ci-0123456789
+          -e ACOP_COMPOSER_ISSUER_SECRET=dummy-composer-issuer-secret-for-ci-0123456789
+          -e ACOP_DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:5432/acop_ci
           -e ACOP_SECRET_KEY=dummy-secret-key-for-ci-0123456789abcdef
           -e PYTHONPATH=/srv:/reference
           -v "$PWD/final_project_cs/tests:/srv/tests:ro"
