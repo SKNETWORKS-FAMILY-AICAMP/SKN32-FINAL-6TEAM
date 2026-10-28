@@ -88,6 +88,9 @@ class Resolved:
     #: 대안(후보 · 전체 자동 추천)이 앞뒤 일정의 가운데가 아니라 이 둘레에서 찾게 한다(`candidates.area_of`). 그 밖에는 None
     near_area: dict[str, Any] | None = None
     public_web: dict[str, Any] | None = None
+    #: `[2026-10-28 전수검사 E D3]` 서울에서 못 찾았는데 같은 이름이 서울 밖(카카오 주소)에 있으면 그 시 · 도(「부산」). 그 밖에는 None.
+    #: ★근거일 뿐 범위를 넓히지 않는다 — 상태는 그대로 `unresolved` 이고 고객 문장만 「서울 밖」으로 바뀐다
+    outside_region: str | None = None
 
     def evidence(self) -> dict[str, Any]:
         source = {"places": "places", "typo": "places", "tour_api": "tour_api", "kakao": "kakao",
@@ -99,6 +102,8 @@ class Resolved:
             out.update(source="public_web", method="public_web_supplement", public_web=self.public_web)
         if self.near_area:
             out["near_area"] = dict(self.near_area)
+        if self.outside_region:
+            out["outside_service_area"] = self.outside_region
         return out
 
 
@@ -180,6 +185,8 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     found = _resolve_existing(title, our_places=our_places, tour=tour, kakao=kakao,
         kind_hint=kind_hint, aliases=aliases, dining=dining, near=near, at=at,
         choose_near=choose_near, conn=conn, team_alias=team_alias)
+    if _mark_outside_seoul(found, title, kakao):
+        return found
     from .landmarks import is_lodging_text
     words = title.split()
     corrected = (aliases or {}).get(normalize(title))
@@ -197,6 +204,31 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     found.tried.append("public_web")
     found.needs_review = True
     return found
+
+
+#: 서울 밖 장소의 고객 문장 — 접수 질문 · 확인 줄 · 채팅 거절이 이 말로 「서울 밖」을 알아본다(`chat_edit._refusal`)
+OUTSIDE_SEOUL_TAIL = "지금은 서울 일정만 도와드려요"
+
+
+def _mark_outside_seoul(found: Resolved, title: str, kakao: Any) -> bool:
+    """`[2026-10-28 전수검사 E D3]` 못 찾은 곳이 같은 이름으로 서울 밖에 있으면 그 시 · 도를 단다 — 장소 검색(D2 `_note_outside_service_area`)과 같은 규칙.
+
+    ★서울에서 못 찾았고(후보 없음 · 앞 장소 기다림 아님) 카카오 서울 조회가 **막히지 않았을 때만** 서울 사각 없이 **한 번** 부른다.
+    정규화 이름이 같은 서울 밖 장소만 근거다 — 호출 실패(None) · 이름이 다른 곳은 근거가 아니다(지금처럼 못 찾음, 막힘으로도 세지 않는다)."""
+    if (found.status != "unresolved" or found.candidates or found.chain_deferred or found.blocked
+            or kakao is None or not hasattr(kakao, "outside_seoul") or not title.strip()):
+        return False
+    hits = kakao.outside_seoul(title)
+    found.tried.append(f"kakao_outside:{title}")
+    if not hits:
+        return False
+    key = normalize_full(title)
+    region = next((h["region"] for h in hits if h.get("region") and normalize_full(h.get("name") or "") == key), None)
+    if region is None:
+        return False
+    found.outside_region = region
+    found.note = f"「{region}」에 있는 곳으로 보여요 — {OUTSIDE_SEOUL_TAIL}"
+    return True
 
 
 def _resolve_existing(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,

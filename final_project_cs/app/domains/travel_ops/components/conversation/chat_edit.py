@@ -25,6 +25,7 @@ from zoneinfo import ZoneInfo
 import psycopg
 
 from app.domains.travel_ops.components.intake import reopen_commit as _reopen_commit
+from app.domains.travel_ops.components.intake.places import OUTSIDE_SEOUL_TAIL
 
 KST = ZoneInfo("Asia/Seoul")
 log = logging.getLogger(__name__)
@@ -128,6 +129,11 @@ def _refusal(code: str, message: str, violations: Any = None) -> str:
     if code == "place_not_found" and ("budget_exhausted" in message or "조회가 막혀" in message):
         # 찾는 쪽(관광 정보 조회)의 오늘 한도가 찼거나 막힌 것 — 없는 곳이라는 뜻이 아니다(실서버 확인 10-15: 안내가 「고객이 고친다」로 샜다)
         return "지금 장소 조회가 잠시 막혀 찾지 못해 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요."
+    if code == "place_not_found" and OUTSIDE_SEOUL_TAIL in message:
+        # `[2026-10-28 전수검사 E D3]` 같은 이름이 서울 밖에 있다 — 이름을 고치라고 하지 않는다
+        name, _, rest = message.partition(": ") if ": " in message else ("", "", message)
+        where = f"말씀하신 곳({name})은 " if name else "말씀하신 곳은 "
+        return f"{where}{rest.rstrip('.')}. 그래서 일정은 바꾸지 않았어요."
     if code == "place_not_found":
         return f"말씀하신 곳을 장소 목록 · 관광 정보 · 지도에서 하나로 찾지 못해 일정은 바꾸지 않았어요({message}). 장소 이름을 조금 더 정확히 알려 주세요."
     if code == "item_in_past":

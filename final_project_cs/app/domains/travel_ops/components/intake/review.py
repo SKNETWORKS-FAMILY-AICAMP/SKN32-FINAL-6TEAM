@@ -211,6 +211,10 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
                          + f" · 사유: {web.get('reason') or 'unknown'} · 확인: {web.get('checked_at') or '미확인'}"
                          + (" · 공식 출처: " + ", ".join(sources) if sources else " · 공식 본문 근거 미확인")
                          + " · 운영시간·휴무·방문일은 확정하지 않았어요 — 장소를 확인해 주세요")
+        region = evidence.get("outside_service_area")
+        if region:
+            # `[2026-10-28 전수검사 E D3]` 같은 이름이 서울 밖에 있다 — 이름을 고치라고 하지 않는다
+            return _line("place", "bad", f"「{region}」에 있는 곳으로 보여요 — 지금은 서울 일정만 도와드려요 · 서울 장소를 고르거나 장소 없이 두어 주세요")
         blocked = evidence.get("blocked") or []
         why = " · 장소 조회가 막혀 있어서 못 찾은 것일 수 있어요" if blocked else ""
         return _line("place", "bad", f"장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요{why}")
@@ -770,6 +774,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             # 예약했다고 적혀 있나(True · False · 말 없음 None) · 이름 없는 줄이 읽힌 조각(그 밖은 None) — 후보 중심 · 문장의 재료
             "booked": booked, "parts": nameless_parts(r, state),
             "_lodging_parts": (((r.get("claims") or {}).get("place") or {}).get("evidence") or {}).get("lodging_parts"),
+            # `[2026-10-28 전수검사 E D3]` 못 찾은 줄의 같은 이름이 있는 서울 밖 시 · 도 — 먼저 채우기 질문 문장용(응답에는 싣지 않는다 — `public`)
+            "_outside_area": ((((r.get("claims") or {}).get("place") or {}).get("evidence") or {}).get("outside_service_area")
+                              if state == "unresolved" else None),
             # `[2026-10-15 ST4F-490]` 업체 예약 표에 묶인 일정(수정 접수만) — 화면은 잠금을 풀 때 「업체 예약은 따로 취소 · 변경해야 해요」를 알린다
             "vendor_booking": ((r["claims"].get("vendor_booking") or {}).get("value") is True),
             # `[2026-10-19]` 「광장시장 점심」처럼 장소 근처에서 고른 식당의 기준 장소(그 밖은 None) — 대안을 그 둘레에서 찾는다(`candidates.area_of`)
@@ -1007,7 +1014,7 @@ def public(payload: dict[str, Any] | None, *, tenant_id: str | None = None) -> d
         items.append({**it, "place": public_place(place), "rows": list(it.get("rows", []))})
     from .lodging_context import prepare
     prepared = prepare({**payload, "items": items})
-    items = [{k: v for k, v in it.items() if k != "_lodging_parts"} for it in items]
+    items = [{k: v for k, v in it.items() if k not in ("_lodging_parts", "_outside_area")} for it in items]
     # `uses` 는 경로선을 그리는 쪽(`/route-shapes`)이 저장본에서 읽는다 — 확인 화면 응답 모양은 그대로 둔다
     return {**prepared, "items": items,
             "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses", "departure_context", "selected_option_id")}

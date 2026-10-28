@@ -62,7 +62,10 @@ def _run(monkeypatch, payload, *, asking=False):
             elif sql.startswith("DELETE FROM intake_claims"):
                 pass
             elif sql.startswith("UPDATE trip_intakes SET status='review', stage=%s"):
-                state.update(status="review", stage=params[0])
+                # 실제 DB 처럼 읽는 중(status='reading')일 때만 1행 — 확인 화면 전환 0행이면 처리기가 물러난다(전수검사 A17)
+                if state["status"] == "reading":
+                    self.rowcount = 1
+                    state.update(status="review", stage=params[0])
             elif sql.startswith("UPDATE trip_intakes SET stage='review'"):
                 state["stage"] = "review"
             elif sql.startswith("UPDATE trip_intakes SET status='fatal'"):

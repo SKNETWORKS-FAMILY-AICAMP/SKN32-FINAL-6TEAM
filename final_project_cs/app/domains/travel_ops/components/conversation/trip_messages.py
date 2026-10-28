@@ -53,7 +53,8 @@ def _stage(progress: Callable[[str], None] | None, name: str) -> None:
     try:
         progress(name)
     except Exception:                                   # noqa: BLE001
-        pass
+        # `[2026-10-28 전수검사 C #21]` 처리는 계속하되 원인은 남긴다(전에는 기록 없이 삼켰다)
+        logger.warning("chat progress notice failed stage=%s", name, exc_info=True)
 
 
 class TripNotFound(LookupError):

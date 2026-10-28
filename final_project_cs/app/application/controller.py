@@ -234,6 +234,8 @@ class Controller:
             return self.policy_search(tenant_id, query, scopes), False
         except Exception:
             # Retrieval failure is an explicit signal to ContextBroker, not an empty result.
+            # `[2026-10-28 전수검사 C #22]` 신호는 그대로 — 원인도 기록한다(전에는 기록 없이 신호만 남았다).
+            logger.warning("policy retrieval failed tenant=%s scopes=%s", tenant_id, scopes, exc_info=True)
             return [], True
 
     def _task(self, case: dict[str, Any], entry, run_id: UUID, *, resume: bool = False,

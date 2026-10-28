@@ -37,6 +37,8 @@ MISSING_QUESTION = {"first_day_date": "여행 첫날이 언제인가요?", "lodg
 #:   후보는 질문에 싣지 않는다 — 화면이 이미 있는 `GET …/candidates` 로 받는다(같은 검사 · 같은 순서, 판이 바뀌어도 낡지 않게).
 #:   「직접 고르기」는 그 줄의 장소 바꾸기 · 검색을 연다(새 화면 없음). 설계 `wiki/records/plans/2026-10-19_못찾은장소_후보와_직접고르기_설계.md`
 PLACE_NOT_FOUND_QUESTION = "「{title}」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
+#: `[2026-10-28 전수검사 E D3]` 같은 이름이 서울 밖에 있는 줄 — 이름을 고치라고 하지 않는다(카드는 못 찾은 줄과 같다)
+OUTSIDE_SEOUL_QUESTION = "「{title}」은 「{region}」에 있는 곳으로 보여요 — 지금은 서울 일정만 도와드려요. 서울 장소를 고르거나 장소 없이 두어 주세요"
 PLACE_NOT_FOUND_BLOCKED_QUESTION = "「{title}」은 장소 조회가 막혀 다시 찾아봤지만 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
 PLACE_NOT_FOUND_ACTIONS = ("pick_candidate", "pick_myself", "no_place")
 #: `[2026-10-26 사용자 지시 — 호텔 후보는 고객이 고른다]` 이름 없는 호텔 줄의 질문 카드 — 못 찾은 줄과 같은 모양(그 일정 · 후보 · 직접 고르기).
@@ -115,8 +117,10 @@ def check_gaps(review: Mapping[str, Any], *, trip: Mapping[str, Any] | None = No
         elif state == "needs_name":
             out.append(Gap("booked_place_name", {"item": item["id"]}, f"「{title}」 — 예약하신 곳의 이름을 알려 주세요", source="check"))
         elif state == "unresolved":
-            out.append(Gap("place_not_found", {"item": item["id"]}, PLACE_NOT_FOUND_QUESTION.format(title=title),
-                           source="check", quote=item.get("title")))
+            region = item.get("_outside_area")
+            question = (OUTSIDE_SEOUL_QUESTION.format(title=title, region=region) if region
+                        else PLACE_NOT_FOUND_QUESTION.format(title=title))
+            out.append(Gap("place_not_found", {"item": item["id"]}, question, source="check", quote=item.get("title")))
     trip = trip or {}
     out.extend(scope_gaps(party_size=_int(trip.get("party_size")), days=_int(trip.get("days")),
                           dates=[i.get("date") for i in review.get("items") or []], max_days=MAX_DAYS, max_party=MAX_PARTY))
@@ -465,6 +469,8 @@ def _question(p: Proposal, items: Mapping[Any, Mapping[str, Any]], blocked: set[
     was_blocked = item_id in blocked
     if p.gap.kind == "lodging_place":
         text = LODGING_PICK_QUESTION.format(title=title)
+    elif item.get("_outside_area") and not was_blocked:
+        text = OUTSIDE_SEOUL_QUESTION.format(title=title, region=item["_outside_area"])
     else:
         text = (PLACE_NOT_FOUND_BLOCKED_QUESTION if was_blocked else PLACE_NOT_FOUND_QUESTION).format(title=title)
     return {**row, "question": text,

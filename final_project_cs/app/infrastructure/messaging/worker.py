@@ -1,6 +1,7 @@
 """Claim and deliver outbox rows without deleting them."""
 from __future__ import annotations
 
+import math
 from typing import Any, Callable
 
 from app.core.settings import get_guardrails
@@ -28,8 +29,19 @@ class OutboxWorker:
           상대를 두드려 서로를 밀어낼 때 쓰는 것이고, 여기는 내보내는 곳이 하나에
           양도 적다. 그리고 정작 조심해야 할 429 는 공급자가 정확한 값을 준다 —
           추측으로 덮을 이유가 없다.
+        ★`[2026-10-28 전수검사 C #18]` 전에는 `or 60.0` 이라 설정 0 이 조용히 60초가 되고, 값이 없어도 60초로 돌았다.
+          이제 설정값 그대로(0 포함) — 없거나 음수 · 숫자가 아니면 설정 오류로 올린다(지어 채우지 않는다).
         """
-        return float(get_guardrails().get("reliability.outbox_retry_seconds") or 60.0)
+        value = get_guardrails().get("reliability.outbox_retry_seconds")
+        if value is None or isinstance(value, bool):
+            raise ValueError("reliability.outbox_retry_seconds is required")
+        try:
+            seconds = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("reliability.outbox_retry_seconds must be a number") from exc
+        if not math.isfinite(seconds) or seconds < 0:
+            raise ValueError("reliability.outbox_retry_seconds must be finite and nonnegative")
+        return seconds
 
     def _reclaim_stale_processing(self, conn: Any) -> None:
         """Expose crashed workers' abandoned claims as human-reviewable unknowns."""
@@ -93,7 +105,7 @@ class OutboxWorker:
             except (TimeoutError, ConnectionError) as exc:
                 with conn.transaction():
                     with conn.cursor() as cur:
-                        cur.execute("UPDATE outbox SET status='unknown',last_error=%s,locked_at=NULL WHERE message_id=%s", (str(exc), message_id))
+                        cur.execute("UPDATE outbox SET status='unknown',last_error=%s,locked_at=NULL WHERE message_id=%s", (str(exc)[:500], message_id))
                 return True
             except Exception as exc:
                 status = "dead_letter" if attempts + 1 >= self.max_attempts else "pending"
@@ -102,7 +114,7 @@ class OutboxWorker:
                         cur.execute(
                         "UPDATE outbox SET status=%s,last_error=%s,locked_at=NULL,"
                         "available_at=now()+make_interval(secs => %s) WHERE message_id=%s",
-                        (status, str(exc), self._retry_seconds(), message_id))
+                        (status, str(exc)[:500], self._retry_seconds(), message_id))
                 return True
             with conn.transaction():
                 with conn.cursor() as cur:

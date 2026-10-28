@@ -305,6 +305,10 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             cur.execute("UPDATE trip_intakes SET status='review', stage=%s, updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'",
                         ("checking" if filling or asking else "review", tenant_id, intake_id))
+            if cur.rowcount == 0:
+                # `[2026-10-28 전수검사 A17]` 그 사이 이 접수가 더는 읽는 중이 아니다(대개 실패 확정 `reap_stalled`) — 뒤의 일(먼저 채우기 ·
+                #   해석 답 · 대안 이유 문장 모델 · 요식 판정)을 부르지 않는다. 전에는 계속 불러 그 접수에 계산을 낭비했다
+                raise _Abandoned()
         if not (filling or asking):
             marks["published"] = time.monotonic()          # 확인 화면 공개(`stage=review`)
         if filling:
@@ -523,7 +527,9 @@ def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
                     "WHERE tenant_id=%s AND intake_id=%s AND (status='reading' OR (status='review' AND stage='checking')) "
                     "AND now() - updated_at > make_interval(secs => %s)", (tenant_id, intake_id, seconds))
         if cur.rowcount:
-            cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 AND method <> 'customer'",
+            # `[2026-10-28 전수검사 A15]` 모든 판의 읽은 값을 지운다 — 먼저 채우기로 2판이 생긴 뒤 멈추면 전에는 1판만 지워 현재 판 값이
+            #   조회 응답(`sources[].items` · `needs_review`)에 남았다. 고객이 고친 값은 그대로 둔다(1판 규칙과 같다)
+            cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND method <> 'customer'",
                         (tenant_id, intake_id))
 
 
@@ -2544,7 +2550,9 @@ def _fatal(connect, tenant_id: str, intake_id: UUID, code: str, detail: str) -> 
                     "updated_at=now() WHERE tenant_id=%s AND intake_id=%s "
                     "AND (status='reading' OR (status='review' AND stage='checking'))", (code, detail, tenant_id, intake_id))
         if cur.rowcount:
-            cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 AND method <> 'customer'",
+            # `[2026-10-28 전수검사 A15]` 모든 판의 읽은 값을 지운다 — 먼저 채우기로 2판이 생긴 뒤 멈추면 전에는 1판만 지워 현재 판 값이
+            #   조회 응답(`sources[].items` · `needs_review`)에 남았다. 고객이 고친 값은 그대로 둔다(1판 규칙과 같다)
+            cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND method <> 'customer'",
                         (tenant_id, intake_id))
 
 
