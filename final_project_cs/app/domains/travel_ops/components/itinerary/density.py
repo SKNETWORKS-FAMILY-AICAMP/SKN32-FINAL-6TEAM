@@ -13,7 +13,21 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from app.core.settings import get_guardrails
-from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part, particle
+
+#: ★`[2026-10-28]` 아래 `reason` · `remedy` 는 여행 화면 「살펴볼 점」(`trip-attention.tsx`)에 그대로 보인다 — 해요체 고객 문장으로 쓰고,
+#:   항목 순번(「항목 3」) 대신 일정 이름을, 내부 말(프리셋 · 완충시간 · 대기 주석 · 가용시간 창) 대신 고객 말을 쓴다.
+_INVALID_INPUT = "하루 여유 설정 값을 읽지 못했어요"
+
+
+def _name(part: Part) -> str:
+    return str(part.title or "").strip() or "이름 없는 일정"
+
+
+def _pair(previous: Part, current: Part, tail: str) -> str:
+    """두 일정을 한 문장에 — 「궁과 시장의 시간이 겹쳐요」 「궁에서 시장으로 가는 …」(받침 조사는 `particle`)."""
+    first, second = _name(previous), _name(current)
+    return tail.format(first=first, second=second, wa=particle(first, "과/와"), ro=particle(second, "으로/로"))
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -77,22 +91,22 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
             warnings.append({"code": "density_" + status, "date": str(day) if day else None,
                              "policy_basis": basis,
                              "reason": " / ".join(reasons) if reasons else (
-                                 "하루 일정이 연구 보정 프리셋의 목표를 초과합니다" if basis == "research_calibrated"
-                                 else ("하루 일정이 추정 프리셋의 목표를 초과합니다" if basis == "estimated"
-                                       else "하루 일정이 사용자가 지정한 목표를 초과합니다")),
-                             "remedy": "누락되거나 잘못된 시간·이동 정보를 보완하세요" if reasons
-                             else "고정 예약·식사·이동·완충시간을 유지하며 선택 활동 축소를 검토하세요"})
+                                 "하루 일정이 고르신 여유 정도보다 빡빡해요" if basis == "research_calibrated"
+                                 else ("하루 일정이 기본 여유 기준보다 빡빡해요" if basis == "estimated"
+                                       else "하루 일정이 정하신 여유 목표보다 빡빡해요")),
+                             "remedy": "빠지거나 잘못된 시간 · 이동 정보를 채워 주세요" if reasons
+                             else "예약 · 식사 · 이동 시간과 여유 시간은 그대로 두고, 꼭 가지 않아도 되는 일정을 줄여 보세요"})
 
     try:
         spec = DensityInput.model_validate(constraints["density"])
         windows = sorted(spec.days.items(), key=lambda pair: pair[1].starts_at)
         for day, window in windows:
             if window.starts_at.date() != day or not timedelta(0) < window.ends_at - window.starts_at <= timedelta(days=1):
-                raise ValueError("가용시간 시작 날짜 또는 길이가 잘못되었습니다")
+                raise ValueError("하루 활동 시간의 날짜나 길이가 맞지 않아요")
         if any(a.ends_at > b.starts_at for (_, a), (_, b) in zip(windows, windows[1:])):
-            raise ValueError("하루 가용시간 창이 서로 겹칩니다")
+            raise ValueError("날짜별로 정한 활동 시간이 서로 겹쳐요")
     except (ValidationError, ValueError) as exc:
-        reason = "밀도 입력 형식이 잘못되었습니다" if isinstance(exc, ValidationError) else str(exc)
+        reason = _INVALID_INPUT if isinstance(exc, ValidationError) else str(exc)
         add(None, None, None, None, [reason])
         return {"density": results, "warnings": warnings}
 
@@ -108,12 +122,12 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
         if part.kind in STAY_KINDS:
             continue        # `[2026-10-13]` 숙소는 하루 일정의 빽빽함에 세지 않는다(며칠에 걸친다 — `itinerary_quality._DAY_KINDS` 와 같은 뜻)
         if part.starts_at.tzinfo is None:
-            outside.setdefault(None, []).append(f"항목 {part.seq}: 시작 시간대 누락")
+            outside.setdefault(None, []).append(f"{_name(part)}: 시작 시각에 시간대 정보가 없어요")
             continue
         start = part.starts_at.astimezone(KST)
         day = next((d for d, w in windows if w.starts_at <= start < w.ends_at), None)
         if day is None:
-            outside.setdefault(start.date(), []).append(f"항목 {part.seq}: 가용시간 창 없음 또는 창 밖 시작")
+            outside.setdefault(start.date(), []).append(f"{_name(part)}: 정해 둔 활동 시간 밖에서 시작해요")
         else:
             buckets[day].append(part)
 
@@ -126,7 +140,7 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
         for part in items:
             end = part.ends_at
             if end is None or end.tzinfo is None or end <= part.starts_at or end > window.ends_at:
-                reasons.append(f"항목 {part.seq}: 종료 누락·시간 순서 오류·가용시간 초과")
+                reasons.append(f"{_name(part)}: 끝나는 시각을 알 수 없거나, 시작 시각보다 늦지 않거나, 정해 둔 활동 시간을 넘어요")
                 continue
             minutes = (end - part.starts_at).total_seconds() / 60
             scheduled += minutes
@@ -150,7 +164,7 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
             if "queue_minutes" in detail:
                 queue = _number(detail["queue_minutes"])
                 if part.kind == "mobility" or queue is None or queue > minutes:
-                    reasons.append(f"항목 {part.seq}: 대기 주석은 비이동 항목 소요 안의 유효한 시간이어야 합니다")
+                    reasons.append(f"{_name(part)}: 적힌 대기 시간이 맞지 않아요. 대기 시간은 방문 일정에만, 머무는 시간 안으로 적을 수 있어요")
                 else:
                     known_queue += queue
             elif part.kind != "mobility":
@@ -164,13 +178,13 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
                 option = next((o for o in options if isinstance(o, dict) and o.get("id") == chosen_option), None) if isinstance(options, list) else None
                 eta = _number(option.get("eta_min")) if option else None
                 if eta is None or minutes < eta:
-                    reasons.append(f"항목 {part.seq}: 경로 소요 누락 또는 이동시간 부족")
+                    reasons.append(f"{_name(part)}: 이동 소요 시간을 모르거나 잡아 둔 이동 시간이 모자라요")
         for previous, current in zip(items, items[1:]):
             if previous.ends_at is None or previous.ends_at.tzinfo is None:
                 continue
             gap = (current.starts_at - previous.ends_at).total_seconds() / 60
             if gap < 0:
-                reasons.append(f"항목 {previous.seq}/{current.seq}: 시간 겹침")
+                reasons.append(_pair(previous, current, "{first}{wa} {second}의 시간이 겹쳐요"))
             if previous.kind == "mobility" or current.kind == "mobility":
                 continue
             if _place_id(previous) is not None and _place_id(previous) == _place_id(current):
@@ -180,7 +194,7 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
             transfer = (transfer_seconds / 60.0 if transfer_seconds is not None else
                         _number(current_detail.get("transfer_minutes_before")))
             if transfer is None or transfer > gap:
-                reasons.append(f"항목 {previous.seq}/{current.seq}: 이동시간 누락 또는 간격 부족")
+                reasons.append(_pair(previous, current, "{first}에서 {second}{ro} 가는 이동 시간을 모르거나 사이 간격이 모자라요"))
             else:
                 transfers += transfer
         available = (window.ends_at - window.starts_at).total_seconds() / 60
