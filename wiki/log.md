@@ -359,4 +359,8 @@ B10 후보 327d7baaa 의 결함 2개(숙소·항공 고정 거절 답의 막다�
 
 ## 2026-11-03 — scratch 승인 삭제와 남은 프로젝트 폴더 준비
 
-사용자 승인(15:47·15:51·15:53)으로 final_workspace scratch 63개와 `.tmp/clones` 2개를 manifest 대조 뒤 파일 단위로 지웠다(65/65, 93.27GB, 오류 0). final_workspace는 54.68GB, C: 여유 349.02GB다. `_unified_mall_3`·`test_workspace`는 지우지 않고 보존본과 복원 시험을 마쳤다. [보고서](records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md)
+사용자 지시(15:51:20 「정리 하라고」·15:53:41 「무조건 프로젝트폴더 용량 확보」)와 총괄 세션의 확대 해석(묶음 ②·③)으로 final_workspace scratch 63개와 `.tmp/clones` 2개를 manifest 대조 뒤 파일 단위로 지웠다(65/65, 93.27GB, 오류 0). final_workspace는 54.68GB, C: 여유 349.02GB(17:06)다. `_unified_mall_3`·`test_workspace`는 지우지 않고 보존본과 복원 시험을 마쳤다. [보고서](records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md)
+
+## 2026-11-03 — 승인 삭제·백업 푸시 문서 정정 (독립 검증 2건 반영)
+
+독립 검증 2건([삭제 재검증](records/reports/2026-11-03_scratch-approved-deletion-independent-verification.md), [백업 푸시 교차검증](records/reports/2026-11-03_backup-push-independent-crosscheck.md))이 찾은 문서 오류를 고쳤다. 데이터 손실은 0이다. 승인 인용은 15:47 항의가 아니라 15:51:20·15:53:41 지시로 고쳤고, ②·③은 확대 해석이라고 적었다. 「끊긴 링크 0」에는 보존본 안 worktree gitdir 3개 예외를 달았다. 재현되지 않는 `MM` 주장은 정정했다. 4.93GB는 폴더 2개의 합이고, C: 여유는 17:06 값과 그 뒤 값을 나눠 적었다. 복원 안내는 `git switch -c role-manager --track origin/role-manager`로 고쳤다. 보류 `workspace` 커밋 54개가 개인 A-COP에 브랜치 없이 남아 있다는 사실과, 공개 팀 SKN의 사용자 경로·사설 IP 포함 사실도 기록했다. [복원 안내](handoff/2026-11-03_new-pc-restore-guide.md)

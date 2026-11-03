@@ -13,7 +13,7 @@ domain: travel
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
 
 2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
-2026-11-03 C: 정리 승인 삭제: scratch·clones 65/65 루트 93.27GB 삭제(오류0·끊긴 링크0), final_workspace 54.68GB, C: 여유 349.02GB(400GB까지 50.98GB 부족), `_unified_mall_3`·`test_workspace` 보존 준비 완료·승인 대기. [보고](records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md) · [인계](handoff/2026-11-03_scratch-approved-deletion-handoff.md)
+2026-11-03 C: 정리 승인 삭제: scratch·clones 65/65 루트 93.27GB 삭제(오류0, 끊긴 링크는 보존본 안 worktree gitdir 3개 외 0), final_workspace 54.68GB(17:1x), C: 여유 349.02GB(17:06, 이후 343~351GB 변동, 400GB까지 50.98GB 부족), `_unified_mall_3`·`test_workspace` 보존 준비 완료·승인 대기. [보고](records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md) · [인계](handoff/2026-11-03_scratch-approved-deletion-handoff.md) · [독립 재검증·정정](records/reports/2026-11-03_scratch-approved-deletion-independent-verification.md) · [백업 푸시 교차검증](records/reports/2026-11-03_backup-push-independent-crosscheck.md)
 
 2026-11-03 Telegram 총괄 세션 5fbd35ab 위키화: 지시134/134·답변366/366 대조, 인사동·일정 설명 원인 보존, 설명 작성기 후보 backups 보존, 삭제 전 비밀 교체·삭제 방식 결정 필요. [보고](records/reports/2026-11-03_telegram-orchestrator-5fbd35ab-session-wiki.md) · [인계](handoff/2026-11-03_telegram-orchestrator-5fbd35ab-close-handoff.md).
 

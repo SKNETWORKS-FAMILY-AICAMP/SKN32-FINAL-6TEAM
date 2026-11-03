@@ -39,7 +39,7 @@ impl_scope: 운영 기록. 원본 작업 폴더는 읽기만 했다(삭제·수�
 
 | 항목 | 이유 |
 |---|---|
-| 원본 로컬 브랜치 `workspace`(끝 `52c7fcd56`, 원격 origin/workspace 보다 54 앞) | 고유 커밋에 `datasets/commerce/**` 106개 경로(실제 주문 페이지 `order_detail_real.html` 등 개인정보·데이터셋 규칙 위반)가 들어 있다. 외장 백업의 원본 `.git` 에만 있다 |
+| 원본 로컬 브랜치 `workspace`(끝 `52c7fcd56`, 원격 origin/workspace 보다 54 앞) | 고유 커밋에 `datasets/commerce/**` 106개 경로(실제 주문 페이지 `order_detail_real.html` 등 개인정보·데이터셋 규칙 위반)가 들어 있다. 브랜치로는 어디에도 올리지 않았다. **정정(18:3x)**: 처음 「외장 백업의 원본 `.git` 에만 있다」고 썼으나 틀렸다. 고유 커밋 54개(그중 `datasets/commerce` 를 건드리는 47개)는 개인 private A-COP 에 브랜치 없는 객체로 남아 있어 해시를 지정하면 받을 수 있다(`gh api repos/roroblack/A-COP/commits/<sha>` 54/54 조회, `git fetch origin 52c7fcd56…` 성공). A-COP `workspace` 브랜치에 08-18~08-29 push 한 뒤 09-14 force-push 로 되감긴 잔재이고, 11-03 푸시가 만든 것이 아니다. 팀 SKN 에는 0/54. GitHub 의 참조 없는 객체는 저장소 주인이 직접 지울 수 없고 GitHub Support 에 삭제를 요청해야 한다(결정은 사용자) |
 
 ## 2. 새 PC 에서 복원하는 순서
 
@@ -50,7 +50,9 @@ impl_scope: 운영 기록. 원본 작업 폴더는 읽기만 했다(삭제·수�
    git remote add team https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM.git
    git fetch team
    git config core.longpaths true   # Windows: 긴 경로 파일이 있다
-   git switch role-manager           # 최신 작업 기준(문서·도구 포함)
+   git switch -c role-manager --track origin/role-manager   # 최신 작업 기준(문서·도구 포함)
+   # 'git switch role-manager' 는 origin·team 두 원격에 같은 이름이 있어
+   # "matched multiple (2) remote tracking branches" 로 실패한다(11-03 교차검증)
    ```
 2. **원본 작업 폴더 상태가 필요할 때**(옛 미커밋 코드·evidence·legacy 등): 별도 폴더에서만 꺼낸다.
    ```bash
@@ -192,7 +194,15 @@ impl_scope: 운영 기록. 원본 작업 폴더는 읽기만 했다(삭제·수�
 
 ## 5. 시크릿 검사 방법 (푸시 전 실행, 값은 출력하지 않음)
 
-- 대상: role-manager 에 올린 3개 커밋의 추가 줄 전부, backup 스냅숏에 넣은 파일 34,224개 전체, 로컬 전용 커밋 364개의 추가 줄(333MB 패치)과 고유 blob 1,654개 전체.
+- 대상: role-manager 에 올린 4개 커밋의 추가 줄 전부(4번째 = 이 안내 문서, 따로 검사), backup 스냅숏에 넣은 파일 34,224개 전체, 로컬 전용 커밋 364개의 추가 줄(333MB 패치)과 고유 blob 1,654개 전체.
 - 규칙: 개인키 머리, AWS·GitHub·OpenAI·Anthropic·Google·Slack·Telegram 토큰 꼴, JWT, 접속 문자열 속 비밀번호, `serviceKey=`류 질의, `*key|secret|token|password* = "<20자 이상 고엔트로피>"`, 그리고 이 PC 의 `.env`·`.env.apikeys`·`.env.local`·`.env.teamflow`·Hermes `.env`·`*-private.json` 실제 값 29개와의 정확 일치.
 - 결과: 실제 자격증명 0건. 검출은 모두 오탐(공개 Turnstile site key, 시험 이름 속 `PRIVATE KEY` 문자열, PyJWT 문서 예시, 127.0.0.1 시험 DB 접속 문자열, 시험 실행이 만든 resume_token, 원격에 이미 있는 Google Travel 페이지 토큰).
 - 개인정보: 로컬 `workspace` 브랜치만 보류(위 표). 개인 A-COP 은 비공개 저장소, 팀 SKN 은 공개 저장소다.
+- **팀 SKN 은 public 저장소다**(누구나 읽을 수 있다). 11-03 role-manager 4커밋의 727 파일(문서·도구)에는 비밀·개인정보가 0건이었다([교차검증](../records/reports/2026-11-03_backup-push-independent-crosscheck.md) 재검사). 다만 인프라 정보가 들어 있다: Windows 사용자 경로(`C:/Users/<사용자>/…`) 189 파일(409회), 사설 LAN IP 15 파일(23회), `사용자@IP` 6 파일(7회). 이전부터 팀 저장소에 같은 꼴이 있었다(`fab3da50a` 트리 사용자 경로 21 파일·사설 IP 9 파일). 현재 파일에서 빼도 이력에는 남고, 이력에서 지우려면 force-push 가 필요해 하지 않았다 — 결정은 사용자.
+
+## 6. 원격 확인 (2026-11-03 17:18 KST, ls-remote · gh api)
+
+- 팀 SKN `role-manager` = 개인 A-COP `role-manager` = `4c2f82a3b9236327e5515781d3a572ef94086e12` (fab3da50a 에서 빨리감기, 커밋 4개: 4fc6ded17 · 897532bde · ce789a6a1 · 4c2f82a3b). develop·main 은 손대지 않음(팀 3463b30c6·57f3d2f00, 개인 da35486cb·b0485d05f).
+- 개인 A-COP `backup/2026-11-03/*` 83개 모두 기대 해시와 일치(스냅숏 끝 `2a18a8c1ce6fbe03ce6b466828d49e4a67e66de4`, r8 `b2732cfe74409c08ce4abfd3d00d881340919d68`). 팀 SKN 의 backup/2026-11-03 브랜치 0개. 보류 브랜치(workspace) 미푸시 확인.
+- **후속(18:3x)**: 같은 날 정정 커밋이 `4c2f82a3b` 위에 일반 push 로 올라갔다(이 안내 문서의 switch 명령·보류 커밋 위치·커밋 수·팀 SKN 공개 정보 정정 포함). 최신 끝은 `git ls-remote origin refs/heads/role-manager` 로 확인한다.
+- 이 절은 17:17 role-manager 커밋 뒤 원본 사본에 덧붙였고, 18:3x 정정 커밋으로 role-manager 에도 올라갔다.
