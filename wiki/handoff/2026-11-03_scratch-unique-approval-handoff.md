@@ -64,3 +64,7 @@ impl_scope: 운영 기록. guguroute backups/c400-unique-20261103 작성, wiki �
 - 이 세션의 작업 폴더 `guguroute cache/scratch/c400-unique-1103`은 24시간 동안 쓰지 않으면 정리된다. 객체원(`refrepo.git`)과 스캔 원본은 이미 지웠다. 필요한 사본은 backups와 wiki 증거에 있다.
 - 복원에는 GitHub, 원본 `.git` 객체, guguroute backups bundle이 필요하다. 원본 local 브랜치에만 있는 객체도 쓰므로 원본 `.git`은 유지해야 한다.
 - 원본 `.git`은 ref 파일을 읽기 전용으로 읽고 객체를 alternates로만 참조했다. 마지막에 새 wiki 파일 3개의 추적 상태를 보려고 원본에서 `GIT_OPTIONAL_LOCKS=0 git status --short --ignored -- <3경로>`를 한 번 실행했다(조회 전용, `tools/safe_git.py`는 이 셸에서 WinError 5). 결과는 3개 모두 미추적(`??`)이고 커밋·푸시는 0이다.
+
+## 후속 (2026-11-03 16:03 추가)
+
+- 이 목록의 ①②③④ 65개 루트는 사용자 승인(15:47·15:51·15:53)에 따라 16:03까지 모두 삭제됐다(93,266,602,317 B, 건너뜀 0). 이 문서의 「삭제 0건」은 작성 시점 기준이다 → [실행 보고서](../records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md)

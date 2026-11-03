@@ -102,3 +102,7 @@ impl_scope: 읽기 전용 조사. 쓴 것은 guguroute backups/c400-unique-20261
 - 스크립트
 
 전체 manifest·store·bundle·Git 정보·참조 원자료는 `C:/Users/kcxsz/AppData/Local/hermes/profiles/guguroute/backups/c400-unique-20261103/`에 있다(`README.md`, `SHA256SUMS.txt` 118행). 프로세스 명령줄 원문과 `*-private.json` 내용은 증거에 넣지 않았다.
+
+## 후속 (2026-11-03 16:03 추가)
+
+- 이 목록의 ①②③④ 65개 루트는 사용자 승인(15:47·15:51·15:53)에 따라 16:03까지 모두 삭제됐다(93,266,602,317 B, 건너뜀 0). 이 문서의 「삭제 0건」은 작성 시점 기준이다 → [실행 보고서](2026-11-03_scratch-approved-deletion-and-project-prep.md)

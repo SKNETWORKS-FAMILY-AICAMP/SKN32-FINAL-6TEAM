@@ -98,3 +98,7 @@ impl_scope: 사용자 Temp의 vitest SSR 덤프 폴더 402개, DiagOutputDir/RdC
 - [temp_delete_summary.json](../evidence/2026-11-03_disk-round10/temp_delete_summary.json): 묶음별 루트·파일·바이트, 실행 결과, 최종 여유
 - [recent_since_2240_summary.json](../evidence/2026-11-03_disk-round10/recent_since_2240_summary.json): 22:40 이후 생성·수정 재고(상위 디렉터리, 100MB 이상 파일)
 - 실행 스크립트 `scripts-r10_*`. 파일별 전체 manifest(`temp_plan.json` 등)와 재고 JSON은 `C:/Users/kcxsz/AppData/Local/hermes/profiles/guguroute/backups/disk-round10-20261103/`에 있다(`SHA256SUMS.txt`). 프로세스 명령줄 원문은 증거에 넣지 않았다.
+
+## 후속 (2026-11-03 17:2x 추가)
+
+- 이 문서가 승인 대상으로 든 scratch·`.tmp/clones` 사본 65개(93.27GB)는 16:03까지 삭제됐다. 17:06 C: 여유 349.02GB, 400GB까지 50.98GB 부족 → [실행 보고서](2026-11-03_scratch-approved-deletion-and-project-prep.md)

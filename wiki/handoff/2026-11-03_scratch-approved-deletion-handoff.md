@@ -27,6 +27,28 @@ impl_scope: 운영 기록. 삭제 대상은 승인된 final_workspace/scratch 63
 
 시작 시 C: 여유: 267,543,351,296 B (15:54:24).
 
-## 진행
+## 진행 (15:54–17:2x, 결과)
 
-(실행 중 — 결과는 끝난 뒤 이 절과 보고서에 적는다)
+- [실측] 묶음 ①→④→②→③ 순서로 65/65 루트를 지웠다. 1,217,470파일 93,266,602,317 B, 폴더 안 junction 링크 41개(링크만), 오류 0, 건너뜀 0. 묶음마다 직전 manifest 대조(새 파일·크기·mtime 변경 0), 프로세스 참조 0, 새 소유자 0을 확인했다.
+- [실측] 삭제 뒤 65/65 경로 부재, 달성 시점 폴더 19/19 그대로, `.disk_guard_ledger.json` 남김. 지운 경로를 가리키는 링크·alternates·gitdir·remote 0.
+- [실측] 보존본 `c400-unique-20261103/SHA256SUMS.txt` 118/118, `store` 20,248/20,248, hold3 보존 213/213·117/117.
+- [실측] C: 여유 267.54GB(15:54) → 362.66GB(16:03) → **349.02GB(17:06)**. 400GB까지 50.98GB 부족. 줄어든 몫은 이 세션 보존본 8.19GB와 다른 세션의 `.tmp/clones/backup-push-1103`(16:10, `leased`) 등이다.
+- [실측] final_workspace 54.68GB 논리 / 55.90GB 할당(17:1x, `backup-push-1103` 포함). 100GB 미만.
+- `_unified_mall_3`·`test_workspace`는 **지우지 않았다.** 보존본 `guguroute backups/c400-projprep-20261103/`(8.19GB, `SHA256SUMS.txt` 174/174, `README.md`에 복원 절차), 복원 시험 test_workspace 48,767/48,767·mall3 표본 2,067/2,067.
+- 상세: [보고서](../records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md).
+
+## 다음 담당자가 할 일
+
+1. 사용자에게 `_unified_mall_3`(25.31GB)·`test_workspace`(12.65GB) 삭제 승인을 받는다. `test_workspace/npu_sm8735`는 NPU 소유자(`local-445eeffb…`, 기본 프로필) 확인 뒤에만. 지울 때도 이번과 같이 `backups/c400-projprep-20261103/<폴더>/manifest.jsonl.gz`와 크기·mtime 대조 → 파일 단위 삭제 → 부재·`SHA256SUMS.txt` 재확인.
+2. 400GB까지 남는 몫은 hiberfil(관리자)·NPU·WSL 결정이다(보고서 「400GB까지 남은 것」).
+3. `.tmp/clones/.disk_guard_ledger.json`의 지운 두 항목은 담당 36cd5c가 정리한다(설정 파일이라 이 세션은 고치지 않음).
+4. 이 세션이 만든 wiki 파일은 **커밋·푸시하지 않은 단일 사본(untracked)**이다. 사본은 `guguroute backups/c400-docs-20261103/`에 있다. 같은 시각 다른 세션(`bk1103-backup-push`)이 백업 커밋을 준비 중이므로, 이 파일들이 그쪽 커밋에 들어갈지는 그 세션이 정한다.
+
+## 독립 재검증 입력
+
+- 대상 목록: [approval_list.json](../records/evidence/2026-11-03_scratch-unique-approval/approval_list.json) `post_peak` 63행 + `C:/_proj/final_workspace/.tmp/clones/{hold3-integ-1102,hold3-eks-precision-r18}`. 루트별 결과: [deletion_roots.json](../records/evidence/2026-11-03_scratch-approved-deletion/deletion_roots.json).
+- 보존본: `C:/Users/kcxsz/AppData/Local/hermes/profiles/guguroute/backups/c400-unique-20261103/`(삭제 로그 `deletion-20261103/`), `.../backups/c400-projprep-20261103/`.
+- 확인 명령(Git Bash):
+  - 부재: `python -c "import json,os;d=json.load(open(r'C:/_proj/final_workspace/wiki/records/evidence/2026-11-03_scratch-unique-approval/approval_list.json',encoding='utf-8'));print(sum(os.path.exists(r['path']) for r in d['post_peak']), sum(os.path.exists(r['path'] if isinstance(r,dict) else r) for r in d['pre_peak_excluded']))"` → `0 19`
+  - 해시: `cd <backups>/c400-unique-20261103 && sha256sum -c SHA256SUMS.txt | grep -c ': OK$'` → 118, `cd <backups>/c400-projprep-20261103 && sha256sum -c SHA256SUMS.txt | grep -c ': OK$'` → 174
+  - 여유: `powershell -NoProfile -Command "(Get-PSDrive C).Free"`

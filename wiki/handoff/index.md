@@ -10,6 +10,10 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 2026-11-03 모든 Hermes 세션 이관 패키지(복사만): default·guguroute·myapp 세션 1,146개·행 120,876을 sqlite backup + 가림 없는 JSONL export로 guguroute `backups/all-sessions-migration-20261103/`(1.95GB, SHA 3,063/3,063)에 보존, DB 행 = export 행 불일치 0, 복원 시험 315세션 불일치 0. 필수 이관 약 62GB(패키지+backups 나머지 7.86+final_workspace 52.21), 비밀 파일은 이름만·외부 목적지면 암호화 필수 — 목적지·비밀 이관은 사용자 결정 → [인계](2026-11-03_all-sessions-migration-backup-handoff.md)
 
 2026-11-03 scratch 승인 삭제 실행(진행 중): 사용자 승인 원문 15:47·15:51·15:53 기록, 범위 ①②③④ 63+2개 93.27GB, _unified_mall_3·test_workspace는 삭제 준비만 → [인계](2026-11-03_scratch-approved-deletion-handoff.md)
+2026-11-03 새 PC 복원 안내: 원본 미커밋 문서 706개·도구 4개를 팀·개인 `role-manager`에, 원본 작업 폴더 스냅숏(커밋 5개)과 로컬 전용 커밋 82개를 개인 A-COP `backup/2026-11-03/*`에 올렸다. 비밀·datasets·50MB 초과는 외장 백업에서만 복원 → [복원 안내](2026-11-03_new-pc-restore-guide.md)
+
+
+2026-11-03 scratch 승인 삭제 실행 완료: 사용자 승인 원문 15:47·15:51·15:53 기록 → ①②③④ 65/65 루트 1,217,470파일 93,266,602,317 B 삭제(건너뜀 0·오류 0·끊긴 링크 0), 보존본 SHA 118/118·store 20,248/20,248. final_workspace 54.68GB(100GB 미만), C: 여유 349.02GB = 87.25%(400GB까지 50.98GB 부족). `_unified_mall_3`·`test_workspace`는 보존본 8.19GB·복원 시험(48,767/48,767·2,067/2,067)까지 끝내고 사용자 승인 대기 → [인계](2026-11-03_scratch-approved-deletion-handoff.md) · [보고서](../records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md)
 
 2026-11-03 scratch 고유 분류·승인 목록: 400GB 달성 뒤 scratch 63개 83,427,213,040 B 전 파일 해시 → 보존 Git 재현 49.68·캐시 15.29·.git 객체 12.61·tar 2.60·고유 2.97GB(압축 0.52GB 보존)·기존 동일 0.28, ref 116/116 보존(새 bundle 1), 복원 시험 62,914/62,914 일치, 삭제 0 — 경로별 승인(①7차 16.35 ②HOLD 12.46 ③56개 54.61 ④clones 9.84 = 93.27GB) 대기. NPU 소유자 추가 회수 244,521,087 B(`RESULT-NPUDISK2-1103`) → [인계](2026-11-03_scratch-unique-approval-handoff.md) · [보고서](../records/reports/2026-11-03_scratch-unique-classification-approval.md)
 

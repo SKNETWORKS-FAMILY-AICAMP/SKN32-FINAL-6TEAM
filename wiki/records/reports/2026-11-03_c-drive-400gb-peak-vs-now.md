@@ -84,3 +84,7 @@ impl_scope: 읽기 전용 재고·세션 DB 조회. 추가 파일은 이 보고�
   - `tools/safe_git.py`는 이 셸의 Python에서 git을 실행하지 못했다(WinError 5). 그래서 HEAD 판정은 원본 Git이 아니라 hold3 clone의 `team/*` 원격 참조(10-29 fetch)로 했다.
   - WSL 내부 사용량은 재지 않았다(`wsl.exe` 호출 금지).
   - 숨김 영역과 VSS 차분 크기는 관리자 권한이 필요하다.
+
+## 후속 (2026-11-03 17:2x 추가)
+
+- 이 문서가 승인 대상으로 든 scratch·`.tmp/clones` 사본 65개(93.27GB)는 16:03까지 삭제됐다. 17:06 C: 여유 349.02GB, 400GB까지 50.98GB 부족 → [실행 보고서](2026-11-03_scratch-approved-deletion-and-project-prep.md)

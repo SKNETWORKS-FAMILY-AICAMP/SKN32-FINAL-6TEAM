@@ -316,6 +316,9 @@ program/
 
 ## 2026-10-24 — timeout 복구 후 이관·대화자료 문서 반영
 
+
+
+
 [검증 범위·과거 자료 요약](records/reports/2026-10-24_workspace-migration-and-history.md)에 기존 JSON 집계와 미완료, Codex outputs 4개·D 최신인계 원문 3개를 기록했습니다. 수정 경로: 루트 wiki index/log·handoff 새문서/index·보고서 및 cs wiki index/log(총7문서). 원본/코드/서비스 변경·추가복사·전체 재검사는 하지 않았고 과거 자료를 현재 구현·배포 완료로 승격하지 않았습니다.
 
 
@@ -353,3 +356,7 @@ B10 후보 327d7baaa 의 결함 2개(숙소·항공 고정 거절 답의 막다�
 세션은 이미 닫혀 있고 지우지 않았다. 사람 입력·답변·압축 요약을 전문으로 대조해 wiki에 없던 인사동 대안 원인과 일정 설명 원인을 보고서로 옮겼고, scratch에만 있던 설명 작성기 후보를 backups에 보존했다. 삭제 전 남은 결정은 비밀 교체·삭제 방식(위임 하위 153개 동반 삭제)·wiki 커밋이다. [보고서](records/reports/2026-11-03_telegram-orchestrator-5fbd35ab-session-wiki.md) · [인계](handoff/2026-11-03_telegram-orchestrator-5fbd35ab-close-handoff.md).
 
 2차(같은 날): 설치 Hermes 소스로 삭제 범위를 다시 계산했다 — 154개 세션·21,658행과 DB 밖 spillover 64개·request_dump 9개. 이를 원문 그대로 guguroute `backups/session-5fbd35ab-export-20261103/`에 보존(행 21,658/21,658·SHA 220/220, 하위 153/153 가져오기 시험 통과, 부모는 5 MiB 한도 초과). md 내보내기는 기본이 가림 꺼짐이고 꼬리 원본을 뺀다. 세션은 지우지 않았다. [보고서 §11](records/reports/2026-11-03_telegram-orchestrator-5fbd35ab-session-wiki.md).
+
+## 2026-11-03 — scratch 승인 삭제와 남은 프로젝트 폴더 준비
+
+사용자 승인(15:47·15:51·15:53)으로 final_workspace scratch 63개와 `.tmp/clones` 2개를 manifest 대조 뒤 파일 단위로 지웠다(65/65, 93.27GB, 오류 0). final_workspace는 54.68GB, C: 여유 349.02GB다. `_unified_mall_3`·`test_workspace`는 지우지 않고 보존본과 복원 시험을 마쳤다. [보고서](records/reports/2026-11-03_scratch-approved-deletion-and-project-prep.md)
