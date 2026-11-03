@@ -117,3 +117,9 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 ## 운영 반영 확인 — 2026-10-08
 
 GPT-6 Luna 자동 전환을 운영 환경에 반영했고 실제 Ollama 연결 실패를 거친 응답 3/3이 API로 성공했다. [작업 리포트](../records/reports/2026-10-08_2245_Luna_자동전환_운영반영.md).
+
+## F3 요청별 publication / dispatch claim — 2026-10-25 원본 반영
+
+검증 통과 성공의 publication과 각 provider 시도의 dispatch claim은 요청별 lock으로 선후를 정합니다. publication이 먼저이면 아직 claim하지 않은 첫 호출·재시도는 취소하고, claim이 먼저이면 그 시도는 이미 시작한 것으로 보아 허용합니다. lock은 전역이 아니며 budget callback·`Thread.start`·provider I/O 동안 잡지 않습니다. 이미 시작한 HTTP/SDK의 물리 취소, bool 예약 환불, 엄격 금전 상한은 보장하지 않습니다.
+
+시험: `tests/unit/infrastructure/test_llm_f3_acceptance.py`(local 승자가 `Thread.start` 전에 enqueue된 틈에서 유료 호출 0, 수정 전 코드 RED 3/3·수정 코드 GREEN 3/3)와 `test_llm_overflow_f3.py`. 후보 계열의 원문 probe 3건은 유료 호출이 있어야(81행) 통과하면서 없어야(90행) 통과하는 모순이라 사용자 지시로 위 대체 시험으로 바꿨습니다. 원문·근거: [evidence](../records/evidence/2026-10-25_f3_contradictory_probe/README.md), [보고](../records/reports/2026-10-25_f3-contradictory-probe-resolution.md).

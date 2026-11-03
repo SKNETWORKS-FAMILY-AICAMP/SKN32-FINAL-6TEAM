@@ -8,6 +8,46 @@ status: draft
 domain: travel
 ---
 
+2026-10-29 ST4F-719 인증 세대 독립검토: 웹1463/1463·PG/Edge64/64=100%, 필수2/3=66.7% 보존 XML HOLD. [보고](records/reports/2026-10-29_st4f719-auth-generation-independent-review.md).
+
+2026-10-29 ST4F-746 보안 추적: 최초4파일10건 시험값 오탐·원본 detector 실패/HOLD, 기능20/20=100%. [보고](records/reports/2026-10-29_st4f746-security-gate.md).
+
+2026-10-29 ST4F-719 미리보기 P1 격리후보 수정: PG·Edge26/26·웹1321/1321=100%, 단위변이7/7·Edge변이3/3 검출, 필수2/3=66.7% scanner/XML HOLD·push0. [보고](records/reports/2026-10-29_st4f719-preview-privacy-fix.md).
+
+2026-10-29 ST4F-746 아침 읽기 복구 독립검토: 단위20/20·시간대2/2·PG2/2·두여행1/1=100%, 원본 detector 4파일/HOLD·push0. [보고](records/reports/2026-10-29_st4f746-morning-independent-review.md).
+
+2026-10-29 ST4F-746 ?? ?? ?? ??: ??56/56??PG2/2???2/2=100%, ?? ??HOLD?push0. [??](records/reports/2026-10-29_st4f746-morning-read-recovery.md).
+
+
+2026-10-29 ST4F-719 재개: id mutation4/4 격리수정·Edge8/8·실PG전환4/4·개인정보10/10=100%, 필수1/3=33.3%(Git 환경 오류)·scanner/XML HOLD·push0. [보고](records/reports/2026-10-29_st4f719-late-id-mutations-resumed.md).
+
+2026-10-29 A11 실DB 기준대조: 계약367/367·DoD26/26=100%, 회귀1505/1505=100%, 보안124/125=99.2%·필수2/3=66.67% HOLD·push0. [보고·인계](records/reports/2026-10-29_routing-a11-real-db.md).
+
+2026-10-29 중단 S6 A11 재개: 숙박16/16=100%·XML118/118=100% 보존, 필수0/3=0%·통합HOLD·push0. [인계](../../wiki/handoff/2026-10-29_routing-a11-resumed.md).
+
+
+2026-10-29 ST4F-719 개인정보·인증 복구 후보: Edge10/10·웹1282/1282·변이4/4=100%, 필수2/3=66.7% 보안 HOLD·push/배포0. [보고·인계](records/reports/2026-10-29_st4f719-privacy-auth-recovery.md).
+
+2026-10-29 ST4F-719 identity-bound 독립검토: Edge4/8=50%·개인정보/401/옛 키 3경계 재현, 필수2/3=66.7% HOLD. [보고](records/reports/2026-10-29_st4f719-identity-independent.md).
+
+2026-10-29 ST4F-719 세션 소유권 격리수정: 웹1268/1268·실인증 Edge3/3·변이4/4=100%, 필수2/3=66.7% HOLD. [보고](records/reports/2026-10-29_st4f719-identity-bound.md).
+
+2026-10-29 새벽 첫차 원인추적: 첫차시험군2/3=66.67%·추가해소0/5=0%, 정류장 첫차 근거 미확보·PR110 HOLD. [보고·인계](../../wiki/records/reports/2026-10-29_eks-dawn-first-vehicle-causality.md).
+
+2026-10-29 ST4F-719 수정 후보 독립 재검토: 웹1257/1257·변이3/3=100%, Edge5/6=83.3%, 계정 경계 잔존/이력 삭제 재현, 필수2/3=66.7% HOLD. [보고·인계](records/reports/2026-10-29_st4f719-fixes-independent-review.md).
+
+
+2026-10-29 ST4F-719 검토실패3건 격리수정: 새사본 웹1257/1257·Edge9/9=100%, 필수2/3=66.7% HOLD. [보고·인계](records/reports/2026-10-29_st4f719-review-fixes.md).
+
+
+2026-10-29 ST4F-719 독립검토 HOLD: 웹1231/1231·변이4/4=100%, 정보누락2·로그아웃잔존1·필수2/3=66.7%. [보고](records/reports/2026-10-29_st4f719-independent-review.md).
+
+
+2026-10-29 ST4F-732 단계 시계 독립검토: 목표12→0초 확인·Edge15/19=78.9%, 기존경계4건·필수2/3=66.7% HOLD. [보고·인계](records/reports/2026-10-29_st4f732-clock-independent-review.md).
+
+
+
+2026-10-29 ST4F-718 저장 정책 독립검토: 웹1241/1241·Edge22/22=100%; 구버전 중복/raw ID 재생성·queued open 무응답 재현, 기존 필수2/3=66.7% HOLD 유지. [보고·인계](records/reports/2026-10-29_st4f718-storage-policy-review.md).
 # cs 프로젝트 구현 wiki
 
 2026-10-29 ST4F-728 늦은 게스트 응답 차단: 웹1227/1227·모방화면11/11·필수3/3=100%,운영수락남음. [보고](records/reports/2026-10-29_st4f728-guest-logout.md).
@@ -59,6 +99,66 @@ domain: travel
 2026-10-18 관리자 여행 상세: 여행을 눌러 저장 대화·최초/현재 계획을 조회합니다. 양쪽 매니저 코드 반영·운영 자동배포 완료, 지정 다섯 여행의 세 탭 15/15을 실제 화면과 DB로 대조했습니다. [운영 확인·시험 한계](records/reports/2026-10-17_admin-trip-release.md) · [초기 구현 기록](records/reports/2026-10-17_admin-trip-detail.md).
 
 여행 CS guguroute의 현재 계약·구현 안내입니다. 제품 사양은 [상위 wiki](../../wiki/index.md)의 후속 확정 결정과 대조하며, 이력 문서는 당시 상태를 확인할 때만 엽니다.
+2026-10-29 A11 ready 독립 재검토: 실DB 9/9·웹 69/69 통과, 권한·미답·미검사·판 충돌 우회 새 결함 없음. XML 336/336 불변, 보안 124/125 HOLD 유지·운영 변경0. [검토 보고](records/reports/2026-10-29_a11-ready-independent-resume.md).
+
+2026-10-29 Linux 기대13/18=72.22% 추가정정·전체층218/223=97.76%/5실패,기본전체RAG16미준비·운영HOLD. [보고](../../wiki/records/reports/2026-10-29_eks-linux-remaining18.md).
+
+2026-10-29 ST4F-718 저장/quota/privacy 후보: 웹1241/1241·Edge22/22·변이4/4=100%, 필수2/3=66.7% HOLD·정책/운영수락 미완. [보고·인계](records/reports/2026-10-29_st4f718-storage-policy.md).
+
+2026-10-29 ST4F-718 독립검토: 웹1255/1255·변이4/4·Edge12/12=100%, 무제한 증가·quota/탭 한계 확인, 필수2/3=66.7% HOLD. [보고·인계](records/reports/2026-10-29_st4f718-independent-review.md).
+
+
+ST4F-740 다음 미배정 항목으로 718의 자동 재생 이력 유실을 찾고 격리 수정했습니다. **필수 2/3 = 66.7% HOLD**, 종결·push·배포 0건입니다. [보고서](records/reports/2026-10-29_st4f718-credits-retention.md).
+
+
+2026-10-29 EKS Linux 기대값 정정:198/216=91.67%·기존18/36=50%해소,필수3/3=100%·운영HOLD. [보고](../../wiki/records/reports/2026-10-29_eks-linux-precision-expectations.md).
+
+
+2026-10-29 보안 원본2/2=100% 보존·과거XML 탐지5건/HOLD. 새727 브라우저16/16,739 운영읽기5/5=100%;운영종결보류. [보고](records/reports/2026-10-29_systemic-scanner-and-backlog.md).
+
+2026-10-29 EKS 전체원본113/113=100%·Linux180/216=83.33%, 기존36실패/새실패0·PR110 draft/HOLD. [보고](../../wiki/records/reports/2026-10-29_eks-linux-full-original-reliability.md).
+
+2026-10-29 734/724 독립검토: 실API·PG·Edge 전이확인, 변이3/3=100%;724 필수2/3=66.7% HOLD·보호18/18=100%.739 추가검증20/20=100%,운영종결보류. [보고](records/reports/2026-10-29_st4f734-724-independent-review.md).
+
+2026-10-29 ST4F734 slack2 도착 질문 실API/Edge 수정확인·웹1232/1232=100%;724 최신tip검증·기존XML 필수2/3=66.7% HOLD. [보고](records/reports/2026-10-29_st4f734-tight-question-and724-validation.md).
+
+2026-10-29 EKS reader 관측 후속: workflow5/5·격리31/31=100%, 기존 읽기 실행 경로 미확보·원인 미확정/HOLD. [보고](../../wiki/records/reports/2026-10-29_eks-reader-observability-boundary.md).
+
+2026-10-29 EKS fatal 후속: reader215/215·원인분리7/7=100%, 운영원인 미확정·배포HOLD. [보고](../../wiki/records/reports/2026-10-29_eks-reading-fatal-offline-discrimination.md).
+
+2026-10-29 EKS checking AMD6451/51·PR CI3/3=100%, 운영 기준2/3=66.67%·fatal1건으로 배포HOLD. [보고·인계](../../wiki/records/reports/2026-10-29_eks-checking-amd64-validation-and-baseline-fatal.md).
+
+2026-10-29 EKS 후속: 기존37실패 전부기준대조, 실제checking SQL절감후보·필수3/3=100%·통합HOLD. [근거](../../wiki/records/reports/2026-10-29_eks-linux37-and-checking-duplication.md).
+
+2026-10-29 [734 읽기 전용 실서버 확인·733 격리 회귀](records/reports/2026-10-29_734-readonly-and733.md): 소스4/4·실PG7/7·웹39/39=100%,전체화면 수락 남음·731 HOLD 유지.
+
+2026-10-29 ST4F-731 후보 문서 정정·잠금 시험8/8, 독립734 DB2/2·웹14/14=100%; 필수2/3=66.7% HOLD. [보고](records/reports/2026-10-29_lock-lifetime-and734.md).
+
+2026-10-29 EKS ????: ?????? ????0.632?0.521?, ??24/24=100%; EKS?? ??????HOLD. [??](../../wiki/records/reports/2026-10-29_eks-full-data-latitude-pruning.md).
+
+2026-10-29 EKS 서빙 후속 격리후보: 이동1488/1614=92.19%(skip126), 경계1500/1500=100%; 합성87.904→84.428μs·운영통합HOLD. [근거](../../wiki/records/reports/2026-10-29_eks-serving-bottleneck-partition.md).
+
+
+2026-10-29 추가ST4F727:실제Leaflet/Edge 취약2/2→현재차단2/2=100%,운영수락보류. [보고](records/reports/2026-10-29_teamflow714-acceptance-and589-boundary.md).
+
+2026-10-29 ST4F-714 종결1건·전체미완료102/688=14.8%.서버due자동추가를 영수증에 기록. [보고](records/reports/2026-10-29_teamflow714-acceptance-and589-boundary.md).
+
+2026-10-29 ST4F-714 기존수정 수락:12/12=100%·x600 설정해시 일치.589 운영상한 읽기관측·종결보류. [보고](records/reports/2026-10-29_teamflow714-acceptance-and589-boundary.md).
+
+2026-10-29 x600006268853c/908실함수 확인·ST4F-504역사재현→현행보호검증/종결. 새30/30·원반복30/30=100%,597메뉴근거부재348곳은남음. [보고](records/reports/2026-10-29_x600-acceptance-and-st4f504-causal-review.md).
+
+
+2026-10-29 ST4F-597: 메뉴 원문이 있어도 누락하던 SQL 선택을 격리 수정·재현4→0, 새회귀6/6. 운영 메뉴 미적재 문제·이슈종결은 남음. [검증·인계](records/reports/2026-10-29_teamflow-st4f597-menu-source.md).
+
+[현재3100 실측] 호텔조식 예시 실제교체 2/2=100% 완료: localhost93tSFrxar_RqgguLjsbwY / LANp4N2ThMaXaAI8RY4eWrbC, fresh guest 예시버튼·전체 textarea 확인, 제출/등록0·선택동의거부. old pin+검증delta이며 최신12커밋전체통합 아님. API/DB/Dining·기존고객계획 불변. [핸들/PID·사진·rollback·인계](records/reports/2026-10-25_hotel-example-live3100.md).
+
+[현재 실측 2026-10-25 12:56] DB6536/API22260·기존웹27124/16432 연결복구. 새DB/API handed_off, HTTP/CORS12/12·실guest GET2/2·확정여행version1/items2 readback. test1 질문·대안선택은 미완료, 사용자원고 쓰기0. [긴급복구 근거·현재handoff](records/reports/2026-10-25_service-emergency-recovery.md).
+
+2026-10-25 관리자: 지정 DB identity/app-role read-only 일치·3300/8070 준비. 예약 false/default revision0, 정식 로그인 비밀 전달 후 명시OFF 저장 필요. [근거](records/reports/2026-10-25_admin-db-handoff-connection.md).
+
+2026-10-25: 승인된 V10+좌표 guard 로컬·LAN 실서비스 반영. proc_194b6e03a438 handed_off/PID27500, E4B/native tokenizer 실제로딩, 필수API·브라우저·비교DB2case stop/저장 확인. shared schema905/archives·의미 품질은 별도 남음. [최종 근거·rollback·한계](records/reports/2026-10-25_v10-local-service-release.md).
+
+여행 CS triPilot의 현재 계약·구현 안내입니다. 제품 사양은 [상위 wiki](../../wiki/index.md)의 후속 확정 결정과 대조하며, 이력 문서는 당시 상태를 확인할 때만 엽니다.
 
 세션을 이어받는 경우 [인계 안내 목차](../../wiki/handoff/index.md)에서 가장 최근 인계부터 읽습니다.
 
@@ -77,6 +177,28 @@ domain: travel
 | 흐름·상태 | [실행 흐름 목차](runtime/index.md)·[품질 목차](quality/index.md)·[결정 목록](decisions/index.md) |
 
 `TeamRegistry`는 에이전트 팀을 선택하는 장치이고 `Controller`는 처리 흐름을 진행합니다. 감시 작업과 모니터링 도구의 구분은 해당 아키텍처 계약에서 확인합니다. 개발자·QA의 사후 결함 분석과 고객 요청 처리의 자동화를 혼동하지 않습니다.
+
+## 고객 응대 라이팅 현재 상태
+
+[E4B tokenizer 실제 복구·후속 재생 인계](records/reports/2026-10-25_e4b-tokenizer-recovery-v6.md): 공식 loader SHA256 일치 설치 자산으로 새 고유 cache를 복구, 원래 두 입력 양쪽 offline token-count/encode/decode 4/4=100% 통과했습니다. 기존 배치3/6 stage·채팅35/476 snapshot은 계속 실행 중입니다. 기존6stage와 PID 종료 후에만 실API·실E4B 양쪽4행을 순차 재생하는 continuation `proc_227989a6c1f3`는 부모 handed_off 확인, 결과 아직 대기·의미 unknown입니다.
+
+[E4B v5 실재생 관찰·부모 인계](records/reports/2026-10-25_e4b-v5-observation-handoff.md): 2026-10-25 06:10 KST snapshot은 원계획8/8 review·reload, field baseline18/23·나머지 미진행, 단계2/6 exit0입니다. 실제 HTTP500 2행의 tokenizer 캐시 부재를 offline probe로 분리했으며 기존 parent-owned `proc_f11a51b230be`는 계속 실행 중입니다. 582행 비교 snapshot과 완료 후 정확 마감 명령을 남겼고 의미 개선/운영 성공은 미판정입니다.
+
+고객 웹은 문의·알림·계획 검토/등록 응대 상태를 최소 표시하도록 연결했습니다. 기존 trip-home 타입 오류 2건을 계약에 맞게 최소 수정한 뒤 Vitest 770/770 = 100%, 깨끗한 격리 tsc·Next webpack production build가 통과했습니다. 원본 tsc는 0바이트 `.next-live/types/routes.d.ts`의 generated 오류 1건으로 계속 실패하며 화면은 미확인입니다. [웹 소비 계약](external/web-response-status.md) · [응대 소비 검증](records/reports/2026-10-24_web-response-status-consumption.md) · [타입 수정·전체 빌드 증거와 한계](records/reports/2026-10-25_web-trip-home-type-repair.md).
+
+[독립 P2 늦은 등록 응답 세션 귀속 수정](records/reports/2026-10-25_web-registration-session-fence.md): 실제 발신 세션/세대를 결과까지 보존하고 교체 후 저장·성공 반환을 거부합니다. 정확 반례 RED 3건 → GREEN, 최종 Vitest 798/798 = 100%·92/92 파일, 격리 tsc·Next webpack production build exit 0입니다. 원본 generated TS2306·실화면/실환경 수락은 계속 열려 있습니다.
+
+[HTTP4 승인 범위 실검증](records/reports/2026-10-25_http4-approved-155006.md): 원본 임시 loopback HTTP4 **4/4 = 100%**, 기존 57파일·964 nodeid 단일 재실행 **959/964 = 99.4813%·DB setup 오류 5·실패/skip 0**입니다. 전후 backend 1,297파일 hash 동일·임시 listener/thread 정리를 검산했으며 실DB/실모델/서비스/배포 수락은 아닙니다.
+
+[계획서·문의·모니터링 구현/검증 현황](../../wiki/delivery/travel-response-current.md)에서 최신 결과·독립 검토 결함·승인 경계를 확인합니다. 개별 단위 통과와 실제 DB·모델·화면·운영 완료를 구분합니다.
+
+## 2026-10-24 이관·과거 자료 참고
+
+[복사 검증과 D 인계자료 요약](../../wiki/records/reports/2026-10-24_workspace-migration-and-history.md)에서 제한 시간 해시·readcheck 미완료와 10월 10~18일 자료의 시점·충돌을 확인합니다. 과거 기록을 현재 코드·배포 사실로 사용하지 않습니다.
+
+## 2026-10-24 보조 자료 선별 보존
+
+[실험 원본·결과 및 설명 그림 보존 안내](records/reports/2026-10-24_langgraph-comparison-preservation.md)를 추가했습니다. 과거 보고서는 동결 유지하며 원래 루트 폴더 삭제는 보류했습니다.
 
 ## 2026-10-12 작업 기록 요약
 
@@ -147,9 +269,125 @@ domain: travel
 
 2026-10-24 한 구간의 택시 이동이 전체로 확대되지 않도록 읽기·구간 생성·성향 전달을 통일했습니다. 매니저 통합·검증과 운영 확인은 [결함 기록](records/reports/debugs/2026-10-24_택시구간_범위수정_매니저반영.md)에서 구분합니다.
 2026-10-27 G 모델 품질 — 해석 문법이 쓸모없는 기준 칸 · 날짜 인용을 비워 두지 못하게(F02 통과 · I05 날짜 해소, 수용 49 엄격 38→39/49 = 77.6→79.6%, 회귀 0) · 속도 병목은 GPU 경합 · num_ctx 재적재(33 s+31 s)가 주원인 · 후보 00aca1041→a7e6da518(push 전) · W1~W6 공개 response 계약 초안: [보고서](records/reports/2026-10-27_G_모델품질_해석문법_속도_설계.md)
+## 원본 최소 통합 현재 상태
+
+[2026-10-25 launcher 독립분 반영·나머지 HOLD](records/reports/2026-10-25_original-minimal-integration.md). 기존 고객 응대 기록을 보존하며 backend/admin/auth 원본 수용 및 실제 예약 OFF 저장은 미확인입니다.
+
+
+## 2026-10-25 관리자 OFF 수락 보충
+
+[실측] 이전 인증 대기·OFF 미확인은 후속 정식 저장 및 독립DB 확인으로 해소됐습니다(false/override revision1, audit1). backend/admin/auth 원본 통합 완료를 뜻하지 않습니다. 현재 PC native5433/이전 WSL 요구 차이는 [완료 보충](records/reports/2026-10-25_admin-db-handoff-connection.md)에 명시했습니다.
+
+
+## 공유 9구간 원본 적용 현재 결론 — 2026-10-25
+
+[실측] 신규 reader/F3 7 + 기존 Diagnostics 보존2 = **9/9 = 100%** 원본 완료. 5필수파일 CAS·원본208/212(bind차단4·제품실패0)·관리자진단2/2·기존변경/index/refs/flags/백업 검산. 이전 shared HOLD 해소, 서비스/DB/OFF/모델/배포 변경0. [변경·검증·복원·인계](records/reports/2026-10-25_shared-original-safe-application.md).
+
+## F3 원문 probe 3건 정식 해소 — 2026-10-25
+
+[실측] 서로 모순되는 원문 probe 3건(81행 유료 호출 필요 vs 90행 `paid == []`)을 사용자 지시로 동등 시험 `test_llm_f3_acceptance.py`로 대체. 원문 바이트·실패 근거 보존, 같은 시험 바이트 수정 전 RED 3/3·수정 후 GREEN 3/3, 회귀 208/212(bind 차단4·제품실패0)로 이전과 동일. 제품 코드·DB·서비스·모델·배포 변경0. [보고](records/reports/2026-10-25_f3-contradictory-probe-resolution.md).
+
+## I01~I08 로컬 전용 공개 문구 재대조 — 2026-10-26
+
+[실측] 계획 writer 문구 6개 모두 role-manager 계약에 없는 공개 `response` 키를 새로 만드는 (b) 6/6=100% → 이식·커밋 0, 6행 N/A 유지. 16d6b00a 빠른 관문 10,219 통과·실패0·건너뜀173. [보고](records/reports/2026-10-26_I행_로컬전용문구_role-manager_계약재대조.md).
+
+## 원본 직접 통합 A(날짜 위험·고객시간·최신팀 후보) — 2026-10-28
+
+[실측] 원본 47경로 적용·커밋0, 고객시간 P1 4동작 원본구조 이식 RED12→GREEN12, 날짜 위험 HOLD. 백엔드 7,633/7,672·신규 회귀0, 관리자 6/6. [보고](records/reports/2026-10-28_original-final-integration.md).
+
+## 원본 ops 8070·관리자 3300 직접 실행 — 2026-10-28
+
+[실측] 원본 cwd에서 ops(리스너 PID 26564)·관리자(32620) 기동, 운영자 admin 로그인 200, 프록시·직접 GET·읽기 전용 DB 모두 `travel.booking.enabled=false`(override, admin, revision 2) 일치, 로그인 전 401. 소스 변경0·커밋0. [보고](records/reports/2026-10-28_original-runtime-ops-admin-switch.md).
 
 2026-10-29 ST4F-711: 실제 백엔드 필수3/3=100%·동시성41/41=100%, 최신 양쪽 role-manager 소스217da9ad0 반영; 운영/LB-09 원인 확인 별도. [검증·한계·인계](records/reports/2026-10-29_st4f711-backend-gates.md).
 
 
 
 [2026-10-29 버스 scalar 독립 검토](../../wiki/records/reports/2026-10-29_bus-scalar-independent-continuation.md): 필수3/3=100%, 기존 min_cell 보존·한 표현식 후보; 제외·운영 미검증·원격결과는 보고서 참조.
+2026-10-29 EKS 후속: 버스 프로파일 단일값 검사 로컬 합성 개선 후보·독립 7,528/7,528 = 100%, 원본 제품 코드 변경·운영 배포 0. [측정과 한계](../../wiki/records/reports/2026-10-29_eks-bus-profile-scalar-performance.md).
+
+
+
+
+
+
+2026-10-29 EKS 후속: main 위 scalar·CD 진단 후보 회귀, contract368/security125/DoD26 통과. 운영 접수속도 미입증·push/배포0. [측정·전제·인계](../../wiki/records/reports/2026-10-29_eks-operational-performance-continuation.md).
+
+2026-10-29 ST4F-728 x600 소스2/2일치·공개403/운영수락 미완, 다음729 관리자46/46=100%;종결0·미완료102/688=14.8%. [근거](records/reports/2026-10-29_st4f728-production-and729-followup.md).
+
+2026-10-29 ST4F-729 실제로딩 잔여결함 격리수정·화면2/2/회귀1/1/관리자46/46=100%,통합HOLD·종결0.공개403은Cloudflare1010,x600공개GET2/2통과. [근거](records/reports/2026-10-29_st4f729-loading-and-public403.md).
+
+
+2026-10-29 ST4F-729 독립검토: 필수2/3=66.7%, 기존728증거XML 보안실패로 통합HOLD. Next합성2/2·웹세션11/11=100%, push/배포0. [보고·인계](records/reports/2026-10-29_st4f729-independent-review.md).
+
+2026-10-29 ST4F-729 후속: 기본 build4/4·화면14/14=100%, 보안124/125=99.2%·필수2/3=66.7% HOLD. 기존 XML 불변·표본 id 생성 원인 수정 후보, push/배포0. [검증·실패·인계](records/reports/2026-10-29_st4f729-source-followup.md).
+
+2026-10-29 ST4F-729: 기존 필수2/3=66.7% HOLD·오탐 분류 제안 보안143/143=100%, XML 불변·정책 승인 전 미통합. [보고](records/reports/2026-10-29_st4f729-security-resolution.md).
+
+2026-10-29 ST4F-729 SHA 예외 미채택·보존 규칙 아래HOLD, 미배정708 독립 검증. [보고](records/reports/2026-10-29_st4f729-policy-review-and708.md).
+
+
+2026-10-29 ST4F-731 빈 추천의 판 변경 경합 격리 수정: 접수단위1063/1063·DB10/10=100%, 필수2/3=66.7% HOLD·729 증거 불변. [보고](records/reports/2026-10-29_st4f731-empty-recommendation-race.md).
+
+
+2026-10-29 ST4F-731 독립검토 REQUEST_CHANGES: 실제 edit 후 revision1/view2 두모드 재현2/2=100%, 필수2/3=66.7% 보안 HOLD 유지·push0. [보고](records/reports/2026-10-29_st4f731-independent-review.md).
+
+
+2026-10-29 Mobility 위도 가지치기 독립 검토: 필수3/3=100%, 로컬 실익 확인·EKS 성능 미측정·배포HOLD. [보고 및 인계](../../wiki/records/reports/2026-10-29_eks-latitude-independent-review.md).
+
+
+2026-10-29 ST4F-731 응답 경합 격리수정: 실DB29/29·단위1063/1063=100%, 보안124/125·필수2/3=66.7% HOLD. [검증·인계](records/reports/2026-10-29_st4f731-response-fence.md).
+
+
+2026-10-29 ST4F-731 corrected fence 독립검토: 실DB45/45·변이3/3=100%, 보안124/125·필수2/3=66.7% HOLD 유지. [검토·인계](records/reports/2026-10-29_st4f731-response-fence-independent-review.md).
+
+
+2026-10-29 EKS 반경 구조 검증: Linux 전체층216건 실행·37실패, 오류정책 반례로 미통합. 공개 자료 보완·그래프 적재 후속. [보고](../../wiki/records/reports/2026-10-29_eks-structural-radius-and-graph-load.md).
+
+2026-10-29 [ST4F732 독립 진행 검증](records/reports/2026-10-29_st4f732-independent-progress.md):실PG13/13·위험22/22·웹45/45=100%,새 결함 없음·화면 수락 남음·731 HOLD 유지.
+
+2026-10-29 ST4F-733 거절 일정 이름 누락 격리수정:단위39/39·실DB집중6/6=100%,확장15/16=93.8%,보안124/125·필수2/3=66.7% HOLD,설명만 정확재조회·종결0. [근거·인계](records/reports/2026-10-29_st4f733-named-refusal.md).
+
+
+2026-10-29 733+731 독립검토: PG43/43·실제runner6/6·변이5/5=100%, 필수2/3=66.7% HOLD·734 후속. [보고](records/reports/2026-10-29_st4f733-731-second-independent-review.md).
+
+
+2026-10-29 ST4F-734 실API 연결 격리화면3/3=100%·tight잔여,724 후보audit3/3=100%;운영수락·통합HOLD. [보고](records/reports/2026-10-29_st4f734-staged-browser-and724.md).
+
+
+2026-10-29 ST4F-740 윤일·불가능한 날짜 정합성 격리 수정: 단위1073/1073·API/PG3/3=100%, 보안124/125 HOLD·원본2/2 보존·종결0. [보고](records/reports/2026-10-29_intake-calendar-integrity.md).
+
+2026-10-29 ST4F-740 independent review: intake1142/1142, corrected31/31, mutation2/2=100%; security124/125=99.2%, HOLD. [Report](records/reports/2026-10-29_st4f740-independent-review.md).
+
+
+2026-10-29 ST4F-718 대기 후속: 웹1241/1241·Edge pending4/4=100%; 구형 탭/영속 HMAC 정책 미해결·통합HOLD. [검증·인계](records/reports/2026-10-29_st4f718-storage-wait-continuation.md).
+
+
+2026-10-29 ST4F-732 단계 대기 시계 격리수정: 웹1230/1230·Edge5/5 = 100%, 보호XML 탐지5건·통합HOLD, 718미해결 유지. [보고·인계](records/reports/2026-10-29_st4f732-step-clock.md).
+
+2026-10-29 ST4F-732 경계후속: Edge21/21·웹1232/1232=100%, 음성5/5=100%; scanner/XML·통합/운영 HOLD. [근거](records/reports/2026-10-29_st4f732-edge-followup.md).
+
+2026-10-29 ST4F-732 경계후속 독립검토: 기존4실패4/4 재현, Edge21/21·실제 로컬SSE10/10·웹1232/1232=100%, 변이1/1=100%; 동일입력 실행경계·전체앱 수락 미확인, 필수/scanner/XML/통합/운영 HOLD. [보고·인계](records/reports/2026-10-29_st4f732-edge-independent-review.md).
+
+2026-10-29 ST4F-719 동시 시각·장소 변경 카드 격리수정: 웹1231/1231·Edge5/5=100%, 보안124/125·필수2/3=66.7% HOLD·종결0. [보고·인계](records/reports/2026-10-29_st4f719-combined-change-card.md).
+
+
+2026-10-29 EKS 혼합 선택: 전체6/8=75%·동률 변이1/1=100%, 추가해소0/5=0%·PR110 HOLD. [보고](../../wiki/records/reports/2026-10-29_eks-mixed-selection-causality.md).
+
+
+2026-10-29 ST4F-746 ???? ?? ??? ?? ??:29/29???335/335=100%, ??HOLD. [??](records/reports/2026-10-29_st4f746-checkout-route-match.md).
+
+
+2026-10-29 ST4F-746 독립검토: 실제DB1/1·계약367/367=100%, 관련49/51=96.1%·기존 아침읽기2실패/보안HOLD. [보고](records/reports/2026-10-29_st4f746-independent-review.md).
+
+
+2026-10-29 ST4F-746 fixture 치환 검토: 기준·7곳치환114/114=100%, DNS포함110/114=96.5%·HOLD. [보고](records/reports/2026-10-29_st4f746-fixture-replacement-review.md).
+
+2026-10-29 ST4F-719 미리보기 독립검증: Edge21/24=87.5%, 비인증 늦은 성공·실패 재시도 결함, 변이8/8=100%, 릴리스 HOLD. [보고](records/reports/2026-10-29_st4f719-preview-independent.md).
+
+2026-10-29 ST4F-719 ??? ?? ?? ?? ??: Edge28/28=100%, scanner/XML HOLD ??. [??](records/reports/2026-10-29_st4f719-authorization-lifetime.md).
+
+
+2026-10-29 ST4F-719 auth lifetime independent review: unit32/40=80%, Edge28/28 + identity10/10 + UI1/1=100%; endpoint/race defects, security HOLD. [Review](records/reports/2026-10-29_st4f719-auth-lifetime-independent-review.md).
+
+2026-10-29 ST4F-719 ?? ???watcher 401 ?? ??: ? 1,438/1,438?PG/Edge 58/58 = 100%, Git ?? ??? ?? 1/3 = 33.3% HOLD. [??](records/reports/2026-10-29_st4f719-auth-generation-race-fix.md).

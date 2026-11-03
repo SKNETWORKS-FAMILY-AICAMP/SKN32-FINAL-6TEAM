@@ -170,3 +170,12 @@ tags: [evaluation, gpu, testing]
 `[등록·검증 대기 2026-10-12]` Winnow를 우선 후보로 보강 학습하고 Saluki는 원본 보존 학습 경로를 추가했습니다. 학습·정확도·전체 앱 로직 완료와 구분하며 기존 A4000 실행 뒤 단일 큐로 이어갑니다. [Winnow 기존/새 보강판과 Saluki 동일 조건 비교 등록](../records/reports/2026-10-12_winnow-saluki-queue-registration-and-handoff.md)。
 
 `[실측 2026-10-07~08, 정리 2026-10-15]` 잡담 보강 재학습(oos1~3)은 D 계열 오지목을 크게 줄였으나(D 잡담 9.4%→0.6%, D3 17.2%→0.4%, 판당 1회) 잡담이 섞인 MX 에서는 항목 선택률이 내려가 사전 기준 4개를 모두 통과한 판이 없다(최대 2/4). 문장을 어렵게 만든 H(함정 855 · 대조 461)에서 오지목은 시드 26.9~38.0%, oos1 9.1%, 어려운 문장 900개를 더한 oos2r 0.2% 이며 이 H 는 같은 계열 모델이 쓰고 라벨해 낙관적일 수 있다. 짚은 답을 다시 묻는 검토자는 Codex 아스트라·솔 6.1 이 D3 AUROC 0.96 으로 가장 낫지만 구독 CLI 라 서비스에 못 쓴다. PPO·DPO·KTO·GRPO 는 설계만 했고 돌린 적이 없다. 결론 · 한계 · 확인 안 한 GPU 대기열 상태는 [평가 세션 한 일 목록](../records/reports/2026-10-15_평가세션_한일목록과_위키연결.md).
+`[계획·준비 2026-10-31]` 현행 E4B의 RL 없는 SFT 지식 증류 계획(구조화 결정 우선·자연어 답변 분리·원본 보존 adapter)과 manifest 검사기·readiness를 추가했습니다. 기준선 0/47·툴체인 0/7로 학습 차단, 관문 수치는 이 문서 기준을 재사용하고 새 값은 제안으로 표시합니다. [계획·검증 근거](../records/reports/2026-10-31_sft-distill-training-plan.md).
+
+`[독립 검토 2026-10-31]` 위 계획은 배포 채팅 호출이 enum과 자연어 칸(social·general_requests·advice)을 한 JSON으로 내므로 adapter 분리 대신 칸별 평가·무학습 대조군 A′가 필요하고, G 말뭉치는 decision_unit 형식 0행이며, x600 실효 num_ctx는 12288이다. [독립 검토](../records/reports/2026-10-31_sft-distill-plan-independent-review.md).
+
+`[정정·준비 2026-10-31]` 학습 목표는 배포 채팅 JSON 전체(enum + 사용자 노출 칸)로 정정했고, 무학습 대조군 A1/A2/A′와 관문별 exact 문항 수를 사전 등록 제안으로 두었습니다. 합성 픽스처 부정시험 35/35=100% 검출, 배포 서버 검증은 그중 28/35를 수락해 라벨 필터가 아닙니다. 학습 시작 관문 2/7. [정정·준비물 보고](../records/reports/2026-10-31_sft-distill-plan-correction-synthetic-prep.md).
+
+`[독립 검토 2026-10-31]` 합성 검사기의 35/35는 재현되지만, 정답 7/7이 생성 문법이 만들 수 없는 키 순서였고 구조 칸·추가 읽기·실린 메시지·문맥 초과를 검사하지 않았습니다. 격리 후보 0.2에서 수정했습니다(단위 26/26). 규칙 기반 공백·주장 검사는 보류 탐침에서 거부 대상 12건 중 5건만 잡아 라벨 관문이 아니라 사람 검수 표시로만 씁니다. num_ctx 12288은 실측상 32항목·8턴까지 맞고 48항목부터 넘칩니다. 기준선·학습 수치는 없습니다. [독립 검토](../records/reports/2026-10-31_sft-distill-synthetic-checker-independent-review.md).
+
+`[동일성 검증 2026-10-31]` 배포 Ollama gemma4 renderer·토크나이저와 HF Gemma 4 E4B 학습 템플릿은 어휘·병합·특수 토큰이 같고 서빙 prompt·토큰이 합성 10/10 일치합니다. 다만 어휘 GGUF 내장 템플릿(빈 생각 블록)·반복 문자 BPE 동순위(포트 예측)·검사기 토큰 수 CRLF 과대(system 실측 7,439)가 남았고, 근거 없는 자연어는 어휘 목록 없이 7/26만 잡혀 나머지는 의미 판단이 필요합니다. [동일성·일반화 보고](../records/reports/2026-10-31_sft-template-tokenizer-parity-grounding-feasibility.md)

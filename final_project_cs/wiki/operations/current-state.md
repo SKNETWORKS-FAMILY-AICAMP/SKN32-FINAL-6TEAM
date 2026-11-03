@@ -9,6 +9,7 @@ domain: travel
 # 환경별 운영 구성과 관측 기록
 
 [실측 2026-10-17] 공개 cs 프로젝트 서버의 숙소 추천·개별 자동 추천·숙박 아이콘을 수정하고 기본 이틀 예시의 저장 결과와 실제 화면을 확인했다. 기존 알림 수정과 DB를 보존했다. [수정·운영 이미지·검증 범위](../records/reports/2026-10-17_lodging_production_and_ui.md).
+[현재 실측 2026-10-25 12:56] DB6536/API22260·기존웹27124/16432 연결복구. 새DB/API handed_off, HTTP/CORS12/12·실guest GET2/2·확정여행version1/items2 readback. test1 질문·대안선택은 미완료, 사용자원고 쓰기0. [긴급복구 근거·현재handoff](../records/reports/2026-10-25_service-emergency-recovery.md).
 
 [실측 2026-10-12] Oracle ARM의 식사 오연결·빈 검색 자료·일반 식사 질문 분류를 보완하고 실제 질의를 확인했습니다. 응답 지연은 남아 있습니다. 현재 수정 범위·실패·관측 시각은 [검색·모델 연동 복구](../records/reports/2026-10-12_0454_arm-search-model-repair.md)를 따릅니다. 아래 이전 점검은 당시 관측입니다.
 

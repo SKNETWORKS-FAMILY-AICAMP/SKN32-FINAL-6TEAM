@@ -596,6 +596,16 @@ W16의 기능별 구현·검토 책임과 현재 코드·시험 경로를 보완
 여행 실행 자료·SQL 입력·학습 보스를 정리하고 환경별 운영 절차를 개정했습니다. 관련 회귀723/723, 과거 문서74개 보존이며 실제 운영 반영·기존 업무DB 삭제는 수행하지 않았습니다. [수정·검증·백업](records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md).
 
 ## 2026-10-11 — Oracle ARM 답변 복구 검증
+## 2026-10-24 — 고객 웹 응대 상태 소비 (후속 검증 10-25 KST)
+
+문의 JSON/SSE·duplicate/재조회, 알림, 계획 검토·등록 결과의 선택 응대 필드를 enum allowlist로 소비하고 partial/입력 필요/실패 한계를 짧게 표시했습니다. Vitest 770/770 = 100%, 수정 소스 ESLint 통과. 전체 tsc 및 격리 webpack 빌드는 기존 trip-home/.next-live 타입 오류로 실패했습니다. 앱/서비스/브라우저 기동 및 화면 확인은 하지 않았습니다. [소비 계약](external/web-response-status.md) · [보고서·RED/GREEN·백업·차단 사항](records/reports/2026-10-24_web-response-status-consumption.md).
+
+
+
+## 2026-10-13 — 베이스라인을 작업 기준 양식으로 다시 작성
+
+10-12 「제품 전체 기준선 검토본」은 표준이 말하는 베이스라인의 조건(공식 승인·특정 시점 고정·변경 통제)과 문서 양식을 갖추지 못해 둘로 나눴습니다. 베이스라인은 NASA 형상 관리 계획서(SCMP) 양식의 작업 기준으로, 커밋 `11a1dbcd` 에 고정한 [베이스라인 TRP-BL-2026-10-13](../../program/baseline/triPilot-baseline-2026-10-13.md), 시험 결과는 [검증 현황 보고](../../program/baseline/triPilot-verification-status-2026-10-12.md)입니다.
+
 
 로컬 연결기·앱 전용 경로·준비 검사와 반복 계정·시험 여행 재사용을 반영했다. 기본 실제 답변 복구, 혼합·복합 요청 결과와 남은 결함은 [복구 리포트](records/reports/2026-10-11_oracle_answer_repair.md)에서 확인한다.
 
@@ -1127,3 +1137,22 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 ## 2026-10-18 develop CI 후속 보완
 
 실제 재개 경합·명시적 시험 DB·합성 재난 입력·웹 기대값을 보완했다. [원인·전체 검증·미확인 범위](records/reports/2026-10-18_develop-ci-repair.md). 최초 실패 기록은 보존한다.
+
+## 2026-10-24 — timeout 복구 후 이관·대화자료 문서 반영
+
+[검증 범위·과거 자료 요약](../../wiki/records/reports/2026-10-24_workspace-migration-and-history.md)에 기존 JSON 집계와 미완료, Codex outputs 4개·D 최신인계 원문 3개를 기록했습니다. 수정 경로: 루트 wiki index/log·handoff 새문서/index·보고서 및 cs wiki index/log(총7문서). 원본/코드/서비스 변경·추가복사·전체 재검사는 하지 않았고 과거 자료를 현재 구현·배포 완료로 승격하지 않았습니다.
+
+
+
+## 2026-10-24 — 후속 완료 검토
+
+기존 19:52:43 완료 JSON을 직접 검토: 양측 open+첫 바이트 읽기 552,857/552,857(100%), 오류0·긴 경로18건 해소. 우선 해시 1,706/1,706 완료, 1,705 일치·wiki/index.md 의도된 문서 수정1건(기존 transcript/백업 비교). 전체 payload·전체 해시 검증과 raw chats 확보는 아님. [보고서](../../wiki/records/reports/2026-10-24_workspace-migration-and-history.md)·인계의 stale timeout 한계만 정정; index·D 원본 불변, 새 검사 없음. 직전4문서 백업: scratch migration-wiki-backup-20261024/final-review/.
+
+
+## 공유 9구간 원본 적용 현재 결론 — 2026-10-25
+
+[실측] 신규 reader/F3 7 + 기존 Diagnostics 보존2 = **9/9 = 100%** 원본 완료. 5필수파일 CAS·원본208/212(bind차단4·제품실패0)·관리자진단2/2·기존변경/index/refs/flags/백업 검산. 이전 shared HOLD 해소, 서비스/DB/OFF/모델/배포 변경0. [변경·검증·복원·인계](records/reports/2026-10-25_shared-original-safe-application.md).
+
+## F3 원문 probe 3건 정식 해소 — 2026-10-25
+
+[실측] 서로 모순되는 원문 probe 3건(81행 유료 호출 필요 vs 90행 `paid == []`)을 사용자 지시로 동등 시험 `test_llm_f3_acceptance.py`로 대체. 원문 바이트·실패 근거 보존, 같은 시험 바이트 수정 전 RED 3/3·수정 후 GREEN 3/3, 회귀 208/212(bind 차단4·제품실패0)로 이전과 동일. 제품 코드·DB·서비스·모델·배포 변경0. [보고](records/reports/2026-10-25_f3-contradictory-probe-resolution.md).
