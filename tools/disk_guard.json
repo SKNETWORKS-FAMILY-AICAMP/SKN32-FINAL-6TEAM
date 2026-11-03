@@ -1,0 +1,10 @@
+{
+ "min_free_bytes": 32212254720,
+ "min_free_source": "30 GiB: existing documented floor in C:/Users/kcxsz/frog-npu-dev/experiments/npu-full/build_stream.py and README (NPU engine consumer). Reused, not invented; change only by explicit user decision.",
+ "target_free_bytes": 400000000000,
+ "target_free_source": "400 GB (10^9 B): user instruction 2026-10-29. Below target, new clones must reuse an idle registered clone first.",
+ "below_target_policy": "reuse_first",
+ "below_target_policy_source": "Recommendation of the 2026-10-29 disk-guard session pending user confirmation; 'deny_new' blocks every new clone below target.",
+ "ledger_path": "C:/_proj/final_workspace/.tmp/clones/.disk_guard_ledger.json",
+ "managed_roots": ["C:/_proj/final_workspace/.tmp/clones"]
+}
