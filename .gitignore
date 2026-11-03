@@ -216,3 +216,14 @@ docs/mobility/*.png
 
 # 개인 실제 택시 이용 기록: 문서·스크립트에도 주소가 있어 전체 제외
 /datasets/mobility/user_taxi_golden_20261011_v1/
+
+# 2026-10-24 루트 보조 폴더: 추적 유입 방지. 외부 보관 안내:
+# wiki/records/reports/2026-10-24_root-aux-cleanup.md
+# /_experiments/ 규칙은 위에서 유지. 하위의 동명 폴더에는 적용하지 않는다.
+/_backup/
+/_explain/
+# 2026-10-26 사용자 지시: 지우면 안 되는 루트 보조 폴더는 이름 앞에 . 을 붙여 관리한다.
+# 루트 _backup·_experiments·_explain 을 .backup·.experiments·.explain 으로 옮겼다(.backup/ 은 위에서 이미 제외).
+/.experiments/
+/.explain/
+

@@ -509,3 +509,7 @@ git log --oneline -5
 본 저장소의 코드·문서·데이터셋은 각각의 원출처와 사용 조건을 따릅니다. 외부 공공데이터와 모델을 사용할 때는 제공기관의 이용약관·쿼터·재배포 조건을 확인합니다. 한국관광공사 자료는 출처(ⓒ한국관광공사)를 표시하며, 사진·이미지는 학업용 한정으로 git 밖에만 보관합니다([D-022](wiki/decisions/D-022-study-only-kto-images.md)). 본 시스템의 응답은 여행 운영 지원을 위한 사전 확인이며, 항공·숙박·교통·업체의 최종 변경이나 계약을 자동 확정하지 않습니다.
 
 개정 전 소개·도구 목록은 [보존 기록](wiki/records/commerce_2026-10-11/README.md)에 남겼습니다.
+
+## 로컬 실행기 독립 수정 (2026-10-25)
+
+서비스 없는 사전점검은 `triPilot-실행.bat check`입니다. 기동/중지는 별도 승인 범위이며 이미 실행 중인 서비스는 그대로 둡니다. [묶음 실행 계약](final_project_cs/wiki/operations/local-app-bundle.md) · [이번 원본 부분 반영·남은 차단](wiki/records/reports/2026-10-25_original-minimal-integration.md). DB 준비나 관리자 예약 OFF 저장 완료를 의미하지 않습니다.

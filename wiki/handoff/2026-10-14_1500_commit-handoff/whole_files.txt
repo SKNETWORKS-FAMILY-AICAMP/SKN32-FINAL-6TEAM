@@ -1,0 +1,5 @@
+final_project_cs/wiki/records/reports/2026-10-14_1500_wiki-rule-and-test-followup.md
+wiki/handoff/index.md
+wiki/handoff/2026-10-12_2200_claude-integrated-handoff.md
+wiki/handoff/2026-10-12_why-claude-read-stale.svg
+wiki/handoff/2026-10-14_virtual-memory-holders.svg

@@ -7,6 +7,151 @@ domain: travel
 impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업 폴더 상태를 다룬다. final_project_sample 은 별도 참고 구현이라 해당 없다
 ---
 
+2026-11-03 모든 Hermes 세션 이관 패키지(복사만): default·guguroute·myapp 세션 1,146개·행 120,876을 sqlite backup + 가림 없는 JSONL export로 guguroute `backups/all-sessions-migration-20261103/`(1.95GB, SHA 3,063/3,063)에 보존, DB 행 = export 행 불일치 0, 복원 시험 315세션 불일치 0. 필수 이관 약 62GB(패키지+backups 나머지 7.86+final_workspace 52.21), 비밀 파일은 이름만·외부 목적지면 암호화 필수 — 목적지·비밀 이관은 사용자 결정 → [인계](2026-11-03_all-sessions-migration-backup-handoff.md)
+
+2026-11-03 scratch 승인 삭제 실행(진행 중): 사용자 승인 원문 15:47·15:51·15:53 기록, 범위 ①②③④ 63+2개 93.27GB, _unified_mall_3·test_workspace는 삭제 준비만 → [인계](2026-11-03_scratch-approved-deletion-handoff.md)
+
+2026-11-03 scratch 고유 분류·승인 목록: 400GB 달성 뒤 scratch 63개 83,427,213,040 B 전 파일 해시 → 보존 Git 재현 49.68·캐시 15.29·.git 객체 12.61·tar 2.60·고유 2.97GB(압축 0.52GB 보존)·기존 동일 0.28, ref 116/116 보존(새 bundle 1), 복원 시험 62,914/62,914 일치, 삭제 0 — 경로별 승인(①7차 16.35 ②HOLD 12.46 ③56개 54.61 ④clones 9.84 = 93.27GB) 대기. NPU 소유자 추가 회수 244,521,087 B(`RESULT-NPUDISK2-1103`) → [인계](2026-11-03_scratch-unique-approval-handoff.md) · [보고서](../records/reports/2026-11-03_scratch-unique-classification-approval.md)
+
+2026-11-03 C: 400GB 실제 달성 시점 대비: 10-27 20:21 약 437GB(df 407GiB, 바이트 최종 21:59 403,961,397,248 B) 실측 확인 → 지금 273.45GB(사용 +163.15GB). 증가 = final_workspace/scratch 10-29 사본 67개 83.43 · frog-npu-dev 65.28 · WSL vhdx +38.41 · 기본 프로필 scratch 16.63 · pagefile +15.07 · .tmp/clones 9.84, 같은 기간 달성 시점 scratch −77.8. 삭제 0, 미보존 HEAD 3개 bundle 보존(이제 HEAD 미보존 0) — 승인 대상 92행 목록·남은 보존 작업 → [인계](2026-11-03_c-drive-400gb-peak-diff-handoff.md) · [보고서](../records/reports/2026-11-03_c-drive-400gb-peak-vs-now.md)
+
+2026-11-03 C: 400GB 10차 후속 — 소유자 회수 전달: 36cd5c(`ACK-DISK-1103`)가 scratch `hold3-integ-1102` 1,543,581,236 B 삭제·`RESULT-HOLD3-1102` 작성, `.tmp/clones` 2개 9,839,389,277 B는 재사용 불필요·bundle 보존으로 승인 요청. NPU 소유자(기본 프로필 Desktop)가 동결 `.logits` 363개 21,105,213,440 B를 하드링크로 통합(inode 363/363 재확인). 여유 245.65→273.45GB = 68.36%, 부족 126.55GB — 승인 이력 조회 결과 남은 대용량은 모두 경로별 승인 필요, 모델 제외 도달 조합 131.82GB 표 있음 → [인계](2026-11-03_c-drive-round10-owner-relay.md)
+
+2026-11-03 Telegram 총괄 세션 5fbd35ab 위키화(세션 삭제는 안 함): 사람 입력 134/134·답변 366/366·압축 요약 3/3 전문 대조. wiki에 없던 인사동 대안 원인 7개·일정 설명 원인 6개를 보고서로 옮기고, scratch에만 있던 설명 작성기 후보 4bc2d9080+미커밋 r8을 backups에 보존(SHA 16/16). 삭제 시 위임 하위 153개(19,633행) 동반 삭제·후속 세션 d047d36a 부모 참조 상실, 하위 13개 세션에 비밀 후보 19행(값 미출력) → 교체·삭제 방식은 사용자 결정. [인계](2026-11-03_telegram-orchestrator-5fbd35ab-close-handoff.md) · [보고서](../records/reports/2026-11-03_telegram-orchestrator-5fbd35ab-session-wiki.md)
+
+2026-11-03 C: 400GB 10차: 11-02 22:50 258.58GB(cron 259.30GB)→05:24 244.04GB(227.28GiB) 감소 14.54–15.26GB 중 근거 11.40GB = HOLD 3 격리 사본 2개 9,839,389,277 B(`.tmp/clones`, 36cd5c)·scratch `hold3-integ-1102` 1,558,755,067 B, 약 3–4GB 미확인(페이지 파일·hiberfil 불변, Volsnap 이벤트 없음). 사용자 Temp vitest SSR 덤프 402개·RdClient ETL 56개·node-compile-cache 2,264,767,256 B 삭제(실패 0). 여유 245.66GB = 61.41%, 부족 154.34GB — 차단 대상·조건표 있음. [보고서](../records/reports/2026-11-03_c-drive-400gb-cleanup-round10.md)
+
+2026-11-02 HOLD 3건(EKS 정밀 잔여 18·PR110, reader fatal #6/#7 로그, 513ab4cc·1ab3f0d88 통합 적합성) 실행 이관: 기존 담당 36cd5c에 안전 경로로 전달(admission fbd6153d, `ACK-HOLD3-1102`). 36cd5c는 하위 세션 3개(`deleg_cfa750b4`)로 격리 실행을 시작했다. 결과는 아직 없다 → [인계](2026-11-02_proj-root38-post-deletion-handoff.md) 「HOLD 3건 실행 이관」 절
+
+2026-11-02 C:/_proj 지정 38개 삭제 후 인계·복구 가능성 독립 확인: 보존 해시 18/18, bundle head 4개 일치(복원은 하지 않음). 총괄 5fbd35ab는 결과를 받았고, 받지 못했던 라우팅/EKS 세션 36cd5c에는 안전 경로로 전달해 `ACK-ROOT13-1102` 수락을 확인했다. WSL은 Stopped 상태라 시작하지 않았고 /mnt/c 참조는 확인 불가. 다음 담당: HOLD 3건 배정은 총괄, 보존 위치 기록은 36cd5c → [인계](2026-11-02_proj-root38-post-deletion-handoff.md)
+
+2026-11-02 C:/_proj 지정 38개 중 남은 13개 최종 처리: 새 담당 하위 세션이 보존본을 sha256으로 다시 대조했다(35,745/35,745 파일, 분류되지 않은 파일 0). 오프라인 bundle 복원으로 로컬 커밋 8개와 513ab4cc·1ab3f0d88의 보존을 확인했고, DB 4개·비밀 이름 파일 11개도 보존돼 있다. Explorer 핸들 0을 확인한 뒤 Hermes 승인 경로로 정확한 13개만 삭제했다(13/13, 38개 전체 38/38 = 100%, 유실 0, C: 여유 +3,399,102,464 B). 남은 HOLD 작업은 각 EKS 인계에 그대로 있다. WSL은 시작하지 않아 미확인 → [보고서](../records/reports/2026-11-02_proj-root-13-final-retirement.md)
+
+2026-11-02 x600 F:\ 루트 guguroute 폴더 4개 실측·처리: 압축 전 사본 2개 삭제(E 원본 SHA 3/3 일치, json 보존), offline 4.35GB는 `F:\_work\backups`로 이관하고 E 링크 5개를 다시 걸음(SHA 21,646/21,646), qemu-cow-probe 1개는 보존 복구 VM의 절대경로 실행 자원이고 10-18 보존 결정이 있어 중단. F 여유 +1.53GB. [인계](2026-11-02_x600-f-root-guguroute-cleanup.md)
+
+2026-11-01 C:/_proj 지정 38개 폴더 담당 세션 직접 처리: 삭제 25/38(`_clones`는 라우팅 세션 36cd5c가 disk_guard 설정을 `final_workspace/.tmp/clones`로 옮긴 뒤 삭제). 남은 13개는 Codex `never` 모드 정책 거부 11개와 Explorer PID 11372 핸들 2개이고, 우회하지 않음. 정식 승인 경로 3개와 루트 금지 강제 상태(disk_guard만 코드로 강제, hook/ACL은 미연결) → [보고서](../records/reports/2026-11-01_proj-root-38-owner-relay-and-blockers.md)
+
+2026-10-31 SFT 합성 검사기 후보 0.3: 토큰 수를 렌더된 서빙 prompt 전체 1회로 실측(system 7,439·user 몫 3,636·0.2 과대 208–255 제거, 경계 결론 변화 0/21), 행별 학습 렌더 == 서빙 렌더 fail-closed(HF sha 0a2c8073… 고정·12b/26b/31b·빈 생각 블록 실패), 정답 JSON 전체 비교로 HN9 닫힘, R_ENTITY_IN_FREE_TEXT 검수 표시 7/26·오표시 0/17(판정 영향 0), 시험 RED→GREEN 52/52=100%·부정 39/39, T2·완성부 \n·G5·출력 공백은 결정 목록(승인 필요), 학습·추론·GPU·x600 0. [보고](../../final_project_cs/wiki/records/reports/2026-10-31_sft-candidate-v0_3-template-token-grounding.md) · [인계](2026-10-31_sft-template-tokenizer-parity.md)
+
+2026-10-31 빈 폴더를 가리키는 serving 프로세스 3개(61695·50487·8042, 8042는 LAN에도 열림): 살아 있고 health 200, 소스 폴더는 10-27 19:56–20:04부터 파일 0개. 10-31 정리가 원인은 아님. 라우팅 세션 36cd5c에 읽기 전용 원인·복원 조사를 넘겼고 수락받음(admission seq 743). 중지·재기동은 사용자 승인 뒤에만. [인계](2026-10-31_empty-serving-folders-routing-relay.md)
+
+2026-10-31 세션별 정리 지시 후속 감독: 12개 세션 중 완료 9·승인 대기 1(RE bin/obj 1.20GB)·차단 2(4791b6 agy:// resume 거부, 3e66dd 401). 중복 제거 정리 합계 14,704,308,111 B, C: 여유 220.24GB. 라우팅 세션 후속 요청 2회(백그라운드 완료 알림이 턴을 시작하지 않음). [인계](2026-10-31_session-cleanup-relay-supervision.md)
+
+2026-10-31 SFT 템플릿·토크나이저 동일성·근거 판별 일반화: 배포 Ollama gemma4 renderer·어휘 = HF Gemma 4 E4B(토큰·병합·특수 동일), 서빙 prompt·토큰 10/10·학습 접두사 7/7 일치, 남은 차이 3건(어휘 GGUF 내장 템플릿 빈 생각 블록·BPE 동순위 반복문자 예측·검사기 토큰 CRLF 과대 208–255, system 실측 7,439), 근거 판별 일반 해결 7/26(정답 전체 비교·일정 개체)·19/26 의미 판단 필요, 모델·GPU 0. [인계](2026-10-31_sft-template-tokenizer-parity.md)
+
+2026-10-31 SFT 증류 합성 검사기 독립 검토: 원 결과 재현(단위15/15·부정35/35), 정답 7/7 생성 문법 순서 위반·쓰기 칸 미비교·추가 읽기·실린 메시지·문맥 초과 미검사를 격리 후보 0.2에서 수정(단위 26/26), 어휘 규칙은 보류 탐침 FN 5/12로 일반화 안 됨, 12288 실측(32항목·8턴 적합·48항목 초과), 라우팅 세션 전달 실패(종료 상태)·학습/추론/GPU 0. [인계](2026-10-31_sft-distill-synthetic-checker-independent-review.md)
+
+2026-10-31 SFT 증류 계획 정정·합성 검사 준비물: 검토 지적 코드 대조 완료(단일 호출 JSON 자연어 칸·G 채팅형식 0/18,927·num_ctx 12288), 배포 JSON 전체 목표·무학습 대조군 A1/A2/A′·관문별 exact 문항 수, 부정시험 실제 실행 양성7/7·부정35/35·단위15/15=100%(배포 서버는 부정 28/35=80% 수락), 학습 시작 관문 2/7=29%, 학습·추론·teacher 라벨·유료·x600 0. [인계](2026-10-31_sft-distill-plan-correction-synthetic-prep.md).
+
+2026-10-31 구구루트 골든 재시도·메모리 원인: 커밋 한도 92.8GiB(OS30.5+페이지62.3)에 GPU 가중치도 부과(ngl0 1.70→ngl99 3.87GiB)·Qwen 36.5GiB·E4B 적재 +5.96GiB, 적재 성공 후 실제 3/47 호출 3/3 120초 초과=0/47 PASS·44 미실행(GPU 경합 96%, 2.29토큰/초), 유료·x600·서비스변경 0. [보고](../records/reports/2026-10-31_guguroute-golden-eval-memory-gpu-diagnosis.md) · [인계](2026-10-31_guguroute-model-golden-eval.md).
+
+2026-10-31 SFT 증류 계획 독립 검토: 단위시험 재실행 24/24=100%·x600 num_ctx 12288 직접 확인(로컬 8192), 심각 3건(자연어 칸 adapter 분리 충돌·G→decision_unit 0행·허위 학습승인 대기 문구), 학습·추론·운영변경 0. [인계](2026-10-31_sft-distill-plan-independent-review.md).
+
+2026-10-31 SFT 지식 증류 학습·평가 계획(RL 제외·구조화 결정 우선·자연어 답변 분리): 준비물 단위시험 24/24=100%·G 검증 통과, readiness NOT_READY(pass6·fail1·blocked4), 남은 승인 0/11=0%, 학습·추론·유료·배포0. [인계](2026-10-31_sft-distill-training-plan.md).
+
+2026-10-31 구구루트 모델 골든 비교(평가 전용): x600 배포 fab3da50ab·tripilot-pointer:e4b-ft 동일 코드6/6·가중치 확인, E2 실제유래 47행 골든·채점기 고정(대조 양성47/47·음성0/47), 실제 답변 0/47 — 로컬 E4B 적재 실패(커밋 메모리 부족), 정확도 미측정. [인계](2026-10-31_guguroute-model-golden-eval.md).
+
+2026-10-30 아침 이동 복구 독립검토: 단위59/59·웹54/54·실PG/API 최종 개별9/9·Edge6/6=100%, 필수 실행3/3·원본 인정2/3=66.7% 보안 HOLD, 보호503/503·제품수정/push0. [인계](2026-10-30_morning-recovery-independent-review.md).
+
+2026-10-29 ST4F-719 인증 세대 독립검토: 웹1463/1463·PG/Edge64/64=100%, 필수2/3=66.7% 보존 XML HOLD. [인계](2026-10-29_st4f719-auth-generation-independent-review.md).
+
+출처 후속 검토: HTTP4/4·문서/strict4/4 = 100%, 서비스·보안 HOLD 유지. [인계](2026-10-29_conversation-source-schema-continuation.md).
+
+
+2026-10-29 대화 출처 신원 수정 독립검토: 집중142/142·추가 strict/경계31/31·실행회귀565/565=100%(4제외), 문서손상1·공식 wire schema/실제 제공처 수락 미확인, 서비스·보안 HOLD 유지. [보고·인계](2026-10-29_conversation-source-identity-independent-review.md).
+
+
+2026-10-29 ST4F-719 미리보기 P1 격리후보 수정: PG·Edge26/26·웹1321/1321=100%, 단위변이7/7·Edge변이3/3 검출, 필수2/3=66.7% scanner/XML HOLD·push0. [인계](2026-10-29_st4f719-preview-privacy-fix.md).
+
+2026-10-29 ST4F-746 보안 남은 관문: 원본 detector4파일/HOLD, 기능20/20=100%. [인계](2026-10-29_st4f746-security-gate.md).
+
+2026-10-29 EKS v0.9.3 재검증: 전체223/223 = 100.00%·집중73/73 = 100.00%·과거/캐시11/11=100%, PR110 HOLD·운영쓰기0. [인계](2026-10-29_eks-route-policy-full-recheck.md).
+
+2026-10-29 ST4F-719 late-id 독립검토: PG·Edge 미리보기 소유권 누락1건 재현/수락보류, 네경합8/8·변이4/4·웹1304/1304=100%, 필수2/3=66.7% 보안 HOLD·push0. [인계](2026-10-29_st4f719-late-id-independent.md).
+
+
+2026-10-29 ST4F-746 아침 복구 독립검토: 실PG/API 전후 결함재현2/2·후보DB2/2·격리1/1=100%, scanner 차이/HOLD 유지. [인계](2026-10-29_st4f746-morning-independent-review.md).
+
+2026-10-29 ST4F-746 ?? ?? ??: ??2?? ???????, ??56/56??PG2/2???2/2=100%, ?? ??4?? ??????HOLD??clone0?push0. [??](2026-10-29_st4f746-morning-read-recovery.md).
+
+
+2026-10-29 ST4F-719 중단 작업 재개: 늦은 id mutation4/4 격리수정·Edge8/8·실PG계정전환4/4·개인정보10/10·변이4/4·웹1303/1303=100%. 필수1/3=33.3%(Git 실행 환경 오류), scanner/XML HOLD 보존·새clone0·push0. [인계](2026-10-29_st4f719-late-id-mutations-resumed.md).
+
+2026-10-29 A11 독립 보안 검토 재개: 실DB 9/9·웹69/69·기존 E2E442/442, 권한·미답·미검사·revision 경계 확인. XML336/336 불변, 보안 HOLD·통합/push 보류·운영 변경0. [인계](2026-10-29_a11-ready-independent-resume.md).
+
+2026-10-29 EKS 남은3실패 해소 후보(`1ab3f0d88`, push0): 혼합 판정 순서를 사고 반영 구체화 뒤 같은 모양 안에서 다시 세움(settle_head · 모양 자리·판정상한3 유지) + 중간 정류장 버스 첫차 승차 하한(승차 소요와 같은 추정기 · 새 불가0 · 관측 우선). mobility_full 220→223/223·빠른층 1611→1629 새실패0·변이 D1 3/D2 6 검출·지연 25.5→23.5s, Codex·Claude 3차 ship-candidate. 누적 5/5, PR110 HOLD. [인계](2026-10-29_eks-remaining3-fix.md).
+
+2026-10-29 ST4F-719 최종 재검증(같은 사본·새 clone0): P1 캐시 소유자 수정 확인·막는 결함0, 폐기 키 이관 표 TTL 안 교환(P3) → consume_legacy 살아 있는 키 확인 410 격리수정(RED 201→GREEN), web-auth.md 45·51행 문서 정정, cache-owner Vitest 9(변이4검출), Vitest1299/1299·tsc0·build0·Edge22/22·세션9파일82/82·계약367·DoD26·쿠키38/38, 보안124/125 HOLD·push0, TeamFlow ST4F-745 담당 `3rd_team_4_be`. [보고·인계](2026-10-29_st4f719-final-recheck.md).
+
+2026-10-29 일정 설명 작성 모델(explain_writer, 후보 `4bc2d9080` 브랜치 feat/schedule-explain-writer-20261029, push0): 템플릿 설명 → E4B 가 검증 사실만으로 설명 · 배치 이유를 쓰고 검사 통과 문장만 고객, 실패는 원인 + 시간순 목록(조용한 대체0)·「왜 이렇게 짰어?」 route 재판단. 실E4B g4 채택5·other1·정당거절2, 원문40행 재판정 불변, 단위183·변이44+·관문 11096 새실패0(보안 HOLD 1 기존)·독립검토 7차 Claude·Codex APPROVE·유료호출0·decision_unit 바이트 동일. 대상 manager `team/role-manager`(fab3da50a, 빨리감기 가능). [인계](2026-10-29_explain-writer-llm.md).
+
+2026-10-29 A11 재열기·1안 답 뒤 등록(후보 routingresume1029, 커밋 안 함): 앞 미답 기본값 수정 독립검토 막는 결함0. 인접 실제 결함 2건 재현·수정 — 다시 연 결과 화면에서 종류 질문이 빠져 「모두 확인했어요」인데 ✓ 막힘 → 서버 `kind_unanswered`가 가리키는 질문을 그 일정 카드에서 물음(`PlanAsk.held`·`heldAsks`, 멈추지 않음)·요약 「일정 종류 n곳」·✓ 이유는 서버 문구, 1안 답은 판을 안 만들어 저장 `review.ready` false 그대로 → 조회가 같은 판·검사끝·확인필요0·`check.ready`면 올리기만. 실DB 회귀 1526/1526·접수 e2e 433/433·계약 367/367·보안 124/125(기존 HOLD)·DoD 26/26·웹 1233/1233·tsc·eslint 0, Edge 화면 재열기→카드 답→등록 confirmed, push0. [인계](2026-10-29_routing-a11-reopen-kind-question-ready.md).
+
+2026-10-29 TeamFlow 매니저(19:2x): 재조회 107/693=15.4%, 공개 운영을 쓰기 차단 브라우저로 GET만(게스트 생성0) — features plan_input_extras:false·배포 번들 JS28/CSS6에서 704·707·721·723·735·736·738·739 표시 확인, 8건 증거 덧붙임(정확 재읽기 8/8·상태변화0·완료0). 약관 뒤 화면은 게스트 세션(운영 쓰기) 승인 필요. [인계](2026-10-29_teamflow-manager-bundle-markers.md).
+
+2026-10-29 ST4F-719 독립 최종검토(중단 세션 사본 재사용·새 clone 0): 결함1(P1) A→401→B 화면 캐시 잔존 → providers 소유자 유지 격리수정, 검토자시험 2/3→3/3·Vitest1290/1290·build0·Edge19/19·세션9파일82/82·전체921/958(기준910/954) 새회귀0, 계약367·DoD26·쿠키37, 보안124/125 HOLD·push0, TeamFlow ST4F-744 담당 `3rd_team_4_be`. [보고·인계](2026-10-29_st4f719-independent-final.md).
+
+2026-10-29 EKS 남은3실패 원인귀속: 3/3 버스→버스(모양C) — mixed·only_blocked 첫 나쁨 9c2edb189(판정상한3을 C가 차지, 제품 _rank상 더 나은 B 10:09 미판정), 새벽 첫 나쁨 병합2b5ad1633(_mixed_sources에 C 추가, bisect11단계), tip 메모리상 C끄면 5/5 통과. 해소0/3·제품/시험변경0·push0·PR110 HOLD, 정렬/몫/첫차 중간정류장 계약 결정 필요. [인계](2026-10-29_eks-remaining3-shape-c-causality.md).
+
+2026-10-29 TeamFlow 매니저: 재조회 105/691→106/692=15.3%, A11 새 이슈 ST4F-743(inprogress·담당 `3rd_team_4_be`·중복0·본문 정확 재읽기), 담당 없는 review 12건(704~707·721~723·735~739) 커밋이 role-manager fab3da50a·develop·main 조상임을 증거로 덧붙임(상태·담당 변경0·완료0), 나머지 679건 변화0, 미배정25 불변. [인계](2026-10-29_teamflow-manager-743-and-unowned-evidence.md).
+
+2026-10-29 A11 미답 기본값·실제 화면 길(후보 routingresume1029, 커밋 안 함): 종류 질문 붙은 짝 없는 체크아웃 줄을 답 전에도 1안(숙박)으로 계산(`question_kinds`·`kind_first`) — 전에는 답 전 활동→1안 답 뒤 화면 활동·check 숙박막음·등록422로 갈라짐(실DB 재현). 웹 `checkOrder`·`withAskSlot`은 질문을 그 일정 앞에서 물음(빨간 줄이 질문을 가리던 것, 실제 Edge 화면 확인). 실DB 회귀 1526/1526·e2e 24/24·계약 367/367·보안 124/125(기존 HOLD)·DoD 26/26·웹 1229/1229·tsc0, push0. [인계](2026-10-29_routing-a11-unanswered-kind-default-screen-path.md).
+
+2026-10-29 A11 P2 독립검증(후보 routingresume1029, 커밋 안 함): 실제 경로 결함 3건 수정 — 종류 질문 1안 「숙박」 답이 규칙에 덮여 문제0 등록되던 것 → 답도 고객 선택(`answered_kinds`)·`stay_without_check_in`, 「일정 추가」 폼으로 풀 수 있게 문구에 「<호텔> 체크인」, 규칙 시각 체크아웃 메모를 `check.filled`·대체 화면(from-intake.ts)에도. 새 시험 RED 3/7→GREEN, 확대 1275/1275·웹 1228/1228·tsc 0(DB 차단), DB 관문 미재실행·보안HOLD(XML 118/118 동일)·push0. [인계](2026-10-29_routing-a11-checkout-choice-independent-verify.md).
+
+2026-10-29 A11 독립검토 잔여 P2·P3 수정(후보 routingresume1029, 커밋 안 함): 고객이 숙박으로 고른 짝 없는 체크아웃 줄은 종류·끝 유지+조립 문제 `stay_without_check_in`으로 등록 막음, 규칙으로 바꾼 종류·규칙 시각 체크아웃 주의를 시간 줄에 표시(새 시각·상수 0), 실제 읽기경로 새 시험 RED 2/6→GREEN, 숙박 unit 72/72·확대 98파일 1268/1268(DB 차단), DB 관문 미재실행·보안HOLD·push0. [인계](2026-10-29_routing-a11-checkout-choice-review-fix.md).
+
+2026-10-29 A11 후속 독립검토(읽기전용·실제 읽기경로 입력): 수정 타당·막는 결함0, 기준은 다른 호텔 체크아웃 줄을 삭제/끝없는 숙박으로 → 후보는 방문 일정 보존, 고객선택·trip 보존, 숙박 unit 66/66, 잔여 P2(고객이 숙박으로 고르면 끝없는 숙박 등록 가능)·P3 3건, 보안HOLD·push0. [검토](2026-10-29_routing-a11-checkout-only-independent-review.md).
+
+2026-10-29 A11 후속(짝 없는 체크아웃 lodging 줄 → 끝 없는 가짜 숙박): 활동으로 남김(규칙 표시·고객 선택 보존), RED 3/5→GREEN 5/5, 회귀1510/1510·계약367/367·DoD26/26, 보안124/125 기존HOLD·push0·새 clone0·증가 약73MB. [인계](2026-10-29_routing-a11-checkout-only-lodging.md).
+
+2026-10-29 두 응답 계약 분리(일정 설명·배치 이유·답 불가 원인 안내): 후보 738aa9ad9(push0), 새·관련 112/112·변이 15/15·관문 10,993 새실패0(보안 HOLD 1 기존), Claude·Codex 4차 승인, 제품 모델 호출 0, TeamFlow ST4F-742 담당 `3rd_team_4_be`. [인계](2026-10-29_answer-contracts-split.md).
+
+2026-10-29 A11 독립검토(읽기전용): 새시험5/5, 개인정보·스캐너 직접적용 0건, **결함1**(에이전트가 lodging으로 읽은 다른 호텔 체크아웃 → 끝 없는 가짜 숙박) 수정 권고·좌표167m 동일호텔 분리 잔여위험, 보안HOLD·push0·새 clone0. [검토](2026-10-29_routing-a11-independent-review.md).
+
+2026-10-29 A11 실DB 기준대조: 계약367/367·DoD26/26=100%, 회귀1505/1505=100%, 보안124/125=99.2%·필수2/3=66.67% HOLD·push0. [보고·인계](2026-10-29_routing-a11-real-db.md).
+
+2026-10-29 중단 S6 A11 재개: 숙박16/16=100%·XML118/118=100% 보존, 필수0/3=0%·통합HOLD·push0. [인계](2026-10-29_routing-a11-resumed.md).
+
+
+2026-10-29 라우팅 B10 독립검토(S5): 327d7baaa 결함2(「고정 풀어줘」 막다른 안내 · 보고서 표본주소로 보안시험 둘째 파일) 수정→새 후보 d1b06357e(push0), 새시험4/4·booking325/325·관문10,945 잃음0·상태변화0, TeamFlow ST4F-741 담당 `3rd_team_4_be`(매니저)·기존 미배정25 불변, 보안 HOLD 유지·셸 GIT_INDEX_FILE 누출 주의. [인계](2026-10-29_routing-b10-independent-review.md).
+
+2026-10-29 ST4F-719 독립검토 차단결함 격리수정: 재마운트·객체비교·로그아웃경합·점검이관·누락22 수정, 웹1290/1290·Edge수락10/10·전체 화면 새회귀0·변이9/9, 필수2/3=66.7% 보안HOLD·push0(반영은 role-manager 담당). [보고·인계](2026-10-29_st4f719-blocker-fix.md).
+
+2026-10-29 EKS 섞어준 자전거58 후속시험: departure_context 직접단언·earliest_on_late 혼합(성립/불성립) +2시험, 로컬커밋 47549aa4(push0·제품변경0), RED 52f933e8·513ab4cc 각2/2→GREEN2/2·변이4/4·기본1621/1skip·전체223 새실패0·golden2 2/2·ruff, 독립검토 없음, 누적해소2/5=40%·PR110 HOLD. [인계](2026-10-29_eks-mixed-bike-followup.md).
+
+2026-10-29 라우팅 전수검사 미결 재집계 28→27(38.6%): B10 고객 고정 숙소·항공 바꾸기 거절 후보 327d7baaa(push0)·RED3/4→4/4·관문 새실패0, B11 화면결정·tip 보안시험 실패(ST4F-728 XML) 기록. [인계](2026-10-29_routing-open-recount-b10.md).
+
+2026-10-29 EKS 섞어준 자전거 계획수단 58수정: 혼합요청 planned=bike 3경우 재현=58위반→`_bike_mixed` 판정만·left_out `bike_not_recommended`·earliest 제외, 로컬커밋 56fc3ce1(push0), 새시험 RED2/3→3/3·변이4/4·전체223 새실패0·기본1619/1skip·ruff, Claude·Codex R3 승인, 누적해소2/5=40%·PR110 HOLD. [인계](2026-10-29_eks-mixed-bike-planned.md).
+
+2026-10-29 EKS golden2 자전거58 충돌판정: 섞어준 자전거 more_options·출발문맥 노출=58위반→격리수정 52f933e8, golden2 2/2·변이검출·5파일22/24·새실패0, 누적해소2/5=40%·PR110 HOLD. [인계](2026-10-29_eks-golden-bike-policy-review.md).
+
+2026-10-29 ST4F-719 개인정보·인증 복구 독립검토: 관문·Edge10/10 재현, 기존 live 60/61→53/61(새실패7)·채팅유실·API23/24, 수락불가·필수2/3=66.7% HOLD. [보고·인계](2026-10-29_st4f719-privacy-auth-independent-review.md).
+
+2026-10-29 ST4F-719 개인정보·인증 복구 후보: Edge10/10·웹1282/1282·변이4/4=100%, 필수2/3=66.7% 보안 HOLD·push/배포0. [인계](2026-10-29_st4f719-privacy-auth-recovery.md).
+
+2026-10-29 ST4F-719 identity-bound 독립검토: Edge4/8=50%·변이4/4=100%, P1/P2 3경계 재현·필수2/3=66.7% HOLD. [인계](2026-10-29_st4f719-identity-independent.md).
+
+2026-10-29 EKS golden2 도보·출발문맥: 해소1/5=20%(bike golden v2 독립도출=실제), 5파일21/24·새실패0, 가려진 자전거 more_option 담당결정·PR110 HOLD. [인계](2026-10-29_eks-golden-walk-context-causality.md).
+
+2026-10-29 ST4F-719 세션 소유권 격리수정: 웹1268/1268·실인증 Edge3/3·변이4/4=100%, 필수2/3=66.7% HOLD. [인계](2026-10-29_st4f719-identity-bound.md).
+
+2026-10-29 새벽 첫차 원인추적: 첫차시험군2/3=66.67%·추가해소0/5=0%, 정류장 첫차 근거 미확보·PR110 HOLD. [보고·인계](2026-10-29_eks-dawn-first-vehicle-causality.md).
+
+2026-10-29 ST4F-719 수정 후보 독립 재검토: 웹1257/1257·변이3/3=100%, Edge5/6=83.3%, 계정 경계 잔존/이력 삭제 재현, 필수2/3=66.7% HOLD. [보고·인계](2026-10-29_st4f719-fixes-independent-review.md).
+
+
+2026-10-29 ST4F-719 검토실패3건 격리수정: 새사본 웹1257/1257·Edge9/9=100%, 필수2/3=66.7% HOLD. [보고·인계](2026-10-29_st4f719-review-fixes.md).
+
+
+2026-10-29 ST4F-719 독립검토: 웹1231/1231·변이4/4=100%, 정보누락2·로그아웃잔존1 재현, 필수2/3=66.7% HOLD. [인계](2026-10-29_st4f719-independent-review.md).
+
+
+2026-10-29 ST4F-732 단계 시계 독립검토: 목표12→0초 확인·Edge15/19=78.9%, 기존경계4건·필수2/3=66.7% HOLD. [보고·인계](2026-10-29_st4f732-clock-independent-review.md).
+
+
+
+2026-10-29 ST4F-718 저장 정책 독립검토: 웹1241/1241·Edge22/22=100%; 구버전 중복/raw ID 재생성·queued open 무응답 재현, 기존 필수2/3=66.7% HOLD 유지. [보고·인계](2026-10-29_st4f718-storage-policy-review.md).
 # 세션 인계 안내 목차
 
 2026-10-29 ST4F-728 로그아웃 경합 수정·웹1227/1227·필수3/3=100%,종결0·589담당유지. [인계](2026-10-29_st4f728-guest-logout.md).
@@ -20,6 +165,189 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 2026-10-23 — [Dining 실행 내 결과 재사용 2단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-result-reuse.md): 같은 도구·인자의 확인 결과와 원 call_id 재사용, 실제 호출 예산과 분리, unknown·오류·빈 검색 미재사용, 입력·근거 사본 반환, cache_hits 기록. 새 시험 24/24 = 100%, 1단계 포함 35/35 = 100%, 관련 전체 183/192 = 95.3%(기존 실패 2·DB 연결 불가 건너뜀 7), ruff 통과. 백업 `_backup/2026-10-23_dining-result-reuse/`. 커밋·푸시·배포 안 함. 전체 2/3 = 66.7%, 다음은 3번 모호한 조건 질문·답변 연결.
 
 2026-10-23 — [Dining 필수 검사 누락 보완 1단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-required-checks.md): 한 일은 실패 체크 완료 집계 제외·수명주기 누락 재대조·접수의 별도 unknown 안내·웹 타입과 라벨 연결. 새 시험 11/11 = 100%, 관련 Python 143/145 = 98.6%(기존 잠금 시험 실패 2건을 수정 전에도 재현), 웹 57/57 = 100%, ruff 통과. 웹 타입 오류 15건도 수정 전 동일. 로컬 부품 화면만 확인, 커밋·푸시·배포 안 함. 전체 진행 1/3 = 33.3%, 다음은 2번 실행 내 조회 결과 재사용. 수정 전 사본은 `_backup/2026-10-23_dining-required-checks/`.
+2026-10-29 source identity: independent failures 2 reproduced and corrected; final regression 565/565=100%, review 7/7=100%, gates 630/631=99.84% (existing security HOLD). [handoff](2026-10-29_conversation-source-identity-fix.md).
+
+2026-10-29 장소 소개 재검증: 공공 필드 단어 오거절 수정, 회귀429/429=100%, 실모델 작성1/1=100%(합성 한 표본), 유료1/1회. scanner/XML HOLD1·서비스 보류·push0. [인계](2026-10-29_conversation-place-recheck.md).
+
+2026-10-29 대화 서빙 후속: 기존 격리 후보에 공공자료 장소 소개·일반 추천 이유·실제 해석→고객답 시험 추가. 회귀401/401=100%, 선택관문630/631=99.84%(XML HOLD1), 독립 한정승인. 유료5회·장소소개 실모델0/1, 최종 재측정·서비스 수락 HOLD·push0. [인계](2026-10-29_conversation-source-serving.md).
+
+- [2026-10-29 Linux 원래18 중13해소·5잔여/RAG별도16·운영HOLD](2026-10-29_eks-linux-remaining18.md)
+
+2026-10-29 ST4F-718 저장/quota/privacy 후보: 웹1241/1241·Edge22/22·변이4/4=100%, 필수2/3=66.7% HOLD·정책/운영수락 미완. [보고·인계](2026-10-29_st4f718-storage-policy.md).
+
+2026-10-29 ST4F-718 독립검토: 웹1255/1255·변이4/4·Edge12/12=100%, 무제한 증가·quota/탭 한계 확인, 필수2/3=66.7% HOLD. [보고·인계](2026-10-29_st4f718-independent-review.md).
+
+
+ST4F-740 다음 미배정 항목으로 718의 자동 재생 이력 유실을 찾고 격리 수정했습니다. **필수 2/3 = 66.7% HOLD**, 종결·push·배포 0건입니다. [보고서](../../final_project_cs/wiki/records/reports/2026-10-29_st4f718-credits-retention.md). [handoff](2026-10-29_st4f718-credits-retention.md).
+
+
+- [2026-10-29 EKS Linux 정밀 기대18건 정정·잔여18·PR110 HOLD](2026-10-29_eks-linux-precision-expectations.md) — 한 일·Linux 비교·독립 검토·실패/사본 보존·다음 조건.
+
+
+2026-10-29 보안 원본2/2=100% 보존·과거XML 탐지5건/HOLD. 새727 브라우저16/16,739 운영읽기5/5=100%;운영종결보류. [보고](../../final_project_cs/wiki/records/reports/2026-10-29_systemic-scanner-and-backlog.md).
+
+2026-10-29 EKS 전체원본113/113=100%·Linux180/216=83.33%, 기존36실패/새실패0·PR110 draft/HOLD. [보고](2026-10-29_eks-linux-full-original-reliability.md).
+
+2026-10-29 734/724 독립검토: 실API·PG·Edge 전이확인, 변이3/3=100%;724 필수2/3=66.7% HOLD·보호18/18=100%.739 추가검증20/20=100%,운영종결보류. [보고](../../final_project_cs/wiki/records/reports/2026-10-29_st4f734-724-independent-review.md).
+
+- [2026-10-29 ST4F734 실제tight 질문·724 최신tip 검증과 보안HOLD](2026-10-29_st4f734-tight-question-and724-validation.md) — 한 일·변이·실API/브라우저·보존·다음 조건.
+
+2026-10-29 EKS reader 관측 후속: workflow5/5·격리31/31=100%, 기존 읽기 실행 경로 미확보·원인 미확정/HOLD. [보고](2026-10-29_eks-reader-observability-boundary.md).
+
+- [2026-10-29 EKS reading fatal 원인 분리·관측 로그 대기 HOLD](2026-10-29_eks-reading-fatal-offline-discrimination.md) — 한 일·215회귀·7개 대역·비용/보존·다음 조건.
+
+- [2026-10-29 EKS checking AMD64·운영 baseline fatal HOLD](2026-10-29_eks-checking-amd64-validation-and-baseline-fatal.md) — 한 일·실데이터 대조·원래16실패 판정·후보 미배포.
+
+- [2026-10-29 EKS checking 독립검토·PG전후·Linux16 HOLD](2026-10-29_eks-checking-independent-review.md) — 한 일·실패·운영 읽기 증거·남은 관문.
+
+- [2026-10-29 EKS Linux37 기준대조·checking SQL 후보 HOLD](2026-10-29_eks-linux37-and-checking-duplication.md) — 한 일·개별분류·검증·잔여16건·운영변경0.
+
+2026-10-29 [734 실서버 읽기 확인·733 격리 회귀](2026-10-29_734-readonly-and733.md): 소스4/4·실PG7/7·웹39/39=100%,731 HOLD 유지.
+
+2026-10-29 후보 잠금 설명 정정·실DB8/8, ST4F-734 DB2/2·웹14/14=100%; 필수2/3=66.7% HOLD. [한 일·인계](2026-10-29_lock-lifetime-and734.md).
+
+2026-10-29 EKS ???? ??: ??1486/1612=92.18%(skip126), ??200/200=100%; ????17.60%???HOLD. [??](2026-10-29_eks-full-data-latitude-pruning.md).
+
+2026-10-29 EKS 서빙 병목 후속: 이동1488/1614=92.19%(skip126), 경계1500/1500=100%; 합성 미세개선·운영HOLD, 새접수0. [인계](2026-10-29_eks-serving-bottleneck-partition.md).
+
+2026-10-29 ST4F-729 보존 경계·HOLD와 ST4F-708 격리 독립 검증. [인계](2026-10-29_st4f729-policy-review-and708.md).
+
+
+2026-10-29 ST4F-714 종결1건·남음102/688=14.8%.589지정담당·실조회수락/원인 남음. [인계](2026-10-29_teamflow714-acceptance-and589-boundary.md).
+
+2026-10-29 TeamFlow714 역사/현행/x600 수락·589 담당경계. [인계](2026-10-29_teamflow714-acceptance-and589-boundary.md).
+
+2026-10-29 x600006268853c 읽기수락·ST4F-504 원인대조/종결1건. 새30/30·원반복30/30=100%,남음103/688=15.0%.597/711열림. [인계](2026-10-29_x600-acceptance-and-st4f504-causal-review.md).
+
+
+2026-10-29 TeamFlow104/688=15.1% 미완료 재확인. ST4F-597 격리SQL 고침·새회귀6/6, 요식254/255(기준공통실패1), 계약367·보안125·DoD26 통과. push·이슈종결0. [인계](2026-10-29_teamflow-st4f597-menu-source.md).
+
+2026-10-29 x600 ST4F-711: 실행 소스217da9ad07·문서3dd9bd70 배포입력9/9=100% 동일, 공개 GET4/4=100%(x600 관측). ST4F-504 새PG 파일19/19·동시답장30/30 통과; 역사적 원인·종결 보류. [인계](2026-10-29_deploy-followup-and-st4f504.md).
+
+
+2026-10-29 00:4x x600 F: guguroute 폴더 **실측 완료**: 5개, 합계 18.94 GB. 모두 10-18 x600 복구 세션이 만들었다(세션 ID 는 기록 보존 범위 밖이라 미확인). torch 압축 사본 2개(1.53 GB)는 E 원본 SHA 3/3 일치 → 승인 시 삭제 가능. `guguroute-offline` 은 E junction/symlink 5개의 실체라 삭제 금지. 독립 복구 VM(12.54 GB, 고객 비밀 사본 포함)과 QEMU probe 는 보존. 삭제 0. [인계](2026-10-29_x600-f-drive-guguroute-folders-inspected.md)
+
+2026-10-29 00:4x 라우팅 통합(S2): 팀 · 개인 role-manager `c52fb5c69` → **`c714eecdb`**(ff). 전수검사 7건 + TeamFlow ST4F-574 · 714(`010f9deeb`) + 574 숨은 대체 제거 + **A13 수정**(해 없는 날짜 인용에 모델이 붙인 해 → 확인 표시, Codex blocker 반영). 관문 10,766/실패 2(환경) · DB 555 · 110/110. **x600 배포 확인**: board `deploy:c714eecdbc` done 00:31 · 「반영 완료」 · api 버전 c714eecdbc · health 200. 미결 29 → 28. 셸 환경 변수 작업자 간 섞임 주의. [인계](2026-10-29_routing-7-teamflow-a13-role-manager-integration.md)
+
+2026-10-29 00시 EKS 릴리스 독립 검증(V): 배포 성공 · R 전후 수치 재현 확인. CD 1차 실패는 첫 공개 확인의 연결 단계 `URLError`(이유 미기록, verify 153초 중 ~130초는 되돌리기). 운영 확인 단계 최소 19.3초 중 로컬 CPU 몫 1.3~2.8초 — 나머지 귀속은 AWS 로그 필요. 측정 접수 26건은 게스트 정리(약 11-04) 때 `intake_backups` 에 영구 백업 — 사용자 결정. CD 진단 후보 `72ba5ff48` push 0. [인계](2026-10-28_eks-release-independent-verification.md) · [보고서](../records/reports/2026-10-28_eks-release-independent-verification-and-bottlenecks.md)
+
+2026-10-28 22:3x x600 F: 「guguroute 뭐시기」 폴더 조사 **미완 — x600 접속 불가**(SSH timeout 4/4 · ARP 없음 · 공개 health 523). F: 직접 쓰기 기록 0, 간접 1(`ollama create tripilot-pointer:e4b-ft` → `F:\_work\models\ollama`). 재개 절차: [인계](2026-10-28_x600-f-drive-guguroute-folders-readonly.md).
+
+2026-10-28 22시 C: 여유 공간 단위 정정 · guguroute scratch 정리. 과거 「301GB」(10-28 18:13)는 **301GiB ≈ 323GB**, 「251GB」(10-27 20:08)는 **251GiB ≈ 269.5GB**였다(정리 스크립트·`df -h` 가 GiB). 「436.6GB」(10-27 20:2x)는 GB가 맞다. scratch 에서 작업이 끝난 worktree·clone 작업 사본만 지웠다. 커밋은 원격에 있거나 검증된 bundle 로 보존했고, 증거 파일은 지우지 않았다. [보고서](../records/reports/2026-10-28_c-drive-free-space-units-and-scratch-cleanup.md)
+
+2026-10-28 라우팅 전수검사 미결 재집계: 결함표 원문으로 70 · 고침 28 · 미결 42 확인 → 지금 고침 38(이미 고침 3: C12 · C13 · 웹 8 + 이번 7) · 종결 3(웹 9 · A04 · A12) · **미결 29**. 이번 7건(E-D3 서울 밖 안내 · A17 · A15 · C18 · C20 · C21 · C22)은 팀 기능 브랜치 `fix/routing-open-audit-20261028`(`87081891e`, role-manager `c52fb5c69` 위)에만 있다 — R 릴리스(PR #107) 중이라 role-manager push 보류. 관문 10,755 통과 · 실패 2(환경), 격리 PG 553/554(날짜 박힌 시험 1 — 이후 커밋에서 통과) · 4/4. [인계](2026-10-28_routing-open-audit-recount.md)
+
+2026-10-28 밤 TeamFlow 이어서 점검: 다시 조회 4회(105 → **104/688 = 15.1%**). EKS 릴리스 뒤 원격(role-manager `c52fb5c69` · develop `3463b30c6` · main `20c296e77`)과 대조해 실제 반영된 **ST4F-710 하나만 done**(CI · CD success · main 트리 22/22). 격리 clone 가지 `tf105/candidates`(c52fb5c69 위 4커밋 `7af3c9b66` 574·714 · `76053f529` 521 · `ef4a3c54b` 724 zod 4.6.7 + admin HTML · `a0ba3e50f` 502·531 check:html · check:stale) — 넓은 묶음 상태 바뀐 시험 0, Claude CLI 검토 APPROVE. 해당 7건은 상태 유지 · 증거만 덧붙임. **push 0 — 라우팅 세션 role-manager 반영 대기와 겹치지 않게 부모 몫.** [보고서](../records/reports/2026-10-28_teamflow-105-continue.md)
+
+2026-10-28 TeamFlow 미완료 전수 점검(프로젝트 84). 전체 688건을 상태×유형 16묶음으로 받아 미완료 117건을 모두 분류했다. **완료 12 · 검토로 6**으로 바꿨고, 각 이슈 본문 끝에 증거를 덧붙였다. 갱신 뒤 다시 받아 확인한 미완료는 105/688 = 15.3%다. 수정 후보 `010f9deeb`(ST4F-574 공통 공공데이터 키 · ST4F-714 project.yaml 팀 블록 중복 4개)를 efc6fca47 위 격리 사본에 만들었다. RED 2 → GREEN, 1,973 통과다. **push 0 — 라우팅 세션이 반영할 몫**(710 후보 `e6e754f27` 도 같다). 724 는 새 zod 권고 때문에 audit 0 기준을 못 채워 진행 중으로 두었다. [보고서](../records/reports/2026-10-28_teamflow-open-117-sweep.md)
+
+2026-10-28 EKS 후보 `ca879220b` 전체 시험 실패 원인 수정 · 건너뜀 해소: 실패 2(`test_intake_read_lock` 읽기 계산 1초×2를 잠금으로 오판 · `test_trip_events` 1.6초 창) · dining `test_dining_agent_judge`(82eecd6b2 뒤 `intake_state` 대역 누락) · 재검증에서 드러난 SSE 3(`op_stream` 픽스처 마감 5초 · 준비 대안 1초 대기/beat) · 이동 자료 전용 1(`departure_context` 더 보기 후보) — **모두 시험 쪽, 앱 0**. scratch clone 위 3커밋 `1dbef9e6d`(main · develop · role-manager 모두 적용됨). 격리 PG16 CI 재현 **13,376 통과 · 실패 0 · 건너뜀 207 / 13,583**, 아키텍처 170/170. 건너뜀 506 중 485(95.8%) 실제 실행 · 통과(dining 246 · PGlite 37 · 전용 DB 30 · WSL bash/dash 40 · 공개 이동 자료 132), 남은 21 = 정책 차단 14 · 자료 없음 7. 공유 5433 접속 시도는 dining conftest 기본값 — 이번 0. **push 0 — 부모가 EKS PR 에 넣을지 결정.** [보고서](../records/reports/2026-10-28_eks-candidate-test-failures-root-cause-and-skips.md)
+
+2026-10-28 21:2x 「Hi」·현재 텔레그램 세션 종료 가능성 4차 감사(읽기 전용, `state.db` `mode=ro`). **Hi는 10-27 20:11에 이미 닫혔다(하위 26개 종료, 실행 중 0). 그러나 삭제는 아직 하지 않는다.** 남은 일 3건:
+- 비밀 교체: x600 DB 비밀번호·공공데이터 키·재난문자 키가 하위 세션 `2fef48`의 1행(+FTS 색인)에 가림 없이 남아 있고, 교체 결정 기록이 없다. 다른 76개 세션의 비밀 후보는 오탐이었다.
+- 보존: 기록 커밋 4개(`2c1ea3184` Q, `28ff40a0d` K, `eaa649f40` C, `f5edf4784` E)가 원격에도 원본에도 없고 scratch에만 있다.
+- 확인 필요: Hi에 admissions 104건이 있는데, 이 상태에서 `sessions delete`가 어떻게 동작하는지 확인하지 않았다.
+
+**현재 세션은 닫을 수 없다.** 21:24 기준 열린 하위 세션이 7개이고, 21:10 지시 6과제 중 완료는 0이다.
+
+wiki 누락 보강:
+- x600 `C:\` 루트 조사: `guguroute` 폴더는 미특정
+- C++ 상태 유지 서버 질문에 대한 답
+- 목차에 연결이 빠졌던 문서: [x600 배포 전후 속도](../records/reports/2026-10-28_x600-serving-latency-before-after-readonly.md) · [관리자 3300·ops 8070 종료 원인](2026-10-28_admin-3300-ops-8070-exit-cause.md)([보고서](../records/reports/2026-10-28_admin-3300-ops-8070-exit-cause.md)) · [원본 직접 실행 준비](2026-10-28_original-runtime-prep-ops-admin.md) · cs [거절 문장](../../final_project_cs/wiki/records/reports/2026-10-28_거절문장_고객말_role-manager_후보.md) · [로컬 회로 줄서기 제외](../../final_project_cs/wiki/records/reports/2026-10-28_로컬회로_줄서기_제외_후보.md) · [살펴볼 점 경고 문장](../../final_project_cs/wiki/records/reports/2026-10-28_살펴볼점_경고문장_고객말_role-manager_후보.md)
+
+코드·원격·세션 DB 변경과 세션 삭제는 0이다. [인계](2026-10-28_hi-and-current-session-close-readiness.md) · [보고서](../records/reports/2026-10-28_hi-and-current-session-close-readiness-audit.md)
+
+2026-10-28 텔레그램 「Hi」 세션(10-26 05:50~10-27 20:11) 삭제 전 감사(읽기 전용, `session_search`). 압축 뒤 193 메시지는 전부 읽었고, 압축 전 436 메시지는 요약과 원문 인용으로 대조했다(줄 단위 전수는 아님). 보강한 누락 사항:
+- 사용자 결정: 휴지통 비우기·Nemotron 삭제, disk-hygiene 규칙, final_workspace 하나만 남기기.
+- Q 보고서와 K·C·E 기록 커밋이 원격 role-manager에 없다.
+- 10-27 03시 x600 유료 대체 290회: 원인과 비용 미확인.
+- 하위 세션 도구 출력에 비밀이 표시됨: 교체 결정 없음.
+- 재난 낱말 확대: 사후 승인 필요.
+- 308을 role-manager에 넣을지: 결정 대기.
+- scratch 230개 삭제 중 77개 경로가 남아 있다: 미확인.
+
+코드·원격 변경은 0이다. [인계](2026-10-28_hi-telegram-session-audit.md)
+
+보강(2026-10-28): 압축 전 원본 436행은 지워지지 않고 `state.db`(`compacted=1`)에 남아 있었다. 읽기 전용으로 436/436행을 순회했다(tool 출력 141행은 정독하지 않음). 앞 감사에 없던 사항:
+- 사용자 지시: Codex 6.1 Terra 사용. wiki에는 없고 스킬에만 있다.
+- 결정 대기: 「먼저 채우기」를 확인 화면 뒤로 옮길지, Qwen과 `base_e4b.gguf`를 지울지.
+- auto-merge를 실제로 시도했다(저장소가 허용하지 않아 실패).
+- 10-26 14:10에 하기로 한 보고가 이행되지 않았다.
+- 10-27 응답에 날짜 혼동이 있었다(시연과 CD 시각).
+
+[보강 인계](2026-10-28_hi-telegram-session-audit-436-raw.md)
+
+3차 보강(2026-10-28): 압축 전 436행과 꼬리 원본 15행의 전문을 state.db에서 읽기 전용으로 읽었다. tool 출력 141행, 위임 지시문, 완료 통지도 모두 포함한다. 활성 193행과 하위 세션 26개는 다시 읽지 않았다. 앞 감사에 없던 사항:
+- 하위 세션이 원본 저장소에서 `git worktree prune`을 실행했다(규칙 위반, 본인 보고).
+- 고객 경로 `catalog_hours` 73행에 옛 운영시간이 남아 있다(P0 후보, 미수정, 결정 목록에 빠짐).
+- 12:35 x600 `docker cp` 직접 반영이 있었다. CI 실패를 안은 호텔 패치가 x600에 자동 배포됐다.
+- 사용자에게 사실과 다른 보고 4건이 있었다(모두 뒤에 정정됨).
+- TeamFlow 「열린 버그 없음」은 100건만 보고 판단한 것이다(전체 688건, 미해결 18건).
+- 날짜 혼동이 하위 세션 10개의 push 금지 시각으로 번졌다.
+- 개인 저장소 CI는 10-14 이후 돌지 않았다.
+
+[3차 보강 인계](2026-10-28_hi-telegram-session-audit-full-read.md)
+
+2026-10-28 EKS 릴리스: PR #107 병합 → **EKS main `20c296e77`**(CD 1차 verify URLError 자동 복구 → 재실행 성공, 마이그레이션 Job 17.4초 committed). role-manager `c52fb5c69` · develop `3463b30c6`. 같은 입력 배포 전후 13/13: SSE 최대 간격 p50 4.05→3.01초 · 7초 넘는 간격 1/13→0/13(확인), 끝까지 p50 45.6→32.1초(변동 커서 미확정). x600 523 · SSH 불통(미확인). [인계](2026-10-28_eks-release-deploy-before-after.md)
+
+2026-10-28 ST4F-710(같은 날 **시각 없는** 체크아웃 줄 → 시작보다 앞선 거꾸로 숙박): role-manager `efc6fca47` 위 격리 후보 `e6e754f27`(1커밋, `assemble._stays` + 시험 3개) — 시각 없는 체크아웃 줄이 체크인 날이면 끝을 다음 날 11:00(기존 관례 · B안 배지). RED 2 → GREEN, `test_intake_stays` 8/8 · 직접 관련 5파일 30/30, travel unit 전체 8,407 통과 · 문제 13건 전부 base 재현 또는 부하 시간 판정(회귀 0), ruff 0. 성능은 Claude CLI ↔ Codex CLI 3회차 — **다음 구현 1건: 요청 내 완전히 동일한 이동 조회만 메모화**(조건: 먼저 실제 트레이스로 중복 비율, 0이면 기각 · 키에 시점 의존 입력 포함 · 채택 = 같은 입력 세트 wall time 전후 + 결과·순서 동일). 고객 정보·비밀 외부 전송 0. **push 0 — 부모 몫.** TeamFlow ST4F-710 상태 변경은 사람 화면 작업. [보고서](../records/reports/2026-10-28_st4f710-same-day-checkout-stay-fix.md)
+
+2026-10-28 EKS 마이그레이션 Job 후보 `ca879220b` 최신 main 기준 최종 통합 검증: 팀 main `e88e01925` 그대로(rebase 불필요, 4커밋), 바이트는 2차 검토와 동일. 격리 PG16(55511) CI(main) 재현 전체 13,075 통과 · 실패 2(기준 main에서도 재현되는 시간 판정, 변경 무관) · 건너뜀 506 / 13,583, 아키텍처 170/170, 변경 영역 99/99, ruff · actionlint 0. **push · PR 0 — PR 후보 `hotfix/eks-migration-deadline-20261028`, merge=운영 배포라 사람 승인.** [보고서](../records/reports/2026-10-28_eks-migration-job-final-integration-check.md)
+
+2026-10-28 접수 SSE beat · 슬롯 수명 최신 role-manager 누적 검증: 후보는 `efc6fca47` 에 **이미 반영**(op_stream blob 동일). 그 위 `f24b71080` 1커밋 — 상대 날짜 전환에서 빠진 `test_intake_prefill_scope.py` 날짜(오늘 실행 시 fatal) + 보고서, 제품 코드 0. 빠른 관문 10,725/0 · 격리 PG 158/159 → 1/1 · slow 환경 4 → loopback guard 87/87. **실제 Chrome**에서 웹 `watchIntake`: 기준 8a1feae8f 13.9초에 `lost` → 후보 lost 0(최대 간격 23.3 → 3.09초). origin fetch 미확인. **push 0 — 부모 몫.** [인계](2026-10-28_intake-sse-final-role-manager-browser.md) · [보고서](../../final_project_cs/wiki/records/reports/2026-10-28_접수SSE_최신role-manager_누적검증_브라우저.md)
+
+2026-10-28 ST4F-631 최신 기준 독립 리뷰 · 통합 검증: 팀·개인 role-manager `efc6fca4` 에 `6833b1153`(후보 `4f899ecd3` 와 patch-id 같음)로 이미 반영 — 첫 patch 는 대체됨. 리뷰 차단 0 · 접수 unit 1,028/1,028 · DB e2e 21/21(비교 DB 변화 0). TeamFlow 읽기만: 미해결 117, 버그 17 대조 — **ST4F-710 최신 코드에서 재현**(다음 1순위). TeamFlow · 원격 쓰기 0. [인계](2026-10-28_st4f631-independent-review-teamflow-priority.md) · [보고서](../records/reports/2026-10-28_st4f631-independent-review-and-teamflow-priority.md)
+
+2026-10-28 role-manager `8a1feae8f`(origin · team 동일) x600 자동 배포 읽기 전용 확인 — **사용자 지시로 「라우팅 에이전트 구현」 세션에 이관, 중단.** `/health` 200 이나 공지 게시판 · deploy.log 끝 기준 실행 판은 `93c7ba8ecf`(10-27 18:59), `8a1feae8f` 배포 항목 없음. 원인(state · lock · 타이머) · 2분 안내 게스트 화면 readback 미실행. 배포 · 수정 0. [인계](2026-10-28_x600-8a1feae8-deploy-readonly-handoff.md)
+
+2026-10-28 실제 서빙 속도(SSE 표시 아님): 확인 화면 공개(`stage=review`) 전 먼저 채우기가 빈칸이 아닌 일정까지 `autofix.plan` 으로 후보 · 시간표 이동을 계산하고 버리던 것 → **빈칸 일정만 계산** + 단계 시각 로그 2줄. Claude CLI ↔ Codex CLI 3회차(둘 다 approve). 팀 role-manager `ffb5fb1b5` 위 후보 `06b75e491`(main 에도 충돌 0). 격리 합성 짝 측정: 받기 → 채우기 끝 p50 9.55 → 4.42초(10쌍×2, 결과 모양 20/20 같음) · 2.2초/호출 32.4 → 19.3초(한도 소진으로 못 채우던 빈칸을 채움). 새 시험 RED 11 → 14/14 · 넓은 묶음 8,756/0 · 관문 662/662. 운영 효과 미측정. **push 0 — 부모 몫.** [인계](2026-10-28_prefill-gap-only-serving-speed.md) · [보고서](../../final_project_cs/wiki/records/reports/2026-10-28_먼저채우기_빈칸만_계산_서빙속도.md)
+
+2026-10-28 EKS 마이그레이션 시도별 제한 후보 `0f584a2eb` 2차 독립 검토: 격리 PG16(55481) 경합 시험 — 여러 문장 시도 끊김 · COMMIT 중 취소/끊김 `commit_unknown`(DB 는 되돌려짐, 보수적) · 경계 60회 결과-DB 불일치 0 · 늦은 취소 0/1,100. DB 통합 23/23 진짜 · 격리(단 새 제한 경로는 안 탐). blocker 1(RULE.md 3 하드코딩: 600 · 2min · 120 · +120) → 격리 clone 추가 커밋 `ca879220b`(값을 `deploy/aws/migration-job.json` 으로, Job 바이트 동일, 중첩 호출 제한 거절) 137/137 · 변이 7/7. **push 0 — 부모가 PR · CI.** [보고서](../records/reports/2026-10-28_eks-migration-deadline-independent-review-2.md)
+
+2026-10-28 EKS 마이그레이션 시도별 제한 · Job 기한 검사 보강(독립 검토 §1 위험 1): `statement_timeout` 이 문장마다 걸려 시도 하나를 못 묶는 것을 실 PG16 으로 확인 → `apply_all` 시도별 취소 제한 · 기한 검사 = 횟수 × 시도 2min + 사이 대기 + 시작 여유 120 ≤ 600초(지금 493) · COMMIT 중 오류 `commit_unknown`. 누적 후보 `0f584a2eb`(팀 main `e88e01925` 위 3커밋). 실 PG 10/10 · 단위 134/134 · DB 통합 23/23 · 변이 8/8 · actionlint 0. **push 0 — 부모가 PR · CI.** [인계](2026-10-28_eks-migration-per-attempt-deadline-fix.md) · [보고서](../records/reports/2026-10-28_eks-migration-per-attempt-deadline-fix.md)
+
+2026-10-28 C12 독립 리뷰 수정(소유 확인 전 실패는 503 대신 원래 예외 · 503 본문 `proposal_status` open) 반영: 팀 role-manager `ffb5fb1b5` 위 `7f670774f` → 로컬 후보 `129741ec3`. 빠른 관문 10,549/0 · 단위 RED 2 → 14/14 · 실 PostgreSQL RED 4/22 → 이웃 122/122. **push 0 — 부모 몫.** [인계](2026-10-28_c12-review-followup-integration.md) · [리뷰 보고서](../../final_project_cs/wiki/records/reports/2026-10-28_C12_리뷰_제안고르기_저장실패.md)
+
+2026-10-28 계획 읽기 · 계획 짜기 화면 예상 시간 안내 「1분쯤 걸려요」 → 「2분쯤 걸릴 수 있어요」(한 · 영 4곳, 사용자 결정): 팀 role-manager `ffb5fb1b5` 위 로컬 커밋 `72c6a718f`. vitest 1,219/1,219 · Playwright 새 4/4(RED 4/4). 시간 제한 · 성능 불변. **push 0 — 부모 몫.** [인계](2026-10-28_plan-wait-estimate-two-minutes.md) · [보고서](../records/reports/2026-10-28_plan-wait-estimate-two-minutes.md)
+
+2026-10-28 00:40 EKS 브라우저 시험(손님 예시 6일정, 접수 40c50259) 80.7초 · 58초 「연결이 끊겼어요」 읽기 전용 추적: 서버는 EKS main `e88e01925`(A·B 포함, x600 아님). EKS DB · 로그는 AWS 자격증명 무효로 못 읽음. 끊김은 웹 7초 감시 + 서버 SSE beat 가 DB 회차 뒤에만 나가는 구조가 유력, 접수 처리가 API pod 안에서 CPU 를 나누는 것은 정황(미측정). 5초 자동 넘김은 설계 대기. 후보: EKS 측정 → SSE beat 분리 → 처리 위치 이동 · 용량. [인계](2026-10-28_eks-browser-80s-latency-readonly.md) · [보고서](../records/reports/2026-10-28_eks-browser-80s-reading-latency-readonly.md)
+
+2026-10-28 EKS 80.7초 · 58초 거짓 「연결이 끊겼어요」: 실제 처리 시간은 EKS 자격 무효로 **분리 못 함**, SSE 쪽만 고침 — Claude CLI(opus-5-5) ↔ Codex CLI(gpt-6.1-sol) 4회차 실제 논의로 `op_stream.watch` beat 를 DB 조회 · 내용 계산과 분리(`pending`·`pending_seconds`, 새 임계값 0). 팀 main `e88e01925` 위 후보 `35e1b0259`(role-manager 에도 apply 가능). 새 단위 RED 6 → 11/11, 격리 PG 74/74 · 69/69, 관문 325/325, 합성 최대 이벤트 간격 10.03 → 3.02초(처리 속도 불변). **push 0 — 부모 몫.** [인계](2026-10-28_intake-sse-beat-claude-codex.md) · [보고서](../../final_project_cs/wiki/records/reports/2026-10-28_접수SSE_beat_분리_후보.md)
+
+2026-10-28 ST4F-631(일정 사이 메모 줄이 여행 제목이 되던 결함): role-manager `ffb5fb1b5` 위 scratch 후보 patch — `assemble._title` 이 규칙 읽기가 일정 본문으로 읽은 줄을 지나면 기본값 「내 여행」(낱말 휴리스틱 없음). RED 5 → GREEN 67/67, 접수 unit 1044/1044, unit 전체 실패 475 는 수정 전과 nodeid 동일(회귀 0). **push 0 — 부모 몫.** [인계](2026-10-28_st4f631-memo-trip-title.md) · [보고서](../../final_project_cs/wiki/records/reports/2026-10-28_ST4F-631_메모줄_여행제목.md)
+
+2026-10-28 EKS 후보 `aaebdacc3`(팀 main `e88e01925` 위 2커밋, fast-forward 가능) 독립 검토 · 격리 실제 PostgreSQL(55472, scratch 새 클러스터) 충돌 검증: 후보 Job 스크립트 5/5 기대대로(55P03 재시도 성공 · 3회 소진 기록 · 40P01 재시도 성공), 수정 전 I 2/2 재시도 0회 재현. 단위 119/119 · `test_migrations_rerun` 11/11. 후속 권고 1(Job 기한 검사가 시도별 statement 를 한 번만 셈). **push 0 — 부모가 PR · CI.** [인계](2026-10-28_eks-lock-policy-independent-review-real-pg.md) · [보고서](../records/reports/2026-10-28_eks-lock-policy-independent-review-real-pg.md)
+
+2026-10-27 C 전수검사 결함 12(P1): 제안 고르기 저장 실패가 일반 500 이던 것을 잠근 제안 행 다시 읽기로 503 `save_failed` 로 고친 role-manager 후보 `7f670774f`(부모 `ffb5fb1b`). 빠른 관문 10,547/0 · 실 PostgreSQL RED 3 → 3/3. **push 0 — 부모 몫.** [인계](2026-10-27_c12-proposal-choose-save-failed.md) · [보고서](../../final_project_cs/wiki/records/reports/2026-10-27_C12_제안고르기_저장실패_503.md)
+
+2026-10-27 23:50 EKS 후보 I(`1b38aa7ef`) ↔ C `lock_policy` 상충 수정: 최신 팀 main `e88e01925` 위 scratch clone 에 I cherry-pick + 수정 `aaebdacc3` — Job 이 확인 트랜잭션을 닫고 `apply_all` 을 맨 바깥에서 불러 교착·잠금 재시도가 살아난다, 잠금 값은 `lock_policy` 한 곳. `test_aws_cd` 45/45 · lock_policy 13/13 · RED 6. **push 0**. 속도 후보 A·B 는 x600 17:23 반영됐으나 그 뒤 접수 0건이라 실측 전후 비교 미완. AWS 자격증명 여전히 무효(`InvalidClientTokenId`). [인계](2026-10-27_eks-lock-policy-and-latency-readback.md) · [보고서](../records/reports/2026-10-27_eks-lock-policy-conflict-fix-and-latency-readback.md)
+
+2026-10-27 작업 폴더 캐시와 빌드 산출물을 정리했다. `.next*` 20개, `.pytest_cache`·`.ruff_cache` 12개, `*.pyc`를 지웠고 파일 **13,909개, 1.88GB**이며 오류는 0건이다. scratch·.backup·.tmp·datasets·node_modules·증거는 보존했다. [인계](2026-10-27_workspace-cache-cleanup.md) · [보고서](../records/reports/2026-10-27_workspace-cache-cleanup.md)
+
+★**2026-10-27 할 일 (사용자 지시 「상대날짜 전환 다음날로 해놔」, 10-26)** — 팀·개인 develop(`f57be997`·`22ea65c7`)과 양쪽 role-manager(`376f2a67` 이후)의 `tests/conftest.py` 전부-과거 가드 시계 전역 고정(오늘=2026-08-01)은 **임시 조치**다. 고정 날짜를 박아 둔 테스트 자료를 「오늘 + N일」 상대 날짜로 바꾸고, 전역 시계 고정을 걷어낸 뒤 `CI (main)` 전체 시험을 다시 통과시킨다. 가드 자체 시험(자기 시계 주입)은 유지. 근거: [develop 전체 시험 복구](../records/reports/2026-10-26_develop-full-ci-restored.md) · 고정 패치 보고 `final_project_cs/wiki/records/reports/2026-10-26_allpast-guard-test-clock-push-prep.md`. 예약·자동화는 만들지 않았다(사용자가 시작을 지시하면 진행).
+  - ↳ **2026-10-28 진행: role-manager 후보 완료, push 0.** `8a1feae8f` 위 `254a0b1d4`(별도 커밋 1개, 39파일, 제품 코드 0) — conftest 고정 제거 + 공용 helper `tests/helpers/relative_dates.py`(같은 요일 · 한 폭). 빠른 관문 실제 시계 · +37일 · 12-31 23:58 각 10,572/0, 비교 DB 97파일 1,108건 실패 0(환경 4) + scratch PG 전역 표 6파일 129/0. 남은 것: push · develop 트리 관문 · `CI (main)` 전체. [보고서](../../final_project_cs/wiki/records/reports/2026-10-28_allpast-guard-test-clock-relative-dates.md)
+
+2026-10-27 13:00 codex_percall uuid + C1 v2 통합: 양쪽 role-manager `93c7ba8e` 위 scratch clone 에 커밋 `45318ab4` → `ffb5fb1b`(tree `be917b80`). 빠른 관문 10,497 passed · 0 failed, C1 격리 PG 1/1 · 이웃 46/46, 비밀값 0. **push 0 — 부모가 두 원격 재확인 후 fast-forward push**. [인계](2026-10-27_codex-c1-combined-commit.md) · [보고서](../records/reports/2026-10-27_codex-c1-combined-isolated-commit.md)
+
+2026-10-27 bundle 후보 C1(고객 외부 알림 관리 콘솔 e2e 시험 · 문서): 최신 role-manager `93c7ba8e` 에서 scratch 전용 새 PostgreSQL 클러스터(55471)로 검증 — 원 patch 1/1 통과, 단 덧붙이기 전용 감사 줄 2행을 남겨 `_audit_cleanup` 을 붙인 **v2** 가 2회 1/1 · 변이 RED 1 · 이웃 46/46 통과. 적용은 v2 patch(원 patch 대체, 런타임 변경 0). 공유 DB · 원본 · 원격 쓰기 0, push 0. [보고서](../records/reports/2026-10-27_c1-customer-notice-e2e-isolated-validation.md)
+
+2026-10-27 옛 작업공간 `C:/_proj/파이널스페이스` 고유 파일 38,114개(10.65GB, datasets 35,922개 포함)를 덮어쓰기 없이 이관했다(검증 38,114/38,114=100%). 고유 커밋 11개는 `.backup/2026-10-26_finalspace_git.bundle`에 보존했고, 옛 폴더는 삭제했다. [보고서](../records/reports/2026-10-26_finalspace-migration-and-removal.md)
+
+2026-10-26 로컬 live API: v7a → v8(02:52) → **v9**(04:18, `proc_56306ecfe547`). [v8 교체](../records/reports/2026-10-26_local-live-swap-v7a-to-v8.md) · [v9 교체](../records/reports/2026-10-26_local-live-swap-v8-to-v9.md). role-manager 최신 `d3d0a063`(x600 배포 확인 중).
+
+2026-10-25 23:55 로컬 live API를 v7에서 **v7a**(v7 + 전체 과거 날짜 가드만)로 교체했다. 새 handle `proc_49f94fe8cb2d`, 포트 8042(localhost/LAN). 교체 후 검증 PASS: 두 주소 모두 새 프로세스 소유, 핵심 GET 14/14, 실행 코드 출처 확인, 전부 과거 계획 422. 교체 전 회귀 1,376/1,376. 웹 화면(3100)은 변경 없다. v7로 되돌리는 방법과 후보 정보는 Hermes scratch `action-v7a-allpast-20261025-233317-fac130f7/PARENT_SWAP.json`, 보고서는 [v7a 후보](../../final_project_cs/wiki/records/reports/2026-10-25_v7a-allpast-serving-candidate.md).
+
+2026-10-25 21:55 전체 과거 날짜 가드: 4개 원격 반영 **4/4 = 100%**(팀 develop `d2ab93a65` CI success · 양쪽 role-manager `08b99597` · 개인 develop `d8366bb`), x600 자동배포 후 실서버 확인 **3/3 = 100%**. 로컬 v7 API와 원본 작업 폴더는 미반영이며, 반영하려면 재시작 승인이 필요합니다. [기록](../records/reports/2026-10-25_allpast-four-remotes-x600-verified.md).
+
+2026-10-25 v6 intake closeout: **authentry PASS / core match=true / full parity=false**. 승인 추가 GET2/2=100%, 유일한 차이는 risk 관측시각3 pointer이며 업무11표 변경0·v6 모델 counters0. [보충 증거](../records/reports/2026-10-25_v6-intake-diff-closeout-child.md) · [CS 인계](../../final_project_cs/wiki/handoff/2026-10-25_v6-intake-diff-closeout.md). 기존 FAIL은 보존합니다.
+
+[현재3100 실측] 호텔조식 예시 실제교체 2/2=100% 완료: localhost93tSFrxar_RqgguLjsbwY / LANp4N2ThMaXaAI8RY4eWrbC, fresh guest 예시버튼·전체 textarea 확인, 제출/등록0·선택동의거부. old pin+검증delta이며 최신12커밋전체통합 아님. API/DB/Dining·기존고객계획 불변. [핸들/PID·사진·rollback·인계](../../final_project_cs/wiki/records/reports/2026-10-25_hotel-example-live3100.md).
+
+[현재 실측 2026-10-25 12:56] DB6536/API22260·기존웹27124/16432 연결복구. 새DB/API handed_off, HTTP/CORS12/12·실guest GET2/2·확정여행version1/items2 readback. test1 질문·대안선택은 미완료, 사용자원고 쓰기0. [긴급복구 근거·현재handoff](2026-10-25_service-emergency-recovery.md).
+
+2026-10-25 [관리자 DB 연결 인계](2026-10-25_admin-db-handoff-connection.md): ops proc_4906d16bd1bd/PID24596, admin proc_c18061b7c7aa/PID27004 모두 handed_off. 지정DB 연결 확인, OFF 명시 저장은 기존 admin private credential 부족으로 대기.
+
+2026-10-25: [V10 로컬·LAN 실서비스 최종 인계](2026-10-25_v10-local-service-release.md) — proc_194b6e03a438 handed_off, PID27500. local E4B/tokenizer 활성화, 실제 API10/10·CORS4/4·GET-only 실브라우저4/4·비교DB 동일2case answered/stop/readback2/2. shared schema/원본env 미변경, 의미·905/archives 남음.
 
 여러 세션(Codex · Claude)이 같은 작업 폴더에서 일하고, 커밋은 사용자가 시킬 때만 한다. 그래서 **git 이력만 보면 최근 작업이 안 보인다.** 이어받는 세션은 아래 목록의 맨 위 인계부터 읽는다.
 
@@ -185,6 +513,13 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 | 2026-10-13 01:00 | [베이스라인 TRP-BL-2026-10-13 — 작업 기준](../../program/baseline/triPilot-baseline-2026-10-13.md) | 한 일: 베이스라인을 NASA 형상 관리 계획서(SCMP) 양식의 작업 기준으로 다시 씀(커밋 `11a1dbcd` 고정, 승인란 기입 대기). 옛 검토본 본문은 [검증 현황 보고](../../program/baseline/triPilot-verification-status-2026-10-12.md)로 옮김. 알려진 문제는 [검증 현황 보고](../../program/baseline/triPilot-verification-status-2026-10-12.md) 부록으로 옮김. 01:20 해결 요청 전달: 이동(시험 실패 6·택시 요금) → 「이동 이어서」 세션이 받아 「이동경로 최적화」 세션으로 넘김(이동 담당 교대, [근거](../../final_project_cs/wiki/records/reports/2026-10-12_mobility_no_fallback/CLAUDE-HANDOFF-20261013-from-45290d-v1.md) §3), 모니터링·코어(도로 사건 방향 2/20·감시 회차 팀 순서 고정) → 「재난 알림 시 작업 중단 처리」 세션. 01:35 커밋 `2c737818` 기준 이동 시험: 자료 없음 97 통과·실패 0, 실제 자료 132/136(골든 4개 — 새로 만들지 사용자 결정 대기). 남은 것: 승인란 기입·태그(승인 뒤) |
 | 2026-10-15 | [후보 세 단 · 모델 이유 문장 · 임베딩 · 약관 보관 기간 — 인계](../../final_project_cs/wiki/records/reports/2026-10-15_후보_세단_모델이유_보관기간_인계.md) | 한 일(코드 끝 · role-manager/develop 반영 · 로컬 시험만 · 실모델/x600 서버 확인 안 함): 호텔 후보 · 취향 추천 3단 · 모델 이유 문장 · 임베딩/분류 채우기 · 보관 기간 정리(기본 dry_run). 남은 결정: 정리 on 승인 · 활동 기록 비식별 보관 · CLAUDE/AGENTS 의 case_events 문장 |
 | 2026-10-15 01:30 | [cs 개발 세션(10-06~10-07) 한 일 목록](../../final_project_cs/wiki/records/reports/2026-10-15_cs개발세션_10-06_10-07_한일목록_인계.md) | 한 일(끝 · 원격 반영 `f281cdbb` · `503aff22` · `129934f6` · `38f9e08c` · `5f46479c` · `425b6924` — 양쪽 develop·role-manager 포함 확인): 서비스 평가 약한 지표 여섯 해결(사람 평가 화면 + 첫 결과 35행 · 번역 금액 단위 보호 · 엉뚱한 대상 변경 0/172 · 계획 읽기 값 변조 표시 없이 새는 것 3.4%→0.6% · 일정 짚기 빈 답과 규정 검색은 RAG 세션 하네스) · 서버키 자동 전환(`app/infrastructure/llm_failover.py` · 운영 반영은 10-08 다른 세션 기록) · 계획 확인 화면 연동(`other_value` · 검토 응답 `rereads`) · 이번 문서 점검(결정 D-CS-016 · 불변식 `INV-CS-SEC-012`~`015` · `INV-CS-RT-027`·`028` · 구조 시험 1). 남은 일: 번역 · 분류 · 계획 읽기의 OpenAI 경로 정확도 미측정 · 사람 평가 두 번째 평가자 · x600 서버의 마이그레이션 055 · 모델 호출 지연 p95 원인. 확인 명령은 보고서 「다시 확인하는 명령」. 이 문서 점검 묶음(미커밋 → 커밋 예정): 결정 · 불변식 · 구조 시험 · 인계 보고서 · 위키 목차 행 |
+| 2026-10-25 06:23 | [E4B tokenizer 실제 복구·후속 재생 인계](../../final_project_cs/wiki/records/reports/2026-10-25_e4b-tokenizer-recovery-v6.md) | 공식hash 검증·새 cache 복구, 무네트워크 양쪽4/4 통과. 기존 proc_f11a51b230be 유지, 3/6stage·채팅35/476 snapshot. 기존 종료 후 원래2개 양쪽 실API/E4B 재생 continuation proc_227989a6c1f3 부모 handed_off; 실재생완료 대기. 기존 runner/env/cache/DB복원 변경0 |
+| 2026-10-25 06:10 | [E4B v5 실재생 관찰·부모 인계](../../final_project_cs/wiki/records/reports/2026-10-25_e4b-v5-observation-handoff.md) | 원계획8/8 review·reload 재검산. 2/6 stage exit0·field baseline18/23, tokenizer 부재 실제 HTTP500 2행. 유일 proc_f11a51b230be parent-owned running/기존 handed_off 유지, 완결 아님. 582행 안전 snapshot·중복/hash 검산·최종 순차마감 helper 추가, 제품/DB/서비스 수정0 |
+| 2026-10-24 | [계획 읽기 API 다음 절](2026-10-24_plan-reading-api-next.md) | 순수 읽기/제안 경계 부모285/285 재실행. 정상 API 미활성. API·설정·공급자 연결과 감시 응대 연결을 새 child에 인계, 운영 변경 없음 |
+| 2026-10-24 | [라이팅 첫 구현·최신 기준선 통합](2026-10-24_travel-writing-implementation.md) | 공통 계약·문의 연결, 부모 unit 105/105 재확인. 후속 문의/계획서 읽기 개편 누락 발견. 최신 기능 선별 통합·계획서/감시 연결·운영 검증 남음 |
+| 2026-10-24 | [라이팅 에이전트 설계 검토](2026-10-24_travel-writing-review.md) | 정적 조사·개선 제안 기록. 제품 코드·설정·실행·배포 변경 없음. 다음은 공통 응대 계약·수용 기준 독립 검토 |
+| 2026-10-24 | [루트 보조 폴더 보관·정리 보류](../records/reports/2026-10-24_root-aux-cleanup.md) | 한 일: 두 D 보관처 871파일 전수 일치·ADS/reparse 0 확인, 선별 원본/결과/그림 12파일 및 경로 manifest 보존, 루트 anchored ignore 추가. 루트 규칙 수정 승인 시간 초과로 삭제 0, AGENTS/CLAUDE 동기 수정과 삭제 직전 재검증·삭제 후 검증 미완료. 커밋·push 안 함 |
+| 2026-10-24 | [작업공간 검증·자료 조사 문서 인계](2026-10-24_workspace-migration-history.md) | 문서만 보완. 상대경로·크기 일치와 전체 내용 검증 미완료를 분리; outputs4개·D 최신인계3개 선별 요약. 코드·배포·추가복사 없음 |
 | 2026-10-12 22:00 | [통합 인계 — 10-08~10-12 한 일 목록과 점검 결과](2026-10-12_2200_claude-integrated-handoff.md) | **여기부터 읽는다.** 작업 줄기별 한 일 · 왜 git 이력에 안 보이나 · 오늘 고친 것 · 남은 문제와 주인 · 커밋 전 할 일 |
 | 2026-10-12 21:40 | [Claude 이어받기 — 후속 회귀·검색 시험 통과](../../final_project_cs/wiki/records/reports/2026-10-12_2130_followup-data-regression.md) | 한 일: 식당·이동 7개 해소 확인 · 후속 회귀 2,119/2,137(이동 단위 실패 18은 이동 담당 몫) · 시험용 pgdata 33개 삭제 · 베이스라인·v12·통합표 W13 갱신. 21:40 추가: 실제 벡터 계산 끝 · 검색 시험 17/17 통과. 남은 것: 이동 단위 실패 18(이동 담당 판정 — develop PR #41 은 다른 52건 수정) |
 | 2026-10-12 18:00 | [코덱스 세션 작업 정리](../../final_project_cs/wiki/records/reports/2026-10-12_1800_코덱스_세션_작업_정리.md) | 10-11 저녁~10-12 오후 코덱스 세션 10개 상세 · 원격→로컬 합침 내역 |
@@ -222,3 +557,171 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 
 [2026-10-29 버스 scalar 독립 검토 인계](2026-10-29_bus-scalar-independent-continuation.md): 한 일·시험·제외·위험·통합 결과.
+## 2026-10-25 원본 최소 통합 인계
+
+[한 일·정확한 차단·DB 인계 대기](2026-10-25_original-minimal-integration.md): launcher 독립 수정만 원본 적용, 최신팀 의미충돌은 scratch 원문으로 보존. 전체 누적 후보 반영 완료 아님.
+
+
+## 2026-10-25 관리자 DB 인계 완료 보충
+
+[실측] 한 일: 기존 [관리자 DB 연결 인계](2026-10-25_admin-db-handoff-connection.md)에 정식 로그인·예약 OFF 실저장·fresh proxy/direct revision1/override false·별도 read-only DB false/admin/revision1/audit1 완료를 추가했습니다. 이전 미완료는 해당 수락 범위에서 해소. 현재 PC native5433(이전 WSL 요구와 다름), DB 위치 추가 변경·서비스 재실행·추가 PATCH 없음. 완료 파일은 active-profile scratch/admin_db_handoff_connection/HANDOFF_COMPLETE.md 및 FINAL_COMPLETE.json이며 기존 HANDOFF.json은 당시 기록으로 유지합니다.
+
+
+## 공유 9구간 원본 적용 현재 결론 — 2026-10-25
+
+[실측] 신규 reader/F3 7 + 기존 Diagnostics 보존2 = **9/9 = 100%** 원본 완료. 5필수파일 CAS·원본208/212(bind차단4·제품실패0)·관리자진단2/2·기존변경/index/refs/flags/백업 검산. 이전 shared HOLD 해소, 서비스/DB/OFF/모델/배포 변경0. [변경·검증·복원·인계](2026-10-25_shared-original-safe-application.md).
+
+## F3 원문 probe 3건 정식 해소 — 2026-10-25
+
+[실측] 서로 모순되는 원문 probe 3건(81행 유료 호출 필요 vs 90행 `paid == []`)을 사용자 지시로 동등 시험 `test_llm_f3_acceptance.py`로 대체. 원문 바이트·실패 근거 보존, 같은 시험 바이트 수정 전 RED 3/3·수정 후 GREEN 3/3, 회귀 208/212(bind 차단4·제품실패0)로 이전과 동일. 제품 코드·DB·서비스·모델·배포 변경0. [보고](2026-10-25_f3-contradictory-probe-resolution.md).
+
+## 원본 직접 통합 A(날짜 위험·고객시간·최신팀 후보) — 2026-10-28
+
+[실측] 원본 작업 트리 47경로 적용·커밋0, 고객시간 P1 원본구조 이식 RED12→GREEN12, 날짜 위험·최신팀 동기화 HOLD(원본 HEAD 1,065커밋 뒤). 백엔드 7,633/7,672·비통과 38 전부 기존과 동일·신규 회귀0, 관리자 6/6 rc0·vitest 24/24. [인계](2026-10-28_original-final-integration.md).
+
+
+## 원본 ops 8070·관리자 3300 직접 실행 — 2026-10-28
+
+[실측] 원본 cwd에서 ops(리스너 PID 26564)·관리자(32620) 기동, 운영자 admin 로그인 200, 프록시·직접 GET·읽기 전용 DB 모두 `travel.booking.enabled=false`(override, admin, revision 2) 일치, 로그인 전 401. 소스 변경0·커밋0. [인계](2026-10-28_original-runtime-ops-admin-switch.md).
+
+- 2026-10-29 [ST4F-711 ?? role-manager ?? ?????? ?? ??](2026-10-29_st4f711-independent-latest.md) ? ?1224/1224=100%, ???0/3=0%(??), ?? ??.
+
+
+2026-10-29 EKS 후속: 버스 cell 단일값 검사 격리 후보, 로컬 합성 cell 16.77%·walk 16.29% 감소, 독립 7,528/7,528 = 100%. 운영 속도 미검증·push/배포 0. [인계](2026-10-29_eks-bus-profile-scalar-performance.md).
+
+
+
+
+
+
+2026-10-29 [EKS 운영 성능 후속 인계](2026-10-29_eks-operational-performance-continuation.md): main 격리 필수3/3=100%, CD 진단 후보·반려 계산후보·권한/실험 전제, EKS 지연 개선 미입증·push/배포0.
+
+
+2026-10-29 [EKS CD 진단 독립 후속 인계](2026-10-29_eks-cd-diagnostics-independent-review.md): 한 일·83/83 배포시험·필수3/3·PR108·직접 EKS 읽기 부재와 후속 관문.
+
+2026-10-29 ST4F-728 x600 소스2/2일치·공개403/운영수락 미완, 다음729 관리자46/46=100%;종결0·미완료102/688=14.8%. [근거](2026-10-29_st4f728-production-and729-followup.md).
+
+2026-10-29 ST4F-729 실제로딩 잔여결함 격리수정·화면2/2/회귀1/1/관리자46/46=100%,통합HOLD·종결0.공개403은Cloudflare1010,x600공개GET2/2통과. [근거](2026-10-29_st4f729-loading-and-public403.md).
+
+
+2026-10-29 EKS 진단 후속 완료: PR108·main5041362ba6·CD40747516232 성공, 배포83/83·필수3/3·증거 보존, 직접 pod 조회/성능 실측 한계. [최종 인계](2026-10-29_eks-cd-diagnostics-independent-review.md).
+
+
+2026-10-29 ST4F-729 독립검토: 필수2/3=66.7%, 기존728증거XML 보안실패로 통합HOLD. Next합성2/2·웹세션11/11=100%, push/배포0. [보고·인계](2026-10-29_st4f729-independent-review.md).
+
+2026-10-29 [EKS scalar ????? ?? ??](2026-10-29_eks-scalar-release-and-measurement.md): PR109???3/3=100%, ????/??? ??.
+
+2026-10-29 ST4F-729 후속: 기본 build4/4·화면14/14=100%, 보안124/125=99.2%·필수2/3=66.7% HOLD. 기존 XML 불변·표본 id 생성 원인 수정 후보, push/배포0. [검증·실패·인계](2026-10-29_st4f729-source-followup.md).
+
+2026-10-29 ST4F-729 보안 재현·helper 정상 조회·해시 고정 오탐 제안 승인 대기. [인계](2026-10-29_st4f729-security-resolution.md).
+
+2026-10-29 [EKS scalar 최종](2026-10-29_eks-scalar-release-and-measurement.md): CI/CD성공·실제전후각3/3=100%, 인과개선미입증·기록보존.
+
+
+2026-10-29 ST4F-731 변경 없는 추천 경합 수정·격리 검증과 통합 HOLD. [인계](2026-10-29_st4f731-empty-recommendation-race.md).
+
+
+2026-10-29 [ST4F-731 독립검토 인계](2026-10-29_st4f731-independent-review.md): 실제응답 경합2/2재현·필수2/3=66.7% HOLD, XML/스캐너 불변·push0.
+
+
+2026-10-29 위도 가지치기 독립 검토: 필수3/3=100%, 전체층 HEAD 실패재현·운영HOLD. [한 일·남은 검증](2026-10-29_eks-latitude-independent-review.md).
+
+
+2026-10-29 ST4F-731 응답 경합 수정·실DB29/29=100%, 필수2/3=66.7% 보안 HOLD 유지. [한 일·인계](2026-10-29_st4f731-response-fence.md).
+
+
+2026-10-29 ST4F-731 corrected fence 독립검토: 새PG45/45·변이3/3=100%, 필수2/3=66.7% HOLD·반영0. [한 일·남은 일](2026-10-29_st4f731-response-fence-independent-review.md).
+
+
+2026-10-29 EKS 구조 band 기각·Linux 전체층/독립 벤치마크·그래프 적재 후보 인계, 통합0. [인계](2026-10-29_eks-structural-radius-and-graph-load.md).
+
+2026-10-29 [ST4F732 독립 진행 검증](2026-10-29_st4f732-independent-progress.md):실PG13/13·위험22/22·웹45/45=100%,새 결함 없음·화면 수락 남음·731 HOLD 유지.
+
+2026-10-29 ST4F-733 거절 일정 이름 누락 격리수정:단위39/39·실DB집중6/6=100%,확장15/16=93.8%,보안124/125·필수2/3=66.7% HOLD,설명만 정확재조회·종결0. [근거·인계](2026-10-29_st4f733-named-refusal.md).
+
+
+[2026-10-29 733+731 두 번째 독립검토·734 후속](2026-10-29_st4f733-731-second-independent-review.md) — 실제runner6/6·변이5/5=100%, 필수2/3=66.7% HOLD.
+
+
+- [2026-10-29 ST4F-734 격리 브라우저·2분 경계와724 독립 audit](2026-10-29_st4f734-staged-browser-and724.md) — 한 일·실제 저장3/3·후보audit3/3·트래커 불변·HOLD.
+
+
+2026-10-29 [ST4F-740 날짜 정합성 격리 수정·보안 HOLD 인계](2026-10-29_intake-calendar-integrity.md).
+
+2026-10-29 ST4F-740 independent review: intake1142/1142, corrected31/31, mutation2/2=100%; security124/125=99.2%, HOLD. [Report](../../final_project_cs/wiki/records/reports/2026-10-29_st4f740-independent-review.md).
+
+
+2026-10-29 ST4F-718 대기 후속: 웹1241/1241·Edge pending4/4=100%; 구형 탭/영속 HMAC 정책 미해결·통합HOLD. [검증·인계](../../final_project_cs/wiki/records/reports/2026-10-29_st4f718-storage-wait-continuation.md).
+
+
+2026-10-29 ST4F-732 단계 대기 시계 격리수정: 웹1230/1230·Edge5/5 = 100%, 보호XML 탐지5건·통합HOLD, 718미해결 유지. [보고·인계](2026-10-29_st4f732-step-clock.md).
+
+2026-10-29 ST4F-732 경계후속 독립검토: 기존4실패4/4 재현, Edge21/21·실제 로컬SSE10/10·웹1232/1232=100%, 변이1/1=100%; 동일입력 실행경계·전체앱 수락 미확인, 필수/scanner/XML/통합/운영 HOLD. [보고·인계](2026-10-29_st4f732-edge-independent-review.md).
+
+2026-10-29 ST4F-719 동시 시각·장소 변경 카드 격리수정: 웹1231/1231·Edge5/5=100%, 보안124/125·필수2/3=66.7% HOLD·종결0. [보고·인계](2026-10-29_st4f719-combined-change-card.md).
+
+2026-10-29 EKS Linux 잔여5 원본 재현: 추가해소0/5=0%·실패5/5=100%, rail+bus 성립/선택·첫차 근거·golden 차이 분리, PR110 HOLD. [인계](2026-10-29_eks-linux-remaining5-investigation.md).
+
+
+2026-10-29 혼합 선택: 후보 생성·상한·동률 원인 보존, 추가해소0/5=0%·PR110 HOLD. [인계](2026-10-29_eks-mixed-selection-causality.md).
+
+2026-10-29 C 드라이브 안전 정리: npm·pip 캐시 2,393/2,393=100% 삭제·실측 +1.111GB, NPU 실험 +25.278GB·WSL +6.349GB 확인, Git 권한 오류로 프로젝트 캐시 보존. [조사·삭제·인계](../records/reports/2026-10-29_c-drive-safe-cache-audit.md).
+
+2026-10-29 디스크 증가 예방 가드: 설정 기반 여유 검사·사본 재사용 장부 `tools/disk_guard.py` 구현, 시험 18/18=100%×3회, C: 여유 78.499GB(목표 400GB 부족 321.5GB), NPU FP16 이중 저장·엔진 ONNX+DLA·작업 사본 누적 원인 실측, 삭제 0건. [원인·사용법·한계](../records/reports/2026-10-29_disk-growth-guard.md).
+
+2026-10-29 guguroute scratch 사본 정리: 끝난 체크아웃 19개·10-24~26 스냅숏 트리 18개를 커밋·고유 파일 보존 확인 뒤 삭제(논리 57.07GB, 고유 2.87GB는 backups 보존), C: 여유 최저 76.27GB→126.50GB, 같은 시간 NPU 실험 +33GB·WSL +3.7GB, 400GB 목표 미달. [삭제 범위·보존·증가 원인](../records/reports/2026-10-29_guguroute-scratch-copy-cleanup.md).
+
+- [2026-10-29 TeamFlow 중단 재개: 705 36/36·737 23/23, 재조회2/2·보안 HOLD](2026-10-29_teamflow-manager-resume-705-737.md)
+
+
+2026-10-29 TeamFlow ?? ?? ST4F-746 ????29/29=100%????109/695=15.7%. [??](2026-10-29_teamflow-actionable-746.md).
+
+2026-10-29 일정 설명 유료 서빙 재개: 226/226·넘김91/91=100%, 실응답 재판정 E4B66/66 불변·유료8/10=80%, 서비스 수락·보안 HOLD. [인계](2026-10-29_explain-writer-serving-resume.md).
+
+2026-10-29 EKS 경로 독립검토: 전체223/223=100.00%, 빠른층1629/1630=99.94%·skip1, 경계89/89·번호보존4/4=100%. 정책판충돌 P2·첫차는 추정·성능비용 확인, PR110 HOLD·push0. [보고·인계](2026-10-29_eks-route-fix-independent-review.md).
+
+
+[2026-10-29 ST4F-746 독립검토](2026-10-29_st4f746-independent-review.md) — 실제DB 날짜·목적지 검증, 기존 아침 읽기2실패·보안HOLD.
+
+
+2026-10-29 EKS 정책판 P2 후속: 집중71/71·portable2/2=100%, 10구간 ABBA 17.473→15.531초. PR110/운영 fatal HOLD. [후속](../records/reports/2026-10-29_eks-route-policy-version-followup.md).
+
+
+2026-10-29 [EKS reader fatal ???: ?? ?? ?? ???? ??](2026-10-29_eks-reader-fatal-telemetry-blocker.md). ?? ??7/7 ?? ???(? ?? ??), PR110 HOLD ????? ?? ????live/??0.
+
+- [2026-10-29 Conversation independent review](2026-10-29_conversation-independent-review.md) - 258/258 regression; 5/7 boundary probes, source identity correction required; HOLD remains.
+
+
+2026-10-29 ST4F-746 fixture 검토: 기준·7곳치환114/114=100%, DNS포함110/114=96.5%·의미손상/HOLD. [인계](2026-10-29_st4f746-fixture-replacement-review.md).
+
+2026-10-29 ST4F-719 미리보기 독립검증: Edge21/24=87.5%, 비인증 경계3실패·필수2/3=66.7% HOLD. [인계](2026-10-29_st4f719-preview-independent.md).
+
+2026-10-29 ST4F-719 ??? ?? ??: Edge28/28???56/56=100%, ??2/2 ?????2/3=66.7% HOLD. [??](2026-10-29_st4f719-authorization-lifetime.md).
+
+
+2026-10-29 ST4F-719 auth lifetime independent review: unit32/40=80%, Edge28/28 + identity10/10 + UI1/1=100%; endpoint/race defects, security HOLD. [Review](2026-10-29_st4f719-auth-lifetime-independent-review.md).
+
+2026-10-29 [ST4F-719 ?? ?? ???watcher 401 ??](2026-10-29_st4f719-auth-generation-race-fix.md) ? ?? ?? 8? ??, ? 1,438/1,438?PG/Edge 58/58 = 100%, ?? 1/3 = 33.3% Git ?? HOLD, push?????? 0.
+
+
+2026-10-30 작업 흐름 읽기 전용 감사: 5/5 = 100% 범위 확인. NPU 재개 활동·CPU toolchain 차단, TeamFlow/EKS/서빙 HOLD, 디스크 목표 미달 및 후속10항목. [인계](2026-10-30_workstreams-readonly-audit.md).
+
+- [2026-10-30 TeamFlow 실제 잔여·구구루트 아침 이동 격리 수정](2026-10-30_teamflow-guguroute-morning-recovery.md) — 미완료109/695=15.7%, 최종41/41=100%, HOLD 유지.
+
+2026-10-30 ??? 400GB ?? ??: ?? ????? ?? ???, ?? npm/pip ??0B???0?, ?? ??. [??](../records/reports/2026-10-30_disk-400gb-resume-audit.md).
+
+2026-10-30 disk duplicate cleanup: 244/244 = 100% fixture copies deleted (32,975,703,428 B); 24/24 independent keeper SHA groups verified. [Handoff](2026-10-30_disk-duplicate-cleanup.md).
+
+2026-10-30 NPU argen4 실측: 3/3 arm full1 비트 동일(33/33행), A1–A5 통과, Q4 게이트 실패 유지(RMS 0.1571), 다른 소유자 GPU 경합(앵커 1/20 이하)으로 속도 비대표, 백그라운드 unload 기각. [인계](2026-10-30_npu-argen4-repro-async-unload.md).
+
+2026-10-30 C: 400GB 5차: 재생성 NPU ONNX 138개 15,638,812,560 B 삭제(DLA 보존), 여유 226.92GB=56.73%, 부족 173.08GB — 나머지는 사용자·소유자 결정 필요. [보고서](../records/reports/2026-10-30_c-drive-400gb-cleanup-round5.md).
+
+2026-10-30 C: 400GB 6차: 규칙 경계 재대조(대상별 승인 = final_workspace 안 자료), guguroute scratch·Temp 캐시의 GitHub/git archive 재현 파일 5,398,585,886 B 삭제(보존본 21.1MB), 여유 232.21GB=58.05%, 부족 167.79GB — final_workspace scratch 90개 승인 후보표·HOLD/routing 소유·disk-guard 연결 누락 소유 정리. [보고서](../records/reports/2026-10-30_c-drive-400gb-cleanup-round6.md).
+
+2026-10-30 C: 400GB 7차: final_workspace scratch 승인 후보 3개(st4f719-fix·st4f734-tight724·st4f719-identity 체크아웃) 15,950,881,145 B 증거 확인, 보존본(bundle·diff·미추적·.git 메타) 선작성·sha256 확인, 삭제 0 — 사용자 대상별 승인 대기, 여유 232.15GB·부족 167.85GB. [보고서](../records/reports/2026-10-30_c-drive-400gb-cleanup-round7.md).
+
+2026-10-31 C: 400GB 8차: 드라이브 전체 재조사(중복 sha256·WSL 내부·숨김 영역·Temp 추적), RdClient ETL 210개 1,695,547,392 B 삭제 + guguroute scratch 불변 중복 116개 하드링크 통합 5,616,292,684 B(경로·바이트 유지, 재해시 불일치 0), 실측 +7.32GB. 같은 시간 페이지 파일 +9.84GB·원인 미상 약 17GB로 여유 231.68→207.94GB=51.99%, 부족 192.06GB. NPU 검증 중복 25.57GB는 소유자 결정. [보고서](../records/reports/2026-10-31_c-drive-400gb-cleanup-round8.md).
+
+2026-10-31 C: 8차 하드링크 독립 검토(읽기 전용): 116개 inode·nlink·크기 일치, inode 24개 sha256 재계산 24/24 일치, 합계 7,315,361,792 B 일치, 실행 중 참조 0·final_workspace 대상 0. 위험: 보존 경로(_preserved bundle·backups 8개·_archive/place-quality 15개)가 작업 사본과 inode 18개 938,329,044 B 공유 — 분리·읽기 전용 지정은 사용자 결정. 변경·삭제 0. [보고서](../records/reports/2026-10-31_disk-round8-independent-review.md) · [인계](2026-10-31_disk-round8-independent-review.md).
+
+2026-10-31 C: 400GB 9차: 사용자 Temp 유휴 브라우저 자동화 프로필·WinGet·playwright 캐시 45개 735,547,156 B 삭제(실측 +749,658,112 B, 실행 중 2개 제외). 하드링크 반영 재고로 숨김 사용량 98.43GB 실측(현재 사용자 Appx 17.19GB 포함), 시스템 복원 DiskPercent 15%(153.31GB)·VSS 상한 도달 이벤트 확인(차분 영역 크기는 관리자 확인 필요). 여유 209.46GB=52.37%, 부족 190.54GB. 하드링크 추가 통합 0. [보고서](../records/reports/2026-10-31_c-drive-400gb-cleanup-round9.md).

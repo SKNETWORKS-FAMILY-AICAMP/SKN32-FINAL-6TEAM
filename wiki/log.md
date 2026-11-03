@@ -313,3 +313,43 @@ program/
 | `A-COP_문서표준_설계_codex초안.md` | 참고자료. 이관 안 함 | 제외 |
 
 전체 범위 산정은 [governance/migration.md](governance/migration.md).
+
+## 2026-10-24 — timeout 복구 후 이관·대화자료 문서 반영
+
+[검증 범위·과거 자료 요약](records/reports/2026-10-24_workspace-migration-and-history.md)에 기존 JSON 집계와 미완료, Codex outputs 4개·D 최신인계 원문 3개를 기록했습니다. 수정 경로: 루트 wiki index/log·handoff 새문서/index·보고서 및 cs wiki index/log(총7문서). 원본/코드/서비스 변경·추가복사·전체 재검사는 하지 않았고 과거 자료를 현재 구현·배포 완료로 승격하지 않았습니다.
+
+
+
+
+
+
+
+## 2026-10-24 — 후속 완료 검토
+
+기존 19:52:43 완료 JSON을 직접 검토: 양측 open+첫 바이트 읽기 552,857/552,857(100%), 오류0·긴 경로18건 해소. 우선 해시 1,706/1,706 완료, 1,705 일치·wiki/index.md 의도된 문서 수정1건(기존 transcript/백업 비교). 전체 payload·전체 해시 검증과 raw chats 확보는 아님. [보고서](records/reports/2026-10-24_workspace-migration-and-history.md)·인계의 stale timeout 한계만 정정; index·D 원본 불변, 새 검사 없음. 직전4문서 백업: scratch migration-wiki-backup-20261024/final-review/.
+
+
+## 공유 9구간 원본 적용 현재 결론 — 2026-10-25
+
+[실측] 신규 reader/F3 7 + 기존 Diagnostics 보존2 = **9/9 = 100%** 원본 완료. 5필수파일 CAS·원본208/212(bind차단4·제품실패0)·관리자진단2/2·기존변경/index/refs/flags/백업 검산. 이전 shared HOLD 해소, 서비스/DB/OFF/모델/배포 변경0. [변경·검증·복원·인계](records/reports/2026-10-25_shared-original-safe-application.md).
+
+## F3 원문 probe 3건 정식 해소 — 2026-10-25
+
+[실측] 서로 모순되는 원문 probe 3건(81행 유료 호출 필요 vs 90행 `paid == []`)을 사용자 지시로 동등 시험 `test_llm_f3_acceptance.py`로 대체. 원문 바이트·실패 근거 보존, 같은 시험 바이트 수정 전 RED 3/3·수정 후 GREEN 3/3, 회귀 208/212(bind 차단4·제품실패0)로 이전과 동일. 제품 코드·DB·서비스·모델·배포 변경0. [보고](records/reports/2026-10-25_f3-contradictory-probe-resolution.md).
+
+## 2026-10-28 — 「Hi」·현재 세션 종료 가능성 4차 감사
+
+Hi는 이미 닫혔지만 삭제 보류다. 남은 일은 하위 세션 1행의 비밀 교체 결정, scratch에만 있는 기록 커밋 4개, 삭제 동작 미확인이다. 현재 세션은 열린 하위 세션 7개로 종료 불가다. [보고서](records/reports/2026-10-28_hi-and-current-session-close-readiness-audit.md) · [인계](handoff/2026-10-28_hi-and-current-session-close-readiness.md).
+
+## 2026-10-29 — 라우팅 B10 독립 검토 · TeamFlow 매니저 담당
+
+B10 후보 327d7baaa 의 결함 2개(숙소·항공 고정 거절 답의 막다른 「고정 풀어줘」 안내, 보고서의 표본 공인 주소)를 고쳐 새 후보 d1b06357e(push 0)를 만들었다. 관문 10,945 nodeid 잃음 0. TeamFlow 신규 ST4F-741 담당 `3rd_team_4_be`(매니저 브랜치), 기존 미배정 25건 불변. 보안 HOLD 유지. [인계](handoff/2026-10-29_routing-b10-independent-review.md).
+
+
+2026-10-29 EKS 정책판 P2 후속: 집중71/71·portable2/2=100%, 10구간 ABBA 17.473→15.531초. PR110/운영 fatal HOLD. [보고](records/reports/2026-10-29_eks-route-policy-version-followup.md).
+
+## 2026-11-03 — Telegram 총괄 세션 5fbd35ab 위키화
+
+세션은 이미 닫혀 있고 지우지 않았다. 사람 입력·답변·압축 요약을 전문으로 대조해 wiki에 없던 인사동 대안 원인과 일정 설명 원인을 보고서로 옮겼고, scratch에만 있던 설명 작성기 후보를 backups에 보존했다. 삭제 전 남은 결정은 비밀 교체·삭제 방식(위임 하위 153개 동반 삭제)·wiki 커밋이다. [보고서](records/reports/2026-11-03_telegram-orchestrator-5fbd35ab-session-wiki.md) · [인계](handoff/2026-11-03_telegram-orchestrator-5fbd35ab-close-handoff.md).
+
+2차(같은 날): 설치 Hermes 소스로 삭제 범위를 다시 계산했다 — 154개 세션·21,658행과 DB 밖 spillover 64개·request_dump 9개. 이를 원문 그대로 guguroute `backups/session-5fbd35ab-export-20261103/`에 보존(행 21,658/21,658·SHA 220/220, 하위 153/153 가져오기 시험 통과, 부모는 5 MiB 한도 초과). md 내보내기는 기본이 가림 꺼짐이고 꼬리 원본을 뺀다. 세션은 지우지 않았다. [보고서 §11](records/reports/2026-11-03_telegram-orchestrator-5fbd35ab-session-wiki.md).

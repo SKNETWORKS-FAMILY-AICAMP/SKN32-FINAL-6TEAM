@@ -1,0 +1,2 @@
+정상 writable 입구 8/8, shadow readonly 실패 보존. 전체 enrichment parity 아님. C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\public-web-binding-v5-20261025-162650-c2dac8ce\runtime-v5-serving\normal-writable-20261025\AUTH_ENTRY_CLOSEOUT.json
+C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\public-web-binding-v5-20261025-162650-c2dac8ce\runtime-v5-serving\normal-writable-20261025\REPORT_KO.md

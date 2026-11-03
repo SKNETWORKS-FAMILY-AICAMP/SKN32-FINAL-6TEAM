@@ -52,6 +52,23 @@
 
 세션을 이어받으면 [인계 안내 목차](wiki/handoff/index.md)의 **맨 위 인계**부터 읽습니다. 커밋되지 않은 Codex 작업이 많아 `git log` 만으로는 최근 상태가 보이지 않습니다 — `git status --short` 와 인계의 「한 일 목록」을 함께 봅니다. 자동 메모리(`~/.claude/projects/.../memory/`)의 프로젝트 사실은 기록 당시 값이며, 이 파일·wiki 와 다르면 이 파일·wiki 가 맞습니다.
 
+## 로컬 원본·데이터셋 삭제 금지 — 2026-10-17 사용자 지시
+
+- 이 로컬 작업 폴더는 원격 Git과 같게 만들어도 되는 사본이 아니다. Git 밖 자료·데이터셋·학습 결과·평가 결과·문서·다른 세션의 미커밋 작업을 가진 원본이다. **원격과 일치시키기 위한 삭제·덮어쓰기·축소는 금지한다.** `.gitignore`는 삭제 방지 장치가 아니다.
+- 원본에서 `pull`, `checkout`, `switch`, `reset`, `restore`, `clean`, `read-tree`, `update-index`, `sparse-checkout` 및 원본을 대상으로 한 사본 역복사를 실행하지 않는다. `skip-worktree` 또는 sparse 설정도 임의로 바꾸지 않는다. 현재 설정을 해제하는 일도 복구에 영향을 줄 수 있으므로 별도 복구 담당자의 명시적 지시 없이 하지 않는다.
+- 원본의 Git 조회·fetch는 `python tools/safe_git.py <명령>`으로 실행한다. 코드 통합·시험·커밋·푸시는 새 격리 사본에서 진행하고, 결과를 원본으로 통째로 복사하지 않는다. 격리 사본도 원본 Git 디렉터리를 대상으로 설정을 바꾸지 않는다.
+- Git 실행 도구는 `GIT_OPTIONAL_LOCKS=0`을 강제해 조회 중 색인 자동 갱신도 막는다. 이 설정은 데이터 파일 잠금이나 모든 프로그램의 삭제 방지가 아니다.
+- 디스크 공간 부족을 이유로 프로젝트 안의 자료를 정리하지 않는다. `datasets/`, `program/`, `w3/`, `.tmp/`, `_backup/` 등은 이름만으로 폐기 가능한 폴더가 아니다. 세션이 만든 임시 사본이라도 삭제 전 정확한 절대 경로·파일 목록·보존 상태를 제시하고 사용자의 그 대상에 대한 명시적 삭제 승인을 받는다. 커밋·푸시·동기화 승인은 자료 삭제 승인이 아니다.
+- `git clean/reset/restore`, 재귀 삭제, `robocopy /MIR /PURGE /MOV /MOVE`, `rsync --delete`, 삭제가 수반되는 이동·동기화를 복구 대용이나 용량 확보 수단으로 쓰지 않는다. 복구는 별도 담당자가 수행한다. 이 세션은 자료 복원·삭제·일치화·색인 재구성을 하지 않는다.
+- Codex와 Claude 모두 이 절을 우선 적용한다. Claude 실행 전 훅은 대표적인 위험 셸 명령을 차단한다. Codex는 위 Git 진입점과 이 규칙을 따른다. 이 장치는 모든 프로그램·우회 실행을 운영체제 차원에서 막는 파일 잠금이 아니므로, 보호가 완전하다고 보고하지 않는다.
+
+## 디스크 증가 예방 — 2026-10-29 사용자 지시
+
+- 새 작업 사본은 `bash tools/guarded_clone.sh <원본> C:/_proj/final_workspace/.tmp/clones/<이름> <작업자> <목적> [예상바이트]`로 만든다. 같은 원본의 유휴 사본이 있으면 그것을 재사용하고, 작업이 끝나면 `python tools/disk_guard.py release --dest <사본> --owner <작업자>`로 반환한다.
+- 수 GB 산출물(모델 변환·엔진·로짓 덤프·DB 사본)을 쓰기 전에 `python tools/disk_guard.py check --path <쓸 위치> --need-bytes <예상바이트>`를 실행한다. 거부(종료 코드 3)나 설정 오류(2)면 쓰지 않고 보고한다. 임계값은 `tools/disk_guard.json`에만 있다(최소 여유 30GiB·목표 400GB). 코드에 기본값을 두지 않는다.
+- 같은 데이터의 두 번째 전체 사본(예: FP16 `.npy`와 F16 GGUF, ONNX와 DLA)을 만들기 전에 기존 산출물 재사용 가능성을 먼저 적는다. 인계 때 `python tools/disk_guard.py inventory` 결과와 자기가 만든 사본·산출물 크기를 남긴다.
+- 이 가드는 도구를 거친 생성만 막는다. 맨 `git clone`·복사, 다른 프로젝트 스크립트, 운영체제 할당량은 막지 않으므로 보호가 완전하다고 보고하지 않는다. 공간 확보를 위한 삭제는 위 절의 대상별 승인 규칙을 그대로 따른다. 근거: [디스크 증가 예방 가드](wiki/records/reports/2026-10-29_disk-growth-guard.md).
+
 ## 워크플로 그림 규칙 — 2026-10-09 사용자 지시
 
 - 워크플로를 그릴 때는 반드시 `diagram-design` 스킬과 그 스킬의 `references/type-flowchart.md` 가이드를 먼저 읽고 따른다. 프로젝트의 `.diagram-design` 프로필도 확인한다.
@@ -63,7 +80,7 @@
 
 - Claude 는 `CLAUDE.md`, Codex 는 `AGENTS.md` 를 읽는다. 규칙·사실을 바꿀 때는 **두 파일을 같은 내용으로 함께** 고친다. 다른 곳은 파일 이름 언급과 도구 전용 절(「Claude 작업 재개」·「모델 작업큐 이어받기」)뿐이다. `final_project_cs/` 의 두 파일도 같다.
 - 한쪽에만 넣으면 다른 쪽 에이전트는 그 규칙을 모른다. 2026-10-12 점검에서 「워크플로 그림 규칙」과 「커밋·푸시 대상」이 `AGENTS.md` 에만 있었고, Claude 가 커밋·푸시 대상을 틀린 원인이 됐다.
-- 줄바꿈은 CRLF 한 번으로 저장한다. 2026-10-11 편집에서 `CLAUDE.md` 의 줄 끝이 `\r\r\n` 으로 겹쳐 표가 한 줄짜리 표로 쪼개졌다(백업 `_backup/2026-10-12_claude-md-line-endings/`).
+- 줄바꿈은 CRLF 한 번으로 저장한다. 2026-10-11 편집에서 `CLAUDE.md` 의 줄 끝이 `\r\r\n` 으로 겹쳐 표가 한 줄짜리 표로 쪼개졌다(백업 `.backup/2026-10-12_claude-md-line-endings/` — 2026-10-26 루트 `_backup` 을 `.backup` 으로 옮김).
 - 커밋되지 않은 작업은 다른 세션에 보이지 않는다(git 이력만 보면 멈춘 것처럼 읽힌다). 세션을 넘길 때는 [인계 안내](wiki/handoff/index.md)에 **한 일 목록**을 남긴다.
 
 ## 현재 문서 우선순위 — 2026-10-11 정정
@@ -205,6 +222,8 @@ API 주소와 토큰과 사용법은 [`.env.teamflow`](.env.teamflow)에 있다.
 형식은 [`.env.teamflow.example`](.env.teamflow.example)을 본다.
 
 토큰으로는 이슈 생성만 된다. 조회와 수정과 스프린트 생성은 화면에서 사람이 한다.
+
+`[2026-10-29 사용자 지시 · 실측]` **앞으로 TeamFlow 에 넣는 작업은 전부 매니저 브랜치(`role-manager`) 담당**으로 만든다 — 이슈의 담당 칸 `assignee` 에 매니저(최연우, Core 1)의 TeamFlow 계정 `3rd_team_4_be` 를 넣는다(README 팀 표 · `program/plan/A-COP_스프린트_에픽_설계.md` 「담당자」). POST 본문의 `assignee` 가 저장되는 것을 ST4F-741 생성 · 재조회로 확인했다. 이 지시 전의 담당 없는 이슈(미완료 25건)는 일괄로 바꾸지 않는다. ★토큰 조회는 된다(위 문장은 낡았다) — 단 목록은 한 번에 500건까지라 `status=todo|inprogress|review|done` 으로 나눠 읽는다(offset · page 는 무시된다).
 등록할 스프린트와 에픽의 정본은 [`program/plan/A-COP_스프린트_에픽_설계.md`](program/plan/A-COP_스프린트_에픽_설계.md)다.
 
 
