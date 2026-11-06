@@ -7,6 +7,8 @@ domain: travel
 
 # 2026-10-26 원격 role-manager 위 재병합 · 전체 시험
 
+> `[2026-11-06 후속]` 이 문서의 push 보류 · 서빙 롤백 경로는 낡았다 — 원격 `1cf4542a1` 위 재병합(`43a3ced29`)과 push · 정리는 [2026-11-06 마무리](2026-11-06_pastguard-remerge-push-cleanup.md). 여기 적힌 scratch 경로(`fullrun-20261026` · `integ-mgr-a465c6022-20261026` 등)는 이미 없다.
+
 작업 위치: 격리 worktree `scratch/integ-mgr-a465c6022-20261026`(`core.autocrlf=false`로 꺼냄), 브랜치 `integ/rebase-on-manager-a465c6022-20261026`. 원본 `C:/_proj/final_workspace`는 건드리지 않았다. push는 하지 않았다. 증거는 `cache/scratch/fullrun-20261026/integ-877e6723b*`, `integ-92541686d/`, `cache/scratch/integ-mgr-a465c6022-20261026-tools/`에 있다.
 
 ## 결론

@@ -1,0 +1,19 @@
+pastguard-final runner root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\pastguard-final-20261106\wt\final_project_cs
+............F                                                            [100%]
+================================== FAILURES ===================================
+_______________ test_year_written_in_a_header_line_is_grounded ________________
+
+    def test_year_written_in_a_header_line_is_grounded():
+        """머리줄의 해 — 날짜 인용(「1월 3일」) 밖에 있어도 모델이 인용한 연도 조각이 원문에 있으면 적힌 해다"""
+        text = "2027년 겨울 여행\n1월 3일\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer("1월 3일", "2027-01-03", year_quote="2027년")), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == "2027-01-03" and row["needs_review"] is False
+E       AssertionError: assert ('2027-01-03' == '2027-01-03'
+E         
+E           2027-01-03 and True is False)
+
+tests\unit\travel\test_intake_agent_yearless_date.py:81: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_year_written_in_a_header_line_is_grounded
+1 failed, 12 passed in 5.66s

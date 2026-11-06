@@ -7,6 +7,8 @@ domain: travel
 
 # 2026-10-26 원격 role-manager 위 재병합 — 인계
 
+> `[2026-11-06 후속]` push · 정리는 [2026-11-06 마무리 인계](2026-11-06_pastguard-remerge-push-cleanup.md).
+
 상세: [cs 기록](../../final_project_cs/wiki/records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md)
 
 ## 한 일

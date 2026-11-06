@@ -50,6 +50,8 @@ domain: travel
 2026-10-29 ST4F-718 저장 정책 독립검토: 웹1241/1241·Edge22/22=100%; 구버전 중복/raw ID 재생성·queued open 무응답 재현, 기존 필수2/3=66.7% HOLD 유지. [보고·인계](records/reports/2026-10-29_st4f718-storage-policy-review.md).
 # cs 프로젝트 구현 wiki
 
+2026-11-06 [과거 날짜 가드레일 세션 마무리 — 원격 `1cf4542a1` 위 재병합 · push · 정리](records/reports/2026-11-06_pastguard-remerge-push-cleanup.md) — 10-26 세션 전체(통합 병합 충돌 9 · 날짜 가드 4요구 · LLM 날짜 읽기 81문장 · 지난 일정 삭제만 · Codex) 연결, `43a3ced29` 충돌 9파일 · 원격 A13 과 `date_form` 겹침 맞춤, unit/travel 8467/8467 = 100% · vitest 1235/1235 = 100%, 남은 것: 지난 고정 일정 삭제 경로(보류) · `v4-date-form` E4B 재측정 · 서빙 v10.
+
 2026-10-29 ST4F-728 늦은 게스트 응답 차단: 웹1227/1227·모방화면11/11·필수3/3=100%,운영수락남음. [보고](records/reports/2026-10-29_st4f728-guest-logout.md).
 
 2026-10-29 ST4F-597 메뉴 선택 고침 독립 검토·양원격 반영 `07e79f1987`: Dining258/258·판정39/39·필수3/3=100%,운영 종결 보류. [보고](records/reports/2026-10-29_st4f597-independent-review.md).

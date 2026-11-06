@@ -7,6 +7,8 @@ domain: travel
 
 # 2026-10-26 통합 HEAD 전체 시험 · push · 로컬 서빙 결정
 
+> `[2026-11-06 후속]` 이 문서의 push 보류 · 서빙 롤백 경로는 낡았다 — 원격 `1cf4542a1` 위 재병합(`43a3ced29`)과 push · 정리는 [2026-11-06 마무리](2026-11-06_pastguard-remerge-push-cleanup.md). 여기 적힌 scratch 경로(`fullrun-20261026` · `integ-mgr-a465c6022-20261026` 등)는 이미 없다.
+
 작업 위치: 격리 worktree `scratch/mgr-merge-20261026-0045`, 브랜치 `feat/past-date-guard-ext-20261026`, 시험 대상 HEAD `2cccbfaef`(= team/role-manager `08b995976` + team/develop + team/role-eval-ui 병합 + 과거 날짜 가드레일 3커밋). 원본 `C:/_proj/final_workspace` 는 건드리지 않았다. 증거: `cache/scratch/fullrun-20261026/`.
 
 ## 결론

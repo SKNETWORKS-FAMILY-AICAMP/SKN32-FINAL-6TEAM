@@ -7,6 +7,8 @@ domain: travel
 impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업 폴더 상태를 다룬다. final_project_sample 은 별도 참고 구현이라 해당 없다
 ---
 
+2026-11-06 — [과거 날짜 가드레일 세션 마무리](2026-11-06_pastguard-remerge-push-cleanup.md): 10-26 세션 전체 연결, 원격 `1cf4542a1` 위 재병합 `43a3ced29`, unit/travel 8467/8467 = 100% · 웹 1235/1235 = 100%, 남은 것 지난 고정 일정 삭제 경로(보류) · E4B 재측정 · 서빙 v10 · 브랜치 5개 유지.
+
 2026-11-03 모든 Hermes 세션 이관 패키지(복사만): default·guguroute·myapp 세션 1,146개·행 120,876을 sqlite backup + 가림 없는 JSONL export로 guguroute `backups/all-sessions-migration-20261103/`(1.95GB, SHA 3,063/3,063)에 보존, DB 행 = export 행 불일치 0, 복원 시험 315세션 불일치 0. 필수 이관 약 62GB(패키지+backups 나머지 7.86+final_workspace 52.21), 비밀 파일은 이름만·외부 목적지면 암호화 필수 — 목적지·비밀 이관은 사용자 결정 → [인계](2026-11-03_all-sessions-migration-backup-handoff.md)
 
 2026-11-03 새 PC 복원 안내: 원본 미커밋 문서 706개·도구 4개를 팀·개인 `role-manager`에, 원본 작업 폴더 스냅숏(커밋 5개)과 로컬 전용 커밋 82개를 개인 A-COP `backup/2026-11-03/*`에 올렸다. 비밀·datasets·50MB 초과는 외장 백업에서만 복원 → [복원 안내](2026-11-03_new-pc-restore-guide.md) · [교차검증·정정(switch 명령, workspace 커밋 54개 위치, 팀 SKN 공개)](../records/reports/2026-11-03_backup-push-independent-crosscheck.md)

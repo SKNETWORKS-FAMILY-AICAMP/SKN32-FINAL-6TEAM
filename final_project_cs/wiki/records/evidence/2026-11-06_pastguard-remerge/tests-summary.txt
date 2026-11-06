@@ -1,0 +1,21 @@
+## merge 43a3ced29 (before test fixes)
+unit_travel=1
+gates=1
+12 failed, 8455 passed, 128 skipped, 506 deselected, 7 warnings in 330.82s (0:05:30)
+1 failed, 632 passed, 29 deselected, 1 warning in 303.78s (0:05:03)
+## final 43a3ced29
+43a3ced29dbbdb9b70ec235a693fb658854bbac0
+unit_travel=0
+unit_rest=1
+8467 passed, 128 skipped, 506 deselected, 7 warnings in 288.05s (0:04:48)
+4 failed, 1827 passed, 46 skipped, 5 deselected, 1 warning in 67.53s (0:01:07)
+FAILED tests/unit/infrastructure/test_llm_failover.py::test_http_a_closed_port_goes_to_the_api_quickly
+FAILED tests/unit/infrastructure/test_llm_failover.py::test_http_a_slow_server_times_out_and_goes_to_the_api
+FAILED tests/unit/infrastructure/test_llm_failover.py::test_http_a_503_server_is_retried_once_then_goes_to_the_api
+FAILED tests/unit/infrastructure/test_llm_failover.py::test_http_a_healthy_server_answers_locally_and_the_api_is_not_touched
+## web (merge tree, unchanged web files)
+v26.7.0
+tsc=0
+eslint=0
+vt=0
+{'numTotalTests': 1235, 'numPassedTests': 1235, 'numFailedTests': 0, 'numPendingTests': 0, 'success': True} files 138

@@ -1,0 +1,214 @@
+{
+ "ours": {
+  "added_lines": 3519,
+  "missing": 15,
+  "missing_sample": [
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "                  \"required\": [\"place_quote\", \"day\", \"date_quote\", \"year_quote\", \"date_form\", \"date\", \"start\", \"end\", \"time_quote\", \"kind\"],"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "Output: {{\"guard\":{{\"off_topic\":false,\"prompt_injection\":false,\"out_of_scope\":false,\"quote\":null}},\"pieces\":[{{\"kind\":\"plan_item\",\"quote\":\"모레 11시 낙성대공원 산책하고 택시로"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "               \"piece\": 0, \"gap\": 0}"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "            date_guessed=relative, year_unverified=unverified, date_invalid=invalid, start=start, end=end, time_quote=tq if start else None,"
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_interpretations_api.py",
+    "        {\"place_quote\": \"경복궁\", \"day\": 1, \"date\": \"2026-10-15\", \"date_quote\": \"2026-10-15\", \"year_quote\": \"2026\", \"date_form\": \"explicit_year\", \"start\": \"10:00\","
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_interpretations_api.py",
+    "        {\"place_quote\": \"광장시장\", \"day\": 1, \"date\": \"2026-10-15\", \"date_quote\": \"2026-10-15\", \"year_quote\": \"2026\", \"date_form\": \"explicit_year\", \"start\": \"17:00\""
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_reading_prefs.py",
+    "        {\"place_quote\": \"경복궁\", \"day\": 1, \"date\": \"2026-10-15\", \"date_quote\": \"2026-10-15\", \"year_quote\": \"2026\", \"date_form\": \"explicit_year\", \"start\": \"10:00\","
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_reading_prefs.py",
+    "        {\"place_quote\": \"광장시장\", \"day\": 1, \"date\": \"2026-10-15\", \"date_quote\": \"2026-10-15\", \"year_quote\": \"2026\", \"date_form\": \"explicit_year\", \"start\": \"13:30\""
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_llm_date_form.py",
+    "    item = agent_read.SCHEMA[\"properties\"][\"items\"][\"items\"]"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_llm_date_form.py",
+    "    assert {\"date_form\", \"year_quote\"} <= set(item[\"required\"])"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_llm_date_form.py",
+    "    assert item[\"properties\"][\"date_form\"][\"enum\"] == [\"explicit_year\", \"relative\", \"yearless\", None]"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_llm_date_form.py",
+    "    order = list(item[\"properties\"])"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_llm_date_form.py",
+    "    # 인용을 먼저 적고 → 판단 → 값(작은 모델이 근거를 보고 고르게)"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_llm_date_form.py",
+    "    assert order.index(\"date_quote\") < order.index(\"year_quote\") < order.index(\"date_form\") < order.index(\"date\")"
+   ],
+   [
+    "final_project_cs/wiki/external/rest-endpoints/web-intakes.md",
+    "  ★`[2026-10-26 사용자 지시 · Codex 검토]` 읽기 에이전트가 읽은 날짜는 **형식을 모델이 판단**한다 — 항목마다 `date_quote` → `year_quote`(고객이 적은 연도 조각, 머리줄 가능) → `date_form`(`explicit_year` · `r"
+   ]
+  ]
+ },
+ "remote": {
+  "added_lines": 48636,
+  "missing": 35,
+  "missing_sample": [
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "        # ★`[2026-10-27 G 모델 품질 · 수용 I05]` 날짜를 내면 날짜 인용 칸을 비울 수 없다(`_dated_items`) — 생성 문법만 좁힌다"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "                  \"required\": [\"place_quote\", \"day\", \"date\", \"date_quote\", \"start\", \"end\", \"time_quote\", \"kind\", \"locked\", \"locked_quote\"],"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "Output: {{\"guard\":{{\"off_topic\":false,\"prompt_injection\":false,\"out_of_scope\":false,\"quote\":null}},\"pieces\":[{{\"kind\":\"plan_item\",\"quote\":\"모레 11시 낙성대공원 산책하고 택시로"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "PROMPT_VERSION = \"intake.agent_read.v3-booked-not-locked\"   # v2: 명시 고정 locked/locked_quote · v3: 예약만 있는 항목 예시(locked null) · 예약 말 인용 금지"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/agent_read.py",
+    "    dropped = {\"item\": 0, \"time\": 0, \"date\": 0, \"move\": 0, \"move_end\": 0, \"condition\": 0, \"preference\": 0, \"piece\": 0, \"gap\": 0, \"locked\": 0}"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/pipeline.py",
+    "    ★아무 네 자리 숫자(「1230 출발」 · 예약번호)는 해가 아니다. 다른 해(「1027년」)가 적혀 있으면 모델 값과 어긋나므로 적힌 것으로 보지 않는다\"\"\""
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/pipeline.py",
+    "    return bool(re.search(rf\"(?<!\\d){year}(?!\\d)\", quote) or re.search(rf\"(?<!\\d){year[2:]}\\s*년\", quote))"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/pipeline.py",
+    "        elif it.date and it.date_quote is not None and not _year_written(it.date[:4], it.date_quote.text):"
+   ],
+   [
+    "final_project_cs/app/domains/travel_ops/components/intake/pipeline.py",
+    "            # `[2026-10-28 전수검사 A13]` 인용(「10월 30일」)에 해가 없는데 모델이 해를 붙였다 — 값은 두고 확인 표시만 붙인다"
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_interpretations_api.py",
+    "        {\"place_quote\": \"경복궁\", \"day\": 1, \"date\": D_2026_10_15, \"date_quote\": D_2026_10_15, \"start\": \"10:00\", \"end\": None,"
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_interpretations_api.py",
+    "        {\"place_quote\": \"광장시장\", \"day\": 1, \"date\": D_2026_10_15, \"date_quote\": D_2026_10_15, \"start\": \"17:00\", \"end\": None,"
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_reading_prefs.py",
+    "        {\"place_quote\": \"경복궁\", \"day\": 1, \"date\": D_2026_10_15, \"date_quote\": D_2026_10_15, \"start\": \"10:00\", \"end\": None,"
+   ],
+   [
+    "final_project_cs/tests/e2e/test_intake_reading_prefs.py",
+    "        {\"place_quote\": \"광장시장\", \"day\": 1, \"date\": D_2026_10_15, \"date_quote\": D_2026_10_15, \"start\": \"13:30\", \"end\": None,"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_date_generation.py",
+    "    raw = item(date=expected, date_quote=text, time_quote=text)"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_date_generation.py",
+    "    rows = [item(date_quote=text.splitlines()[0],time_quote=text.splitlines()[0]),"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_date_generation.py",
+    "            item(place_quote='경복궁스테이',date='2030-01-03',date_quote=text.splitlines()[1],start='10:00',end='11:00',time_quote=text.splitlines()[1],kind='lodging'"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_date_generation.py",
+    "    value = dict(place_quote='덕수궁', day=1, date='2030-01-02', date_quote=TEXT,"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_i06_booked_only_not_locked.py",
+    "    assert agent_read.PROMPT_VERSION == \"intake.agent_read.v3-booked-not-locked\""
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_i06_final_contract.py",
+    "    assert got.report['prompt_version']=='intake.agent_read.v3-booked-not-locked'"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "값은 그대로 두고(머리줄 등 다른 곳의 해를 모델이 읽었을 수 있다) 확인 표시와 그 해를 밝힌 안내만 붙인다."
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "해가 인용에 적힌 날짜(「2026-10-22」 · 「2027년 1월 3일」 · 「'27년 1월 3일」)는 지금처럼 확인 표시 없이 간다.\"\"\""
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "def _answer(day_line: str, iso: str):"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "    return {\"items\": [{\"place_quote\": \"경복궁\", \"day\": 1, \"date\": iso, \"date_quote\": day_line, \"start\": \"10:00\", \"end\": None,"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "                       \"time_quote\": \"10:00\", \"kind\": \"activity\"}],"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "@pytest.mark.parametrize(\"quote\", [\"10월 30일\", \"10월 30일 1230 출발\", \"10월 30일 예약번호 123456\", \"1027년 10월 30일\"])"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "def test_model_picked_year_for_a_yearless_quote_is_flagged_for_review(quote):"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "    \"\"\"해 없는 인용 · 해가 아닌 네 자리 숫자 · 모델 값과 다른 해(Codex 검토 지적)는 모두 확인 표시\"\"\""
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "    rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, \"2027-10-30\")), agent_mode=\"on\", position=0)"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "@pytest.mark.parametrize(\"quote,iso\", [(\"2026-10-22\", \"2026-10-22\"), (\"2027년 1월 3일\", \"2027-01-03\"), (\"'27년 1월 3일\", \"2027-01-03\"),"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "                                       (\"27년 1월 3일\", \"2027-01-03\"), (\"2027.1.3\", \"2027-01-03\")])"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "def test_quote_with_a_written_year_is_not_flagged(quote, iso):"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py",
+    "    rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode=\"on\", position=0)"
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_date_quote_grammar.py",
+    "    base = {\"place_quote\": \"합성궁\", \"day\": 1, \"date\": None, \"date_quote\": None, \"start\": \"10:00\", \"end\": \"11:00\","
+   ],
+   [
+    "final_project_cs/tests/unit/travel/test_intake_date_quote_grammar.py",
+    "@pytest.mark.parametrize(\"item\", [{\"date\": None, \"date_quote\": None}, {\"date\": \"2031-03-04\", \"date_quote\": \"2031년 3월 4일\"}])"
+   ],
+   [
+    "final_project_cs/wiki/external/intake-explicit-lock.md",
+    "- 프롬프트: `intake.agent_read.v3-booked-not-locked` — 예시 메시지에 예약만 있는 항목(`1시에 점심(예약 완료)` → `locked:null`)을 넣고 「예약 말을 locked_quote 로 쓰지 않는다」를 명시합니다. 판·템플릿 해시·렌더 해시는 "
+   ]
+  ]
+ }
+}

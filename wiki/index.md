@@ -8,6 +8,8 @@ domain: travel
 
 # guguroute wiki
 
+2026-11-06 [과거 날짜 가드레일 세션 마무리 인계](handoff/2026-11-06_pastguard-remerge-push-cleanup.md) — 원격 role-manager `1cf4542a1` 위 재병합 `43a3ced29`(충돌 9 · A13 겹침 맞춤), unit/travel 8467/8467 = 100% · vitest 1235/1235 = 100%, 팀 · 개인 role-manager push(SHA 는 인계 응답), 이 세션 scratch 정리. [cs 기록](../final_project_cs/wiki/records/reports/2026-11-06_pastguard-remerge-push-cleanup.md).
+
 2026-10-29 ST4F-728 로그아웃 경합 재현·차단: 웹1227/1227·화면11/11·필수3/3=100%,트래커종결0. [보고](../final_project_cs/wiki/records/reports/2026-10-29_st4f728-guest-logout.md).
 
 2026-10-26 [원격 role-manager a465c6022 위 재병합 인계](handoff/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — HEAD `92541686d`, 시험 범위 실패 0, fast-forward 가능(ahead 10/behind 0) · push 0.
