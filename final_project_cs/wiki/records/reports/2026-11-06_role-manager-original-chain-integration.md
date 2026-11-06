@@ -32,3 +32,7 @@ domain: travel
 - 실패 3건은 기준과 같은 이름이다(`test_no_tracked_text_file_leaks_infrastructure` · `test_api_key_file` 2건 — 이 PC 의 Git/무시 규칙 환경). 새 실패 0.
 - 한 샤드는 파일 순서에 따라 `test_disaster_msg`(건당 약 130초) 뒤 `test_rate_limit` 근처에서 멈추듯 느려졌다. 같은 순서로 기준 role-manager 도 같은 지점에서 느려졌고, 해당 파일들은 따로 돌리면 병합본 233/233 통과다.
 - 실제 서비스 기동 · 실DB · 예약 OFF 저장 확인 · x600 배포는 하지 않았다.
+
+## 재병합 — push 직전 원격 이동
+
+push 직전 원격 role-manager 가 `1cf4542a1` → `5a17e1f53`(과거 날짜 가드 확장)로 움직여 그 위에 다시 합쳤다(충돌 3: `plan-check/model.ts` 의 `draftProblem` 은 "hours" · "past" 둘 다 유지, `result-parts.tsx` import 합침, `wiki/index.md`). 재검증: 관리자 lint 0 · tsc 0 · vitest 48/48, 웹 lint 0 · tsc 0 · vitest 1245/1245, Python 빠른 단계 10,893 통과 · 3 실패(기준 `5a17e1f53` 와 같은 3건, 새 실패 0) · 173 건너뜀 / 11,069. 느린 샤드는 파일마다 따로 돌려 채웠다(시간 초과 0).
