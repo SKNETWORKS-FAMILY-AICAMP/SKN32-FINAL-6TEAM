@@ -2125,8 +2125,10 @@ def _agent_booking_rows(read: Any, item: Any, index: int) -> list[dict[str, Any]
 
 def _year_written(year: str, quote: str) -> bool:
     """`[2026-10-28 전수검사 A13]` 모델이 고른 해(`2027`)가 날짜 인용에 그대로 적혀 있나 — 「2027-10-30」 · 「2027년」 · 「'27년」 · 「27년」.
-    ★아무 네 자리 숫자(「1230 출발」 · 예약번호)는 해가 아니다. 다른 해(「1027년」)가 적혀 있으면 모델 값과 어긋나므로 적힌 것으로 보지 않는다"""
-    return bool(re.search(rf"(?<!\d){year}(?!\d)", quote) or re.search(rf"(?<!\d){year[2:]}\s*년", quote))
+    ★아무 네 자리 숫자(「1230 출발」 · 예약번호)는 해가 아니다. 다른 해(「1027년」)가 적혀 있으면 모델 값과 어긋나므로 적힌 것으로 보지 않는다.
+    ★`[2026-11-06 병합]` 줄인 해에 붙는 따옴표(「'26.3.5」 — 모델 연도 인용 `'26`)도 적힌 해다 — 날짜 형식 규칙(agent_read SYSTEM)의 예와 같다"""
+    return bool(re.search(rf"(?<!\d){year}(?!\d)", quote) or re.search(rf"(?<!\d){year[2:]}\s*년", quote)
+                or re.search(rf"['’]{year[2:]}(?!\d)", quote))
 
 
 def _agent_rows(read: Any, out: Any, *, position: int, today: date,
@@ -2253,13 +2255,16 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
                          "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})
         if it.date_guessed:
             guessed_dates.add(index)
-        elif it.date and it.date_quote is not None and not _year_written(it.date[:4], it.date_quote.text):
-            # `[2026-10-28 전수검사 A13]` 인용(「10월 30일」)에 해가 없는데 모델이 해를 붙였다 — 값은 두고 확인 표시만 붙인다
+        elif it.date and re.fullmatch(r"\d{4}-\d{2}-\d{2}", it.date) and it.date_quote is not None and not _year_written(it.date[:4], it.year_quote or it.date_quote.text):
+            # `[2026-10-28 전수검사 A13]` 인용(「10월 30일」)에 해가 없는데 모델이 해를 붙였다 — 값은 두고 확인 표시만 붙인다.
+            #   `[2026-11-06 병합]` 연도를 적은 날(explicit_year)은 모델이 원문에서 인용한 연도 조각(`year_quote`)과 해를 맞춰 본다 — 머리줄의 해도 근거다.
+            #   연도 없는 날(`--MM-DD`)은 날짜 해석이 이미 `year_filled`(확인 필요)로 채우므로 여기서 다시 보지 않는다
             yearless_dates.add(index)
         # ★`[2026-10-19 진단 포인트 2]` 에이전트가 「숙소」라고 읽은 항목은 장소를 숙소 자료에서만 찾는다(`_place_kind_hint`) — 전에는 식사만 넘기고 숙소를 버렸다
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
                       "meal": it.kind == "dining", "lodging": it.kind == "lodging", "booked": booked, "segment": segment(it),
-                      "start": it.start})
+                      "start": it.start, "year_unverified": it.year_unverified,
+                      "date_invalid": it.date_invalid})
     agent_count = len(items)
 
     # 규칙이 읽은 시각 있는 줄 중 에이전트가 빠뜨린 줄

@@ -18,7 +18,10 @@ from app.infrastructure.llm_failover import strict_schema
 
 
 def _raw(**item):
-    base = {"place_quote": "합성궁", "day": 1, "date": None, "date_quote": None, "start": "10:00", "end": "11:00",
+    # `[2026-11-06 병합]` 날짜는 모델 판단(2026-10-26 사용자 확정) — 답 항목에 연도 인용(`year_quote`) · 날짜 형식(`date_form`)이 있어야 한다
+    #   (형식 칸 없는 옛 답은 `agent_read._grounded_date` 가 날짜를 버린다). 시험 자료를 그 계약으로 맞췄다 — 단언은 그대로다.
+    base = {"place_quote": "합성궁", "day": 1, "date": None, "date_quote": None, "year_quote": None, "date_form": None,
+            "start": "10:00", "end": "11:00",
             "time_quote": "오전 10시~11시", "kind": "activity", "locked": None, "locked_quote": None}
     return {"guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
             "pieces": [{"kind": "plan_item", "quote": "오전 10시~11시 합성궁"}], "items": [{**base, **item}], "moves": [],
@@ -38,7 +41,8 @@ def test_a_dated_item_without_a_date_quote_is_not_generated():
     assert not _admits(_raw(date="2031-03-04", date_quote=""))
 
 
-@pytest.mark.parametrize("item", [{"date": None, "date_quote": None}, {"date": "2031-03-04", "date_quote": "2031년 3월 4일"}])
+@pytest.mark.parametrize("item", [{"date": None, "date_quote": None},
+                                  {"date": "2031-03-04", "date_quote": "2031년 3월 4일", "year_quote": "2031년", "date_form": "explicit_year"}])
 def test_undated_and_quoted_items_are_generated(item):
     assert _admits(_raw(**item))
 

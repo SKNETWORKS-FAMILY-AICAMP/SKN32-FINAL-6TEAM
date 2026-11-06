@@ -137,7 +137,11 @@ def _refusal(code: str, message: str, violations: Any = None) -> str:
     if code == "place_not_found":
         return f"말씀하신 곳을 장소 목록 · 관광 정보 · 지도에서 하나로 찾지 못해 일정은 바꾸지 않았어요({message}). 장소 이름을 조금 더 정확히 알려 주세요."
     if code == "item_in_past":
-        return f"이미 지난 일정은 바꿀 수 없어 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}."
+        # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 고치지 않고(이름 포함) 뺄 수만 있다 · 새로 넣거나 옮기는 날짜 · 시각은 지금 이후만
+        return (f"지난 일정은 고칠 수 없고 새로 넣거나 옮기는 날짜·시각은 지금 이후만 돼서 일정은 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}. "
+                "지난 일정을 다시 하려면 새 일정으로 추가해 주세요.")
+    if code == "no_upcoming_items":
+        return "진행 중이거나 앞으로 남은 일정이 하나는 있어야 해서 일정은 바꾸지 않았어요. 마지막 남은 일정은 뺄 수 없어요."
     if code == "itinerary_infeasible":
         # ★`[2026-10-28 x600 e78e038b]` 위반마다의 고객 문장(`violations[].reason`)을 문장으로 잇는다. 전에는 개발용 메시지를 「:」에서 잘라
         #   「— 북촌한옥마을: 19:00 까지인데 17:00 에 닫는다 / …」로 붙였다. 위반 목록이 없으면 메시지를 되풀이하지 않는다
@@ -291,9 +295,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 continue
             if op.item_id not in where:
                 item = by_id.get(op.item_id)
-                title = item.title if item else "그 일정"
                 if str(op.item_id) in frozen:
-                    raise EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
+                    raise frozen_refusal(item, op.kind, now=now)
                 raise EditRefused("unknown_item", "바꿀 일정을 지금 일정에서 하나로 찾지 못해 일정은 바꾸지 않았어요. 일정 이름을 알려 주세요.")
             if reopen._policy_locked(by_id[op.item_id]):
                 # `[2026-10-15 ST4F-490]` 숙소 · 항공 · 업체 예약 일정은 수정 접수에 **잠금**으로 들어온다(웹 「일정 수정」에서 풀어 고친다). 채팅은 전처럼 바꾸지 않고
@@ -589,6 +592,79 @@ def shift_range(candidates: list[Any], minutes: int, now: datetime) -> tuple[lis
     if kept:
         ops[0] = replace(ops[0], kept=tuple(_kept_label(i) for i in kept))
     return ops, (f"{targets[0].title} 시각 옮기기" if len(targets) == 1 else f"일정 {len(targets)}개 시각 옮기기")
+def _over(item: Any, now: datetime) -> bool:
+    """끝난 일정인가 — 끝 ≤ 지금(끝이 없으면 시작). 서버 「완료」(`reopen._end`) · 수정 접수의 고정 이유 `past` 와 같은 판단."""
+    return (item.ends_at or item.starts_at) <= now
+
+
+def past_item_refusal(item: Any) -> EditRefused:
+    """`[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 기록이다 — 이름 · 장소 · 시각 · 순서 · 고정 무엇이든 고치지 않는다. 다시 하려면 새 일정으로 추가한다."""
+    return EditRefused("item_in_past", f"「{item.title}」은(는) 이미 지난 일정이라 고치지 않았어요. 지난 일정은 기록으로 두고 뺄 수만 있어요 — "
+                                       "다시 하려면 새 일정으로 추가해 주세요.")
+
+
+def frozen_refusal(item: Any, op_kind: str, *, now: datetime) -> EditRefused:
+    """수정 접수에 들어오지 않은(고정) 일정을 채팅이 건드렸을 때의 답. 지난 일정이면 그렇게 말한다 — 고치기는 `past_item_refusal`,
+    빼기는 아직 길이 없다(수정 접수가 지난 일정을 싣지 않는다 — 2026-10-26 기록의 남은 일). 지나지 않은 고정(예약 · 자정 넘김 등)은 전과 같다."""
+    if item is not None and _over(item, now):
+        if op_kind == "remove":
+            return EditRefused("item_in_past", f"「{item.title}」은(는) 이미 지난 일정이에요. 지난 일정 빼기는 아직 채팅으로 하지 못해 일정은 바꾸지 않았어요.")
+        return past_item_refusal(item)
+    title = item.title if item is not None else "그 일정"
+    return EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
+
+
+#: `[2026-10-26 사용자 확정]` 지난 날짜 되묻기 선택지 제목 — 화면은 기존 채팅 선택지(`choices` · `choices_title`)로 그린다
+PAST_DATE_TITLE = "혹시 오타 아닌가요?"
+
+
+def future_date_choices(*, title: str, item_id: Any, begin: str, stops: list[Any], now: datetime, verb: str) -> list[dict[str, Any]]:
+    """같은 시각(`begin` HH:MM)을 지키는 **가장 가까운 앞으로의 날짜** 후보 — 여행 날짜(첫 일정 날~마지막 일정 날) 중 그 날 그 시각이 지금 이후인 날.
+    여행 날짜에 하나도 없으면 오늘 · 내일 중 지금 이후인 날. 선택지 수는 가드레일 `travel.chat_edit.past_date_choices`.
+    `message` 는 버튼을 누르면 고객 대신 보낼 문장이다(기존 채팅 선택지 계약 — `label` · `message` · 서버가 확인한 `item_id`)."""
+    from app.core.settings import get_guardrails
+
+    limit = int(get_guardrails().get("travel.chat_edit.past_date_choices"))
+    floor = now.astimezone(KST).replace(second=0, microsecond=0)
+    today = floor.date()
+    dates = sorted({s.starts_at.astimezone(KST).date() for s in stops if getattr(s, "kind", None) != "mobility"})
+    first = dates[0] if dates else None
+    span = [first + timedelta(days=n) for n in range((dates[-1] - first).days + 1)] if dates else []
+    clock = datetime.strptime(begin, "%H:%M").time()
+
+    def fits(day: Any) -> bool:
+        return datetime.combine(day, clock, tzinfo=KST) >= floor
+
+    days = [d for d in span if fits(d)] or [d for d in (today, today + timedelta(days=1)) if fits(d)]
+    out = []
+    for day in days[:limit]:
+        if first is not None and first <= day <= span[-1]:
+            spoken = f"{(day - first).days + 1}일차({day.month}월 {day.day}일)"
+        else:
+            spoken = f"{'오늘' if day == today else '내일'}({day.month}월 {day.day}일)"
+        out.append({"label": f"{trip_day_label(day)} {begin}",
+                    "message": f"{title} {spoken} {begin}{'으로 옮겨줘' if verb == 'move' else '에 넣어줘'}",
+                    **({"item_id": str(item_id)} if item_id is not None else {})})
+    return out
+
+
+def trip_day_label(day: Any) -> str:
+    from app.domains.travel_ops.components.conversation import trip_facts
+
+    return trip_facts._day_label(day)
+
+
+def past_time_refusal(*, title: str, item_id: Any, day: str, begin: str, stops: list[Any], now: datetime, verb: str) -> EditRefused:
+    """`[2026-10-26 사용자 확정]` 채팅 수정이 **지난 날짜 · 시각**을 냈다 — 적용하지 않고 「혹시 오타 아닌가요?」로 되묻고 가장 가까운 앞으로의 날짜를 버튼으로 낸다.
+    코드는 기존 `time_in_past` 그대로(웹 · 기록 호환). 후보가 없으면 버튼 없이 앞으로의 날짜를 알려 달라고만 한다(지어내지 않는다)."""
+    from datetime import date as _date
+
+    asked = _date.fromisoformat(day)
+    choices = future_date_choices(title=title, item_id=item_id, begin=begin, stops=stops, now=now, verb=verb)
+    action = "옮기지" if verb == "move" else "넣지"
+    text = (f"{PAST_DATE_TITLE} {trip_day_label(asked)} {begin}은(는) 이미 지난 때라 「{title}」 일정은 {action} 않았어요. "
+            + ("아래 가까운 날짜 중에서 골라 주시거나 다른 날짜와 시각을 알려 주세요." if choices else "앞으로의 날짜와 시각을 알려 주세요."))
+    return EditRefused("time_in_past", text, **({"choices": choices, "choices_title": PAST_DATE_TITLE} if choices else {}))
 
 
 _ALL = __import__("re").compile(r"전부|전체|모두|다\s*(?:미뤄|밀어|당겨|늦춰)|all\s+(?:of\s+)?(?:my|the)|everything", __import__("re").IGNORECASE)
@@ -643,6 +719,11 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
     other = by_alias.get(str(raw.get("anchor_item") or "none"))
     name = str(raw.get("destination_text") or "").strip()[:80]
 
+    # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 고치지 않는다(빼기 · 그 뒤에 넣기 · 그 뒤 일정 옮기기는 지난 일정을 고치는 것이 아니다)
+    if action in ("replace_named", "lock_item", "unlock_item", "swap_order"):
+        for target in (item, other if action == "swap_order" else None):
+            if target is not None and _over(target, now):
+                raise past_item_refusal(target)
     if action == "change_time":
         from .edit_intent import range_boundary, time_ops
 
@@ -671,6 +752,9 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                                   + "\n".join(f"· 그대로 둔 일정: {_kept_label(i)}" for i in kept))
         if not targets:
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
+        for target in targets:
+            if _over(target, now):
+                raise past_item_refusal(target)            # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 다른 때로 옮기지 않는다 — 새로 추가한다
         ops = []
         meal = None
         if not decision.minutes and raw.get("anchor_kind") in (None, "none", "time"):
@@ -768,6 +852,10 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
             raise EditRefused("need_time", f"「{name}」을(를) 몇 시에(또는 어느 일정 앞뒤에) 넣을지 알려 주세요.")
         end = begin + DEFAULT_STAY
         _same_day(begin.date().isoformat(), begin.strftime("%H:%M"), end.strftime("%H:%M") if end.date() == begin.date() else "00:00", name)
+        if begin < now.astimezone(KST).replace(second=0, microsecond=0):
+            # `[2026-10-26 사용자 확정]` 지난 때에 새 일정을 넣지 않는다 — 「혹시 오타 아닌가요?」 + 가장 가까운 앞으로의 날짜 버튼
+            raise past_time_refusal(title=name, item_id=None, day=begin.date().isoformat(), begin=begin.strftime("%H:%M"),
+                                    stops=stops, now=now, verb="add")
         return [EditOp("add", date=begin.date().isoformat(), starts_at=begin.strftime("%H:%M"), ends_at=end.strftime("%H:%M"),
                        place_name=name, title=name, said_kind=said_kind(message))], f"{name} 넣기"
     raise EditRefused("not_an_edit", "무엇을 바꿀지 알아듣지 못해 일정은 바꾸지 않았어요.")
@@ -792,7 +880,15 @@ def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: lis
         if not it.start or not title or title in have or _GENERIC_PLACE.fullmatch(title):
             continue
         when = it.date or fallback_day
+        if when.startswith("--"):
+            # `[2026-10-26 사용자 확정]` 연도 없는 날짜(이해 에이전트가 원문에 없는 연도를 지운 값) — 오늘 이후 처음 오는 그 날(오늘 포함, 계획서 읽기와 같은 `dates._fill_year`)
+            from app.domains.travel_ops.components.intake.dates import _fill_year
+
+            when = _fill_year(when, today).isoformat()
         begin = datetime.fromisoformat(f"{when}T{it.start}").replace(tzinfo=KST)
+        if begin < now.astimezone(KST).replace(second=0, microsecond=0):
+            # 연도를 적은 지난 날짜 · 지난 시각 — 넣지 않고 되묻는다(여러 곳 중 하나라도 지났으면 하나도 넣지 않는다)
+            raise past_time_refusal(title=title, item_id=None, day=when, begin=it.start, stops=stops, now=now, verb="add")
         end = datetime.fromisoformat(f"{when}T{it.end}").replace(tzinfo=KST) if it.end and it.end > it.start else begin + DEFAULT_STAY
         if end.date() != begin.date():
             continue

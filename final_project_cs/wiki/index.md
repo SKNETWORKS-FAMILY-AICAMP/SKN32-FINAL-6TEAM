@@ -60,6 +60,15 @@ domain: travel
 
 [2026-10-26 수정] 계획 읽기가 실패(`fatal` · x600 `reading_model_failed`, 막대 8/9줄)인데 질문 붙잡기 때문에 「계획을 다 읽었어요」·「읽어 온 계획 확인하기」가 뜨던 결함 — 실패면 붙잡지 않고 실패 화면으로. vitest 1205/1205=100%(rebase 뒤), Playwright 36/36=100%(mock). [원인·근거·시험](records/reports/2026-10-26_계획읽기_실패인데_다읽었어요_수정.md).
 
+2026-10-26 [원격 role-manager a465c6022 위 재병합 · 전체 시험](records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — `integ/rebase-on-manager-a465c6022-20261026` HEAD `92541686d`, 코드 충돌 0 · wiki 4파일 양쪽 보존, unit/travel 7740/7740 · gates 608/608 · vitest 1205/1205; Codex 지적(달력에 없는 날 첫날 채움) 수정; ahead 10/behind 0, push 0.
+
+2026-10-26 (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183; role-manager 원격 전진(웹 5파일 충돌)으로 push 0, v9 로컬 서빙 유지(agent_read 프롬프트 충돌 · E4B 재측정 필요).
+
+2026-10-26 [날짜 읽기를 모델 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 모델이 `date_form` · `year_quote` 를 내고 코드는 인용만 확인(본문 「2026원」 연도 오판 제거); 로컬 E4B 깨끗한 보류 표본 12/20 → 15/20, 거절 위험 오류 10 → 1건; Codex 3회 논의.
+2026-10-26 [지난 일정은 삭제만](records/reports/2026-10-26_past-edit-delete-only.md) — 끝난 일정은 이름 포함 수정 불가 · 삭제만(서버 `plan_edit` · 웹 `pastEdit` · 채팅); 이미 지난 고정 일정 삭제 경로는 남음.
+
+2026-10-26 [과거 날짜 가드레일 확장](records/reports/2026-10-26_past-date-guard-extension.md) — 모델 연도 없는 날짜 다가오는 날·채팅 「오타 아닌가요?」 choices·`plan_edit` 지금 이후/`no_upcoming_items`; 지난 고정 일정 이름·삭제 경로는 남음.
+
 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
 
 2026-10-27 전수검사 A~J 후보 통합(F · C · B · G · A · D · E · H · J 9/9, I 제외) — 빠른 관문 10,530/10,530 · vitest 1,217/1,217 · DB core 89/89 · 수용 49 엄격 39/49, role-manager 반영 [보고서](records/reports/2026-10-27_K_전수검사후보_통합_role-manager.md)

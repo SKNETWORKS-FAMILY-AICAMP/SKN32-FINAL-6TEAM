@@ -17,7 +17,7 @@ def test_inline_reader_prompt_identity_is_persisted_in_report():
             self.system=system
             return {'items': []}
     c=Chat(); got=agent_read.read('서울 여행', ['서울 여행'], c, today=date(2026,10,25))
-    assert got.report['prompt_version']=='intake.agent_read.v3-booked-not-locked'
+    assert got.report['prompt_version']=='intake.agent_read.v4-date-form'
     assert got.report['prompt_template_hash']==hashlib.sha256(agent_read.SYSTEM.encode()).hexdigest()
     assert got.report['prompt_hashes']==[hashlib.sha256(c.system.encode()).hexdigest()]
 

@@ -1,0 +1,124 @@
+LLMDATE root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\mgr-merge-20261026-0045\final_project_cs
+FFF.FF.FFFF                                                              [100%]
+================================== FAILURES ===================================
+_______ test_schema_asks_the_model_for_the_date_form_and_the_year_quote _______
+
+    def test_schema_asks_the_model_for_the_date_form_and_the_year_quote():
+        item = agent_read.SCHEMA["properties"]["items"]["items"]
+>       assert {"date_form", "year_quote"} <= set(item["required"])
+E       AssertionError: assert {'date_form', 'year_quote'} <= {'date', 'dat...e_quote', ...}
+E         
+E         Extra items in the left set:
+E         'date_form'
+E         'year_quote'
+
+tests\unit\travel\test_llm_date_form.py:48: AssertionError
+__________ test_a_number_elsewhere_in_the_text_is_not_a_written_year __________
+
+    def test_a_number_elsewhere_in_the_text_is_not_a_written_year():
+        text = "3/5 10시 경복궁, 입장료 2026원"
+        item = _item("경복궁", "2026-03-05", "3/5", "yearless")
+>       assert agent_read.ground(_answer([item]), text.splitlines()).items[0].date == "--03-05"
+E       AssertionError: assert '2026-03-05' == '--03-05'
+E         
+E         - --03-05
+E         + 2026-03-05
+
+tests\unit\travel\test_llm_date_form.py:58: AssertionError
+_________ test_a_two_digit_year_the_model_quotes_keeps_the_past_date __________
+
+    def test_a_two_digit_year_the_model_quotes_keeps_the_past_date():
+        text = "'26.3.5 10시 경복궁"
+        row = _date_row(text, _item("경복궁", "2026-03-05", "'26.3.5", "explicit_year", year_quote="'26"))
+>       assert row["value"] == "2026-03-05" and row["evidence"]["how"] == "written"
+E       AssertionError: assert ('2027-03-05' == '2026-03-05'
+E         
+E         - 2026-03-05
+E         ?    ^
+E         + 2027-03-05
+E         ?    ^)
+
+tests\unit\travel\test_llm_date_form.py:67: AssertionError
+___ test_an_explicit_year_without_a_source_quote_is_not_trusted_as_written ____
+
+    def test_an_explicit_year_without_a_source_quote_is_not_trusted_as_written():
+        # 모델이 「연도를 적었다」고 했지만 연도 인용이 원문에 없다 — 연도를 명시한 과거로 보지 않고(정책: 적은 연도만) 연도 없는 날로 둔다 · 버린 수를 센다
+        text = "3월 5일 10시 경복궁"
+        out = agent_read.ground(_answer([_item("경복궁", "2026-03-05", "3월 5일", "explicit_year", year_quote="2026년")]), text.splitlines())
+>       assert out.items[0].date == "--03-05" and out.report["dropped"]["date_year"] == 1
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'date_year'
+
+tests\unit\travel\test_llm_date_form.py:81: KeyError
+___ test_relative_dates_with_digits_are_the_models_date_counted_from_today ____
+
+    def test_relative_dates_with_digits_are_the_models_date_counted_from_today():
+        text = "다음 달 5일 10시 경복궁"
+        out = agent_read.ground(_answer([_item("경복궁", "2026-11-05", "다음 달 5일", "relative")]), text.splitlines())
+>       assert out.items[0].date == "2026-11-05" and out.items[0].date_guessed is True
+E       AssertionError: assert ('--11-05' == '2026-11-05'
+E         
+E         - 2026-11-05
+E         + --11-05)
+
+tests\unit\travel\test_llm_date_form.py:89: AssertionError
+_______ test_a_missing_date_form_is_a_contract_error_not_a_trusted_year _______
+
+    def test_a_missing_date_form_is_a_contract_error_not_a_trusted_year():
+        # 옛 형식 답(판단 칸 없음) — 연도를 믿지도, 연도 없는 날로 바꾸지도 않는다. 날짜를 버리고 센다(날짜는 묻는 길로)
+        text = "3월 5일 10시 경복궁"
+        item = _item("경복궁", "2026-03-05", "3월 5일", None)
+        del item["date_form"]
+        out = agent_read.ground(_answer([item]), text.splitlines())
+>       assert out.items[0].date is None and out.items[0].date_quote is None
+E       AssertionError: assert ('--03-05' is None)
+E        +  where '--03-05' = AgentItem(title=Quote(line=1, start=10, end=13, text='경복궁'), day=1, date='--03-05', date_quote=Quote(line=1, start=0, ..., end=None, time_quote=None, time_guessed=False, kind='activity', time_fixed=False, role='visit', time_from_rule=False).date
+
+tests\unit\travel\test_llm_date_form.py:106: AssertionError
+__________________ test_system_prompt_examples_follow_today ___________________
+
+    def test_system_prompt_examples_follow_today():
+        system = agent_read.system_for(TODAY)
+        assert "2026-10-26" in system
+        # 예시의 「연도 없는 날」 값은 오늘에서 계산한다(고정 날짜가 시간이 지나 과거가 되지 않게)
+>       assert dates.next_month_day(8, 15, TODAY).isoformat() in system
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.components.intake.dates' has no attribute 'next_month_day'
+
+tests\unit\travel\test_llm_date_form.py:114: AttributeError
+__________ test_a_yearless_february_29_waits_for_the_next_leap_year ___________
+
+    def test_a_yearless_february_29_waits_for_the_next_leap_year():
+>       assert dates._fill_year("--02-29", TODAY) == date(2028, 2, 29)
+E       AssertionError: assert datetime.date(2027, 2, 28) == datetime.date(2028, 2, 29)
+E        +  where datetime.date(2027, 2, 28) = <function _fill_year at 0x00000180B486A200>('--02-29', datetime.date(2026, 10, 26))
+E        +    where <function _fill_year at 0x00000180B486A200> = dates._fill_year
+E        +  and   datetime.date(2028, 2, 29) = date(2028, 2, 29)
+
+tests\unit\travel\test_llm_date_form.py:118: AssertionError
+___________ test_chat_add_with_number_noise_uses_the_next_such_date ___________
+
+    def test_chat_add_with_number_noise_uses_the_next_such_date():
+        from app.domains.travel_ops.components.conversation import chat_edit
+    
+        message = "3/5 10시 경복궁 넣어줘, 입장료 2026원"
+        answer = _answer([_item("경복궁", "2026-03-05", "3/5", "yearless")])
+        ops = chat_edit._read_adds(message, lambda text, today: agent_read.ground(answer, text.splitlines()), stops=[], now=NOW, day=None)
+>       assert [(o.date, o.starts_at) for o in ops] == [("2027-03-05", "10:00")]
+E       AssertionError: assert [] == [('2027-03-05', '10:00')]
+E         
+E         Right contains one more item: ('2027-03-05', '10:00')
+E         Use -v to get more diff
+
+tests\unit\travel\test_llm_date_form.py:127: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_llm_date_form.py::test_schema_asks_the_model_for_the_date_form_and_the_year_quote
+FAILED tests/unit/travel/test_llm_date_form.py::test_a_number_elsewhere_in_the_text_is_not_a_written_year
+FAILED tests/unit/travel/test_llm_date_form.py::test_a_two_digit_year_the_model_quotes_keeps_the_past_date
+FAILED tests/unit/travel/test_llm_date_form.py::test_an_explicit_year_without_a_source_quote_is_not_trusted_as_written
+FAILED tests/unit/travel/test_llm_date_form.py::test_relative_dates_with_digits_are_the_models_date_counted_from_today
+FAILED tests/unit/travel/test_llm_date_form.py::test_a_missing_date_form_is_a_contract_error_not_a_trusted_year
+FAILED tests/unit/travel/test_llm_date_form.py::test_system_prompt_examples_follow_today
+FAILED tests/unit/travel/test_llm_date_form.py::test_a_yearless_february_29_waits_for_the_next_leap_year
+FAILED tests/unit/travel/test_llm_date_form.py::test_chat_add_with_number_noise_uses_the_next_such_date
+9 failed, 2 passed in 27.27s

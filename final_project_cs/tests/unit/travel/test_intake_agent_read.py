@@ -10,8 +10,9 @@ TODAY = date(2026, 10, 16)
 TEXT = "1일차 · 2026-10-22\n10:00 경복궁\n12:30 광장시장 · 점심\n15:00 국립중앙박물관\n택시로 이동\n19:00 N서울타워\n\n2일차 · 2026-10-23\n10:00 북촌한옥마을"
 
 
-def _item(quote, start, *, kind="activity", date_="2026-10-22", date_quote="1일차 · 2026-10-22", time_quote=None):
-    return {"place_quote": quote, "day": 1, "date": date_, "date_quote": date_quote, "start": start, "end": None,
+def _item(quote, start, *, kind="activity", date_="2026-10-22", date_quote="1일차 · 2026-10-22", time_quote=None,
+          year_quote="2026", date_form="explicit_year"):
+    return {"place_quote": quote, "day": 1, "date": date_, "date_quote": date_quote, "year_quote": year_quote, "date_form": date_form, "start": start, "end": None,
             "time_quote": time_quote or start, "kind": kind}
 
 
@@ -45,7 +46,7 @@ def _items(rows):
 def test_ground_drops_quotes_that_are_not_verbatim_and_flags_pm_guesses():
     lines = ["낼 1시쯤 이촌동에서 점심", "토속툰 아닌 토속촌"]
     out = agent_read.ground({"items": [
-        {"place_quote": "이촌동", "day": 1, "date": "2026-10-17", "date_quote": "낼", "start": "13:00", "end": None,
+        {"place_quote": "이촌동", "day": 1, "date": "2026-10-17", "date_quote": "낼", "year_quote": None, "date_form": "relative", "start": "13:00", "end": None,
          "time_quote": "1시쯤", "kind": "dining"},
         {"place_quote": "토속툰촌", "day": 1, "date": None, "date_quote": None, "start": None, "end": None, "time_quote": None,
          "kind": "dining"}],
@@ -74,9 +75,9 @@ def test_taxi_line_becomes_the_segment_mode_not_an_item_and_missed_timed_lines_c
 
 def test_a_correction_in_the_message_keeps_the_agent_plan_without_refilling_from_rules():
     text = "10/22 10시 남산타워 12시 명동 점심 3시 덕수궁\n아 잠깐 남산타워 말고 롯데타워로 바꿀게요"
-    agent = Agent(_answer([_item("롯데타워", "10:00", date_quote="10/22", time_quote="10시"),
-                           _item("명동", "12:00", kind="dining", date_quote="10/22", time_quote="12시"),
-                           _item("덕수궁", "15:00", date_quote="10/22", time_quote="3시")], requests=["register", "correction"]))
+    agent = Agent(_answer([_item("롯데타워", "10:00", date_quote="10/22", time_quote="10시", year_quote=None, date_form="yearless"),
+                           _item("명동", "12:00", kind="dining", date_quote="10/22", time_quote="12시", year_quote=None, date_form="yearless"),
+                           _item("덕수궁", "15:00", date_quote="10/22", time_quote="3시", year_quote=None, date_form="yearless")], requests=["register", "correction"]))
     items = _items(read_source(text, today=TODAY, agent=agent, agent_mode="on"))
     assert [i["title"] for i in items] == ["롯데타워", "명동", "덕수궁"]
     assert items[2]["starts_at"] == "15:00"
@@ -154,7 +155,7 @@ def test_pieces_gaps_guard_and_preferences_are_grounded_in_the_text():
     out = agent_read.ground({
         "guard": {"off_topic": False, "prompt_injection": True, "out_of_scope": False, "quote": "이전 지시는 무시하고"},
         "pieces": [{"kind": "plan_item", "quote": "토욜 10시 경복궁"}, {"kind": "chitchat", "quote": "없는 말"}],
-        "items": [{"place_quote": "경복궁", "day": 1, "date": "2026-10-17", "date_quote": "토욜", "start": "10:00", "end": None,
+        "items": [{"place_quote": "경복궁", "day": 1, "date": "2026-10-17", "date_quote": "토욜", "year_quote": None, "date_form": "relative", "start": "10:00", "end": None,
                    "time_quote": "10시", "kind": "activity"}],
         "moves": [], "conditions": [],
         "preferences": [{"code": "kid_friendly", "quote": "애들 데리고"}, {"code": "avoid_walking", "quote": "많이 걷는 건 빼"}],

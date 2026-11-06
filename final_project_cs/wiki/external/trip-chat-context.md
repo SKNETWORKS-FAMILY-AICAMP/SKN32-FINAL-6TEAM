@@ -172,3 +172,9 @@ domain: travel
   - (b) `anchor_kind=time` · `anchor_item=none` · `relation=at` · `anchor_time=HH:MM`: `chat_edit.ops_for`가 새 시작으로 실행한다. before/after(범위 경계)는 낼 수 없다.
 - (b)의 `anchor_time`도 `validate`가 `time`과 같은 인용 재계산(`fact_check.recompute_time`)으로 확인한다(`edit_intent._shift_start_clock`). 인용과 다르거나 인용에 시각이 없으면 해석 실패로 끝나고 일정은 그대로다. 문장 낱말 규칙은 없다.
 - 실 E4B(로컬, `decide` 직접 호출): (a)만 열었을 때 「오후 5시 30분」 2/2가 여전히 `time=""` · `minutes=30`이었다. (b)를 연 뒤 1/1이 `anchor_time=17:30`으로 17:30에 옮겼다. 유료 넘김 스키마(`plain=True`)는 바뀌지 않는다. 시험은 `tests/unit/travel/test_chat_absolute_clock_move_grammar.py`, 보고서는 `wiki/records/reports/2026-10-28_timemove_로컬E4B_절대시각.md`다.
+
+## 2026-10-26 채팅 수정의 지난 날짜 · 지난 일정 (과거 날짜 가드레일 확장 · 삭제만)
+
+- `[2026-10-26 사용자 확정]` 채팅 수정(시각 옮기기 · 넣기 · 읽기 에이전트 넣기)이 **지난 날짜 · 시각**을 내면 적용하지 않고 `status: clarify` · `reason: time_in_past` 로 「혹시 오타 아닌가요? …」를 답한다. `choices` 는 같은 시각을 지키는 가장 가까운 앞으로의 여행 날짜(여행 날짜에 없으면 오늘 · 내일) 최대 `travel.chat_edit.past_date_choices` 개, `choices_title` 은 「혹시 오타 아닌가요?」. 각 선택지는 기존 `label` · `message`(누르면 보낼 문장, 예 「경복궁 3일차(1월 3일) 10:00으로 옮겨줘」) · 옮기기면 서버가 확인한 `item_id`. 후보가 없으면 버튼 없이 앞으로의 날짜를 묻는다. [기록](../records/reports/2026-10-26_past-date-guard-extension.md)
+
+- `[2026-10-26 사용자 확정 — 삭제만]` 채팅이 **지난 일정**(끝 ≤ 지금)을 고치려 하면(장소 바꾸기 · 고정/풀기 · 순서 바꾸기 · 시각 옮기기) 적용하지 않고 `reason: item_in_past` 「「X」은(는) 이미 지난 일정이라 고치지 않았어요. 지난 일정은 기록으로 두고 뺄 수만 있어요 — 다시 하려면 새 일정으로 추가해 주세요.」로 답한다. 이미 지난(고정) 일정 빼기는 아직 경로가 없어 그렇게 답한다(`frozen_refusal`). [기록](../records/reports/2026-10-26_past-edit-delete-only.md)

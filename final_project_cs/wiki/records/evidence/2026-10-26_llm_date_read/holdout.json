@@ -1,0 +1,26 @@
+{
+  "today": "2026-10-26",
+  "note": "보류 표본(holdout) — 프롬프트를 고칠 때 보지 않는다. 합성 문장, today=2026-10-26(월). 기대값은 사용자 확정 정책.",
+  "samples": [
+    {"id": "h01", "group": "yearless_numeric", "text": "4/1 오후 3시 롯데월드", "expect": ["2027-04-01"]},
+    {"id": "h02", "group": "noise_number", "text": "4월 1일 15시 롯데월드 (티켓 2026장 한정)", "expect": ["2027-04-01"]},
+    {"id": "h03", "group": "yearless_english", "text": "Apr 1st 3pm Lotte World", "expect": ["2027-04-01"]},
+    {"id": "h04", "group": "year_past", "text": "2024년 4월 1일 15시 롯데월드", "expect": ["2024-04-01"]},
+    {"id": "h05", "group": "year_two_digit", "text": "'27.4.1 롯데월드 15시", "expect": ["2027-04-01"]},
+    {"id": "h06", "group": "relative_past", "text": "그저께 15시 롯데월드", "expect": ["2026-10-24"]},
+    {"id": "h07", "group": "relative_future", "text": "다음 주 수요일 15시 롯데월드", "expect": ["2026-11-04"]},
+    {"id": "h08", "group": "relative_future", "text": "이번 달 30일 15시 롯데월드", "expect": ["2026-10-30"]},
+    {"id": "h09", "group": "yearless_holiday", "text": "새해 첫날 15시 롯데월드", "expect": ["2027-01-01"]},
+    {"id": "h10", "group": "yearless_dotted", "text": "11.15 15시 롯데월드", "expect": ["2026-11-15"]},
+    {"id": "h11", "group": "noise_phone", "text": "15시 롯데월드 (11월 15일), 연락처 010-1115-2026", "expect": ["2026-11-15"]},
+    {"id": "h12", "group": "year_header", "text": "2025년 여름 여행 정리\n7월 20일 15시 롯데월드", "expect": ["2025-07-20"]},
+    {"id": "h13", "group": "relative_english", "text": "next Wednesday 3pm Lotte World", "expect": ["2026-11-04"]},
+    {"id": "h14", "group": "yearless_english", "text": "October 30th 3pm Lotte World", "expect": ["2026-10-30"]},
+    {"id": "h15", "group": "yearless_past_md", "text": "10월 20일 15시 롯데월드", "expect": ["2027-10-20"]},
+    {"id": "h16", "group": "noise_relative_word", "text": "작년 이맘때 갔던 롯데월드 다시, 1월 10일 15시", "expect": ["2027-01-10"]},
+    {"id": "h17", "group": "relative_future", "text": "글피 15시 롯데월드", "expect": ["2026-10-29"]},
+    {"id": "h18", "group": "year_future", "text": "2026년 12월 31일 23시 보신각", "expect": ["2026-12-31"]},
+    {"id": "h19", "group": "noise_year_word", "text": "12/31 23시 보신각, 2027년 맞이", "expect": ["2026-12-31"]},
+    {"id": "h20", "group": "yearless_numeric", "text": "1/2 10시 경복궁", "expect": ["2027-01-02"]}
+  ]
+}

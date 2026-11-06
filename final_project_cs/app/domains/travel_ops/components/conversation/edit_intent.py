@@ -462,7 +462,7 @@ def pending_goal(decision, *, version: int, now: datetime) -> dict[str, Any] | N
 
 
 def time_ops(decision, *, items, now: datetime):
-    from .chat_edit import EditOp, EditRefused, KST, _hm, _same_day
+    from .chat_edit import EditOp, EditRefused, KST, _hm, _same_day, past_time_refusal
     from .trip_facts import _stops
 
     spec = (decision.raw or {}).get("time_edit") or {}
@@ -554,7 +554,10 @@ def time_ops(decision, *, items, now: datetime):
     if item.kind not in {"activity", "dining"} or item.booking_id or item.locked:
         raise EditRefused("locked_item", "예약·고정된 일정이라 시간을 바꾸지 않았어요.")
     if (item.ends_at or item.starts_at) <= now:
-        raise EditRefused("item_in_past", "이미 끝난 일정이라 시간을 바꾸지 않았어요.")
+        # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 기록이다 — 다시 하려면 새로 추가한다
+        from .chat_edit import past_item_refusal
+
+        raise past_item_refusal(item)
     if boundary == "start":
         from .chat_edit import _day_of, _inside_trip, moved_to
 
@@ -572,7 +575,8 @@ def time_ops(decision, *, items, now: datetime):
             raise EditRefused("day_outside_trip", "이 여행에 없는 날이라 바꾸지 않았어요.")
         _same_day(day, begin, until, item.title)
         if datetime.fromisoformat(f"{day}T{begin}").replace(tzinfo=KST) < now:
-            raise EditRefused("time_in_past", "이미 지난 시작 시각으로 옮길 수 없어 바꾸지 않았어요. 앞으로 시작할 시각을 알려 주세요.")
+            # `[2026-10-26 사용자 확정]` 지난 날짜 · 시각 — 적용하지 않고 「혹시 오타 아닌가요?」 + 가장 가까운 앞으로의 날짜 버튼(코드는 그대로 time_in_past)
+            raise past_time_refusal(title=item.title, item_id=item.item_id, day=day, begin=begin, stops=stops, now=now, verb="move")
         return [EditOp("time", item_id=item.item_id, date=day, starts_at=begin, ends_at=until,
                        reflow=bool(spec.get("cascade")))], f"{item.title} 시작 시각 옮기기"
     # End/duration/reflow currently preserve the anchor day. Do not ignore an explicit other day.

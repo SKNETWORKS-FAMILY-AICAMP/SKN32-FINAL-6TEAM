@@ -6,7 +6,7 @@ import { Check, Send, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
-import { draftOfItem, draftProblem, needs, type ItemDraft, type PlanCheckView, type PlanItem, type TripIssue } from "./model";
+import { draftOfItem, draftProblem, needs, type ItemDraft, type PlanCheckView, type PlanItem, type SeoulClock, type TripIssue } from "./model";
 import { Act, reason } from "./parts";
 import styles from "./plan-check.module.css";
 import tripStyles from "../trip/trip-screen.module.css";
@@ -16,8 +16,12 @@ import tripStyles from "../trip/trip-screen.module.css";
  * What the screen can check it checks first (`draftProblem`); the rest is the server's to say, and a refusal keeps the
  * editor open with what was typed.
  */
-export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item: PlanItem; onCancel: () => void; onSave: (draft: ItemDraft) => Promise<void>; autoFocus?: boolean }) {
+export function StopEditor({ item, onCancel, onSave, autoFocus = true, now }: { item: PlanItem; onCancel: () => void; onSave: (draft: ItemDraft) => Promise<void>; autoFocus?: boolean;
+  /** `[2026-10-26 사용자 확정]` Now in Seoul — given when editing a registered trip: a date or time that has passed is refused here first (`pastEdit`). */
+  now?: SeoulClock }) {
   const t = useT();
+  // The stop as it was, with a stay's check-out day — `pastEdit` reads when it is over from it
+  const [original] = useState(() => ({ ...draftOfItem(item), ...(item.endDate ? { endDate: item.endDate } : {}) }));
   const [draft, setDraft] = useState(() => draftOfItem(item));
   const [problem, setProblem] = useState<ReturnType<typeof draftProblem>>(null);
   const [refusal, setRefusal] = useState("");
@@ -27,7 +31,7 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
   const change = (patch: Partial<ItemDraft>) => { setDraft((current) => ({ ...current, ...patch })); setProblem(null); setRefusal(""); };
 
   async function save() {
-    const found = draftProblem(draft);
+    const found = draftProblem(draft, now ? { original, now } : undefined);
     setProblem(found);
     if (found) return;
     setSaving(true);
@@ -38,7 +42,9 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
 
   const message = problem === "title" ? t("일정 이름을 적어 주세요.", "Give the stop a name.")
     : problem === "time" ? t("끝 시각이 시작보다 빨라요.", "The end is before the start.")
-      : problem === "place" ? t("위 검색창에서 장소를 고르거나 「장소 없음」을 선택해 주세요.", "Choose a place above or select “No place”.") : "";
+      : problem === "place" ? t("위 검색창에서 장소를 고르거나 「장소 없음」을 선택해 주세요.", "Choose a place above or select “No place”.")
+        : problem === "past" ? t("지금 이후의 날짜·시각만 넣거나 바꿀 수 있어요. 지난 일정은 고칠 수 없고 뺄 수만 있어요 — 다시 하려면 새 일정으로 추가해 주세요.",
+          "Only a date and time from now on can be set. A past stop can't be changed, only removed — add a new stop to do it again.") : "";
   return <form className={styles.editor} aria-labelledby="plan-editor-title" noValidate
     onSubmit={(event) => { event.preventDefault(); void save(); }}
     onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onCancel(); } }}>
@@ -49,8 +55,8 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
     </label>
     <div className={styles.fieldRow}>
       <label className={styles.field}>{t("날짜", "Date")}<input type="date" value={draft.date} onChange={(event) => change({ date: event.target.value })} /></label>
-      <label className={styles.field}>{t("시작", "Start")}<input type="time" value={draft.start} aria-invalid={problem === "time"} onChange={(event) => change({ start: event.target.value })} /></label>
-      <label className={styles.field}>{t("끝", "End")}<input type="time" value={draft.end} aria-invalid={problem === "time"} onChange={(event) => change({ end: event.target.value })} /></label>
+      <label className={styles.field}>{t("시작", "Start")}<input type="time" value={draft.start} aria-invalid={problem === "time" || problem === "past"} onChange={(event) => change({ start: event.target.value })} /></label>
+      <label className={styles.field}>{t("끝", "End")}<input type="time" value={draft.end} aria-invalid={problem === "time" || problem === "past"} onChange={(event) => change({ end: event.target.value })} /></label>
     </div>
     {(message || refusal) && <p className={styles.editorError} role="alert">{message || refusal}</p>}
     <div className={styles.editorButtons}>

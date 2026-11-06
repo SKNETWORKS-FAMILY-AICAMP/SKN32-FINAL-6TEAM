@@ -1,0 +1,26 @@
+{
+  "today": "2026-10-26",
+  "note": "보류 표본 2(holdout2) — 프롬프트 C 를 고친 뒤 처음 만든 표본. 프롬프트 수정에 쓰지 않는다. 합성 문장, today=2026-10-26(월).",
+  "samples": [
+    {"id": "g01", "group": "relative_future", "text": "다음 주 금요일 저녁 6시 광장시장", "expect": ["2026-11-06"]},
+    {"id": "g02", "group": "relative_future", "text": "이번 주 일요일 11시 북촌한옥마을", "expect": ["2026-11-01"]},
+    {"id": "g03", "group": "relative_english", "text": "this Friday 6pm Gwangjang Market", "expect": ["2026-10-30"]},
+    {"id": "g04", "group": "relative_future", "text": "사흘 뒤 11시 북촌한옥마을", "expect": ["2026-10-29"]},
+    {"id": "g05", "group": "relative_future", "text": "일주일 뒤 11시 북촌한옥마을", "expect": ["2026-11-02"]},
+    {"id": "g06", "group": "noise_number", "text": "6/10 14시 창경궁 (주차 2026번 구역)", "expect": ["2027-06-10"]},
+    {"id": "g07", "group": "yearless_english", "text": "Jun 10 2pm Changgyeonggung", "expect": ["2027-06-10"]},
+    {"id": "g08", "group": "year_dotted", "text": "2025.06.10 14시 창경궁", "expect": ["2025-06-10"]},
+    {"id": "g09", "group": "year_two_digit", "text": "'25/6/10 창경궁 14시", "expect": ["2025-06-10"]},
+    {"id": "g10", "group": "year_two_digit", "text": "25년 6월 10일 14시 창경궁", "expect": ["2025-06-10"]},
+    {"id": "g11", "group": "year_header", "text": "2026년 가족여행\n11월 3일 14시 창경궁", "expect": ["2026-11-03"]},
+    {"id": "g12", "group": "yearless_holiday", "text": "어린이날 10시 서울대공원", "expect": ["2027-05-05"]},
+    {"id": "g13", "group": "relative_past", "text": "지난달 15일 10시 서울대공원", "expect": ["2026-09-15"]},
+    {"id": "g14", "group": "relative_future", "text": "다다음 주 월요일 10시 서울대공원", "expect": ["2026-11-09"]},
+    {"id": "g15", "group": "yearless_english", "text": "October 27 10am Seoul Grand Park", "expect": ["2026-10-27"]},
+    {"id": "g16", "group": "noise_phone", "text": "1월 1일 0시 보신각, 문의 02-2026-0101", "expect": ["2027-01-01"]},
+    {"id": "g17", "group": "relative_year", "text": "작년 6월 10일 창경궁 14시", "expect": ["2025-06-10"]},
+    {"id": "g18", "group": "yearless_today", "text": "10/26 저녁 8시 남산", "expect": ["2026-10-26"]},
+    {"id": "g19", "group": "relative_future", "text": "모레 오후 2시 창경궁", "expect": ["2026-10-28"]},
+    {"id": "g20", "group": "year_iso", "text": "2027-01-15 10:00 경복궁", "expect": ["2027-01-15"]}
+  ]
+}

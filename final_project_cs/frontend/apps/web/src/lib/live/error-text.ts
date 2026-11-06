@@ -92,6 +92,9 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   not_found: ["찾을 수 없어요. 지워졌거나 주소가 바뀌었을 수 있어요.", "Not found. It may have been removed."],
   item_not_found: [`그 일정을 찾지 못했어요. ${REFRESH[0]}`, `We couldn't find that item. ${REFRESH[1]}`],
   stale_itinerary: ["그 사이 일정이 바뀌었어요. 새로 불러와 주세요.", "The plan changed in the meantime. Please reload it."],
+  // `[2026-10-26 사용자 확정]` 새로 넣거나 바꾸는 날짜·시각은 지금 이후만 · 지난 일정은 고치지 않고 뺄 수만 있다(삭제만) · 진행 중이거나 앞으로 올 일정은 하나 남긴다(`reopen_commit`)
+  item_in_past: ["지난 일정은 고칠 수 없고 뺄 수만 있어요. 새로 넣거나 옮기는 날짜·시각은 지금 이후만 돼요.", "A past stop can't be changed, only removed. Stops can only be added or moved to a time from now on."],
+  no_upcoming_items: ["진행 중이거나 앞으로 남은 일정이 하나는 있어야 해요. 마지막 남은 일정은 뺄 수 없어요.", "At least one current or upcoming stop must stay. The last one can't be removed."],
   stale_revision: ["그 사이 다른 곳에서 바뀌었어요. 새로 불러와 주세요.", "It changed elsewhere in the meantime. Please reload it."],
   intake_confirmed: ["이미 등록한 계획이에요.", "This plan is already registered."],
   intake_incomplete: ["등록하기 전에 채워야 할 곳이 있어요.", "Some details are needed before registering."],
