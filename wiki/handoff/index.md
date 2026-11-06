@@ -751,3 +751,5 @@ wiki 누락 보강:
 
 2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](../../final_project_cs/wiki/records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
 
+
+2026-11-06 — [원본 통합 체인 d0cc4f3 role-manager 반영](../../final_project_cs/wiki/records/reports/2026-11-06_role-manager-original-chain-integration.md): 날짜 위험·고객 운영시간·예약 OFF·로컬 실행기 병합, LLM 넘침 HOLD, 원본 나머지 미커밋 작업은 원격 backup 브랜치에만 보관.
