@@ -1,0 +1,144 @@
+pastguard-final runner root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\pastguard-final-20261106\wt\final_project_cs
+FFFFFFFFF........................                                        [100%]
+================================== FAILURES ===================================
+_ test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[10\uc6d4 30\uc77c] _
+
+quote = '10월 30일'
+
+    @pytest.mark.parametrize("quote", ["10월 30일", "10월 30일 1230 출발", "10월 30일 예약번호 123456", "1027년 10월 30일"])
+    def test_model_picked_year_for_a_yearless_quote_is_flagged_for_review(quote):
+        """해 없는 인용 · 해가 아닌 네 자리 숫자 · 모델 값과 다른 해(Codex 검토 지적)는 모두 확인 표시"""
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, "2027-10-30")), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == "2027-10-30"                    # 값은 바꾸지 않는다
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert None == '2027-10-30'
+
+tests\unit\travel\test_intake_agent_yearless_date.py:42: AssertionError
+_ test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[10\uc6d4 30\uc77c 1230 \ucd9c\ubc1c] _
+
+quote = '10월 30일 1230 출발'
+
+    @pytest.mark.parametrize("quote", ["10월 30일", "10월 30일 1230 출발", "10월 30일 예약번호 123456", "1027년 10월 30일"])
+    def test_model_picked_year_for_a_yearless_quote_is_flagged_for_review(quote):
+        """해 없는 인용 · 해가 아닌 네 자리 숫자 · 모델 값과 다른 해(Codex 검토 지적)는 모두 확인 표시"""
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, "2027-10-30")), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == "2027-10-30"                    # 값은 바꾸지 않는다
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert None == '2027-10-30'
+
+tests\unit\travel\test_intake_agent_yearless_date.py:42: AssertionError
+_ test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[10\uc6d4 30\uc77c \uc608\uc57d\ubc88\ud638 123456] _
+
+quote = '10월 30일 예약번호 123456'
+
+    @pytest.mark.parametrize("quote", ["10월 30일", "10월 30일 1230 출발", "10월 30일 예약번호 123456", "1027년 10월 30일"])
+    def test_model_picked_year_for_a_yearless_quote_is_flagged_for_review(quote):
+        """해 없는 인용 · 해가 아닌 네 자리 숫자 · 모델 값과 다른 해(Codex 검토 지적)는 모두 확인 표시"""
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, "2027-10-30")), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == "2027-10-30"                    # 값은 바꾸지 않는다
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert None == '2027-10-30'
+
+tests\unit\travel\test_intake_agent_yearless_date.py:42: AssertionError
+_ test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[1027\ub144 10\uc6d4 30\uc77c] _
+
+quote = '1027년 10월 30일'
+
+    @pytest.mark.parametrize("quote", ["10월 30일", "10월 30일 1230 출발", "10월 30일 예약번호 123456", "1027년 10월 30일"])
+    def test_model_picked_year_for_a_yearless_quote_is_flagged_for_review(quote):
+        """해 없는 인용 · 해가 아닌 네 자리 숫자 · 모델 값과 다른 해(Codex 검토 지적)는 모두 확인 표시"""
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, "2027-10-30")), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == "2027-10-30"                    # 값은 바꾸지 않는다
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert None == '2027-10-30'
+
+tests\unit\travel\test_intake_agent_yearless_date.py:42: AssertionError
+____ test_quote_with_a_written_year_is_not_flagged[2026-10-22-2026-10-22] _____
+
+quote = '2026-10-22', iso = '2026-10-22'
+
+    @pytest.mark.parametrize("quote,iso", [("2026-10-22", "2026-10-22"), ("2027년 1월 3일", "2027-01-03"), ("'27년 1월 3일", "2027-01-03"),
+                                           ("27년 1월 3일", "2027-01-03"), ("2027.1.3", "2027-01-03")])
+    def test_quote_with_a_written_year_is_not_flagged(quote, iso):
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == iso and row["needs_review"] is False
+E       AssertionError: assert (None == '2026-10-22')
+
+tests\unit\travel\test_intake_agent_yearless_date.py:53: AssertionError
+_ test_quote_with_a_written_year_is_not_flagged[2027\ub144 1\uc6d4 3\uc77c-2027-01-03] _
+
+quote = '2027년 1월 3일', iso = '2027-01-03'
+
+    @pytest.mark.parametrize("quote,iso", [("2026-10-22", "2026-10-22"), ("2027년 1월 3일", "2027-01-03"), ("'27년 1월 3일", "2027-01-03"),
+                                           ("27년 1월 3일", "2027-01-03"), ("2027.1.3", "2027-01-03")])
+    def test_quote_with_a_written_year_is_not_flagged(quote, iso):
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == iso and row["needs_review"] is False
+E       AssertionError: assert (None == '2027-01-03')
+
+tests\unit\travel\test_intake_agent_yearless_date.py:53: AssertionError
+_ test_quote_with_a_written_year_is_not_flagged['27\ub144 1\uc6d4 3\uc77c-2027-01-03] _
+
+quote = "'27년 1월 3일", iso = '2027-01-03'
+
+    @pytest.mark.parametrize("quote,iso", [("2026-10-22", "2026-10-22"), ("2027년 1월 3일", "2027-01-03"), ("'27년 1월 3일", "2027-01-03"),
+                                           ("27년 1월 3일", "2027-01-03"), ("2027.1.3", "2027-01-03")])
+    def test_quote_with_a_written_year_is_not_flagged(quote, iso):
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == iso and row["needs_review"] is False
+E       AssertionError: assert (None == '2027-01-03')
+
+tests\unit\travel\test_intake_agent_yearless_date.py:53: AssertionError
+_ test_quote_with_a_written_year_is_not_flagged[27\ub144 1\uc6d4 3\uc77c-2027-01-03] _
+
+quote = '27년 1월 3일', iso = '2027-01-03'
+
+    @pytest.mark.parametrize("quote,iso", [("2026-10-22", "2026-10-22"), ("2027년 1월 3일", "2027-01-03"), ("'27년 1월 3일", "2027-01-03"),
+                                           ("27년 1월 3일", "2027-01-03"), ("2027.1.3", "2027-01-03")])
+    def test_quote_with_a_written_year_is_not_flagged(quote, iso):
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == iso and row["needs_review"] is False
+E       AssertionError: assert (None == '2027-01-03')
+
+tests\unit\travel\test_intake_agent_yearless_date.py:53: AssertionError
+_____ test_quote_with_a_written_year_is_not_flagged[2027.1.3-2027-01-03] ______
+
+quote = '2027.1.3', iso = '2027-01-03'
+
+    @pytest.mark.parametrize("quote,iso", [("2026-10-22", "2026-10-22"), ("2027년 1월 3일", "2027-01-03"), ("'27년 1월 3일", "2027-01-03"),
+                                           ("27년 1월 3일", "2027-01-03"), ("2027.1.3", "2027-01-03")])
+    def test_quote_with_a_written_year_is_not_flagged(quote, iso):
+        text = f"{quote}\n10:00 경복궁"
+        rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode="on", position=0)
+        row = _date_row(rows)
+>       assert row["value"] == iso and row["needs_review"] is False
+E       AssertionError: assert (None == '2027-01-03')
+
+tests\unit\travel\test_intake_agent_yearless_date.py:53: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[10\uc6d4 30\uc77c]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[10\uc6d4 30\uc77c 1230 \ucd9c\ubc1c]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[10\uc6d4 30\uc77c \uc608\uc57d\ubc88\ud638 123456]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_model_picked_year_for_a_yearless_quote_is_flagged_for_review[1027\ub144 10\uc6d4 30\uc77c]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_quote_with_a_written_year_is_not_flagged[2026-10-22-2026-10-22]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_quote_with_a_written_year_is_not_flagged[2027\ub144 1\uc6d4 3\uc77c-2027-01-03]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_quote_with_a_written_year_is_not_flagged['27\ub144 1\uc6d4 3\uc77c-2027-01-03]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_quote_with_a_written_year_is_not_flagged[27\ub144 1\uc6d4 3\uc77c-2027-01-03]
+FAILED tests/unit/travel/test_intake_agent_yearless_date.py::test_quote_with_a_written_year_is_not_flagged[2027.1.3-2027-01-03]
+9 failed, 24 passed in 13.00s

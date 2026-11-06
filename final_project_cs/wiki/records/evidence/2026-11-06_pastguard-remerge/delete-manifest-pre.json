@@ -1,0 +1,107 @@
+{
+ "session_folder": "C:\\Users\\kcxsz\\AppData\\Local\\hermes\\profiles\\guguroute\\cache\\scratch\\pastguard-final-20261106",
+ "children": {
+  "ev": [
+   4460665,
+   32
+  ],
+  "fix_a13.py": [
+   3140,
+   1
+  ],
+  "fix_agent_read.py": [
+   2020,
+   1
+  ],
+  "fix_e2e.py": [
+   835,
+   1
+  ],
+  "fix_quote.py": [
+   382,
+   1
+  ],
+  "fix_tests.py": [
+   3005,
+   1
+  ],
+  "fix_tests2.py": [
+   2679,
+   1
+  ],
+  "measure.py": [
+   1465,
+   1
+  ],
+  "merge-msg.txt": [
+   1474,
+   1
+  ],
+  "mingit": [
+   389167978,
+   7623
+  ],
+  "npmcache": [
+   125810393,
+   750
+  ],
+  "npmci.log": [
+   614,
+   1
+  ],
+  "preserve_check.py": [
+   1727,
+   1
+  ],
+  "py312": [
+   43364421,
+   1495
+  ],
+  "py312.nupkg": [
+   14515433,
+   1
+  ],
+  "resolve.py": [
+   1113,
+   1
+  ],
+  "run_isolated.py": [
+   2246,
+   1
+  ],
+  "sg.py": [
+   346,
+   1
+  ],
+  "tmp": [
+   0,
+   0
+  ],
+  "venv": [
+   644297521,
+   22186
+  ],
+  "web_gate.sh": [
+   779,
+   1
+  ],
+  "wt": [
+   2115776699,
+   46992
+  ]
+ },
+ "old_targets": {
+  "mgr-merge-20261026-0045": "missing",
+  "past-guard-ext-20261026": "missing",
+  "past-edit-delete-only-20261026": "missing",
+  "past-edit-delete-only-20261026-evidence": "missing",
+  "llm-date-read-20261026": "missing",
+  "fullrun-20261026": "missing",
+  "integ-mgr-a465c6022-20261026": "missing",
+  "integ-mgr-a465c6022-20261026-tools": "missing"
+ },
+ "total": [
+  3337414935,
+  79093
+ ]
+}

@@ -15,7 +15,8 @@ from app.domains.travel_ops.components.conversation import chat_edit
     ('오늘 13:30~14:30 덕수궁 추가', '2030-01-01'),
 ])
 def test_grounded_date_reaches_add_args_without_routing_today_override(text, expected):
-    raw = item(date=expected, date_quote=text, time_quote=text)
+    form = dict(year_quote='2030', date_form='explicit_year') if text.startswith('2030') else dict(year_quote=None, date_form='relative')
+    raw = item(date=expected, date_quote=text, time_quote=text, **form)
     got = agent_read.ground({'items': [raw]}, [text])
     now = datetime.fromisoformat('2030-01-01T09:00:00+09:00')
     ops = chat_edit._read_adds(text, lambda *args: got, stops=[], now=now, day='2030-01-01')
@@ -23,8 +24,9 @@ def test_grounded_date_reaches_add_args_without_routing_today_override(text, exp
 
 def test_multiday_hotel_identifiers_survive_ground_and_add():
     text = '2030-01-02 13:30~14:30 덕수궁\n2030-01-03 10:00~11:00 경복궁스테이 예약AB123'
-    rows = [item(date_quote=text.splitlines()[0],time_quote=text.splitlines()[0]),
-            item(place_quote='경복궁스테이',date='2030-01-03',date_quote=text.splitlines()[1],start='10:00',end='11:00',time_quote=text.splitlines()[1],kind='lodging')]
+    rows = [item(date_quote=text.splitlines()[0],time_quote=text.splitlines()[0],year_quote='2030'),
+            item(place_quote='경복궁스테이',date='2030-01-03',date_quote=text.splitlines()[1],start='10:00',end='11:00',time_quote=text.splitlines()[1],kind='lodging',
+                 year_quote='2030')]
     got = agent_read.ground({'items': rows}, text.splitlines())
     assert [(it.title.text,it.date,it.start,it.end,it.kind) for it in got.items] == [('덕수궁','2030-01-02','13:30','14:30','activity'),('경복궁스테이','2030-01-03','10:00','11:00','lodging')]
     assert text.endswith('예약AB123')  # source itself is never rewritten
@@ -39,8 +41,10 @@ def schema_for(text=TEXT):
     agent_read.read(text, text.splitlines(), chat, today=date(2030, 1, 1))
     return chat.schema['properties']['items']['items']
 
+# `[2026-11-06 병합]` 날짜는 모델 판단(2026-10-26 사용자 확정) — 답 항목에 연도 인용(`year_quote`) · 날짜 형식(`date_form`)이 있어야 한다
+#   (형식 칸 없는 옛 답은 `agent_read._grounded_date` 가 날짜를 버린다). 시험 자료를 그 계약으로 맞췄다 — 단언은 그대로다.
 def item(**changes):
-    value = dict(place_quote='덕수궁', day=1, date='2030-01-02', date_quote=TEXT,
+    value = dict(place_quote='덕수궁', day=1, date_quote=TEXT, year_quote='2030년', date_form='explicit_year', date='2030-01-02',
                  start='13:30', end='14:30', time_quote=TEXT, kind='activity',
                  locked=None, locked_quote=None)   # L07 I06: 명시 고정 칸은 필수(말이 없으면 null)
     value.update(changes)

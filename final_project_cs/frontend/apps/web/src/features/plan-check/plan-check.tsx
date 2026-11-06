@@ -20,7 +20,7 @@ import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { changeLines } from "./change-lines";
-import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, heldAt, stopKind, stopsHere, withArrivalRows, withAskSlot, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type TripIssue } from "./model";
+import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, heldAt, stopKind, stopsHere, withArrivalRows, withAskSlot, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type SeoulClock, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
@@ -133,6 +133,8 @@ export interface TripEditMode {
   onCancel: () => void;
   /** 「지금」 on a day's line, as on the trip screen. */
   now: (date: string) => RailNow | null;
+  /** `[2026-10-26 사용자 확정]` Now in Seoul: the editor and the add form refuse a date or time that has passed before sending (the server decides at 「완료」). */
+  clock?: SeoulClock;
   /** The first notice (in place of 「계획 확인 화면이에요」). */
   intro: BusToast;
 }
@@ -1939,7 +1941,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
         onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
-        <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
+        <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} now={edit?.clock} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
           search={actions.searchToAdd && (inserting.previousId || inserting.nextId) ? (query, signal, form) => actions.searchToAdd!({ previousId: inserting.previousId, nextId: inserting.nextId }, query, signal, form) : undefined}
           onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
@@ -1954,7 +1956,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
             onSheetFull={() => { setCustom(null); setSheet("full"); }}
             editor={actions.edit && <details id="plan-direct-edit" className={styles.details} open={details} onToggle={(event) => setDetails(event.currentTarget.open)}>
               <summary>{t("직접 고치기 · 이름·날짜·시각·장소 없음", "Edit directly · name, date, time, no place")}</summary>
-              {details && <StopEditor key={changing.id} item={changing} autoFocus={false} onCancel={() => setDetails(false)}
+              {details && <StopEditor key={changing.id} item={changing} autoFocus={false} now={edit?.clock} onCancel={() => setDetails(false)}
                 onSave={async (draft) => {
                   if (stopFor(changing)) {
                     setChange(null); setDetails(false);
@@ -2020,7 +2022,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
                     : t("고치면 확인을 마쳐요", "Once it is fixed the check is done")}</small></div>}
             </div>}
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
-            {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
+            {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} now={edit?.clock} onSave={actions.add} />}
             {/* `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고 확인용 칸 — 운영자가 끄면(`GET /v1/web/features` 의 `risk_panel`) 숨는다. 여행 화면 칸과 같은 스위치. */}
             {riskPanelShown && done && !changing && view.risksAvailable !== undefined && <RiskPanel items={view.items.flatMap((item) => item.risk ? [item.risk] : [])}
               at={view.riskCheckedAt} mode={view.riskMode} unavailable={!view.risksAvailable}

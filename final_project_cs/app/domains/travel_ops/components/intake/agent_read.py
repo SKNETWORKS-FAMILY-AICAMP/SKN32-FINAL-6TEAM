@@ -42,6 +42,9 @@ REQUESTS = ("register", "plan_ask", "question", "correction")
 MISSING = ("first_day_date", "lodging_name", "booked_place_name")
 #: 모델이 분류하는 「우리가 채울 빈칸」 — 담당 연결은 `gaps.ROUTES` 가 한다(모델은 담당을 고르지 않는다)
 GAP_KINDS = ("meal_place", "activity_place", "free_slot")
+#: 날짜 형식(모델 판단) — explicit_year 고객이 연도를 적음(year_quote 필수) · relative 오늘에서 센 말(연도까지 모델이 계산, 확인 필요) ·
+#:  yearless 월 · 일만(연도는 코드가 「오늘 이후 처음 오는 그 날」로 채운다). `[2026-10-26 사용자 확정 정책]`
+DATE_FORMS = ("explicit_year", "relative", "yearless")
 COND = re.compile(r"^(if_rain_indoor|if_rain_skip|finish_by:\d{2}:\d{2}|start_after:\d{2}:\d{2})$")
 HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -75,10 +78,15 @@ SCHEMA: dict[str, Any] = {
                                  "out_of_scope": {"type": "boolean"}, "quote": _NS}},
         "pieces": {"type": "array", "items": {"type": "object", "required": ["kind", "quote"],
                    "properties": {"kind": {"enum": list(PIECES)}, "quote": _S}}},
-        # ★`[2026-10-27 G 모델 품질 · 수용 I05]` 날짜를 내면 날짜 인용 칸을 비울 수 없다(`_dated_items`) — 생성 문법만 좁힌다
+        # ★`[2026-10-26 사용자 지시 · Codex 검토]` 날짜는 모델이 판단한다 — 인용(date_quote · year_quote)을 먼저 적고 → 형식(date_form) → 값(date).
+        #   코드는 원문을 숫자 · 낱말로 다시 읽지 않고 인용이 원문에 있는지만 본다(`ground`). 순서가 곧 모델의 출력 순서다(Ollama 스키마 문법).
+        # ★`[2026-10-27 G 모델 품질 · 수용 I05]` 날짜를 내면 날짜 인용 칸을 비울 수 없다(`_dated_items`) — 생성 문법만 좁힌다.
+        #   `[2026-11-06 병합]` 날짜 순서(위) · I05 인용 필수 · I06 명시 고정(locked)을 한 항목 스키마에 함께 둔다.
         "items": {"type": "array", "items": _dated_items({"type": "object",
-                  "required": ["place_quote", "day", "date", "date_quote", "start", "end", "time_quote", "kind", "locked", "locked_quote"],
-                  "properties": {"place_quote": _S, "day": _NI, "date": _NS, "date_quote": _NS, "start": _NS, "end": _NS,
+                  "required": ["place_quote", "day", "date_quote", "year_quote", "date_form", "date", "start", "end", "time_quote", "kind",
+                               "locked", "locked_quote"],
+                  "properties": {"place_quote": _S, "day": _NI, "date_quote": _NS, "year_quote": _NS,
+                                 "date_form": {"enum": list(DATE_FORMS) + [None]}, "date": _NS, "start": _NS, "end": _NS,
                                  "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]},
                                  # I06: 고객이 이 항목을 고정/고정 안 함이라고 **명시**했을 때만 true/false — 아니면 null. 근거 인용 없으면 버린다(`ground`)
                                  "locked": {"type": ["boolean", "null"]}, "locked_quote": _NS}})},
@@ -96,7 +104,7 @@ SCHEMA: dict[str, Any] = {
 
 SYSTEM = """You read a traveller's message (usually Korean; it may be a list, a paragraph, CSV, JSON, a pasted table, several chat messages, or a chat request to change an existing plan) and output what it means, as JSON matching the schema.
 
-Today is {today} ({weekday}). Resolve relative dates from today: 내일/낼 = today+1, 모레/내일모레 = today+2, 토욜/토요일 = the coming Saturday, 담주 월욜/다음주 월요일 = Monday of next week, 다음 달 5일 = the 5th of next month. A year-less date means the next such date from today.
+Today is {today} ({weekday}). Weeks start on Monday. Resolve relative dates from today: 어제 = today-1, 그제/그저께 = today-2, 내일/낼 = today+1, 모레/내일모레 = today+2, 글피 = today+3, 토욜/토요일 = the coming Saturday, 이번 주 X = X of this week (Monday to Sunday), 담주 월욜/다음주 월요일 = Monday of next week, 다음 달 5일 = the 5th of next month.
 {state}
 Rules
 - Apply corrections made later in the message ("A 말고 B", "순서 바꿀래", "빼고", "날짜 틀렸다"): output only the final plan.
@@ -105,7 +113,13 @@ Rules
 - role: origin only for an explicitly stated starting location (지금 X에서 시작해서). An origin is not a visit and has no dwell time. Other items use role=visit.
 - A deictic word such as 거기/여기 refers to the earlier location, never a business name. For 거기서 식사 or 거기서 밥, copy only the exact meal words present (식사 or 밥); never invent 식사 when that word is absent. Resolve the actual restaurant near the earlier location later. Keep exact relative timing: at 20:00 then 10분 뒤 means 20:10 including movement, not 20:20.
 - items: one per place/activity/meal stop the traveller will do. place_quote = the place words copied EXACTLY from the message (keep typos, spacing and language; no times, verbs or particles). Never make items from transport lines (택시로 이동), conditions, headers, or places named only inside a question.
-- day: 1-based day number. date: YYYY-MM-DD or null. date_quote: the exact text that states that date (a header line is fine) or null.
+- day: 1-based day number of the trip.
+- Dates: for each item fill date_quote, year_quote, date_form, date in that order.
+  date_quote = the date words copied exactly, symbols included (' . / -), or a header line that gives that day; null if none.
+  year_quote = the YEAR exactly as the traveller wrote it, copied even when it sits inside date_quote: 2025-09-01 → "2025", Sep 1, 2025 → "2025", '25.9.1 → "'25", 2025년 9월 1일 → "2025년", a header 2025년 가을 여행 → "2025년". null when no year is written. A number that is not the year of that day is never a year_quote: prices (2025원), phone or booking numbers, clock times, counts.
+  date_form = explicit_year when year_quote is set; relative when the day is counted from today (오늘, 내일, 모레, 어제, 그제, 수요일, 이번 주 수요일, 지난주 수요일, 담주 월요일, 다음 달 10일, 작년 성탄절, 내년 4월 1일, tomorrow, next Monday, last Wednesday); yearless when only a month and day are given with no year and no today-word (8/15, 8월 15일, 팔월 십오일, Aug 15th, 15 August, 광복절); null when date is null.
+  date = YYYY-MM-DD. explicit_year: the written year even if that day is past. relative: counted from today, past allowed — 어제 = {ex_yesterday}, 이번 주 수요일 = {ex_this_week_wed}, 다음 주 수요일 = {ex_next_week_wed}, 지난주 수요일 = {ex_last_week_wed}, 다음 달 10일 = {ex_next_month_10}. yearless: the next such day from today, today included; a month and day already passed this year is next year's — 8/15 = {ex_aug15}, {ex_past_md} = {ex_past_md_next}, {ex_today_md} = {today}.
+  Examples: "8/15 13시 덕수궁 (입장료 2025원)" → date_quote "8/15", year_quote null, yearless, {ex_aug15}. "'25.9.1 창덕궁" → date_quote "'25.9.1", year_quote "'25", explicit_year, 2025-09-01. "2025-09-01 창덕궁" → date_quote "2025-09-01", year_quote "2025", explicit_year, 2025-09-01. A header "2025년 가을 여행" then "9월 1일 창덕궁" → date_quote "9월 1일", year_quote "2025년", explicit_year, 2025-09-01.
 - start/end: 24h HH:MM or null. Use PM when the context means it (점심 1시 → 13:00, 저녁 6시 → 18:00, 3시 체크인 → 15:00, afternoon 2~6시 → 14:00~18:00). time_quote: the exact clock text, e.g. "1시쯤". 오전/점심/저녁 without a clock time → null.
 - kind: dining for meals, cafes, food, drinks; lodging for hotel stay/check-in/check-out; otherwise activity.
 - locked: true only when the traveller explicitly asks to keep this stop fixed/unchanged (이 일정은 고정해 주세요, 이건 꼭 그대로); false only when they explicitly say not to fix it (고정하지 마세요); otherwise null. Being booked (예약 완료, 예약번호) alone is NOT locked: a booking is a fact about the stop, not a request to keep it, so never use booking words as locked_quote. locked_quote = the exact words that say it, or null.
@@ -118,16 +132,27 @@ Rules
 
 Example
 Message: 모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심(예약 완료), 비 오면 공원은 빼 줘. 부모님 모시고 가니까 천천히요. 저녁은 알아서 추천해 줘
-Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date":"{ex_date}","date_quote":"모레","start":"11:00","end":null,"time_quote":"11시","kind":"activity","locked":null,"locked_quote":null}},{{"place_quote":"샤로수길","day":1,"date":"{ex_date}","date_quote":"모레","start":"13:00","end":null,"time_quote":"1시","kind":"dining","locked":null,"locked_quote":null}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
+Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date_quote":"모레","year_quote":null,"date_form":"relative","date":"{ex_date}","start":"11:00","end":null,"time_quote":"11시","kind":"activity","locked":null,"locked_quote":null}},{{"place_quote":"샤로수길","day":1,"date_quote":"모레","year_quote":null,"date_form":"relative","date":"{ex_date}","start":"13:00","end":null,"time_quote":"1시","kind":"dining","locked":null,"locked_quote":null}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
 
 
-PROMPT_VERSION = "intake.agent_read.v3-booked-not-locked"   # v2: 명시 고정 locked/locked_quote · v3: 예약만 있는 항목 예시(locked null) · 예약 말 인용 금지
+PROMPT_VERSION = "intake.agent_read.v4-date-form"   # v2: 명시 고정 locked/locked_quote · v3: 예약만 있는 항목 예시(locked null) · 예약 말 인용 금지 · v4(2026-11-06 병합): 날짜 인용 → year_quote → date_form → date 순서
 PROMPT_HASH = hashlib.sha256(SYSTEM.encode()).hexdigest()
 
 
 def system_for(today: date, state: str = "") -> str:
+    from .dates import next_month_day
+
+    # 날짜 예시 값은 오늘에서 계산한다(고정 날짜를 적으면 시간이 지나 예시가 틀려진다) — 고객 원문을 읽는 것이 아니라 예시를 만드는 달력 계산이다
+    next_month = date(today.year + today.month // 12, today.month % 12 + 1, 10)
+    monday = today - timedelta(days=today.weekday())     # 주는 월요일에 시작한다(프롬프트와 같다)
+    past = today - timedelta(days=5)                     # 올해 이미 지난 월 · 일 → 다음 해(연도 없는 날의 예시)
     return SYSTEM.format(today=today.isoformat(), weekday=WEEKDAY[today.weekday()] + "요일",
-                         ex_date=(today + timedelta(days=2)).isoformat(), state=(state + "\n") if state else "")
+                         ex_date=(today + timedelta(days=2)).isoformat(), state=(state + "\n") if state else "",
+                         ex_yesterday=(today - timedelta(days=1)).isoformat(), ex_this_week_wed=(monday + timedelta(days=2)).isoformat(),
+                         ex_next_week_wed=(monday + timedelta(days=9)).isoformat(), ex_last_week_wed=(monday - timedelta(days=5)).isoformat(),
+                         ex_next_month_10=next_month.isoformat(), ex_aug15=next_month_day(8, 15, today).isoformat(),
+                         ex_today_md=f"{today.month}/{today.day}", ex_past_md=f"{past.month}/{past.day}",
+                         ex_past_md_next=next_month_day(past.month, past.day, today).isoformat())
 
 
 @dataclass
@@ -160,6 +185,9 @@ class AgentItem:
     time_from_rule: bool = False             # 같은 줄의 규칙 시각으로 맞췄다(`pipeline._agent_rows`)
     locked: bool | None = None               # I06 — 고객이 명시한 고정(true) · 고정 안 함(false) · 말 없음/근거 없음(None)
     locked_quote: Quote | None = None        # 그 말의 원문 인용 — locked 가 bool 일 때만 있다
+    year_unverified: bool = False            # 모델이 연도를 적었다(explicit_year)고 했지만 연도 인용이 원문에 없어 연도 없는 날로 뒀다(`_grounded_date`)
+    date_invalid: str | None = None          # 모델 날짜가 달력에 없는 날이었다 — 그 날짜 인용(원문). 날짜 해석이 첫날로 채우지 않고 「모름」으로 둔다(`dates.resolve_dates`)
+    year_quote: str | None = None            # 연도를 적은 날(explicit_year)의 모델 연도 인용 — 원문에서 확인한 것만. 모델 날짜의 해와 맞는지 `pipeline._year_written` 이 본다
 
 
 @dataclass
@@ -213,6 +241,53 @@ def _in_text(lines: list[str], text: Any) -> bool:
     return " ".join(text.split()) in " ".join(flat.split())
 
 
+def _grounded_date(it: dict[str, Any], dq: Quote | None, lines: list[str], dropped: dict[str, int]) -> tuple[str | None, bool, bool, str | None]:
+    """모델 날짜 → (받을 값, 상대 날짜인가, 연도 근거를 못 찾아 연도 없는 날로 뒀나, 달력에 없는 날이면 그 날짜 인용). `[2026-10-26 사용자 지시 · Codex 검토]` 날짜 형식은 **모델 판단**(`date_form`)이다 —
+    코드는 고객 원문을 숫자 · 낱말로 다시 읽지 않고, 인용이 원문에 있는지 · 필드끼리 맞는지 · 달력에 있는 날인지만 본다.
+
+    explicit_year  연도 인용(`year_quote`)이 원문에 있으면 모델 날짜 그대로(지난 날이어도 — 전부 과거 가드 대상). 연도 인용이 원문에 없으면
+                   「적은 연도」가 아니다(정책: 연도를 적은 과거만 과거) → 연도 없는 날로 두고 `dropped.date_year` 에 센다. 값 줄은 `year_filled`(확인 필요)에
+                   「연도를 원문에서 확인하지 못했다」 메모가 붙는다(`dates.resolve_dates`). ★Codex 2차 검토는 「날짜 미확정」을 권했으나 실측에서 이 경로를 탄 7건 중
+                   4건은 연도 없는 날을 모델이 explicit_year 로 잘못 낸 것(그대로 믿으면 2건이 지난 날 → 전부 과거 거절), 강등으로 틀어진 것은 2건(「'26.3.5」 ·
+                   「작년 6월 10일」 → 다가오는 날, 확인 필요로 보임)이었다. 미확정으로 두면 맞던 5건도 날짜를 잃는다 — 보고서 참고.
+    relative       오늘에서 센 날 — 모델 날짜 그대로, 확인 필요(`agent_relative`).
+    yearless       월 · 일만 받는다(`--MM-DD`) — 연도는 날짜 해석이 오늘 이후 처음 오는 그 날로 채운다(`dates.resolve_dates` 의 `year_filled`).
+    ★형식 칸이 없거나 모르는 값(옛 형식 답 · 계약 위반)은 날짜를 버리고 `dropped.date_form` 에 센다 — 연도를 믿지도, 연도 없는 날로 바꾸지도 않는다(Codex 검토).
+      relative · yearless 인데 연도 인용이 원문에 있으면(필드가 어긋남) 모델 형식을 따르되 `dropped.date_mismatch` 에 센다.
+    ☆전에는 모델 연도 숫자가 **본문 아무 줄**에 있으면(「입장료 2026원」 · 전화번호) 연도를 적은 것으로 봐서 연도 없는 「3/5」를 지난 날로 읽었고,
+      「'26.3.5」는 「2026」이 없어 연도 없는 날로 읽었다. 숫자 없는 인용만 상대 날짜로 봐서 「다음 달 5일」은 상대가 아니었다."""
+    when = it.get("date") if isinstance(it.get("date"), str) and ISO.match(it.get("date") or "") else None
+    if not when:
+        if "date_form" not in it:
+            dropped["date_form"] += 1                                         # 옛 형식 답 — 날짜가 비어도 계약 위반은 센다
+        return None, False, False, None
+    if dq is None:
+        dropped["date"] += 1
+        return None, False, False, None
+    form = it.get("date_form")
+    if form not in DATE_FORMS:
+        dropped["date_form"] += 1
+        return None, False, False, None
+    from .dates import LEAP_YEAR
+
+    try:
+        # yearless 는 월 · 일만 쓴다 — 윤년(2월 29일 포함)에도 없는 월 · 일(「2/30」)이면 ValueError
+        date(LEAP_YEAR, int(when[5:7]), int(when[8:10])) if form == "yearless" else date.fromisoformat(when)
+    except ValueError:
+        dropped["date"] += 1                                                  # 달력에 없는 날 — 지어내지 않는다
+        # `[2026-10-26 병합 검토 · Codex]` 버린 날짜를 다른 일정의 첫날로 채우면(`day_offset`) 지어낸 날이 전부 과거 관문(`review.wholly_past`)을 연다 — 「모름」으로 표시
+        return None, False, False, dq.text
+    year_grounded = _find(lines, it.get("year_quote")) is not None or _in_text(lines, it.get("year_quote"))
+    if form == "explicit_year" and not year_grounded:
+        dropped["date_year"] += 1
+        return "--" + when[5:], False, True, None
+    if form != "explicit_year" and year_grounded:
+        dropped["date_mismatch"] += 1
+    if form == "yearless":
+        return "--" + when[5:], False, False, None
+    return when, form == "relative", False, None
+
+
 def _guessed_pm(value: str, quote: str) -> bool:
     """모델이 원문의 시(時)와 다른 시를 냈다(「1시」→ 13:00) — 오후로 본 것이라 확인을 받는다."""
     m = _DIGIT_HOUR.search(quote)
@@ -224,7 +299,8 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
     """모델 답 → 원문에 근거가 있는 값만. 버린 수를 `report.dropped` 에 센다.
 
     `allowed` — 이 묶음에서 새로 읽을 줄(겹친 줄에서 나온 항목은 앞 묶음이 이미 셌다). `taken` — 앞 묶음까지 쓴 자리(같은 조각이 날마다 나올 때 다음 자리를 쓴다)."""
-    dropped = {"item": 0, "time": 0, "date": 0, "move": 0, "move_end": 0, "condition": 0, "preference": 0, "piece": 0, "gap": 0, "locked": 0}
+    dropped = {"item": 0, "time": 0, "date": 0, "date_form": 0, "date_year": 0, "date_mismatch": 0, "move": 0, "move_end": 0, "condition": 0, "preference": 0,
+               "piece": 0, "gap": 0, "locked": 0}
     out = AgentRead()
     seen: list[tuple[int, int]] = taken if taken is not None else []
     for it in raw.get("items") or []:
@@ -250,11 +326,7 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
         fixed = False
         if start and tq is not None:
             start, fixed = recompute_time(start, tq.text)
-        when = it.get("date") if isinstance(it.get("date"), str) and ISO.match(it.get("date") or "") else None
         dq = _find(lines, it.get("date_quote"), near=title.line)
-        if when and dq is None:
-            dropped["date"] += 1
-            when = None
         # I06 — 모델이 명시 고정을 bool 로 판단하고 그 말이 원문에 글자 그대로 있을 때만 받는다. 인용 없음 · 원문에 없음 · bool 아님 → 모름(None)
         locked, lq = it.get("locked"), None
         if isinstance(locked, bool):
@@ -264,9 +336,12 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
                 locked = None
         else:
             locked = None
+        when, relative, unverified, invalid = _grounded_date(it, dq, lines, dropped)
+        # `[2026-11-06 병합 — A13 과 date_form]` 연도 근거는 모델이 인용한 연도 조각이다(머리줄 「2025년 가을 여행」처럼 날짜 인용 밖일 수 있다)
+        yq = it.get("year_quote") if when and ISO.match(when) and not relative and isinstance(it.get("year_quote"), str) else None
         out.items.append(AgentItem(
             title=title, day=it.get("day") if isinstance(it.get("day"), int) else None, date=when, date_quote=dq if when else None,
-            date_guessed=bool(when and dq and not re.search(r"\d", dq.text)), start=start, end=end, time_quote=tq if start else None,
+            date_guessed=relative, year_unverified=unverified, date_invalid=invalid, year_quote=yq, start=start, end=end, time_quote=tq if start else None,
             time_guessed=bool(start and tq and _guessed_pm(start, tq.text)), time_fixed=fixed,
             kind=it.get("kind") if it.get("kind") in ("activity", "dining", "lodging") else "activity",
             role="origin" if it.get("role") == "origin" else "visit", locked=locked, locked_quote=lq))

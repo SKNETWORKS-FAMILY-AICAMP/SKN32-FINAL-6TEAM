@@ -1,0 +1,118 @@
+877e6723bd94783583171e21e6c1ffb83f86d733 merge: past-date guard ext (07dcebe35) onto role-manager a465c6022
+
+diff --git a/final_project_cs/wiki/external/trip-chat-context.md b/final_project_cs/wiki/external/trip-chat-context.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/external/trip-chat-context.md
+index 482967370..d22799b88 100644
+--- a/final_project_cs/wiki/external/trip-chat-context.md
++++ b/final_project_cs/wiki/external/trip-chat-context.md
+@@ -110,7 +110,6 @@ domain: travel
+ - 바꿀 일정 없이 기준만 식사가 아닌 일정이면, 그 일정을 바꾸라는 뜻인지 그 근처로 식사를 바꾸라는 뜻인지 대신 정하지 않고 되묻는다(그 일정 바꾸기를 후보로, 식사라면 끼니를 말해 달라고 안내).
+ - 기록: [디버깅 노트](../records/reports/debugs/2026-10-20_1020_채팅_활동_바꿔줘가_식사_되물음으로_끝난다.md). 로컬 구현 · mock 서버 시험까지 — 커밋 · x600 배포 · 실서버 확인은 그 노트의 진행 기록에 따로 적는다.
+ 
+-<<<<<<< a465c6022 (fix(intake-reader): 계획 읽기 원문은 기본으로 유료에 안 넘긴다 — reader 전용 입구 · reader 예산 fail-closed · StreamLifetime (L03))
+ ## 2026-10-25 새 장소의 실내·야외 조건 (QA 결함 「실내를 야외로 바꿔줘」 — 격리 후보)
+ 
+ - 장소 바꾸기·후보 요청에서 고객이 새 장소를 실내 또는 야외로 지정하면 해석은 `place_setting={want: any|indoor|outdoor, evidence}` 로 낸다. evidence 는 현재 고객 문장의 원문 조각이어야 하며(D-025 인용 확인), 아니면 해석 실패로 바꾸지 않는다. 칸이 없는 옛 해석은 조건 없음(any)이다.
+@@ -142,8 +141,9 @@ domain: travel
+ - 되돌리기(`rollback`) 해석에 되돌릴 변경이 없으면(처음 판 그대로, 가리킨 일정이 처음 그대로) 입력 대기(`ask_rollback`)로 남기지 않고 `answered`(reason `nothing_to_undo`)로 「일정은 바꾸지 않았어요」를 답한다(`trip_messages.NothingToUndo`, `conversation_work` rollback 분기). 뒤 변경이 끼어 있어 확인이 필요한 경우는 계속 `ask_rollback`이다. 보류 제안의 승인·거부는 계속 `/proposals/{id}/choose`로만 결정한다.
+ - 장소 행동(`apply_change`·`propose_alternatives`·`replace_named`)의 `time_edit`는 실행되지 않는다(`time_ops`는 `change_time`만 읽는다). 그래서 이 칸이 실행할 수 없는 조합(경계와 범위 불일치, reflow가 아닌 `continue_previous`)이어도 해석 전체를 `DecisionFailed`로 버리지 않는다 — 인용·시각·형식 검증은 그대로 한다. 시간·날짜 범위(`change_scope=time|date`)라 `change_time`으로 옮겨지는 경우와 `change_time`은 이 조합을 계속 거절한다(`edit_intent._executes_time_edit`).
+ - 대신 그 해석은 장소를 바꾸지 않고 「다른 곳으로 바꿀지, 시각을 옮길지」 되묻는다(`edit_intent.ask_on_conflict` → `clarify`, 기록 `temporal_conflict`, 일정은 그대로). 새 장소 이름(`destination_text`)이나 실내·야외 조건(`place_setting`) 없이 시각만 담긴 `apply_change`·`propose_alternatives`도 같은 되묻기다(`time_without_place` — 실 E4B D04 「N서울타워를 1월 3일 오후 2시에 가는 걸로 바꿔줘」가 덕수궁으로 바뀌었다). 새 장소를 말한 장소+시간 요청(`replace_named`, 이름·조건이 있는 교체)은 그대로 둔다. 근거: 2026-10-26 integ-v10 실 E4B T16 2회, 「네, 제안한 일정 변경을 승인해요」 → `apply_change` + `shift`/`continue_previous=true` → escalated(decision_failed).
+-=======
++
++## 2026-10-26 채팅 수정의 지난 날짜 · 지난 일정 (과거 날짜 가드레일 확장 · 삭제만)
++
+ - `[2026-10-26 사용자 확정]` 채팅 수정(시각 옮기기 · 넣기 · 읽기 에이전트 넣기)이 **지난 날짜 · 시각**을 내면 적용하지 않고 `status: clarify` · `reason: time_in_past` 로 「혹시 오타 아닌가요? …」를 답한다. `choices` 는 같은 시각을 지키는 가장 가까운 앞으로의 여행 날짜(여행 날짜에 없으면 오늘 · 내일) 최대 `travel.chat_edit.past_date_choices` 개, `choices_title` 은 「혹시 오타 아닌가요?」. 각 선택지는 기존 `label` · `message`(누르면 보낼 문장, 예 「경복궁 3일차(1월 3일) 10:00으로 옮겨줘」) · 옮기기면 서버가 확인한 `item_id`. 후보가 없으면 버튼 없이 앞으로의 날짜를 묻는다. [기록](../records/reports/2026-10-26_past-date-guard-extension.md)
+ 
+ - `[2026-10-26 사용자 확정 — 삭제만]` 채팅이 **지난 일정**(끝 ≤ 지금)을 고치려 하면(장소 바꾸기 · 고정/풀기 · 순서 바꾸기 · 시각 옮기기) 적용하지 않고 `reason: item_in_past` 「「X」은(는) 이미 지난 일정이라 고치지 않았어요. 지난 일정은 기록으로 두고 뺄 수만 있어요 — 다시 하려면 새 일정으로 추가해 주세요.」로 답한다. 이미 지난(고정) 일정 빼기는 아직 경로가 없어 그렇게 답한다(`frozen_refusal`). [기록](../records/reports/2026-10-26_past-edit-delete-only.md)
+->>>>>>> 07dcebe35 (docs(wiki): merged HEAD full test rerun; hold role-manager push (remote advanced) and local serving swap)
+diff --git a/final_project_cs/wiki/index.md b/final_project_cs/wiki/index.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/index.md
+index 660faa11e..a541c04f5 100644
+--- a/final_project_cs/wiki/index.md
++++ b/final_project_cs/wiki/index.md
+@@ -10,8 +10,6 @@ domain: travel
+ 
+ # cs 프로젝트 구현 wiki
+ 
+-<<<<<<< a465c6022 (fix(intake-reader): 계획 읽기 원문은 기본으로 유료에 안 넘긴다 — reader 전용 입구 · reader 예산 fail-closed · StreamLifetime (L03))
+-=======
+ 2026-10-26 [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183; role-manager 원격 전진(웹 5파일 충돌)으로 push 0, v9 로컬 서빙 유지(agent_read 프롬프트 충돌 · E4B 재측정 필요).
+ 
+ 2026-10-26 [날짜 읽기를 모델 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 모델이 `date_form` · `year_quote` 를 내고 코드는 인용만 확인(본문 「2026원」 연도 오판 제거); 로컬 E4B 깨끗한 보류 표본 12/20 → 15/20, 거절 위험 오류 10 → 1건; Codex 3회 논의.
+@@ -19,11 +17,6 @@ domain: travel
+ 
+ 2026-10-26 [과거 날짜 가드레일 확장](records/reports/2026-10-26_past-date-guard-extension.md) — 모델 연도 없는 날짜 다가오는 날·채팅 「오타 아닌가요?」 choices·`plan_edit` 지금 이후/`no_upcoming_items`; 지난 고정 일정 이름·삭제 경로는 남음.
+ 
+-2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+-
+-2026-10-25 전체 과거 날짜 신규 등록 가드 독립 후보: [날짜 기준·공통 검사·검증 및 미반영 경계](records/reports/2026-10-25_all-past-calendar-hotfix.md). 기존 확정 재시도/reopen 정책과 다른 정상 검사는 보존합니다.
+-
+->>>>>>> 07dcebe35 (docs(wiki): merged HEAD full test rerun; hold role-manager push (remote advanced) and local serving swap)
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
+ 
+ 2026-10-26 채팅 「실내를 야외로 바꿔줘」 첫 답이 식사 낀 대체 목록이던 결함 — 기준 일정 재확인이 활동 되묻기 선택지를 지운 것, 격리 후보에서 고침(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-anchor-guard-fallback.md)
+@@ -31,7 +24,6 @@ domain: travel
+ 2026-10-26 채팅 실내·야외 바꾸기 da4ccd97 재시험 — 되묻기 선택지에 식사가 남던 것 · 이미 야외인 일정을 또 바꾸던 것 고침, 되돌린 뒤 박물관 운영시간 「모름」은 되돌리기 결함이 아님(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-setting-swap-targets.md)
+ 2026-10-26 채팅 실내·야외 바꾸기 c34bd376 x600 — 선택 없이 「실내를 야외로 바꿔줘」가 식사 포함 대체 목록으로 되묻던 경로 확정(해석 `place_setting.want=any`) · 조건이 있으면 어느 되묻기든 조건 선택지(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-setting-clarify-paths.md)
+ 
+-<<<<<<< a465c6022 (fix(intake-reader): 계획 읽기 원문은 기본으로 유료에 안 넘긴다 — reader 전용 입구 · reader 예산 fail-closed · StreamLifetime (L03))
+ 2026-10-25 채팅에서 화면으로 고른 일정에 묻는 말이 「어느 일정」 되묻기 · 앞 일정 답으로 끝나던 결함을 격리 후보에서 고쳤습니다(로컬 시험까지, 반영 전): [원인 · 수정 · 실모델 한계](records/reports/2026-10-25_chat-selected-stop-subject.md).
+ 
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+@@ -40,10 +32,6 @@ domain: travel
+ 
+ 2026-10-25 웹 화면 고침: 계획 확인 · 여행 화면 지도 오른쪽 아래(시트 모서리)에 비치던 흰 바탕은 시트 밑 Leaflet 저작권 줄의 배경이라 투명하게 했고, 계획 입력 아래 고정 단추 줄은 화면 양옆 · 맨 아래까지 덮으며, 보내는 중 잠긴 입력칸은 회색으로 보입니다. 「예시 불러오기」는 내일부터 이틀 · 하루 세 곳(요일 휴무 없는 곳)으로 바꿔 로컬 계획 확인 6/6 통과. 계획 확인 시트 손잡이는 검사 단계부터 보이고, 확인 화면에서 장소가 바뀐 일정(「바꾸기」 · 검색 · 「맞아요」 · 「전체 자동 추천」)은 처음 등록 때도 그 장소 이름이 일정 이름입니다(수정 모드 완료와 같음 · 지역만 적어 서버가 채운 곳은 적힌 이름 · 직접 고친 제목이 먼저 · 그 옆 이동도 남음), 첫 여행이면 「예시 불러오기」 → 「계획 확인하기」를 비추는 첫 안내(A안)가 뜹니다. ST4F-735 ~ 738 · 푸시 전 · [작업 기록](records/reports/2026-10-25_웹_지도모서리_계획입력_예시일정.md).
+ 
+-=======
+-2026-10-25 웹 화면 고침: 계획 확인 · 여행 화면 지도 오른쪽 아래(시트 모서리)에 비치던 흰 바탕은 시트 밑 Leaflet 저작권 줄의 배경이라 투명하게 했고, 계획 입력 아래 고정 단추 줄은 화면 양옆 · 맨 아래까지 덮으며, 보내는 중 잠긴 입력칸은 회색으로 보입니다. 「예시 불러오기」는 내일부터 이틀 · 하루 세 곳(요일 휴무 없는 곳)으로 바꿔 로컬 계획 확인 6/6 통과. 계획 확인 시트 손잡이는 검사 단계부터 보이고, 확인 화면에서 장소가 바뀐 일정(「바꾸기」 · 검색 · 「맞아요」 · 「전체 자동 추천」)은 처음 등록 때도 그 장소 이름이 일정 이름입니다(수정 모드 완료와 같음 · 지역만 적어 서버가 채운 곳은 적힌 이름 · 직접 고친 제목이 먼저 · 그 옆 이동도 남음), 첫 여행이면 「예시 불러오기」 → 「계획 확인하기」를 비추는 첫 안내(A안)가 뜹니다. ST4F-735 ~ 738 · 푸시 전 · [작업 기록](records/reports/2026-10-25_웹_지도모서리_계획입력_예시일정.md).
+-
+->>>>>>> 07dcebe35 (docs(wiki): merged HEAD full test rerun; hold role-manager push (remote advanced) and local serving swap)
+ 2026-10-24 계획 확인 진행 표시 ③ · 멈춘 질문 후보 대기(ST4F-731 · 732): 서버가 위험 점검 · 먼저 채우기 · 해석 반영 진행 알림을 보내고 화면은 서버 단계마다 한 칸으로 보입니다. 검사를 읽는 길은 접수 행을 잠그지 않고(쓰기는 그대로), 대안 미리 준비가 요식 판정보다 먼저 돌며, 「전체 자동 추천」 미리 보기는 첫 검사 · 멈춘 질문이 끝난 뒤 나갑니다 — 로컬 같은 계획 재측정에서 「후보를 찾는 중」 22.5초 → 0.9초. 실서버 확인 전 · [작업 기록](records/reports/2026-10-24_계획확인_진행표시_후보대기_ST4F-731-732.md).
+ 
+ 2026-10-23 Next.js 보안 갱신(ST4F-724): 02시 리뷰 뒤 공개된 Next.js 권고(16.0.0~16.4.0)로 web 16.4.0 도 critical 이 되어 web · admin · dev-console 을 16.4.2 로 올렸습니다. 운영 의존성 audit 3/3 앱 0건 · check 12/12 · 단위 1,198/1,198 통과, 개발 서버 보안 경고 사라짐. 배포 전입니다. [작업 기록](records/reports/2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).
+diff --git a/final_project_cs/wiki/log.md b/final_project_cs/wiki/log.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/log.md
+index 85af4f290..37602b142 100644
+--- a/final_project_cs/wiki/log.md
++++ b/final_project_cs/wiki/log.md
+@@ -1,11 +1,8 @@
+ ---
+ 
+-<<<<<<< a465c6022 (fix(intake-reader): 계획 읽기 원문은 기본으로 유료에 안 넘긴다 — reader 전용 입구 · reader 예산 fail-closed · StreamLifetime (L03))
+-- 2026-10-26: [「예시 불러오기」 1일차 오늘 · 2일차 내일](records/reports/2026-10-26_웹_예시불러오기_오늘내일.md) — 누른 날(서울) · 그다음 날 날짜로, 사용자가 준 형식(하루 세 곳 · 끝 시각 없음)으로 채운다. 오늘 지난 시각 일정은 서버가 등록하되 위험 점검에서 뺀다.
+-=======
+ - 2026-10-26: [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — DB 없는 전체 시험 실패 0(이전 가지도 0), 원격 role-manager `1e4e3b246` 전진으로 push · PR 안 함, 로컬 서빙 교체 보류. Codex 1회 동의.
+ - 2026-10-26: [날짜 읽기를 모델(E4B) 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 계획 읽기 에이전트 스키마에 `year_quote` · `date_form`, 프롬프트 날짜 절 재작성(예시 날짜는 오늘에서 계산), `_year_written`(본문 아무 줄의 연도 숫자) · 숫자 없는 인용 = 상대 판정 제거. 2/29 다음 윤년 · 없는 날짜는 모름. 로컬 실측 · 단위 시험 · 커밋만, 서빙 교체 · 실서버 확인 전.
+->>>>>>> 07dcebe35 (docs(wiki): merged HEAD full test rerun; hold role-manager push (remote advanced) and local serving swap)
++- 2026-10-26: [「예시 불러오기」 1일차 오늘 · 2일차 내일](records/reports/2026-10-26_웹_예시불러오기_오늘내일.md) — 누른 날(서울) · 그다음 날 날짜로, 사용자가 준 형식(하루 세 곳 · 끝 시각 없음)으로 채운다. 오늘 지난 시각 일정은 서버가 등록하되 위험 점검에서 뺀다.
+ 
+ - 2026-10-25: 계획 담기 화면 보조 칸 운영 스위치(ST4F-739) 병합 · 배포 — PR #98 develop `beb726b99` · PR #99 main `144bcfff1`(검사 13 통과 · 실패 0), main push 검사 성공 · CD (AWS) 성공(21:06). 관리 콘솔 · 배포 화면은 사람 확인 전. [기록 5절](records/reports/2026-10-25_계획담기_보조칸_운영스위치_ST4F-739.md).
+ 
+diff --git a/wiki/index.md b/wiki/index.md
+remerge CONFLICT (content): Merge conflict in wiki/index.md
+index fbd619341..3cf0086a7 100644
+--- a/wiki/index.md
++++ b/wiki/index.md
+@@ -8,11 +8,6 @@ domain: travel
+ 
+ # guguroute wiki
+ 
+-<<<<<<< a465c6022 (fix(intake-reader): 계획 읽기 원문은 기본으로 유료에 안 넘긴다 — reader 전용 입구 · reader 예산 fail-closed · StreamLifetime (L03))
+-2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+-
+-2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
+-=======
+ 2026-10-26 [통합 HEAD 전체 시험 · push/서빙 보류 인계](handoff/2026-10-26_merged-head-push-serving-decision.md) — 시험 실패 0, 원격 전진으로 push 중단, 로컬 서빙 v9 유지; Codex 동의.
+ 
+ 2026-10-26 [날짜 읽기 LLM 판단 전환 인계](handoff/2026-10-26_llm-date-reading.md) — `date_form` · `year_quote` 스키마 · 프롬프트, 정규식 연도 판정 제거; 로컬 E4B 실측 · Codex 논의, 커밋만.
+@@ -23,10 +18,6 @@ domain: travel
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+ 
+ 2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
+-2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](handoff/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
+-
+-2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·원격 인증 차단 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
+->>>>>>> 07dcebe35 (docs(wiki): merged HEAD full test rerun; hold role-manager push (remote advanced) and local serving swap)
+ 
+ 현재 제품 사양은 **확정 결정·현재 계약**, 구현·배포 상태는 **코드·환경별 실행 기록**으로 확인합니다. 과거 계획·보고서를 현재 사실로 사용하지 않습니다.
+ 

@@ -680,11 +680,45 @@ export const draftOfItem = (item: PlanItem): ItemDraft => ({
   ...(canTellHours(item) && { hours: { open: item.toldHours?.open ?? "", close: item.toldHours ? (item.toldHours.close === "24:00" ? "00:00" : item.toldHours.close) : "", closedDays: [...(item.toldHours?.closed_days ?? [])] } }),
 });
 
+/** Now in Seoul — a date and the minute of the day (the same shape as the trip screen's clock, `trip-timeline.SeoulNow`). */
+export interface SeoulClock { date: string; minute: number }
+
+const clockKey = (date: string, hhmm: string) => `${date}T${hhmm}`;
+const nowKey = (now: SeoulClock) => clockKey(now.date, `${String(Math.floor(now.minute / 60)).padStart(2, "0")}:${String(now.minute % 60).padStart(2, "0")}`);
+
+/** `endDate` — a stay's check-out day (`PlanItem.endDate`) when it ends on a later day than it starts. */
+export type PastDraft = Pick<ItemDraft, "date" | "start" | "end"> & Partial<Pick<ItemDraft, "title" | "place" | "noPlace">> & { endDate?: string };
+
+/**
+ * `[2026-10-26 사용자 확정]` Whether an edit is refused for time — the same rule as the server's 「완료」 (`reopen.plan_edit`), checked here first:
+ * a new stop (`original` null) starting before now; a start moved before now; an end moved to now or before.
+ * `[2026-10-26 사용자 확정 — 삭제만]` A stop already over is a record: any change to it (name, place, 「no place」, date or times) is refused — it can only be removed,
+ * and to do it again the customer adds a new stop. The minute now is not past (times are HH:MM).
+ */
+export function pastEdit(next: PastDraft, original: PastDraft | null, now: SeoulClock): boolean {
+  if (!next.date || !next.start) return false;
+  const at = nowKey(now);
+  const start = clockKey(next.date, next.start);
+  if (!original) return start < at;
+  const startMoved = next.date !== original.date || next.start !== original.start;
+  const endMoved = next.date !== original.date || next.end !== original.end;
+  const otherChanged = next.title !== original.title || next.place !== original.place || next.noPlace !== original.noPlace;
+  if (!startMoved && !endMoved && !otherChanged) return false;
+  // A stay ends on its check-out day (`endDate`). Without one, an end not after the start (ending on a later day) does not say when the stop is over
+  // on this screen — the server decides then.
+  const later = original.endDate && original.endDate !== original.date ? original.endDate : null;
+  const originalEnd = later ? clockKey(later, original.end || "00:00")
+    : original.end && original.end > original.start ? clockKey(original.date, original.end) : original.end ? null : clockKey(original.date, original.start);
+  if (original.date && original.start && originalEnd && originalEnd <= at) return true;
+  return (startMoved && start < at) || (endMoved && clockKey(next.date, next.end || next.start) <= at);
+}
+
 /**
  * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,
- * no place name (unless 「장소 없음」). Everything else — whether the place exists, the date's range — is the server's to say.
+ * no place name (unless 「장소 없음」), and — when editing a registered trip (`past` given) — a date or time that has passed (`pastEdit`).
+ * Everything else — whether the place exists, the date's range — is the server's to say.
  */
-export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | "hours" | null {
+export function draftProblem(draft: ItemDraft, past?: { original: (ItemDraft & { endDate?: string }) | null; now: SeoulClock }): "title" | "time" | "place" | "hours" | "past" | null {
   if (!draft.title.trim()) return "title";
   if (draft.start && draft.end && draft.end <= draft.start) return "time";
   if (!draft.noPlace && !draft.place.trim()) return "place";
@@ -694,6 +728,7 @@ export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | "ho
       || !/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(h.close) || told.close <= told.open
       || h.closedDays.length >= WEEKDAYS.length || new Set(h.closedDays).size !== h.closedDays.length)) return "hours";
   }
+  if (past && pastEdit(draft, past.original, past.now)) return "past";
   return null;
 }
 

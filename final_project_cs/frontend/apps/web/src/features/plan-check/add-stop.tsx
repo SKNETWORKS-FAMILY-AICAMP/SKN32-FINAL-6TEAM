@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useT } from "@/lib/settings";
 import { reason } from "./parts";
 import type { AddSearchForm, AddStopPlace, NewStop } from "./new-stop";
+import { pastEdit, type SeoulClock } from "./model";
 import { PlaceSearch } from "./place-search";
 import styles from "./add-stop.module.css";
 import type { Coordinates } from "@/features/map/model";
@@ -12,7 +13,9 @@ export type { AddStopPlace, NewStop } from "./new-stop";
 type Field = "title" | "date" | "start" | "end" | "place";
 
 /** 선택한 경계 바로 아래에 연다. 저장 전 검색·취소는 계획을 바꾸지 않는다. */
-export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBusy, mapPicker }: {
+export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBusy, mapPicker, now }: {
+  /** `[2026-10-26 사용자 확정]` Now in Seoul — given when editing a registered trip: a stop starting before now is refused here first (`pastEdit`). */
+  now?: SeoulClock;
   mapPicker?: { active: boolean; value: Coordinates | null; onStart: () => void; onClose: () => void };
   /** `[2026-10-19]` `title` · `kind` · `query` (the place search's words) — the add form opened from the chat comes filled in with what the chat had. */
   date: string; blocked: string | null; initial?: { start: string; end: string; title?: string; kind?: NewStop["kind"]; query?: string };
@@ -55,6 +58,7 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
     if (key === "title" && !draft.title.trim()) return t("일정 이름을 입력해 주세요.", "Enter a stop name.");
     if (key === "date" && !draft.date) return t("날짜를 입력해 주세요.", "Enter a date.");
     if (key === "start" && !draft.start) return t("시작 시각을 입력해 주세요.", "Enter the start time.");
+    if (key === "start" && now && pastEdit(draft, null, now)) return t("지금 이후의 날짜·시각만 넣을 수 있어요.", "Only a date and time from now on can be added.");
     if (key === "end" && !draft.end) return t("끝 시각을 입력해 주세요.", "Enter the end time.");
     if (key === "end" && draft.start >= draft.end) return t("끝 시각은 시작보다 뒤로 입력해 주세요.", "The end must be after the start.");
     if (key === "place" && search && !draft.pickedPlace) return t("검색하거나 지도에서 장소를 선택해 주세요.", "Choose a place from search or the map.");

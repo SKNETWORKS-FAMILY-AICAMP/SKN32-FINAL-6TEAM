@@ -1,9 +1,14 @@
 ---
 
+- 2026-11-06: [과거 날짜 가드레일 세션 마무리](records/reports/2026-11-06_pastguard-remerge-push-cleanup.md) — `60af7a7d2` 를 원격 role-manager `1cf4542a1` 에 병합(`43a3ced29`): agent_read 스키마에 I05 두 갈래 · 날짜 칸 순서 · I06 locked 를 함께(`v4-date-form`), A13 `_year_written` 근거를 모델 `year_quote` 로, 원격 새 시험 3파일 계약 맞춤. 10-26 세션 문서 연결 · 삭제 대상 목록.
+
 - 2026-10-27: [C 컨트롤러 · 감시 · 실패조치 전수검사](records/reports/2026-10-27_C_컨트롤러감시실패조치_전수검사.md) — 결함 24건 중 11건 고침(45.8%, P1 8/10): 승인 · 자동 적용 저장 실패 → escalated(action_storage_failed), 훈련 문자 판정 공용화(실제 사건 표지 · 조건 꼬리 · 장소 이름, 전국 50,070건 실측), 배포 마이그레이션 lock_timeout · 교착 재시도 · deploy.log 원인 한 줄, 판 쓰기 길 save_failed(REST 503). role-manager fast-forward 후보 · push 전.
 
 - 2026-10-27: [장소 · 운영시간 · 장소 검색 품질 전수검사](records/reports/2026-10-27_장소_운영시간_품질_전수검사.md) — 결함 9건 중 4건 수정(44%, 후보 브랜치 `fix/place-quality-20261027`, push 안 함). 서울 이름 검색 적중 34/78=43.6% → 50/78=64.1%(로컬 DB만) · 부산은 범위 밖이라 웹 검색에서 「서울 밖(부산)」으로 알림 · 운영시간 known 69.3% → 72.7% · 관광공사 빈 값이 채운 글을 덮지 않음. `catalog_hours` 73행이 10-26 교정과 달라 고객 경로에 옛 값이 남아 있음(126535 토 22:30 vs 23:00) — 쓰기 승인 뒤 동기화 필요.
 
+- 2026-10-26: [원격 role-manager a465c6022 위 재병합 · 전체 시험](records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — `07dcebe35`를 `a465c6022`에 병합(`877e6723b`, rebase 아님), wiki 4파일 수동 해결 · 충돌 표시 0, 에이전트의 달력에 없는 날짜를 「모름」으로(`92541686d`, Codex 2회차 지적 · 3회차 OK). DB 없는 시험 범위 실패 0, push 안 함.
+- 2026-10-26: (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — DB 없는 전체 시험 실패 0(이전 가지도 0), 원격 role-manager `1e4e3b246` 전진으로 push · PR 안 함, 로컬 서빙 교체 보류. Codex 1회 동의.
+- 2026-10-26: [날짜 읽기를 모델(E4B) 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 계획 읽기 에이전트 스키마에 `year_quote` · `date_form`, 프롬프트 날짜 절 재작성(예시 날짜는 오늘에서 계산), `_year_written`(본문 아무 줄의 연도 숫자) · 숫자 없는 인용 = 상대 판정 제거. 2/29 다음 윤년 · 없는 날짜는 모름. 로컬 실측 · 단위 시험 · 커밋만, 서빙 교체 · 실서버 확인 전.
 - 2026-10-26: [「예시 불러오기」 1일차 오늘 · 2일차 내일](records/reports/2026-10-26_웹_예시불러오기_오늘내일.md) — 누른 날(서울) · 그다음 날 날짜로, 사용자가 준 형식(하루 세 곳 · 끝 시각 없음)으로 채운다. 오늘 지난 시각 일정은 서버가 등록하되 위험 점검에서 뺀다.
 
 - 2026-10-25: 계획 담기 화면 보조 칸 운영 스위치(ST4F-739) 병합 · 배포 — PR #98 develop `beb726b99` · PR #99 main `144bcfff1`(검사 13 통과 · 실패 0), main push 검사 성공 · CD (AWS) 성공(21:06). 관리 콘솔 · 배포 화면은 사람 확인 전. [기록 5절](records/reports/2026-10-25_계획담기_보조칸_운영스위치_ST4F-739.md).

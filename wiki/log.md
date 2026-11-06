@@ -9,6 +9,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력
 
+## 2026-11-06 — 과거 날짜 가드레일 세션 마무리
+
+10-26 과거 날짜 가드레일 세션(통합 병합 · 날짜 가드 4요구 · LLM 날짜 읽기 · 지난 일정 삭제만 · 재병합)을 [인계](handoff/2026-11-06_pastguard-remerge-push-cleanup.md) · [cs 기록](../final_project_cs/wiki/records/reports/2026-11-06_pastguard-remerge-push-cleanup.md)로 묶고, 원격 role-manager `1cf4542a1` 위 재병합 결과를 index · log · handoff 에 반영했습니다.
+
 ## 2026-10-14 21:40 — 도커 이미지 정리 규칙 · 월별 복원용 보존 인계
 
 x600 서버와 오라클 서버의 도커 이미지 정리 규칙·월별 복원 절차·WSL 디스크 압축을 문서화하고 인계 목차에 한 일 목록을 남겼습니다. [정본](../final_project_cs/wiki/operations/image-retention.md) · [기록](../final_project_cs/wiki/records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)

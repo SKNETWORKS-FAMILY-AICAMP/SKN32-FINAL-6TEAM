@@ -8,6 +8,8 @@ domain: travel
 
 # guguroute wiki
 
+2026-11-06 [과거 날짜 가드레일 세션 마무리 인계](handoff/2026-11-06_pastguard-remerge-push-cleanup.md) — 원격 role-manager `1cf4542a1` 위 재병합 `43a3ced29`(충돌 9 · A13 겹침 맞춤), unit/travel 8467/8467 = 100% · vitest 1235/1235 = 100%, 팀 · 개인 role-manager push(SHA 는 인계 응답), 이 세션 scratch 정리. [cs 기록](../final_project_cs/wiki/records/reports/2026-11-06_pastguard-remerge-push-cleanup.md).
+
 2026-10-25 v2 — 독립검토 P1/P2와 추가 cmd 실패코드 누락을 새 격리 후보에서 수정했습니다. 최종 launcher 18/18·admin 41/41·8개 개별 관문 통과, 이전 wrapper 실패 기록은 별도 보존했습니다. 이전 7개 시험은 전체 배치를 검증하지 않았습니다. 실제 3300·예약 OFF 저장은 미검증입니다. [수정·실패 이력·결과](../final_project_cs/wiki/records/reports/2026-10-25_local-admin-3300-v2.md).
 
 2026-10-25 — 로컬 일괄 실행의 개인 스크립트 필수 의존을 해소해 고객 API·운영 API·제품 관리자 3300 구성을 준비했습니다. 서비스·실DB·모델·배포는 실행하지 않았습니다. [실행 계약](../final_project_cs/wiki/operations/local-app-bundle.md) · [검증 기록](../final_project_cs/wiki/records/reports/2026-10-25_local-admin-3300.md).
@@ -15,6 +17,15 @@ domain: travel
 2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](../final_project_cs/wiki/records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
 
 2026-10-29 ST4F-728 로그아웃 경합 재현·차단: 웹1227/1227·화면11/11·필수3/3=100%,트래커종결0. [보고](../final_project_cs/wiki/records/reports/2026-10-29_st4f728-guest-logout.md).
+
+2026-10-26 [원격 role-manager a465c6022 위 재병합 인계](handoff/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — HEAD `92541686d`, 시험 범위 실패 0, fast-forward 가능(ahead 10/behind 0) · push 0.
+
+2026-10-26 (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 보류 인계](handoff/2026-10-26_merged-head-push-serving-decision.md) — 시험 실패 0, 원격 전진으로 push 중단, 로컬 서빙 v9 유지; Codex 동의.
+
+2026-10-26 [날짜 읽기 LLM 판단 전환 인계](handoff/2026-10-26_llm-date-reading.md) — `date_form` · `year_quote` 스키마 · 프롬프트, 정규식 연도 판정 제거; 로컬 E4B 실측 · Codex 논의, 커밋만.
+2026-10-26 [지난 일정은 삭제만 인계](handoff/2026-10-26_past-edit-delete-only.md) — 서버·웹·채팅 일관, Codex 2회 검토, 관련 320/320 · vitest 1183/1183; 커밋만.
+
+2026-10-26 [과거 날짜 가드레일 확장 인계](handoff/2026-10-26_past-date-guard-extension.md) — 연도 없는 날짜·채팅 되묻기·추가/수정 지금 이후 규칙, 관련 303/303; Codex 검토 미수행(미로그인), 커밋만.
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
 

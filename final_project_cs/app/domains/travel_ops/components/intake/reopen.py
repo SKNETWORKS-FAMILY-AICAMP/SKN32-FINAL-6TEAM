@@ -268,8 +268,11 @@ class EditPlan:
     added_ids: list[UUID] = field(default_factory=list)
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    #: 이미 끝난 일정을 바꾸거나 빼거나 지난 때에 더한 것(제목) — 하나라도 있으면 쓰지 않는다
+    #: 지난 때를 새로 만들거나 지난 일정을 고친 것(제목) — 하나라도 있으면 쓰지 않는다. `[2026-10-26 사용자 확정]` 새로 넣거나 바꾸는 날짜 · 시각은 지금 이후만:
+    #:  지금 이전에 시작하는 새 일정 · 지금 이전으로 옮긴 시작이나 끝. `[2026-10-26 사용자 확정 — 삭제만]` 이미 끝난 일정은 무엇이든 고치면(이름 포함) 넣는다. 삭제는 넣지 않는다
     past: list[str] = field(default_factory=list)
+    #: `[2026-10-26 사용자 확정]` 진행 중이거나 앞으로 올 일정이 있었는데 새 판에 하나도 안 남는다(마지막 하나를 빼거나 지난 때로 옮겼다) — 쓰지 않는다
+    no_upcoming: bool = False
     #: 새 판 일정 id → 접수의 (원본, 항목 번호) — 확인 화면이 검증한 이동을 새 판 일정에 잇는 열쇠(`registered_moves.fill_edited_moves`)
     keys: dict[UUID, tuple[str, int]] = field(default_factory=dict)
 
@@ -379,22 +382,23 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             replaced.add(origin.item_id)
             plan.changed.append(title if title == origin.title else f"{origin.title} → {title}")
             plan.changed_ids.append(item.item_id)
-            if _end(origin) <= now or _end(item) <= now:
+            if _end(origin) <= now:
+                # `[2026-10-26 사용자 확정 — 삭제만]` 지난 일정은 기록이다 — 이름 · 장소 · 날짜 · 시각 · 고정 무엇이든 고치지 않는다(뺄 수만 있다). 원래 이름으로 알린다
+                plan.past.append(origin.title)
+            elif _moved_into_past(origin, item, row, now):
                 plan.past.append(title)
         else:
             plan.added.append(title)
             plan.added_ids.append(item.item_id)
-            if _end(item) <= now:
-                plan.past.append(title)
+            if item.starts_at < _minute(now):
+                plan.past.append(title)              # 지금 이전에 시작하는 새 일정 — 끝이 앞으로여도 지난 때를 새로 만든 것이다
         plan.items.append(item)
         plan.keys[item.item_id] = (str(row["source_id"]), row["index"])
     for origin_id in dict.fromkeys(origin_of.values()):
         origin = by_id.get(origin_id)
         if origin is None or origin_id in kept or origin_id in replaced:
             continue
-        plan.removed.append(origin.title)
-        if _end(origin) <= now:
-            plan.past.append(origin.title)
+        plan.removed.append(origin.title)             # `[2026-10-26 사용자 확정]` 지난 일정도 뺄 수 있다 — 남은 일정 하나 규칙은 아래(`no_upcoming`)
     fixed = [i for i in base_items if str(i.item_id) in frozen_ids]
     stays = kept | {i.item_id for i in fixed}
     stops = sorted([*plan.items, *fixed], key=lambda i: (i.starts_at, i.seq or 10_000))
@@ -414,7 +418,28 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             moves.append(move)
     merged = sorted([*stops, *moves], key=lambda i: (i.starts_at, 0 if i.kind == "mobility" else 1, i.seq or 10_000))
     plan.items = [replace(item, seq=n) for n, item in enumerate(merged, start=1)]
+    plan.no_upcoming = _upcoming(base_items, now) and not _upcoming(plan.items, now)
     return plan
+
+
+def _minute(now: datetime) -> datetime:
+    """지금을 분 단위로 내린 때 — 접수의 시각은 HH:MM 이라 「지금 바로」(이번 분)를 지난 때로 보지 않는다."""
+    return now.replace(second=0, microsecond=0)
+
+
+def _upcoming(items: list[Item], now: datetime) -> bool:
+    """진행 중이거나 앞으로 올 일정(이동 제외 — 끝 > 지금)이 있나."""
+    return any(_end(i) > now for i in items if i.kind != "mobility")
+
+
+def _moved_into_past(origin: Item, item: Item, row: dict[str, Any], now: datetime) -> bool:
+    """`[2026-10-26 사용자 확정]` 진행 중이거나 앞으로 올 일정을 고친 것이 지난 때를 새로 만들었나 — 시작을 지금 이전으로 · 끝을 지금 이전으로 바꿨다.
+    이미 끝난 일정은 여기 오기 전에 막는다(`plan_edit` — 삭제만). 끝 없이 등록해 확인 화면이 채운 끝(`ends_at` 값 줄 없음)은 바꾼 것이 아니다(`_same`)."""
+    start_moved = item.starts_at != origin.starts_at
+    end_moved = item.ends_at != origin.ends_at and not (origin.ends_at is None and "ends_at" not in row["claims"])
+    if not (start_moved or end_moved):
+        return False
+    return (start_moved and item.starts_at < _minute(now)) or (end_moved and _end(item) <= now)
 
 
 def prepare(conn, *, tenant_id: str, intake_id: UUID, revision: int, base_items: list[Item], frozen_ids: set[str],

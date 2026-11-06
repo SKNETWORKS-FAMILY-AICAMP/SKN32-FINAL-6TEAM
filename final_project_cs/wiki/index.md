@@ -50,6 +50,8 @@ domain: travel
 2026-10-29 ST4F-718 저장 정책 독립검토: 웹1241/1241·Edge22/22=100%; 구버전 중복/raw ID 재생성·queued open 무응답 재현, 기존 필수2/3=66.7% HOLD 유지. [보고·인계](records/reports/2026-10-29_st4f718-storage-policy-review.md).
 # cs 프로젝트 구현 wiki
 
+2026-11-06 [과거 날짜 가드레일 세션 마무리 — 원격 `1cf4542a1` 위 재병합 · push · 정리](records/reports/2026-11-06_pastguard-remerge-push-cleanup.md) — 10-26 세션 전체(통합 병합 충돌 9 · 날짜 가드 4요구 · LLM 날짜 읽기 81문장 · 지난 일정 삭제만 · Codex) 연결, `43a3ced29` 충돌 9파일 · 원격 A13 과 `date_form` 겹침 맞춤, unit/travel 8467/8467 = 100% · vitest 1235/1235 = 100%, 남은 것: 지난 고정 일정 삭제 경로(보류) · `v4-date-form` E4B 재측정 · 서빙 v10.
+
 2026-10-29 ST4F-728 늦은 게스트 응답 차단: 웹1227/1227·모방화면11/11·필수3/3=100%,운영수락남음. [보고](records/reports/2026-10-29_st4f728-guest-logout.md).
 
 2026-10-29 ST4F-597 메뉴 선택 고침 독립 검토·양원격 반영 `07e79f1987`: Dining258/258·판정39/39·필수3/3=100%,운영 종결 보류. [보고](records/reports/2026-10-29_st4f597-independent-review.md).
@@ -59,6 +61,15 @@ domain: travel
 [2026-10-27 서빙 속도] x600 채팅 접수 157건: 「읽는 중」 p50 20.4초 · p95 62.3초 — 모델 읽기 p50 7.9초, 위험 점검+먼저 채우기 p50 10.1초. 후보 2건(위험 점검 동시 `4f8453ae` · 대안 준비 앞단 양보 `665e17c5`), push · 배포 안 함. [측정 · 병목 순위 · 남은 결정](records/reports/2026-10-27_계획서빙_속도_병목측정.md).
 
 [2026-10-26 수정] 계획 읽기가 실패(`fatal` · x600 `reading_model_failed`, 막대 8/9줄)인데 질문 붙잡기 때문에 「계획을 다 읽었어요」·「읽어 온 계획 확인하기」가 뜨던 결함 — 실패면 붙잡지 않고 실패 화면으로. vitest 1205/1205=100%(rebase 뒤), Playwright 36/36=100%(mock). [원인·근거·시험](records/reports/2026-10-26_계획읽기_실패인데_다읽었어요_수정.md).
+
+2026-10-26 [원격 role-manager a465c6022 위 재병합 · 전체 시험](records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — `integ/rebase-on-manager-a465c6022-20261026` HEAD `92541686d`, 코드 충돌 0 · wiki 4파일 양쪽 보존, unit/travel 7740/7740 · gates 608/608 · vitest 1205/1205; Codex 지적(달력에 없는 날 첫날 채움) 수정; ahead 10/behind 0, push 0.
+
+2026-10-26 (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183; role-manager 원격 전진(웹 5파일 충돌)으로 push 0, v9 로컬 서빙 유지(agent_read 프롬프트 충돌 · E4B 재측정 필요).
+
+2026-10-26 [날짜 읽기를 모델 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 모델이 `date_form` · `year_quote` 를 내고 코드는 인용만 확인(본문 「2026원」 연도 오판 제거); 로컬 E4B 깨끗한 보류 표본 12/20 → 15/20, 거절 위험 오류 10 → 1건; Codex 3회 논의.
+2026-10-26 [지난 일정은 삭제만](records/reports/2026-10-26_past-edit-delete-only.md) — 끝난 일정은 이름 포함 수정 불가 · 삭제만(서버 `plan_edit` · 웹 `pastEdit` · 채팅); 이미 지난 고정 일정 삭제 경로는 남음.
+
+2026-10-26 [과거 날짜 가드레일 확장](records/reports/2026-10-26_past-date-guard-extension.md) — 모델 연도 없는 날짜 다가오는 날·채팅 「오타 아닌가요?」 choices·`plan_edit` 지금 이후/`no_upcoming_items`; 지난 고정 일정 이름·삭제 경로는 남음.
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
 

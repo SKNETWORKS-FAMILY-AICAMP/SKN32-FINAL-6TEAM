@@ -22,7 +22,7 @@ SOURCE = "s-1"
 
 
 def _item(quote, start, *, kind="activity"):
-    return {"place_quote": quote, "day": 1, "date": "2026-10-22", "date_quote": "1일차 · 2026-10-22", "start": start, "end": None,
+    return {"place_quote": quote, "day": 1, "date": "2026-10-22", "date_quote": "1일차 · 2026-10-22", "year_quote": "2026", "date_form": "explicit_year", "start": start, "end": None,
             "time_quote": start, "kind": kind}
 
 

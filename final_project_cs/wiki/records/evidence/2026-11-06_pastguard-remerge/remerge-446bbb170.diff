@@ -1,0 +1,241 @@
+diff --git a/final_project_cs/app/domains/travel_ops/components/intake/review.py b/final_project_cs/app/domains/travel_ops/components/intake/review.py
+remerge CONFLICT (content): Merge conflict in final_project_cs/app/domains/travel_ops/components/intake/review.py
+index fc4d9c7ae..6b5998781 100644
+--- a/final_project_cs/app/domains/travel_ops/components/intake/review.py
++++ b/final_project_cs/app/domains/travel_ops/components/intake/review.py
+@@ -1191,39 +1191,27 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
+             mode = "cached" if cached.get("risk_schema_version") == risks.SCHEMA_VERSION else "fresh"
+             payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
+             if mode == "fresh":
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-                store(conn, tenant_id, intake_id, revision, payload)
+-            return guard_dates(payload)
+-=======
+                 _store_read(conn, tenant_id, intake_id, revision, payload, base=cached)
+             from . import dining_review
+             payload = dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
+             return guard_dates(payload)
+     answered_review = load(conn, tenant_id, intake_id, revision) if force else None
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
+                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
+     if quick:
+         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
+     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+                     previous=previous, new_registration=False, **options)
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-=======
+     from .dining_questions import merge_questions, answers
+     saved_answers = answers(answered_review or previous or {})
+     if saved_answers:
+         payload["dining_questions"] = saved_answers
+         merge_questions(payload, [], "\n".join(source.get("transcript") or "" for source in sources))
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+     payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
+     from . import risks
+ 
+     # ★`[2026-10-20 「대안 적용 13.9초」]` 앞 판에서 방금 점검한 일정(장소 · 날짜 · 시각이 같음)은 그 결과를 쓴다 — 바꾼 일정만 바깥 조회를 다시 한다
+     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
+-    store(conn, tenant_id, intake_id, revision, payload)
+-=======
+     # `[2026-10-24 ST4F-732]` 처음 검사(`pipeline.process`)가 진행 알림을 받을 때만 위험 점검의 알림도 건넨다
+     payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous,
+                              **({"on_event": options["on_event"]} if options.get("on_event") else {}))
+@@ -1240,7 +1228,6 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
+                                         enabled=dining_ledger.agent_judge_runner() is not None,
+                                         deadline_s=(dining_agent_judge() or {}).get("deadline_s", dining_review.DEFAULT_DEADLINE_S),
+                                         notes="\n".join(source.get("transcript") or "" for source in sources))
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+     return guard_dates(payload)
+ 
+ 
+diff --git a/final_project_cs/tests/unit/travel/test_all_past_confirm_api.py b/final_project_cs/tests/unit/travel/test_all_past_confirm_api.py
+remerge CONFLICT (add/add): Merge conflict in final_project_cs/tests/unit/travel/test_all_past_confirm_api.py
+index 903dbe17b..7f2c89c88 100644
+--- a/final_project_cs/tests/unit/travel/test_all_past_confirm_api.py
++++ b/final_project_cs/tests/unit/travel/test_all_past_confirm_api.py
+@@ -12,11 +12,7 @@ import pytest
+ from fastapi import FastAPI, HTTPException
+ from fastapi.testclient import TestClient
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-from app.domains.travel_ops.components.intake import prepared, survey_answers
+-=======
+ from app.domains.travel_ops.components.intake import dining_review, prepared, survey_answers
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ from app.domains.travel_ops.components.itinerary import itinerary_checks as checks
+ from app.domains.travel_ops.entry import trip_api
+ from app.domains.travel_ops.modules.web_account import web_guard
+@@ -107,11 +103,8 @@ def confirm_api(monkeypatch):
+     monkeypatch.setattr(survey_answers, "stored", lambda *args, **kwargs: {})
+     monkeypatch.setattr(survey_answers, "stored_resolved", lambda *args, **kwargs: {})
+     monkeypatch.setattr(prepared, "with_alternates", lambda *args, **kwargs: kwargs["body"])
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-=======
+     monkeypatch.setattr(dining_review, "refresh", lambda *args: args[-1])
+     monkeypatch.setattr(dining_review, "registration_issue", lambda payload: None)
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+     def boundary(*args, **kwargs):
+         db.boundary += 1
+         raise HTTPException(418, {"proof": "passed-calendar-guard-before-write"})
+diff --git a/final_project_cs/tests/unit/travel/test_all_past_dates.py b/final_project_cs/tests/unit/travel/test_all_past_dates.py
+remerge CONFLICT (add/add): Merge conflict in final_project_cs/tests/unit/travel/test_all_past_dates.py
+index a37476d35..dfd224e0a 100644
+--- a/final_project_cs/tests/unit/travel/test_all_past_dates.py
++++ b/final_project_cs/tests/unit/travel/test_all_past_dates.py
+@@ -107,11 +107,7 @@ def test_normal_create_api_rejects_before_new_trip_write(monkeypatch):
+ def test_cached_review_guard_exempts_confirmed_and_reopened(monkeypatch):
+     from contextlib import nullcontext
+     from copy import deepcopy
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-    from app.domains.travel_ops.components.intake import review, risks
+-=======
+     from app.domains.travel_ops.components.intake import review, risks, dining_review
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+     now = datetime(2032, 5, 8, 12, tzinfo=checks.KST)
+     cached = {"items": [{"date": (now - timedelta(days=1)).date().isoformat(), "end_date": None,
+                          "status": "keep", "can_lock": True, "rows": []}], "moves": [],
+@@ -119,10 +115,7 @@ def test_cached_review_guard_exempts_confirmed_and_reopened(monkeypatch):
+               "risk_schema_version": risks.SCHEMA_VERSION}
+     monkeypatch.setattr(review, "load", lambda *a: deepcopy(cached))
+     monkeypatch.setattr(risks, "decorate", lambda *a, **kw: kw["review"])
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+-=======
+     monkeypatch.setattr(dining_review, "refresh", lambda *a: a[-1])
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+     class Conn:
+         state = ("review", None)
+         def cursor(self): return nullcontext(self)
+diff --git a/final_project_cs/wiki/index.md b/final_project_cs/wiki/index.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/index.md
+index 6e4c8f983..298e983dd 100644
+--- a/final_project_cs/wiki/index.md
++++ b/final_project_cs/wiki/index.md
+@@ -10,12 +10,10 @@ domain: travel
+ 
+ # cs 프로젝트 구현 wiki
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+ 
+ 2026-10-25 전체 과거 날짜 신규 등록 가드 독립 후보: [날짜 기준·공통 검사·검증 및 미반영 경계](records/reports/2026-10-25_all-past-calendar-hotfix.md). 기존 확정 재시도/reopen 정책과 다른 정상 검사는 보존합니다.
+ 
+-=======
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
+ 
+ 2026-10-25 전체 과거 날짜 신규 등록 가드 독립 후보: [날짜 기준·공통 검사·검증 및 미반영 경계](records/reports/2026-10-25_all-past-calendar-hotfix.md). 기존 확정 재시도/reopen 정책과 다른 정상 검사는 보존합니다.
+@@ -24,7 +22,6 @@ domain: travel
+ 
+ 2026-10-24 계획 확인 진행 표시 ③ · 멈춘 질문 후보 대기(ST4F-731 · 732): 서버가 위험 점검 · 먼저 채우기 · 해석 반영 진행 알림을 보내고 화면은 서버 단계마다 한 칸으로 보입니다. 검사를 읽는 길은 접수 행을 잠그지 않고(쓰기는 그대로), 대안 미리 준비가 요식 판정보다 먼저 돌며, 「전체 자동 추천」 미리 보기는 첫 검사 · 멈춘 질문이 끝난 뒤 나갑니다 — 로컬 같은 계획 재측정에서 「후보를 찾는 중」 22.5초 → 0.9초. 실서버 확인 전 · [작업 기록](records/reports/2026-10-24_계획확인_진행표시_후보대기_ST4F-731-732.md).
+ 
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ 2026-10-23 Next.js 보안 갱신(ST4F-724): 02시 리뷰 뒤 공개된 Next.js 권고(16.0.0~16.4.0)로 web 16.4.0 도 critical 이 되어 web · admin · dev-console 을 16.4.2 로 올렸습니다. 운영 의존성 audit 3/3 앱 0건 · check 12/12 · 단위 1,198/1,198 통과, 개발 서버 보안 경고 사라짐. 배포 전입니다. [작업 기록](records/reports/2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).
+ 
+ 2026-10-23 프론트엔드 리뷰: role-eval-ui 기준 격리 브랜치에서 P1 4건·P2 15건을 확인했습니다. 세 앱 check 12/12·단위 1,158/1,158 통과, 제품 수정·운영 반영 전입니다. [전체 보고서](records/reports/2026-10-23_frontend-audit.md).
+diff --git a/final_project_cs/wiki/records/reports/2026-10-25_all-past-calendar-hotfix.md b/final_project_cs/wiki/records/reports/2026-10-25_all-past-calendar-hotfix.md
+remerge CONFLICT (add/add): Merge conflict in final_project_cs/wiki/records/reports/2026-10-25_all-past-calendar-hotfix.md
+index f002d6a51..1613830fa 100644
+--- a/final_project_cs/wiki/records/reports/2026-10-25_all-past-calendar-hotfix.md
++++ b/final_project_cs/wiki/records/reports/2026-10-25_all-past-calendar-hotfix.md
+@@ -7,15 +7,12 @@ domain: travel
+ 
+ # 2026-10-25 전체 과거 날짜 가드 — 독립 hotfix 후보
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+ ## role-manager 현재 이식
+ 
+ 양쪽 role-manager 기준 `6410f754b3fe1ff29b0916bab43b130b82a595a8`에 hotfix 11경로만 이식했습니다. 기존 review 저장/위험 경로 및 등록 기능을 보존했고 develop 전체 병합은 하지 않았습니다. 이 브랜치의 실제 네 파일 회귀는 21/21 = 100%이며 develop에만 있는 14개 등록게이트 시험은 이 결과에 포함하지 않습니다. [normal confirm 상세·전체관문 후속](2026-10-25_allpast-normal-confirm-proof.md)을 따릅니다. 실제 DB·모델·고객 경로·운영 배포와 원격 CI 성공은 주장하지 않습니다.
+ 
+ 아래는 원래 독립 후보의 계약·검증 이력입니다.
+ 
+-=======
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ ## 확정 계약
+ 
+ 신규 등록할 일정 항목이 비어 있지 않고, 모든 항목의 시작·종료 달력 날짜가 제품의 기존 서울 시간 기준 오늘보다 엄격히 앞설 때만 이 가드로 거절합니다. 일부 과거 + 오늘/미래, 오늘만, 미래만은 **이 가드에서 차단하지 않으며** 기존 운영시간·이동·필수정보 검사는 그대로 유지합니다. 날짜 미정/빈 목록을 전체 과거로 추정하지 않습니다. 숙박·야간 일정은 실제 종료 날짜가 오늘/미래이면 차단하지 않습니다. 시각이 지났더라도 날짜가 오늘이면 이 가드의 거절 대상이 아닙니다. 원문 날짜·일정 삭제/자동 이동은 하지 않습니다.
+diff --git a/final_project_cs/wiki/records/reports/2026-10-25_allpast-normal-confirm-proof.md b/final_project_cs/wiki/records/reports/2026-10-25_allpast-normal-confirm-proof.md
+remerge CONFLICT (add/add): Merge conflict in final_project_cs/wiki/records/reports/2026-10-25_allpast-normal-confirm-proof.md
+index bcf6dc07d..2f12005f5 100644
+--- a/final_project_cs/wiki/records/reports/2026-10-25_allpast-normal-confirm-proof.md
++++ b/final_project_cs/wiki/records/reports/2026-10-25_allpast-normal-confirm-proof.md
+@@ -1,6 +1,5 @@
+ # 전체 과거 날짜 — normal confirm HTTP 증명
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+ ## role-manager 독립 이식 (이 브랜치의 현재 결과)
+ 
+ - 기준은 양쪽 원격 role-manager `6410f754b3fe1ff29b0916bab43b130b82a595a8`입니다. develop 또는 다른 브랜치를 merge하지 않고 검증된 hotfix 11경로 patch만 `git apply --3way`로 적용했습니다.
+@@ -17,8 +16,6 @@
+ 
+ ## 아래는 이식 원본의 develop 증명 이력
+ 
+-=======
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ ## 결론
+ 
+ 추가 제품 수정 0개입니다. `registration.require_review`는 cached review를 load만 하지만 정상 confirm은 결국 실제 `_create_trip`의 신규 등록 날짜 가드를 거칩니다. stale `ready: true`가 이 가드를 우회하지 못했습니다.
+diff --git a/wiki/handoff/2026-10-25_all-past-calendar-hotfix.md b/wiki/handoff/2026-10-25_all-past-calendar-hotfix.md
+remerge CONFLICT (add/add): Merge conflict in wiki/handoff/2026-10-25_all-past-calendar-hotfix.md
+index 1ee85ca17..5db3527da 100644
+--- a/wiki/handoff/2026-10-25_all-past-calendar-hotfix.md
++++ b/wiki/handoff/2026-10-25_all-past-calendar-hotfix.md
+@@ -1,6 +1,5 @@
+ # 전체 과거 날짜 hotfix 독립 인계 — 2026-10-25
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+ ## role-manager 후속
+ 
+ - 양쪽 role-manager의 동일 `6410f754b3fe1ff29b0916bab43b130b82a595a8` 위에 검증 hotfix 11경로만 적용했습니다. develop/다른 브랜치 merge 및 force push는 하지 않습니다.
+@@ -9,8 +8,6 @@
+ 
+ ## 아래는 최초 인계 이력
+ 
+-=======
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ - 새 팀 develop `34a92cb4d8a0cf5966e0578c64455dd313c775dc` 기반 최소 3 production 파일과 합성 단위 시험만 변경했습니다. I06 명시고정·시간·Comment9·alias·첨부 구현은 포함하지 않았습니다.
+ - [계약·검증 범위](../../final_project_cs/wiki/records/reports/2026-10-25_all-past-calendar-hotfix.md).
+ - 좁은 최종 검증 9/9 = 100%(신규 feature 5 + 기존 deferred review 4). 새 가드는 일부 과거 일정을 제거/이동하지 않으며 기존 검사도 유지합니다.
+diff --git a/wiki/handoff/2026-10-25_allpast-normal-confirm-proof.md b/wiki/handoff/2026-10-25_allpast-normal-confirm-proof.md
+remerge CONFLICT (add/add): Merge conflict in wiki/handoff/2026-10-25_allpast-normal-confirm-proof.md
+index 3a2940d7e..49d23d720 100644
+--- a/wiki/handoff/2026-10-25_allpast-normal-confirm-proof.md
++++ b/wiki/handoff/2026-10-25_allpast-normal-confirm-proof.md
+@@ -1,6 +1,5 @@
+ # allpast normal confirm 최종 독립 인계
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+ ## role-manager 현재 이식
+ 
+ - 대상은 팀/개인 role-manager 두 브랜치이며 시작 SHA는 `6410f754b3fe1ff29b0916bab43b130b82a595a8`입니다. 원격 HEAD를 작업 전 다시 대조했습니다.
+@@ -12,8 +11,6 @@
+ 
+ ## 아래는 이식 원본의 develop 증명 이력
+ 
+-=======
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ 정상 confirm의 stale cached ready 우회는 실제 TestClient + 실제 draft/assemble/registration/create + 쓰기 금지 SQL UOW에서 거절됐습니다. 추가 제품 수정은 0개입니다.
+ 
+ - [정확 증명과 범위](../../final_project_cs/wiki/records/reports/2026-10-25_allpast-normal-confirm-proof.md)
+diff --git a/wiki/index.md b/wiki/index.md
+remerge CONFLICT (content): Merge conflict in wiki/index.md
+index 4818910d1..7f86781a5 100644
+--- a/wiki/index.md
++++ b/wiki/index.md
+@@ -8,15 +8,12 @@ domain: travel
+ 
+ # guguroute wiki
+ 
+-<<<<<<< 08b995976 (fix(travel): reject only wholly past calendar plans)
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+ 
+ 2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·role-manager 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
+-=======
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](handoff/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
+ 
+ 2026-10-25 신규 계획의 전체 과거 날짜만 거절하는 독립 hotfix 후보: [계약·검증·원격 인증 차단 인계](handoff/2026-10-25_all-past-calendar-hotfix.md). 일부 과거 + 오늘/미래는 이 가드로 차단하지 않으며 운영 반영 완료는 아닙니다.
+->>>>>>> d2ab93a65 (fix(travel): reject only wholly past calendar plans)
+ 
+ 현재 제품 사양은 **확정 결정·현재 계약**, 구현·배포 상태는 **코드·환경별 실행 기록**으로 확인합니다. 과거 계획·보고서를 현재 사실로 사용하지 않습니다.
+ 

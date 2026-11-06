@@ -7,6 +7,8 @@ domain: travel
 impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업 폴더 상태를 다룬다. final_project_sample 은 별도 참고 구현이라 해당 없다
 ---
 
+2026-11-06 — [과거 날짜 가드레일 세션 마무리](2026-11-06_pastguard-remerge-push-cleanup.md): 10-26 세션 전체 연결, 원격 `1cf4542a1` 위 재병합 `43a3ced29`, unit/travel 8467/8467 = 100% · 웹 1235/1235 = 100%, 남은 것 지난 고정 일정 삭제 경로(보류) · E4B 재측정 · 서빙 v10 · 브랜치 5개 유지.
+
 2026-11-03 모든 Hermes 세션 이관 패키지(복사만): default·guguroute·myapp 세션 1,146개·행 120,876을 sqlite backup + 가림 없는 JSONL export로 guguroute `backups/all-sessions-migration-20261103/`(1.95GB, SHA 3,063/3,063)에 보존, DB 행 = export 행 불일치 0, 복원 시험 315세션 불일치 0. 필수 이관 약 62GB(패키지+backups 나머지 7.86+final_workspace 52.21), 비밀 파일은 이름만·외부 목적지면 암호화 필수 — 목적지·비밀 이관은 사용자 결정 → [인계](2026-11-03_all-sessions-migration-backup-handoff.md)
 
 2026-11-03 새 PC 복원 안내: 원본 미커밋 문서 706개·도구 4개를 팀·개인 `role-manager`에, 원본 작업 폴더 스냅숏(커밋 5개)과 로컬 전용 커밋 82개를 개인 A-COP `backup/2026-11-03/*`에 올렸다. 비밀·datasets·50MB 초과는 외장 백업에서만 복원 → [복원 안내](2026-11-03_new-pc-restore-guide.md) · [교차검증·정정(switch 명령, workspace 커밋 54개 위치, 팀 SKN 공개)](../records/reports/2026-11-03_backup-push-independent-crosscheck.md)
@@ -162,6 +164,15 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 2026-10-29 ST4F-597 독립 검토·통합: Dining258/258·판정39/39·필수3/3=100%,팀·개인 role-manager `07e79f1987` 양쪽 반영. 운영 메뉴/수락 미확인·종결0. [인계](2026-10-29_st4f597-independent-review.md).
 
 2026-10-29 ST4F-711 백엔드 복구: 필수3/3=100%·PG동시성41/41=100%·웹1224/1224=100%, 팀·개인 role-manager 소스217da9ad0 양쪽 반영. 운영 인수·LB-09 원인 미확정. [인계](2026-10-29_st4f711-backend-gates.md).
+
+2026-10-26 — [원격 role-manager a465c6022 위 재병합](2026-10-26_rebase-merge-on-role-manager-a465c6022.md): `07dcebe35` 병합(`877e6723b`) + 달력에 없는 에이전트 날짜 수정(`92541686d`); unit/travel 7740/7740 · gates 608/608 · vitest 1205/1205; ahead 10/behind 0 · push 0
+
+2026-10-26 — (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 보류](2026-10-26_merged-head-push-serving-decision.md): HEAD `2cccbfaef` unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183(이전 가지도 실패 0). 원격 role-manager 가 `1e4e3b246` 으로 앞서 push 0 · PR 0, 로컬 서빙은 v9 유지(v10 미구성 · 무영향 미확인). Codex 동의.
+
+2026-10-26 — [날짜 읽기 LLM 판단 전환](2026-10-26_llm-date-reading.md): 모델이 날짜 형식(`explicit_year` · `relative` · `yearless`)과 연도 인용을 내고 코드는 인용 존재만 확인. 로컬 E4B 실측 개발 28/41 → 39/41, 깨끗한 보류 12/20 → 15/20. Codex 3회(1회는 샌드박스가 파일 읽기 막음), 강등 정책 1건은 실측 근거로 반영 안 함. 커밋만 · 원격 0/2.
+2026-10-26 — [지난 일정은 삭제만](2026-10-26_past-edit-delete-only.md): 서버·웹·채팅 일관 구현(관련 320/320 = 100%, vitest 1183/1183), Codex 2회 검토, 커밋만 · 원격 0/2.
+
+2026-10-26 — [과거 날짜 가드레일 확장](2026-10-26_past-date-guard-extension.md): 요구 1~4 구현·검증(관련 303/303 = 100%), Codex 검토 미수행(CLI 미로그인), 커밋만 · 원격 0/2.
 
 2026-10-23 — [Dining 모호한 조건 질문·답 저장·재검증 3단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-clarifications.md): 원문과 현재 식사 선택지로 질문, 본인 접수·revision·run_id·서명 대조 뒤 선택/취소 저장과 새 검사 연결. 조건 정정은 해당 조건 행만 갱신하고 독립 영업 불가 보존, 늦은 웹 응답의 최신 상태 덮어쓰기 차단. 새 서버 29/29 = 100%, 관련 Python 212/214 = 99.1%(기존 실패 2), 웹 79/79 = 100%, 브라우저 모형 부품 6/6 = 100%, 타입·수정 파일 정적 검사 통과. 선택 구조·계약·인증 304/305 = 99.7%(Composer 미설치 1), 전체 계약 수집·전체 웹 lint·실DB 확인은 환경 한계 별도 기록. 백업 `_backup/2026-10-23_dining-clarifications/`. 세 보완 로컬 3/3 = 100%, 커밋·푸시·배포 안 함.
 

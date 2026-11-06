@@ -1,0 +1,572 @@
+diff --git a/final_project_cs/app/domains/travel_ops/components/conversation/chat_edit.py b/final_project_cs/app/domains/travel_ops/components/conversation/chat_edit.py
+remerge CONFLICT (content): Merge conflict in final_project_cs/app/domains/travel_ops/components/conversation/chat_edit.py
+index 4d68c9b83..7e225666b 100644
+--- a/final_project_cs/app/domains/travel_ops/components/conversation/chat_edit.py
++++ b/final_project_cs/app/domains/travel_ops/components/conversation/chat_edit.py
+@@ -547,7 +547,6 @@ def _same_day(day: str, start: str, end: str | None, title: str) -> None:
+         raise EditRefused("crosses_midnight", f"「{title}」이(가) 자정을 넘기게 돼 채팅으로는 옮기지 않았어요. 일정 수정 화면에서 날짜와 시각을 함께 고쳐 주세요.")
+ 
+ 
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ def split_range(candidates: list[Any], now: datetime) -> tuple[list[Any], list[Any]]:
+     """범위 옮기기의 대상 정책 **한 곳**(`edit_intent.time_ops` scope=range 와 `ops_for` query 경로가 함께 쓴다) → (옮길 일정, 그대로 둔 일정).
+ 
+@@ -593,7 +592,6 @@ def shift_range(candidates: list[Any], minutes: int, now: datetime) -> tuple[lis
+     if kept:
+         ops[0] = replace(ops[0], kept=tuple(_kept_label(i) for i in kept))
+     return ops, (f"{targets[0].title} 시각 옮기기" if len(targets) == 1 else f"일정 {len(targets)}개 시각 옮기기")
+-=======
+ def _over(item: Any, now: datetime) -> bool:
+     """끝난 일정인가 — 끝 ≤ 지금(끝이 없으면 시작). 서버 「완료」(`reopen._end`) · 수정 접수의 고정 이유 `past` 와 같은 판단."""
+     return (item.ends_at or item.starts_at) <= now
+@@ -667,7 +665,6 @@ def past_time_refusal(*, title: str, item_id: Any, day: str, begin: str, stops:
+     text = (f"{PAST_DATE_TITLE} {trip_day_label(asked)} {begin}은(는) 이미 지난 때라 「{title}」 일정은 {action} 않았어요. "
+             + ("아래 가까운 날짜 중에서 골라 주시거나 다른 날짜와 시각을 알려 주세요." if choices else "앞으로의 날짜와 시각을 알려 주세요."))
+     return EditRefused("time_in_past", text, **({"choices": choices, "choices_title": PAST_DATE_TITLE} if choices else {}))
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+ 
+ 
+ _ALL = __import__("re").compile(r"전부|전체|모두|다\s*(?:미뤄|밀어|당겨|늦춰)|all\s+(?:of\s+)?(?:my|the)|everything", __import__("re").IGNORECASE)
+diff --git a/final_project_cs/app/domains/travel_ops/components/intake/agent_read.py b/final_project_cs/app/domains/travel_ops/components/intake/agent_read.py
+remerge CONFLICT (content): Merge conflict in final_project_cs/app/domains/travel_ops/components/intake/agent_read.py
+index d8a42b270..f79f4a9b8 100644
+--- a/final_project_cs/app/domains/travel_ops/components/intake/agent_read.py
++++ b/final_project_cs/app/domains/travel_ops/components/intake/agent_read.py
+@@ -78,23 +78,18 @@ SCHEMA: dict[str, Any] = {
+                                  "out_of_scope": {"type": "boolean"}, "quote": _NS}},
+         "pieces": {"type": "array", "items": {"type": "object", "required": ["kind", "quote"],
+                    "properties": {"kind": {"enum": list(PIECES)}, "quote": _S}}},
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+-        # ★`[2026-10-27 G 모델 품질 · 수용 I05]` 날짜를 내면 날짜 인용 칸을 비울 수 없다(`_dated_items`) — 생성 문법만 좁힌다
+-        "items": {"type": "array", "items": _dated_items({"type": "object",
+-                  "required": ["place_quote", "day", "date", "date_quote", "start", "end", "time_quote", "kind", "locked", "locked_quote"],
+-                  "properties": {"place_quote": _S, "day": _NI, "date": _NS, "date_quote": _NS, "start": _NS, "end": _NS,
+-                                 "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]},
+-                                 # I06: 고객이 이 항목을 고정/고정 안 함이라고 **명시**했을 때만 true/false — 아니면 null. 근거 인용 없으면 버린다(`ground`)
+-                                 "locked": {"type": ["boolean", "null"]}, "locked_quote": _NS}})},
+-=======
+         # ★`[2026-10-26 사용자 지시 · Codex 검토]` 날짜는 모델이 판단한다 — 인용(date_quote · year_quote)을 먼저 적고 → 형식(date_form) → 값(date).
+         #   코드는 원문을 숫자 · 낱말로 다시 읽지 않고 인용이 원문에 있는지만 본다(`ground`). 순서가 곧 모델의 출력 순서다(Ollama 스키마 문법).
+-        "items": {"type": "array", "items": {"type": "object",
+-                  "required": ["place_quote", "day", "date_quote", "year_quote", "date_form", "date", "start", "end", "time_quote", "kind"],
++        # ★`[2026-10-27 G 모델 품질 · 수용 I05]` 날짜를 내면 날짜 인용 칸을 비울 수 없다(`_dated_items`) — 생성 문법만 좁힌다.
++        #   `[2026-11-06 병합]` 날짜 순서(위) · I05 인용 필수 · I06 명시 고정(locked)을 한 항목 스키마에 함께 둔다.
++        "items": {"type": "array", "items": _dated_items({"type": "object",
++                  "required": ["place_quote", "day", "date_quote", "year_quote", "date_form", "date", "start", "end", "time_quote", "kind",
++                               "locked", "locked_quote"],
+                   "properties": {"place_quote": _S, "day": _NI, "date_quote": _NS, "year_quote": _NS,
+                                  "date_form": {"enum": list(DATE_FORMS) + [None]}, "date": _NS, "start": _NS, "end": _NS,
+-                                 "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]}}}},
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
++                                 "time_quote": _NS, "role": {"enum": ["origin", "visit"]}, "kind": {"enum": ["activity", "dining", "lodging"]},
++                                 # I06: 고객이 이 항목을 고정/고정 안 함이라고 **명시**했을 때만 true/false — 아니면 null. 근거 인용 없으면 버린다(`ground`)
++                                 "locked": {"type": ["boolean", "null"]}, "locked_quote": _NS}})},
+         "moves": {"type": "array", "items": {"type": "object", "required": ["mode", "scope", "day", "from_quote", "to_quote", "quote"],
+                   "properties": {"mode": {"enum": list(MODES)}, "scope": {"enum": ["segment", "day", "all"]}, "day": _NI,
+                                  "from_quote": _NS, "to_quote": _NS, "quote": _S}}},
+@@ -136,17 +131,12 @@ Rules
+ - trip: party_size, days, nights only if stated.
+ 
+ Example
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ Message: 모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심(예약 완료), 비 오면 공원은 빼 줘. 부모님 모시고 가니까 천천히요. 저녁은 알아서 추천해 줘
+-Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date":"{ex_date}","date_quote":"모레","start":"11:00","end":null,"time_quote":"11시","kind":"activity","locked":null,"locked_quote":null}},{{"place_quote":"샤로수길","day":1,"date":"{ex_date}","date_quote":"모레","start":"13:00","end":null,"time_quote":"1시","kind":"dining","locked":null,"locked_quote":null}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
++Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date_quote":"모레","year_quote":null,"date_form":"relative","date":"{ex_date}","start":"11:00","end":null,"time_quote":"11시","kind":"activity","locked":null,"locked_quote":null}},{{"place_quote":"샤로수길","day":1,"date_quote":"모레","year_quote":null,"date_form":"relative","date":"{ex_date}","start":"13:00","end":null,"time_quote":"1시","kind":"dining","locked":null,"locked_quote":null}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
+ 
+ 
+-PROMPT_VERSION = "intake.agent_read.v3-booked-not-locked"   # v2: 명시 고정 locked/locked_quote · v3: 예약만 있는 항목 예시(locked null) · 예약 말 인용 금지
++PROMPT_VERSION = "intake.agent_read.v4-date-form"   # v2: 명시 고정 locked/locked_quote · v3: 예약만 있는 항목 예시(locked null) · 예약 말 인용 금지 · v4(2026-11-06 병합): 날짜 인용 → year_quote → date_form → date 순서
+ PROMPT_HASH = hashlib.sha256(SYSTEM.encode()).hexdigest()
+-=======
+-Message: 모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심, 비 오면 공원은 빼 줘. 부모님 모시고 가니까 천천히요. 저녁은 알아서 추천해 줘
+-Output: {{"guard":{{"off_topic":false,"prompt_injection":false,"out_of_scope":false,"quote":null}},"pieces":[{{"kind":"plan_item","quote":"모레 11시 낙성대공원 산책하고 택시로 샤로수길 가서 1시에 점심"}},{{"kind":"plan_ask","quote":"저녁은 알아서 추천해 줘"}}],"items":[{{"place_quote":"낙성대공원","day":1,"date_quote":"모레","year_quote":null,"date_form":"relative","date":"{ex_date}","start":"11:00","end":null,"time_quote":"11시","kind":"activity"}},{{"place_quote":"샤로수길","day":1,"date_quote":"모레","year_quote":null,"date_form":"relative","date":"{ex_date}","start":"13:00","end":null,"time_quote":"1시","kind":"dining"}}],"moves":[{{"mode":"taxi","scope":"segment","day":1,"from_quote":"낙성대공원","to_quote":"샤로수길","quote":"택시로"}}],"conditions":[{{"code":"if_rain_skip","quote":"비 오면 공원은 빼 줘"}}],"preferences":[{{"code":"elderly_friendly","quote":"부모님 모시고"}},{{"code":"slow_pace","quote":"천천히요"}}],"gaps":[{{"kind":"meal_place","day":1,"start":null,"end":null,"quote":"저녁은 알아서 추천해 줘"}}],"missing":[],"trip":{{"party_size":null,"days":null,"nights":null}}}}"""
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+ 
+ 
+ def system_for(today: date, state: str = "") -> str:
+@@ -193,13 +183,11 @@ class AgentItem:
+     time_fixed: bool = False                 # 인용에서 다시 계산해 바꿨다(`fact_check.recompute_time`)
+     role: str = "visit"
+     time_from_rule: bool = False             # 같은 줄의 규칙 시각으로 맞췄다(`pipeline._agent_rows`)
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+     locked: bool | None = None               # I06 — 고객이 명시한 고정(true) · 고정 안 함(false) · 말 없음/근거 없음(None)
+     locked_quote: Quote | None = None        # 그 말의 원문 인용 — locked 가 bool 일 때만 있다
+-=======
+     year_unverified: bool = False            # 모델이 연도를 적었다(explicit_year)고 했지만 연도 인용이 원문에 없어 연도 없는 날로 뒀다(`_grounded_date`)
+     date_invalid: str | None = None          # 모델 날짜가 달력에 없는 날이었다 — 그 날짜 인용(원문). 날짜 해석이 첫날로 채우지 않고 「모름」으로 둔다(`dates.resolve_dates`)
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
++    year_quote: str | None = None            # 연도를 적은 날(explicit_year)의 모델 연도 인용 — 원문에서 확인한 것만. 모델 날짜의 해와 맞는지 `pipeline._year_written` 이 본다
+ 
+ 
+ @dataclass
+@@ -311,12 +299,8 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None =
+     """모델 답 → 원문에 근거가 있는 값만. 버린 수를 `report.dropped` 에 센다.
+ 
+     `allowed` — 이 묶음에서 새로 읽을 줄(겹친 줄에서 나온 항목은 앞 묶음이 이미 셌다). `taken` — 앞 묶음까지 쓴 자리(같은 조각이 날마다 나올 때 다음 자리를 쓴다)."""
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+-    dropped = {"item": 0, "time": 0, "date": 0, "move": 0, "move_end": 0, "condition": 0, "preference": 0, "piece": 0, "gap": 0, "locked": 0}
+-=======
+     dropped = {"item": 0, "time": 0, "date": 0, "date_form": 0, "date_year": 0, "date_mismatch": 0, "move": 0, "move_end": 0, "condition": 0, "preference": 0,
+-               "piece": 0, "gap": 0}
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
++               "piece": 0, "gap": 0, "locked": 0}
+     out = AgentRead()
+     seen: list[tuple[int, int]] = taken if taken is not None else []
+     for it in raw.get("items") or []:
+@@ -343,10 +327,6 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None =
+         if start and tq is not None:
+             start, fixed = recompute_time(start, tq.text)
+         dq = _find(lines, it.get("date_quote"), near=title.line)
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+-        if when and dq is None:
+-            dropped["date"] += 1
+-            when = None
+         # I06 — 모델이 명시 고정을 bool 로 판단하고 그 말이 원문에 글자 그대로 있을 때만 받는다. 인용 없음 · 원문에 없음 · bool 아님 → 모름(None)
+         locked, lq = it.get("locked"), None
+         if isinstance(locked, bool):
+@@ -356,12 +336,12 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None =
+                 locked = None
+         else:
+             locked = None
+-=======
+         when, relative, unverified, invalid = _grounded_date(it, dq, lines, dropped)
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
++        # `[2026-11-06 병합 — A13 과 date_form]` 연도 근거는 모델이 인용한 연도 조각이다(머리줄 「2025년 가을 여행」처럼 날짜 인용 밖일 수 있다)
++        yq = it.get("year_quote") if when and ISO.match(when) and not relative and isinstance(it.get("year_quote"), str) else None
+         out.items.append(AgentItem(
+             title=title, day=it.get("day") if isinstance(it.get("day"), int) else None, date=when, date_quote=dq if when else None,
+-            date_guessed=relative, year_unverified=unverified, date_invalid=invalid, start=start, end=end, time_quote=tq if start else None,
++            date_guessed=relative, year_unverified=unverified, date_invalid=invalid, year_quote=yq, start=start, end=end, time_quote=tq if start else None,
+             time_guessed=bool(start and tq and _guessed_pm(start, tq.text)), time_fixed=fixed,
+             kind=it.get("kind") if it.get("kind") in ("activity", "dining", "lodging") else "activity",
+             role="origin" if it.get("role") == "origin" else "visit", locked=locked, locked_quote=lq))
+diff --git a/final_project_cs/app/domains/travel_ops/components/intake/pipeline.py b/final_project_cs/app/domains/travel_ops/components/intake/pipeline.py
+index 4dd5c0f88..e904ca5cc 100644
+--- a/final_project_cs/app/domains/travel_ops/components/intake/pipeline.py
++++ b/final_project_cs/app/domains/travel_ops/components/intake/pipeline.py
+@@ -2125,8 +2125,10 @@ def _agent_booking_rows(read: Any, item: Any, index: int) -> list[dict[str, Any]
+ 
+ def _year_written(year: str, quote: str) -> bool:
+     """`[2026-10-28 전수검사 A13]` 모델이 고른 해(`2027`)가 날짜 인용에 그대로 적혀 있나 — 「2027-10-30」 · 「2027년」 · 「'27년」 · 「27년」.
+-    ★아무 네 자리 숫자(「1230 출발」 · 예약번호)는 해가 아니다. 다른 해(「1027년」)가 적혀 있으면 모델 값과 어긋나므로 적힌 것으로 보지 않는다"""
+-    return bool(re.search(rf"(?<!\d){year}(?!\d)", quote) or re.search(rf"(?<!\d){year[2:]}\s*년", quote))
++    ★아무 네 자리 숫자(「1230 출발」 · 예약번호)는 해가 아니다. 다른 해(「1027년」)가 적혀 있으면 모델 값과 어긋나므로 적힌 것으로 보지 않는다.
++    ★`[2026-11-06 병합]` 줄인 해에 붙는 따옴표(「'26.3.5」 — 모델 연도 인용 `'26`)도 적힌 해다 — 날짜 형식 규칙(agent_read SYSTEM)의 예와 같다"""
++    return bool(re.search(rf"(?<!\d){year}(?!\d)", quote) or re.search(rf"(?<!\d){year[2:]}\s*년", quote)
++                or re.search(rf"['’]{year[2:]}(?!\d)", quote))
+ 
+ 
+ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
+@@ -2253,8 +2255,10 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
+                          "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})
+         if it.date_guessed:
+             guessed_dates.add(index)
+-        elif it.date and it.date_quote is not None and not _year_written(it.date[:4], it.date_quote.text):
+-            # `[2026-10-28 전수검사 A13]` 인용(「10월 30일」)에 해가 없는데 모델이 해를 붙였다 — 값은 두고 확인 표시만 붙인다
++        elif it.date and re.fullmatch(r"\d{4}-\d{2}-\d{2}", it.date) and it.date_quote is not None and not _year_written(it.date[:4], it.year_quote or it.date_quote.text):
++            # `[2026-10-28 전수검사 A13]` 인용(「10월 30일」)에 해가 없는데 모델이 해를 붙였다 — 값은 두고 확인 표시만 붙인다.
++            #   `[2026-11-06 병합]` 연도를 적은 날(explicit_year)은 모델이 원문에서 인용한 연도 조각(`year_quote`)과 해를 맞춰 본다 — 머리줄의 해도 근거다.
++            #   연도 없는 날(`--MM-DD`)은 날짜 해석이 이미 `year_filled`(확인 필요)로 채우므로 여기서 다시 보지 않는다
+             yearless_dates.add(index)
+         # ★`[2026-10-19 진단 포인트 2]` 에이전트가 「숙소」라고 읽은 항목은 장소를 숙소 자료에서만 찾는다(`_place_kind_hint`) — 전에는 식사만 넘기고 숙소를 버렸다
+         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
+diff --git a/final_project_cs/tests/e2e/test_intake_interpretations_api.py b/final_project_cs/tests/e2e/test_intake_interpretations_api.py
+remerge CONFLICT (content): Merge conflict in final_project_cs/tests/e2e/test_intake_interpretations_api.py
+index 4da7b7cfa..94cd9acfb 100644
+--- a/final_project_cs/tests/e2e/test_intake_interpretations_api.py
++++ b/final_project_cs/tests/e2e/test_intake_interpretations_api.py
+@@ -42,15 +42,9 @@ ANSWER = {
+     "guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
+     "pieces": [{"kind": "plan_item", "quote": "10시 경복궁"}, {"kind": "plan_ask", "quote": "세 시간 비는데 실내로 뭐 하면 좋을까"}],
+     "items": [
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+-        {"place_quote": "경복궁", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "start": "10:00", "end": None,
++        {"place_quote": "경복궁", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "year_quote": D_2026_10_15[:4], "date_form": "explicit_year", "start": "10:00", "end": None,
+          "time_quote": "10시", "kind": "activity"},
+-        {"place_quote": "광장시장", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "start": "17:00", "end": None,
+-=======
+-        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "10:00", "end": None,
+-         "time_quote": "10시", "kind": "activity"},
+-        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "17:00", "end": None,
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
++        {"place_quote": "광장시장", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "year_quote": D_2026_10_15[:4], "date_form": "explicit_year", "start": "17:00", "end": None,
+          "time_quote": "17:00", "kind": "dining"}],
+     "moves": [], "conditions": [], "preferences": [],
+     "gaps": [{"kind": "free_slot", "day": 1, "start": "13:00", "end": "16:00", "quote": "오후 1시~4시 정도"}],
+diff --git a/final_project_cs/tests/e2e/test_intake_reading_prefs.py b/final_project_cs/tests/e2e/test_intake_reading_prefs.py
+remerge CONFLICT (content): Merge conflict in final_project_cs/tests/e2e/test_intake_reading_prefs.py
+index da7299d79..6ce8bc71e 100644
+--- a/final_project_cs/tests/e2e/test_intake_reading_prefs.py
++++ b/final_project_cs/tests/e2e/test_intake_reading_prefs.py
+@@ -45,15 +45,9 @@ ANSWER = {
+     "guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
+     "pieces": [{"kind": "plan_item", "quote": "10시 경복궁"}, {"kind": "plan_item", "quote": "13:30 광장시장"}],
+     "items": [
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+-        {"place_quote": "경복궁", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "start": "10:00", "end": None,
++        {"place_quote": "경복궁", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "year_quote": D_2026_10_15[:4], "date_form": "explicit_year", "start": "10:00", "end": None,
+          "time_quote": "10시", "kind": "activity"},
+-        {"place_quote": "광장시장", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "start": "13:30", "end": None,
+-=======
+-        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "10:00", "end": None,
+-         "time_quote": "10시", "kind": "activity"},
+-        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "13:30", "end": None,
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
++        {"place_quote": "광장시장", "day": 1, "date": D_2026_10_15, "date_quote": D_2026_10_15, "year_quote": D_2026_10_15[:4], "date_form": "explicit_year", "start": "13:30", "end": None,
+          "time_quote": "13:30", "kind": "dining"}],
+     "moves": [],
+     "conditions": [{"code": "if_rain_indoor", "quote": "비 오면 실내로"}, {"code": "finish_by:21:00", "quote": "9시까지는 숙소 들어가요"}],
+diff --git a/final_project_cs/tests/unit/travel/test_date_generation.py b/final_project_cs/tests/unit/travel/test_date_generation.py
+index a4e34c3f3..5992f09fa 100644
+--- a/final_project_cs/tests/unit/travel/test_date_generation.py
++++ b/final_project_cs/tests/unit/travel/test_date_generation.py
+@@ -15,7 +15,8 @@ from app.domains.travel_ops.components.conversation import chat_edit
+     ('오늘 13:30~14:30 덕수궁 추가', '2030-01-01'),
+ ])
+ def test_grounded_date_reaches_add_args_without_routing_today_override(text, expected):
+-    raw = item(date=expected, date_quote=text, time_quote=text)
++    form = dict(year_quote='2030', date_form='explicit_year') if text.startswith('2030') else dict(year_quote=None, date_form='relative')
++    raw = item(date=expected, date_quote=text, time_quote=text, **form)
+     got = agent_read.ground({'items': [raw]}, [text])
+     now = datetime.fromisoformat('2030-01-01T09:00:00+09:00')
+     ops = chat_edit._read_adds(text, lambda *args: got, stops=[], now=now, day='2030-01-01')
+@@ -23,8 +24,9 @@ def test_grounded_date_reaches_add_args_without_routing_today_override(text, exp
+ 
+ def test_multiday_hotel_identifiers_survive_ground_and_add():
+     text = '2030-01-02 13:30~14:30 덕수궁\n2030-01-03 10:00~11:00 경복궁스테이 예약AB123'
+-    rows = [item(date_quote=text.splitlines()[0],time_quote=text.splitlines()[0]),
+-            item(place_quote='경복궁스테이',date='2030-01-03',date_quote=text.splitlines()[1],start='10:00',end='11:00',time_quote=text.splitlines()[1],kind='lodging')]
++    rows = [item(date_quote=text.splitlines()[0],time_quote=text.splitlines()[0],year_quote='2030'),
++            item(place_quote='경복궁스테이',date='2030-01-03',date_quote=text.splitlines()[1],start='10:00',end='11:00',time_quote=text.splitlines()[1],kind='lodging',
++                 year_quote='2030')]
+     got = agent_read.ground({'items': rows}, text.splitlines())
+     assert [(it.title.text,it.date,it.start,it.end,it.kind) for it in got.items] == [('덕수궁','2030-01-02','13:30','14:30','activity'),('경복궁스테이','2030-01-03','10:00','11:00','lodging')]
+     assert text.endswith('예약AB123')  # source itself is never rewritten
+@@ -39,8 +41,10 @@ def schema_for(text=TEXT):
+     agent_read.read(text, text.splitlines(), chat, today=date(2030, 1, 1))
+     return chat.schema['properties']['items']['items']
+ 
++# `[2026-11-06 병합]` 날짜는 모델 판단(2026-10-26 사용자 확정) — 답 항목에 연도 인용(`year_quote`) · 날짜 형식(`date_form`)이 있어야 한다
++#   (형식 칸 없는 옛 답은 `agent_read._grounded_date` 가 날짜를 버린다). 시험 자료를 그 계약으로 맞췄다 — 단언은 그대로다.
+ def item(**changes):
+-    value = dict(place_quote='덕수궁', day=1, date='2030-01-02', date_quote=TEXT,
++    value = dict(place_quote='덕수궁', day=1, date_quote=TEXT, year_quote='2030년', date_form='explicit_year', date='2030-01-02',
+                  start='13:30', end='14:30', time_quote=TEXT, kind='activity',
+                  locked=None, locked_quote=None)   # L07 I06: 명시 고정 칸은 필수(말이 없으면 null)
+     value.update(changes)
+diff --git a/final_project_cs/tests/unit/travel/test_i06_booked_only_not_locked.py b/final_project_cs/tests/unit/travel/test_i06_booked_only_not_locked.py
+index fa4d4550a..f24322032 100644
+--- a/final_project_cs/tests/unit/travel/test_i06_booked_only_not_locked.py
++++ b/final_project_cs/tests/unit/travel/test_i06_booked_only_not_locked.py
+@@ -137,5 +137,5 @@ def test_prompt_example_shows_booked_item_with_null_lock_and_version_is_bumped()
+     booked_items = [i for i in example["items"] if "예약 완료" in message and i["place_quote"] in message]
+     assert booked_items and all(i["locked"] is None and i["locked_quote"] is None for i in example["items"])
+     assert "never use booking words as locked_quote" in agent_read.SYSTEM
+-    assert agent_read.PROMPT_VERSION == "intake.agent_read.v3-booked-not-locked"
++    assert agent_read.PROMPT_VERSION == "intake.agent_read.v4-date-form"
+     assert agent_read.PROMPT_HASH == hashlib.sha256(agent_read.SYSTEM.encode()).hexdigest()
+diff --git a/final_project_cs/tests/unit/travel/test_i06_final_contract.py b/final_project_cs/tests/unit/travel/test_i06_final_contract.py
+index 2f00a69d8..a29791705 100644
+--- a/final_project_cs/tests/unit/travel/test_i06_final_contract.py
++++ b/final_project_cs/tests/unit/travel/test_i06_final_contract.py
+@@ -17,7 +17,7 @@ def test_inline_reader_prompt_identity_is_persisted_in_report():
+             self.system=system
+             return {'items': []}
+     c=Chat(); got=agent_read.read('서울 여행', ['서울 여행'], c, today=date(2026,10,25))
+-    assert got.report['prompt_version']=='intake.agent_read.v3-booked-not-locked'
++    assert got.report['prompt_version']=='intake.agent_read.v4-date-form'
+     assert got.report['prompt_template_hash']==hashlib.sha256(agent_read.SYSTEM.encode()).hexdigest()
+     assert got.report['prompt_hashes']==[hashlib.sha256(c.system.encode()).hexdigest()]
+ 
+diff --git a/final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py b/final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py
+index baf80b036..a6c2c3af5 100644
+--- a/final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py
++++ b/final_project_cs/tests/unit/travel/test_intake_agent_yearless_date.py
+@@ -1,8 +1,15 @@
+ """`[2026-10-28 전수검사 A13]` 읽기 에이전트가 해 없는 날짜(「10월 30일」)에 해를 골라 붙이면 그 해는 원문 근거가 없다.
+ 
+ 전에는 인용에 숫자가 있다는 이유만으로 `date_guessed` 가 거짓이라 모델이 고른 해가 확인 표시 없이 확인 화면으로 갔다.
+-값은 그대로 두고(머리줄 등 다른 곳의 해를 모델이 읽었을 수 있다) 확인 표시와 그 해를 밝힌 안내만 붙인다.
+-해가 인용에 적힌 날짜(「2026-10-22」 · 「2027년 1월 3일」 · 「'27년 1월 3일」)는 지금처럼 확인 표시 없이 간다."""
++해가 인용에 적힌 날짜(「2026-10-22」 · 「2027년 1월 3일」 · 「'27년 1월 3일」)는 지금처럼 확인 표시 없이 간다.
++
++`[2026-11-06 병합 — 날짜 형식은 모델 판단(2026-10-26 사용자 확정)]` 모델 답은 `date_quote` · `year_quote` · `date_form` · `date` 를 낸다
++(형식 칸 없는 옛 답은 날짜를 버린다 — `agent_read._grounded_date`).
++- 연도를 적었다(explicit_year)면서 연도 인용이 원문에 없으면 정책(연도를 적은 과거만 과거)대로 연도 없는 날 → 오늘 이후 처음 오는 그 날로 두고
++  확인 표시 + 「연도를 원문에서 확인하지 못해」 메모(`dates.resolve_dates`). 이 경우 A13 의 「값은 그대로」보다 사용자 확정 정책이 앞선다.
++- 연도 인용이 원문에 있지만 모델 날짜의 해와 다르면(「1027년」 인데 2027) A13 대로 값은 두고 확인 표시 + 그 해를 밝힌 안내(`pipeline._year_written`).
++- 머리줄에 적힌 해(「2027년 겨울 여행」)는 날짜 인용 밖이어도 연도 근거다 — 확인 표시하지 않는다.
++"""
+ from datetime import date
+ 
+ import pytest
+@@ -22,9 +29,9 @@ class Agent:
+         return self.answer
+ 
+ 
+-def _answer(day_line: str, iso: str):
+-    return {"items": [{"place_quote": "경복궁", "day": 1, "date": iso, "date_quote": day_line, "start": "10:00", "end": None,
+-                       "time_quote": "10:00", "kind": "activity"}],
++def _answer(day_line: str, iso: str, *, year_quote, form="explicit_year"):
++    return {"items": [{"place_quote": "경복궁", "day": 1, "date_quote": day_line, "year_quote": year_quote, "date_form": form, "date": iso,
++                       "start": "10:00", "end": None, "time_quote": "10:00", "kind": "activity"}],
+             "moves": [], "conditions": [], "preferences": [], "requests": ["register"], "missing": [],
+             "trip": {"party_size": None, "days": None, "nights": None}}
+ 
+@@ -33,21 +40,42 @@ def _date_row(rows):
+     return next(r for r in rows if r["field"] == "items[0].date")
+ 
+ 
+-@pytest.mark.parametrize("quote", ["10월 30일", "10월 30일 1230 출발", "10월 30일 예약번호 123456", "1027년 10월 30일"])
+-def test_model_picked_year_for_a_yearless_quote_is_flagged_for_review(quote):
+-    """해 없는 인용 · 해가 아닌 네 자리 숫자 · 모델 값과 다른 해(Codex 검토 지적)는 모두 확인 표시"""
++@pytest.mark.parametrize("quote", ["10월 30일", "10월 30일 1230 출발", "10월 30일 예약번호 123456"])
++@pytest.mark.parametrize("year_quote", [None, "2027"])
++def test_model_year_without_a_written_year_is_flagged_for_review(quote, year_quote):
++    """해 없는 인용 · 해가 아닌 네 자리 숫자 — 모델이 explicit_year 라 해도 연도 근거가 원문에 없으면 다가오는 그 날 + 확인 표시"""
+     text = f"{quote}\n10:00 경복궁"
+-    rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, "2027-10-30")), agent_mode="on", position=0)
++    rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, "2027-10-30", year_quote=year_quote)), agent_mode="on", position=0)
++    row = _date_row(rows)
++    assert row["value"] == "2026-10-30"                    # 오늘(10-16) 이후 처음 오는 10월 30일
++    assert row["needs_review"] is True
++    assert "2026" in (row["note"] or "") and "연도" in row["note"]
++
++
++def test_model_year_differing_from_the_quoted_year_keeps_the_value_and_is_flagged():
++    """연도 인용(「1027년」)은 원문에 있지만 모델 해(2027)와 다르다(Codex 검토 지적) — 값은 두고 확인 표시와 그 해를 밝힌 안내"""
++    quote = "1027년 10월 30일"
++    rows = read_source(f"{quote}\n10:00 경복궁", today=TODAY, agent=Agent(_answer(quote, "2027-10-30", year_quote="1027년")),
++                       agent_mode="on", position=0)
+     row = _date_row(rows)
+     assert row["value"] == "2027-10-30"                    # 값은 바꾸지 않는다
+     assert row["needs_review"] is True
+     assert "2027" in (row["note"] or "") and "해" in row["note"]
+ 
+ 
+-@pytest.mark.parametrize("quote,iso", [("2026-10-22", "2026-10-22"), ("2027년 1월 3일", "2027-01-03"), ("'27년 1월 3일", "2027-01-03"),
+-                                       ("27년 1월 3일", "2027-01-03"), ("2027.1.3", "2027-01-03")])
+-def test_quote_with_a_written_year_is_not_flagged(quote, iso):
++@pytest.mark.parametrize("quote,year_quote,iso", [("2026-10-22", "2026", "2026-10-22"), ("2027년 1월 3일", "2027년", "2027-01-03"),
++                                                  ("'27년 1월 3일", "'27년", "2027-01-03"), ("27년 1월 3일", "27년", "2027-01-03"),
++                                                  ("2027.1.3", "2027", "2027-01-03")])
++def test_quote_with_a_written_year_is_not_flagged(quote, year_quote, iso):
+     text = f"{quote}\n10:00 경복궁"
+-    rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso)), agent_mode="on", position=0)
++    rows = read_source(text, today=TODAY, agent=Agent(_answer(quote, iso, year_quote=year_quote)), agent_mode="on", position=0)
+     row = _date_row(rows)
+     assert row["value"] == iso and row["needs_review"] is False
++
++
++def test_year_written_in_a_header_line_is_grounded():
++    """머리줄의 해 — 날짜 인용(「1월 3일」) 밖에 있어도 모델이 인용한 연도 조각이 원문에 있으면 적힌 해다"""
++    text = "2027년 겨울 여행\n1월 3일\n10:00 경복궁"
++    rows = read_source(text, today=TODAY, agent=Agent(_answer("1월 3일", "2027-01-03", year_quote="2027년")), agent_mode="on", position=0)
++    row = _date_row(rows)
++    assert row["value"] == "2027-01-03" and row["needs_review"] is False
+diff --git a/final_project_cs/tests/unit/travel/test_intake_date_quote_grammar.py b/final_project_cs/tests/unit/travel/test_intake_date_quote_grammar.py
+index 2915653de..25872b83f 100644
+--- a/final_project_cs/tests/unit/travel/test_intake_date_quote_grammar.py
++++ b/final_project_cs/tests/unit/travel/test_intake_date_quote_grammar.py
+@@ -18,7 +18,10 @@ from app.infrastructure.llm_failover import strict_schema
+ 
+ 
+ def _raw(**item):
+-    base = {"place_quote": "합성궁", "day": 1, "date": None, "date_quote": None, "start": "10:00", "end": "11:00",
++    # `[2026-11-06 병합]` 날짜는 모델 판단(2026-10-26 사용자 확정) — 답 항목에 연도 인용(`year_quote`) · 날짜 형식(`date_form`)이 있어야 한다
++    #   (형식 칸 없는 옛 답은 `agent_read._grounded_date` 가 날짜를 버린다). 시험 자료를 그 계약으로 맞췄다 — 단언은 그대로다.
++    base = {"place_quote": "합성궁", "day": 1, "date": None, "date_quote": None, "year_quote": None, "date_form": None,
++            "start": "10:00", "end": "11:00",
+             "time_quote": "오전 10시~11시", "kind": "activity", "locked": None, "locked_quote": None}
+     return {"guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
+             "pieces": [{"kind": "plan_item", "quote": "오전 10시~11시 합성궁"}], "items": [{**base, **item}], "moves": [],
+@@ -38,7 +41,8 @@ def test_a_dated_item_without_a_date_quote_is_not_generated():
+     assert not _admits(_raw(date="2031-03-04", date_quote=""))
+ 
+ 
+-@pytest.mark.parametrize("item", [{"date": None, "date_quote": None}, {"date": "2031-03-04", "date_quote": "2031년 3월 4일"}])
++@pytest.mark.parametrize("item", [{"date": None, "date_quote": None},
++                                  {"date": "2031-03-04", "date_quote": "2031년 3월 4일", "year_quote": "2031년", "date_form": "explicit_year"}])
+ def test_undated_and_quoted_items_are_generated(item):
+     assert _admits(_raw(**item))
+ 
+diff --git a/final_project_cs/tests/unit/travel/test_llm_date_form.py b/final_project_cs/tests/unit/travel/test_llm_date_form.py
+index c82e4cdbf..7e84695d5 100644
+--- a/final_project_cs/tests/unit/travel/test_llm_date_form.py
++++ b/final_project_cs/tests/unit/travel/test_llm_date_form.py
+@@ -44,12 +44,15 @@ def _all_past(value):
+ 
+ 
+ def test_schema_asks_the_model_for_the_date_form_and_the_year_quote():
+-    item = agent_read.SCHEMA["properties"]["items"]["items"]
+-    assert {"date_form", "year_quote"} <= set(item["required"])
+-    assert item["properties"]["date_form"]["enum"] == ["explicit_year", "relative", "yearless", None]
+-    order = list(item["properties"])
+-    # 인용을 먼저 적고 → 판단 → 값(작은 모델이 근거를 보고 고르게)
+-    assert order.index("date_quote") < order.index("year_quote") < order.index("date_form") < order.index("date")
++    # `[2026-11-06 병합]` 항목 스키마는 I05 의 두 갈래(날짜 없음 · 날짜+인용, `agent_read._dated_items`)다 — 두 갈래 모두 같은 칸 순서를 지킨다
++    branches = agent_read.SCHEMA["properties"]["items"]["items"]["anyOf"]
++    assert len(branches) == 2
++    for item in branches:
++        assert {"date_form", "year_quote"} <= set(item["required"])
++        assert item["properties"]["date_form"]["enum"] == ["explicit_year", "relative", "yearless", None]
++        order = list(item["properties"])
++        # 인용을 먼저 적고 → 판단 → 값(작은 모델이 근거를 보고 고르게)
++        assert order.index("date_quote") < order.index("year_quote") < order.index("date_form") < order.index("date")
+ 
+ 
+ def test_a_number_elsewhere_in_the_text_is_not_a_written_year():
+diff --git a/final_project_cs/wiki/external/intake-explicit-lock.md b/final_project_cs/wiki/external/intake-explicit-lock.md
+index 109eed8be..ab124fa38 100644
+--- a/final_project_cs/wiki/external/intake-explicit-lock.md
++++ b/final_project_cs/wiki/external/intake-explicit-lock.md
+@@ -8,7 +8,7 @@
+ - D-025 — 모델(`agent_read`)이 항목별 `locked`(true/false/null)와 `locked_quote` 를 분류합니다. 코드는 인용이 원문에 글자 그대로 있는지(`ground`)와, 그 인용이 규칙이 읽은 **예약 사실의 근거 조각**(`items[n].booked` · `items[n].booking_no` 값 줄의 evidence 범위)과 겹치지 않는지(`pipeline._agent_rows`)만 확인합니다. 겹치면 고정 · 고정 안 함 값 줄을 만들지 않고 `reading.agent.dropped.locked_booking` 에 셉니다. 뜻을 다시 판정하거나 키워드로 재파싱하지 않습니다.
+ - 인용 없음 · 빈 인용 · 원문 밖 인용 · bool 아님 → 값 줄 없음(`dropped.locked`).
+ - 한 항목에서 버려도 다른 항목의 명시 고정은 그대로 둡니다.
+-- 프롬프트: `intake.agent_read.v3-booked-not-locked` — 예시 메시지에 예약만 있는 항목(`1시에 점심(예약 완료)` → `locked:null`)을 넣고 「예약 말을 locked_quote 로 쓰지 않는다」를 명시합니다. 판·템플릿 해시·렌더 해시는 `reading.agent` 값 줄에 남깁니다(미등록 프롬프트 무음 대체 없음).
++- 프롬프트: `intake.agent_read.v4-date-form`(2026-11-06 병합 — v3 `intake.agent_read.v3-booked-not-locked` 에 날짜 인용 → `year_quote` → `date_form` → `date` 순서를 더함) — 예시 메시지에 예약만 있는 항목(`1시에 점심(예약 완료)` → `locked:null`)을 넣고 「예약 말을 locked_quote 로 쓰지 않는다」를 명시합니다. 판·템플릿 해시·렌더 해시는 `reading.agent` 값 줄에 남깁니다(미등록 프롬프트 무음 대체 없음).
+ 
+ ## 남은 한계 · 열린 질문
+ 
+diff --git a/final_project_cs/wiki/external/rest-endpoints/web-intakes.md b/final_project_cs/wiki/external/rest-endpoints/web-intakes.md
+index 9d18fbc7e..ffc0cd766 100644
+--- a/final_project_cs/wiki/external/rest-endpoints/web-intakes.md
++++ b/final_project_cs/wiki/external/rest-endpoints/web-intakes.md
+@@ -32,7 +32,7 @@ domain: travel
+ 
+ 읽는 순서(원본마다): 규칙 → **남은 줄만** 모델에 보내 원문 조각을 인용하게 함(원문에 글자 그대로 없는 인용은 버린다) →
+ 날짜(적힌 날짜 > 일차 > 상대 날짜, 해가 없으면 다가오는 날 + 확인. 어디에도 없으면 `trip.ask_first_day` — 지어내지 않는다) →
+-  ★`[2026-10-26 사용자 지시 · Codex 검토]` 읽기 에이전트가 읽은 날짜는 **형식을 모델이 판단**한다 — 항목마다 `date_quote` → `year_quote`(고객이 적은 연도 조각, 머리줄 가능) → `date_form`(`explicit_year` · `relative` · `yearless`) → `date`. 코드는 원문을 숫자 · 낱말로 다시 읽지 않고 인용이 원문에 있는지만 본다: `explicit_year` 는 `year_quote` 가 원문에 있을 때만 적힌 연도(지난 날이면 전부 과거 가드 대상, 근거 `how: written`) — 없으면 연도 없는 날로 둔다(`reading.agent` 의 `dropped.date_year`), `relative` 는 모델이 오늘에서 센 날(지난 날 포함, `how: agent_relative` · 확인 필요), `yearless` 는 월 · 일만 받아 오늘 포함 다가오는 날(`how: year_filled` · 확인 필요, 2월 29일은 다음 윤년). 형식 칸이 없는 답은 날짜를 버린다(`dropped.date_form`), 달력에 없는 날(「2/30」)은 날짜 모름 — 다른 일정의 첫날로 채우지 않는다(`how: unknown`, 메모에 그 날짜 인용; 채우면 전부 과거 관문이 지어낸 날로 걸렸다, `[2026-10-26 재병합 검토]` `92541686d`). ☆전에는 모델 연도 숫자가 본문 아무 곳에 있으면(「입장료 2026원」) 적힌 연도로 봤다 →
++  ★`[2026-10-26 사용자 지시 · Codex 검토]` 읽기 에이전트가 읽은 날짜는 **형식을 모델이 판단**한다 — 항목마다 `date_quote` → `year_quote`(고객이 적은 연도 조각, 머리줄 가능) → `date_form`(`explicit_year` · `relative` · `yearless`) → `date`. 코드는 원문을 숫자 · 낱말로 다시 읽지 않고 인용이 원문에 있는지만 본다: `explicit_year` 는 `year_quote` 가 원문에 있을 때만 적힌 연도(지난 날이면 전부 과거 가드 대상, 근거 `how: written`) — 없으면 연도 없는 날로 둔다(`reading.agent` 의 `dropped.date_year`), `relative` 는 모델이 오늘에서 센 날(지난 날 포함, `how: agent_relative` · 확인 필요), `yearless` 는 월 · 일만 받아 오늘 포함 다가오는 날(`how: year_filled` · 확인 필요, 2월 29일은 다음 윤년). 형식 칸이 없는 답은 날짜를 버린다(`dropped.date_form`), 달력에 없는 날(「2/30」)은 날짜 모름 — 다른 일정의 첫날로 채우지 않는다(`how: unknown`, 메모에 그 날짜 인용; 채우면 전부 과거 관문이 지어낸 날로 걸렸다, `[2026-10-26 재병합 검토]` `92541686d`). ☆전에는 모델 연도 숫자가 본문 아무 곳에 있으면(「입장료 2026원」) 적힌 연도로 봤다 → ★`[2026-11-06 병합 — 전수검사 A13 과 함께]` 연도를 적은 날(`how: written`)이라도 모델 날짜의 해가 모델이 인용한 연도 조각(`year_quote`, 없으면 `date_quote`)에 적힌 해와 다르면(「1027년」인데 2027) 값은 두고 확인 필요로 바꾼다(`how: agent_year`, 「해가 적혀 있지 않아 …년으로 두었어요」, `pipeline._year_written` · `cb284d301`). 머리줄의 해(「2027년 겨울 여행」)와 줄인 해(「'26」 · 「26년」)도 적힌 해다. 연도 없는 날(`--MM-DD`)은 위 `year_filled` 그대로다. 생성 문법은 I05 두 갈래(`agent_read._dated_items` — 날짜를 내면 인용 필수)에 이 날짜 칸 순서와 I06 `locked` · `locked_quote` 를 함께 싣는다(프롬프트 판 `intake.agent_read.v4-date-form`).
+ 장소(★`[2026-10-22 정정 — D-CS-021]` 그 고객이 고친 별칭 → 대표 장소 정답표 → 우리 장소 표 정확 일치 → **공용 별칭(활동 팀 별칭 CSV + 306 표, 한 곳만 가리킬 때)** → 자모 오타 → 관광공사 서울 · 요식 원장 → 카카오로 이름 찾고 관광공사 재확인 → 관광공사에 없으면 카카오 값을 그 항목에만
+ → 이름이 특정하지 않으면(「한강 카약」·「북한산 둘레길」) **종류가 맞는 후보 중 같은 날 앞뒤 일정에 가장 가까운 곳** — 카카오 근처 거리순 재검색 포함, 확인 필요).
+ ★후보는 원문을 좁혀 찾기가 모두 실패한 뒤에만 쓴다 — 「광장시장 빈대떡」은 광장시장 + 항목 종류 식사(가게를 지어내지 않는다).
+diff --git a/final_project_cs/wiki/external/trip-chat-context.md b/final_project_cs/wiki/external/trip-chat-context.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/external/trip-chat-context.md
+index 4d54c2b3e..91c0a0a0a 100644
+--- a/final_project_cs/wiki/external/trip-chat-context.md
++++ b/final_project_cs/wiki/external/trip-chat-context.md
+@@ -142,7 +142,6 @@ domain: travel
+ - 되돌리기(`rollback`) 해석에 되돌릴 변경이 없으면(처음 판 그대로, 가리킨 일정이 처음 그대로) 입력 대기(`ask_rollback`)로 남기지 않고 `answered`(reason `nothing_to_undo`)로 「일정은 바꾸지 않았어요」를 답한다(`trip_messages.NothingToUndo`, `conversation_work` rollback 분기). 뒤 변경이 끼어 있어 확인이 필요한 경우는 계속 `ask_rollback`이다. 보류 제안의 승인·거부는 계속 `/proposals/{id}/choose`로만 결정한다.
+ - 장소 행동(`apply_change`·`propose_alternatives`·`replace_named`)의 `time_edit`는 실행되지 않는다(`time_ops`는 `change_time`만 읽는다). 그래서 이 칸이 실행할 수 없는 조합(경계와 범위 불일치, reflow가 아닌 `continue_previous`)이어도 해석 전체를 `DecisionFailed`로 버리지 않는다 — 인용·시각·형식 검증은 그대로 한다. 시간·날짜 범위(`change_scope=time|date`)라 `change_time`으로 옮겨지는 경우와 `change_time`은 이 조합을 계속 거절한다(`edit_intent._executes_time_edit`).
+ - 대신 그 해석은 장소를 바꾸지 않고 「다른 곳으로 바꿀지, 시각을 옮길지」 되묻는다(`edit_intent.ask_on_conflict` → `clarify`, 기록 `temporal_conflict`, 일정은 그대로). 새 장소 이름(`destination_text`)이나 실내·야외 조건(`place_setting`) 없이 시각만 담긴 `apply_change`·`propose_alternatives`도 같은 되묻기다(`time_without_place` — 실 E4B D04 「N서울타워를 1월 3일 오후 2시에 가는 걸로 바꿔줘」가 덕수궁으로 바뀌었다). 새 장소를 말한 장소+시간 요청(`replace_named`, 이름·조건이 있는 교체)은 그대로 둔다. 근거: 2026-10-26 integ-v10 실 E4B T16 2회, 「네, 제안한 일정 변경을 승인해요」 → `apply_change` + `shift`/`continue_previous=true` → escalated(decision_failed).
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ - 한 시각 바꾸기 인용에 서로 다른 시각이 둘 이상 `[2026-10-26 묶음 L · 수용 X02]`: 실행될 절대 시각(`time_edit.time`, scope item · 경계 있음)의 인용(`evidence`) 안 시각 언급을 하나씩 `validate` 와 같은 재계산(`fact_check.recompute_time`)으로 돌려 서로 다른 값이 둘 이상이면, 인용이 값을 하나로 정하지 못한 것으로 보고 바꾸지 않고 되묻는다(`edit_intent.ask_on_clock_ambiguity` → `clarify`, 기록 `clock_ambiguity` `{reason: multiple_clocks, clocks, time, evidence}`, 선택지 없음 — 다른 일정 「다른 곳으로」 목록을 붙이지 않는다). 코드는 어느 시각이 맞는지 고르지 않는다. 기준 시각(「12시에 있는 …」) · 기간 끝(「1시부터 3시까지」) · 정정(「1시 말고 2시」) 같은 역할은 인용으로 입증되지 않으므로 빼 주지 않는다(보수적 — Codex 결정 E2). 「N시간」(길이)은 시각 언급이 아니다. 인용의 첫 시각이 모델 값과 다르면 종전대로 `validate` 가 해석 실패(`temporal clock disagrees with evidence`)로 막는다. 근거: J 실 E4B 2차 X02 「인사동을 오후 1시로 바꾸면서 동시에 낮 12시로 해줘」 → time 13:00 · 인용 = 문장 전체 → 13:00 으로 저장됐다. 시험 `tests/unit/travel/test_chat_clock_ambiguity.py` · `tests/e2e/test_chat_edit_web.py::test_two_different_times_in_one_time_change_are_asked_back_and_nothing_is_saved`.
+ - 범위 경계 시각을 한 일정 시간 변경에 붙임 `[2026-10-26 fix5 · 수용 T04]`: 실행될 시간 변경(`time_edit` 경계 있음)이 `scope=range` 가 아닌데 `anchor_kind=time` · `relation=before/after` · 유효한 `anchor_time` 이면, 그 시각은 범위 경계이지 새 시작이 아니다(change_time 의 새 시작은 `relation=at` 의 `anchor_time`). 한 일정만 옮길지 그 시각 전후 일정 전부를 옮길지 해석이 정하지 못한 것으로 보고 바꾸지 않고 되묻는다(`edit_intent.ask_on_range_anchor` → `clarify`, 기록 `range_anchor_conflict` `{reason: range_boundary_on_one_item, anchor_time, relation, scope, boundary}`, 선택지 없음 — 「다른 곳으로」 목록을 붙이지 않는다). 범위(`scope=range`)로 고쳐 실행하지 않는다(출력 수리 금지 — Codex 결정 G2). 방어로 `chat_edit.ops_for` 는 같은 칸 모양에서 한 일정을 새 시작 · 그 일정만의 이동으로 옮기지 않고 `need_target` 으로 거절한다. 근거: J 실 E4B 2차 · rm9 재시험 T04 「1월 2일 오후 2시 이전 일정들을 전부 한 시간 당겨줘」 → change_time · 인사동 · start/item · anchor_time 14:00 · before → 인사동을 14:00 으로 옮기려 했다(겹침으로 거절됐지만 겹치지 않으면 저장). 시험 `tests/unit/travel/test_chat_range_anchor_conflict.py`.
+ - 범위 옮기기(2026-10-26 x600 6152ae77): `change_time`·대상 없음·검증된 `query`(예: 「일정 전부다 1시간씩 미뤄줘」 → `day=all`)는 기준 일정 없이 `scope=following`이 와도 기준을 되묻지 않고 범위 이동이다(`edit_intent.time_ops` → `chat_edit.ops_for` query 경로). `query`가 없으면 기준을 되묻는다(`need_target`). 범위 안의 앞으로 시작할 활동·식사를 같은 분만큼 옮기고, 고객 고정·예약·이미 시작한 일정은 그대로 두며 답에 「그대로 둔 일정」으로 보인다. 하나라도 자정을 넘거나 지난 시각이 되면 전부 그대로 둔다(`crosses_midnight`·`time_in_past`), 겹침은 중앙 저장기가 거절한다. 옮길 일정이 없고 보호 일정만 있으면 `range_kept`. 대상도 범위도 없는 「1시간씩 늦춰줘」는 화면 선택이 있으면 그 일정, 없으면 되묻는다. 결정은 Codex 검토로 정했다.
+@@ -173,11 +172,9 @@ domain: travel
+   - (b) `anchor_kind=time` · `anchor_item=none` · `relation=at` · `anchor_time=HH:MM`: `chat_edit.ops_for`가 새 시작으로 실행한다. before/after(범위 경계)는 낼 수 없다.
+ - (b)의 `anchor_time`도 `validate`가 `time`과 같은 인용 재계산(`fact_check.recompute_time`)으로 확인한다(`edit_intent._shift_start_clock`). 인용과 다르거나 인용에 시각이 없으면 해석 실패로 끝나고 일정은 그대로다. 문장 낱말 규칙은 없다.
+ - 실 E4B(로컬, `decide` 직접 호출): (a)만 열었을 때 「오후 5시 30분」 2/2가 여전히 `time=""` · `minutes=30`이었다. (b)를 연 뒤 1/1이 `anchor_time=17:30`으로 17:30에 옮겼다. 유료 넘김 스키마(`plain=True`)는 바뀌지 않는다. 시험은 `tests/unit/travel/test_chat_absolute_clock_move_grammar.py`, 보고서는 `wiki/records/reports/2026-10-28_timemove_로컬E4B_절대시각.md`다.
+-=======
+ 
+ ## 2026-10-26 채팅 수정의 지난 날짜 · 지난 일정 (과거 날짜 가드레일 확장 · 삭제만)
+ 
+ - `[2026-10-26 사용자 확정]` 채팅 수정(시각 옮기기 · 넣기 · 읽기 에이전트 넣기)이 **지난 날짜 · 시각**을 내면 적용하지 않고 `status: clarify` · `reason: time_in_past` 로 「혹시 오타 아닌가요? …」를 답한다. `choices` 는 같은 시각을 지키는 가장 가까운 앞으로의 여행 날짜(여행 날짜에 없으면 오늘 · 내일) 최대 `travel.chat_edit.past_date_choices` 개, `choices_title` 은 「혹시 오타 아닌가요?」. 각 선택지는 기존 `label` · `message`(누르면 보낼 문장, 예 「경복궁 3일차(1월 3일) 10:00으로 옮겨줘」) · 옮기기면 서버가 확인한 `item_id`. 후보가 없으면 버튼 없이 앞으로의 날짜를 묻는다. [기록](../records/reports/2026-10-26_past-date-guard-extension.md)
+ 
+ - `[2026-10-26 사용자 확정 — 삭제만]` 채팅이 **지난 일정**(끝 ≤ 지금)을 고치려 하면(장소 바꾸기 · 고정/풀기 · 순서 바꾸기 · 시각 옮기기) 적용하지 않고 `reason: item_in_past` 「「X」은(는) 이미 지난 일정이라 고치지 않았어요. 지난 일정은 기록으로 두고 뺄 수만 있어요 — 다시 하려면 새 일정으로 추가해 주세요.」로 답한다. 이미 지난(고정) 일정 빼기는 아직 경로가 없어 그렇게 답한다(`frozen_refusal`). [기록](../records/reports/2026-10-26_past-edit-delete-only.md)
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+diff --git a/final_project_cs/wiki/index.md b/final_project_cs/wiki/index.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/index.md
+index ab6c70731..c737470fb 100644
+--- a/final_project_cs/wiki/index.md
++++ b/final_project_cs/wiki/index.md
+@@ -50,7 +50,6 @@ domain: travel
+ 2026-10-29 ST4F-718 저장 정책 독립검토: 웹1241/1241·Edge22/22=100%; 구버전 중복/raw ID 재생성·queued open 무응답 재현, 기존 필수2/3=66.7% HOLD 유지. [보고·인계](records/reports/2026-10-29_st4f718-storage-policy-review.md).
+ # cs 프로젝트 구현 wiki
+ 
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ 2026-10-29 ST4F-728 늦은 게스트 응답 차단: 웹1227/1227·모방화면11/11·필수3/3=100%,운영수락남음. [보고](records/reports/2026-10-29_st4f728-guest-logout.md).
+ 
+ 2026-10-29 ST4F-597 메뉴 선택 고침 독립 검토·양원격 반영 `07e79f1987`: Dining258/258·판정39/39·필수3/3=100%,운영 종결 보류. [보고](records/reports/2026-10-29_st4f597-independent-review.md).
+@@ -60,7 +59,7 @@ domain: travel
+ [2026-10-27 서빙 속도] x600 채팅 접수 157건: 「읽는 중」 p50 20.4초 · p95 62.3초 — 모델 읽기 p50 7.9초, 위험 점검+먼저 채우기 p50 10.1초. 후보 2건(위험 점검 동시 `4f8453ae` · 대안 준비 앞단 양보 `665e17c5`), push · 배포 안 함. [측정 · 병목 순위 · 남은 결정](records/reports/2026-10-27_계획서빙_속도_병목측정.md).
+ 
+ [2026-10-26 수정] 계획 읽기가 실패(`fatal` · x600 `reading_model_failed`, 막대 8/9줄)인데 질문 붙잡기 때문에 「계획을 다 읽었어요」·「읽어 온 계획 확인하기」가 뜨던 결함 — 실패면 붙잡지 않고 실패 화면으로. vitest 1205/1205=100%(rebase 뒤), Playwright 36/36=100%(mock). [원인·근거·시험](records/reports/2026-10-26_계획읽기_실패인데_다읽었어요_수정.md).
+-=======
++
+ 2026-10-26 [원격 role-manager a465c6022 위 재병합 · 전체 시험](records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — `integ/rebase-on-manager-a465c6022-20261026` HEAD `92541686d`, 코드 충돌 0 · wiki 4파일 양쪽 보존, unit/travel 7740/7740 · gates 608/608 · vitest 1205/1205; Codex 지적(달력에 없는 날 첫날 채움) 수정; ahead 10/behind 0, push 0.
+ 
+ 2026-10-26 (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183; role-manager 원격 전진(웹 5파일 충돌)으로 push 0, v9 로컬 서빙 유지(agent_read 프롬프트 충돌 · E4B 재측정 필요).
+@@ -69,7 +68,6 @@ domain: travel
+ 2026-10-26 [지난 일정은 삭제만](records/reports/2026-10-26_past-edit-delete-only.md) — 끝난 일정은 이름 포함 수정 불가 · 삭제만(서버 `plan_edit` · 웹 `pastEdit` · 채팅); 이미 지난 고정 일정 삭제 경로는 남음.
+ 
+ 2026-10-26 [과거 날짜 가드레일 확장](records/reports/2026-10-26_past-date-guard-extension.md) — 모델 연도 없는 날짜 다가오는 날·채팅 「오타 아닌가요?」 choices·`plan_edit` 지금 이후/`no_upcoming_items`; 지난 고정 일정 이름·삭제 경로는 남음.
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+ 
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
+ 
+diff --git a/final_project_cs/wiki/log.md b/final_project_cs/wiki/log.md
+remerge CONFLICT (content): Merge conflict in final_project_cs/wiki/log.md
+index 71f6ef695..239fafba2 100644
+--- a/final_project_cs/wiki/log.md
++++ b/final_project_cs/wiki/log.md
+@@ -1,15 +1,12 @@
+ ---
+ 
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ - 2026-10-27: [C 컨트롤러 · 감시 · 실패조치 전수검사](records/reports/2026-10-27_C_컨트롤러감시실패조치_전수검사.md) — 결함 24건 중 11건 고침(45.8%, P1 8/10): 승인 · 자동 적용 저장 실패 → escalated(action_storage_failed), 훈련 문자 판정 공용화(실제 사건 표지 · 조건 꼬리 · 장소 이름, 전국 50,070건 실측), 배포 마이그레이션 lock_timeout · 교착 재시도 · deploy.log 원인 한 줄, 판 쓰기 길 save_failed(REST 503). role-manager fast-forward 후보 · push 전.
+ 
+ - 2026-10-27: [장소 · 운영시간 · 장소 검색 품질 전수검사](records/reports/2026-10-27_장소_운영시간_품질_전수검사.md) — 결함 9건 중 4건 수정(44%, 후보 브랜치 `fix/place-quality-20261027`, push 안 함). 서울 이름 검색 적중 34/78=43.6% → 50/78=64.1%(로컬 DB만) · 부산은 범위 밖이라 웹 검색에서 「서울 밖(부산)」으로 알림 · 운영시간 known 69.3% → 72.7% · 관광공사 빈 값이 채운 글을 덮지 않음. `catalog_hours` 73행이 10-26 교정과 달라 고객 경로에 옛 값이 남아 있음(126535 토 22:30 vs 23:00) — 쓰기 승인 뒤 동기화 필요.
+ 
+-=======
+ - 2026-10-26: [원격 role-manager a465c6022 위 재병합 · 전체 시험](records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — `07dcebe35`를 `a465c6022`에 병합(`877e6723b`, rebase 아님), wiki 4파일 수동 해결 · 충돌 표시 0, 에이전트의 달력에 없는 날짜를 「모름」으로(`92541686d`, Codex 2회차 지적 · 3회차 OK). DB 없는 시험 범위 실패 0, push 안 함.
+ - 2026-10-26: (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — DB 없는 전체 시험 실패 0(이전 가지도 0), 원격 role-manager `1e4e3b246` 전진으로 push · PR 안 함, 로컬 서빙 교체 보류. Codex 1회 동의.
+ - 2026-10-26: [날짜 읽기를 모델(E4B) 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 계획 읽기 에이전트 스키마에 `year_quote` · `date_form`, 프롬프트 날짜 절 재작성(예시 날짜는 오늘에서 계산), `_year_written`(본문 아무 줄의 연도 숫자) · 숫자 없는 인용 = 상대 판정 제거. 2/29 다음 윤년 · 없는 날짜는 모름. 로컬 실측 · 단위 시험 · 커밋만, 서빙 교체 · 실서버 확인 전.
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+ - 2026-10-26: [「예시 불러오기」 1일차 오늘 · 2일차 내일](records/reports/2026-10-26_웹_예시불러오기_오늘내일.md) — 누른 날(서울) · 그다음 날 날짜로, 사용자가 준 형식(하루 세 곳 · 끝 시각 없음)으로 채운다. 오늘 지난 시각 일정은 서버가 등록하되 위험 점검에서 뺀다.
+ 
+ - 2026-10-25: 계획 담기 화면 보조 칸 운영 스위치(ST4F-739) 병합 · 배포 — PR #98 develop `beb726b99` · PR #99 main `144bcfff1`(검사 13 통과 · 실패 0), main push 검사 성공 · CD (AWS) 성공(21:06). 관리 콘솔 · 배포 화면은 사람 확인 전. [기록 5절](records/reports/2026-10-25_계획담기_보조칸_운영스위치_ST4F-739.md).
+diff --git a/wiki/handoff/index.md b/wiki/handoff/index.md
+remerge CONFLICT (content): Merge conflict in wiki/handoff/index.md
+index 6053cb98f..448298d4d 100644
+--- a/wiki/handoff/index.md
++++ b/wiki/handoff/index.md
+@@ -157,13 +157,12 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
+ 2026-10-29 ST4F-718 저장 정책 독립검토: 웹1241/1241·Edge22/22=100%; 구버전 중복/raw ID 재생성·queued open 무응답 재현, 기존 필수2/3=66.7% HOLD 유지. [보고·인계](2026-10-29_st4f718-storage-policy-review.md).
+ # 세션 인계 안내 목차
+ 
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ 2026-10-29 ST4F-728 로그아웃 경합 수정·웹1227/1227·필수3/3=100%,종결0·589담당유지. [인계](2026-10-29_st4f728-guest-logout.md).
+ 
+ 2026-10-29 ST4F-597 독립 검토·통합: Dining258/258·판정39/39·필수3/3=100%,팀·개인 role-manager `07e79f1987` 양쪽 반영. 운영 메뉴/수락 미확인·종결0. [인계](2026-10-29_st4f597-independent-review.md).
+ 
+ 2026-10-29 ST4F-711 백엔드 복구: 필수3/3=100%·PG동시성41/41=100%·웹1224/1224=100%, 팀·개인 role-manager 소스217da9ad0 양쪽 반영. 운영 인수·LB-09 원인 미확정. [인계](2026-10-29_st4f711-backend-gates.md).
+-=======
++
+ 2026-10-26 — [원격 role-manager a465c6022 위 재병합](2026-10-26_rebase-merge-on-role-manager-a465c6022.md): `07dcebe35` 병합(`877e6723b`) + 달력에 없는 에이전트 날짜 수정(`92541686d`); unit/travel 7740/7740 · gates 608/608 · vitest 1205/1205; ahead 10/behind 0 · push 0
+ 
+ 2026-10-26 — (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 보류](2026-10-26_merged-head-push-serving-decision.md): HEAD `2cccbfaef` unit/travel 7382/7382 · gates 607/607 · vitest 1183/1183(이전 가지도 실패 0). 원격 role-manager 가 `1e4e3b246` 으로 앞서 push 0 · PR 0, 로컬 서빙은 v9 유지(v10 미구성 · 무영향 미확인). Codex 동의.
+@@ -172,7 +171,6 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
+ 2026-10-26 — [지난 일정은 삭제만](2026-10-26_past-edit-delete-only.md): 서버·웹·채팅 일관 구현(관련 320/320 = 100%, vitest 1183/1183), Codex 2회 검토, 커밋만 · 원격 0/2.
+ 
+ 2026-10-26 — [과거 날짜 가드레일 확장](2026-10-26_past-date-guard-extension.md): 요구 1~4 구현·검증(관련 303/303 = 100%), Codex 검토 미수행(CLI 미로그인), 커밋만 · 원격 0/2.
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+ 
+ 2026-10-23 — [Dining 모호한 조건 질문·답 저장·재검증 3단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-clarifications.md): 원문과 현재 식사 선택지로 질문, 본인 접수·revision·run_id·서명 대조 뒤 선택/취소 저장과 새 검사 연결. 조건 정정은 해당 조건 행만 갱신하고 독립 영업 불가 보존, 늦은 웹 응답의 최신 상태 덮어쓰기 차단. 새 서버 29/29 = 100%, 관련 Python 212/214 = 99.1%(기존 실패 2), 웹 79/79 = 100%, 브라우저 모형 부품 6/6 = 100%, 타입·수정 파일 정적 검사 통과. 선택 구조·계약·인증 304/305 = 99.7%(Composer 미설치 1), 전체 계약 수집·전체 웹 lint·실DB 확인은 환경 한계 별도 기록. 백업 `_backup/2026-10-23_dining-clarifications/`. 세 보완 로컬 3/3 = 100%, 커밋·푸시·배포 안 함.
+ 
+diff --git a/wiki/index.md b/wiki/index.md
+remerge CONFLICT (content): Merge conflict in wiki/index.md
+index 2a0d8c8f3..431dd7f74 100644
+--- a/wiki/index.md
++++ b/wiki/index.md
+@@ -8,9 +8,8 @@ domain: travel
+ 
+ # guguroute wiki
+ 
+-<<<<<<< 1cf4542a1 (docs(wiki): 11-03 승인 삭제·복원 안내 문서 정정 (독립 검증 반영))
+ 2026-10-29 ST4F-728 로그아웃 경합 재현·차단: 웹1227/1227·화면11/11·필수3/3=100%,트래커종결0. [보고](../final_project_cs/wiki/records/reports/2026-10-29_st4f728-guest-logout.md).
+-=======
++
+ 2026-10-26 [원격 role-manager a465c6022 위 재병합 인계](handoff/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — HEAD `92541686d`, 시험 범위 실패 0, fast-forward 가능(ahead 10/behind 0) · push 0.
+ 
+ 2026-10-26 (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 보류 인계](handoff/2026-10-26_merged-head-push-serving-decision.md) — 시험 실패 0, 원격 전진으로 push 중단, 로컬 서빙 v9 유지; Codex 동의.
+@@ -19,7 +18,6 @@ domain: travel
+ 2026-10-26 [지난 일정은 삭제만 인계](handoff/2026-10-26_past-edit-delete-only.md) — 서버·웹·채팅 일관, Codex 2회 검토, 관련 320/320 · vitest 1183/1183; 커밋만.
+ 
+ 2026-10-26 [과거 날짜 가드레일 확장 인계](handoff/2026-10-26_past-date-guard-extension.md) — 연도 없는 날짜·채팅 되묻기·추가/수정 지금 이후 규칙, 관련 303/303; Codex 검토 미수행(미로그인), 커밋만.
+->>>>>>> 60af7a7d2 (docs(wiki): re-merge on role-manager a465c6022 — conflicts, Codex review, full DB-free test run, push readiness)
+ 
+ 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
+ 

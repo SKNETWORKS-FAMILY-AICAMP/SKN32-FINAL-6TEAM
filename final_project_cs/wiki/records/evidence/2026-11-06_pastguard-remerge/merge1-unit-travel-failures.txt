@@ -1,0 +1,13 @@
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_grounded_date_reaches_add_args_without_routing_today_override[2030-01-02 13:30~14:30 \ub355\uc218\uad81 \ucd94\uac00-2030-01-02]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_grounded_date_reaches_add_args_without_routing_today_override[\ub0b4\uc77c 13:30~14:30 \ub355\uc218\uad81 \ucd94\uac00-2030-01-02]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_multiday_hotel_identifiers_survive_ground_and_add
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_quoted_values_and_missing_date_contract[2030\ub144 1\uc6d4 2\uc77c \uc624\ud6c4 1\uc2dc 30\ubd84\ubd80\ud130 \uc624\ud6c4 2\uc2dc 30\ubd84\uae4c\uc9c0 \ub355\uc218\uad81\uc744 \ucd94\uac00\ud574\uc918]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_quoted_values_and_missing_date_contract[\ub0b4\uc77c 13:30~14:30 \ub355\uc218\uad81 \ucd94\uac00]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_quoted_values_and_missing_date_contract[\uc624\ub298 13:30~14:30 \ub355\uc218\uad81 \ucd94\uac00]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_quoted_values_and_missing_date_contract[2030-01-02 \ub355\uc218\uad81 13:30~14:30\n2030-01-03 \uc778\uc0ac\ub3d9 10:00~11:00]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_date_generation.py::test_ground_exact_value_remains_and_unquoted_value_is_still_dropped
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_intake_date_quote_grammar.py::test_undated_and_quoted_items_are_generated[item0]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_intake_date_quote_grammar.py::test_undated_and_quoted_items_are_generated[item1]
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_llm_date_form.py::test_schema_asks_the_model_for_the_date_form_and_the_year_quote
+ev/merge1/unit-travel.log:FAILED tests/unit/travel/test_llm_date_form.py::test_a_two_digit_year_the_model_quotes_keeps_the_past_date
+ev/merge1/gates.log:FAILED tests/security/test_no_infra_in_tracked_files.py::test_no_tracked_text_file_leaks_infrastructure

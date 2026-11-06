@@ -137,5 +137,5 @@ def test_prompt_example_shows_booked_item_with_null_lock_and_version_is_bumped()
     booked_items = [i for i in example["items"] if "예약 완료" in message and i["place_quote"] in message]
     assert booked_items and all(i["locked"] is None and i["locked_quote"] is None for i in example["items"])
     assert "never use booking words as locked_quote" in agent_read.SYSTEM
-    assert agent_read.PROMPT_VERSION == "intake.agent_read.v3-booked-not-locked"
+    assert agent_read.PROMPT_VERSION == "intake.agent_read.v4-date-form"
     assert agent_read.PROMPT_HASH == hashlib.sha256(agent_read.SYSTEM.encode()).hexdigest()

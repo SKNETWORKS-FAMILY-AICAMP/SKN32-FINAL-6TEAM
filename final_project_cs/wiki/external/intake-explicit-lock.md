@@ -8,7 +8,7 @@
 - D-025 — 모델(`agent_read`)이 항목별 `locked`(true/false/null)와 `locked_quote` 를 분류합니다. 코드는 인용이 원문에 글자 그대로 있는지(`ground`)와, 그 인용이 규칙이 읽은 **예약 사실의 근거 조각**(`items[n].booked` · `items[n].booking_no` 값 줄의 evidence 범위)과 겹치지 않는지(`pipeline._agent_rows`)만 확인합니다. 겹치면 고정 · 고정 안 함 값 줄을 만들지 않고 `reading.agent.dropped.locked_booking` 에 셉니다. 뜻을 다시 판정하거나 키워드로 재파싱하지 않습니다.
 - 인용 없음 · 빈 인용 · 원문 밖 인용 · bool 아님 → 값 줄 없음(`dropped.locked`).
 - 한 항목에서 버려도 다른 항목의 명시 고정은 그대로 둡니다.
-- 프롬프트: `intake.agent_read.v3-booked-not-locked` — 예시 메시지에 예약만 있는 항목(`1시에 점심(예약 완료)` → `locked:null`)을 넣고 「예약 말을 locked_quote 로 쓰지 않는다」를 명시합니다. 판·템플릿 해시·렌더 해시는 `reading.agent` 값 줄에 남깁니다(미등록 프롬프트 무음 대체 없음).
+- 프롬프트: `intake.agent_read.v4-date-form`(2026-11-06 병합 — v3 `intake.agent_read.v3-booked-not-locked` 에 날짜 인용 → `year_quote` → `date_form` → `date` 순서를 더함) — 예시 메시지에 예약만 있는 항목(`1시에 점심(예약 완료)` → `locked:null`)을 넣고 「예약 말을 locked_quote 로 쓰지 않는다」를 명시합니다. 판·템플릿 해시·렌더 해시는 `reading.agent` 값 줄에 남깁니다(미등록 프롬프트 무음 대체 없음).
 
 ## 남은 한계 · 열린 질문
 

@@ -1,0 +1,640 @@
+LLMDATE root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\mgr-merge-20261026-0045\final_project_cs
+........................................................................ [ 11%]
+........................................................................ [ 22%]
+........................FFFFFFFFFFFF.................................... [ 33%]
+...........................................................EEE.......... [ 45%]
+........................................................................ [ 56%]
+........................................................................ [ 67%]
+........................................................................ [ 79%]
+......................................F................................. [ 90%]
+..............................................EEE...........             [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_duplicate_dedupe_key_has_one_side_effect[outbox_worker_contract] _
+
+    @pytest.fixture()
+    def consumer_db() -> str:
+        tenant = "consumer_contract_" + uuid4().hex
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_consumer_idempotency_contract.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ ERROR at setup of test_concurrent_claims_have_one_side_effect[outbox_worker_contract] _
+
+    @pytest.fixture()
+    def consumer_db() -> str:
+        tenant = "consumer_contract_" + uuid4().hex
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_consumer_idempotency_contract.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ ERROR at setup of test_timeout_is_unknown_and_not_automatically_retried[outbox_worker_contract] _
+
+    @pytest.fixture()
+    def consumer_db() -> str:
+        tenant = "consumer_contract_" + uuid4().hex
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_consumer_idempotency_contract.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_____ ERROR at setup of test_case_message_is_redacted_in_db_api_and_audit _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002793A1A4C50>
+
+    @pytest.fixture()
+    def pii_case(monkeypatch):
+        original = settings_module.get_settings()
+        tenant = "test_pii_" + uuid4().hex
+        customer = uuid4()
+        configured = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: configured)
+        monkeypatch.setattr(security, "get_settings", lambda: configured)
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\security\test_pii_redaction_runtime.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ ERROR at setup of test_case_list_does_not_leak_across_customers_in_one_tenant _
+
+    @pytest.fixture()
+    def db():
+        tenant = "test_" + uuid4().hex
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\integration\controller\test_controller_integration.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+__ ERROR at setup of test_case_list_without_customer_stays_inside_the_tenant __
+
+    @pytest.fixture()
+    def db():
+        tenant = "test_" + uuid4().hex
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\integration\controller\test_controller_integration.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+================================== FAILURES ===================================
+_________________ test_no_active_prompt_outside_the_allowlist _________________
+
+    def test_no_active_prompt_outside_the_allowlist():
+>       stray = sorted(_active_keys() - set(ALLOWED_PROMPT_KEYS))
+                       ^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\contract\test_active_prompts_are_the_deployed_set.py:26: in _active_keys
+    with get_connection() as conn, conn.cursor() as cur:
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[activity_judge.alternative_order] _
+
+key = 'activity_judge.alternative_order'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[activity_judge.closure] _
+
+key = 'activity_judge.closure'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[activity_judge.disaster_effect] _
+
+key = 'activity_judge.disaster_effect'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[activity_judge.live_status] _
+
+key = 'activity_judge.live_status'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[activity_judge.operating_hours] _
+
+key = 'activity_judge.operating_hours'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[activity_judge.weather_sensitive] _
+
+key = 'activity_judge.weather_sensitive'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+___ test_each_allowed_key_has_exactly_one_active_version[flight.interpret] ____
+
+key = 'flight.interpret'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+___ test_each_allowed_key_has_exactly_one_active_version[lodging.interpret] ___
+
+key = 'lodging.interpret'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+___ test_each_allowed_key_has_exactly_one_active_version[response.generate] ___
+
+key = 'response.generate'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+_ test_each_allowed_key_has_exactly_one_active_version[response.review_tone] __
+
+key = 'response.review_tone'
+
+    @pytest.mark.parametrize("key", sorted(ALLOWED_PROMPT_KEYS))
+    def test_each_allowed_key_has_exactly_one_active_version(key):
+>       with get_connection() as conn, conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+__________________ test_deactivating_does_not_erase_history ___________________
+
+tmp_path = WindowsPath('C:/Users/kcxsz/AppData/Local/Temp/pytest-of-kcxsz/pytest-165/test_deactivating_does_not_era0')
+
+    def test_deactivating_does_not_erase_history(tmp_path):
+        """★내린 프롬프트도 행은 남아 있어야 한다 — 그때 무엇을 썼는지의 기록이다.
+    
+        ★`[2026-09-24]` 전에는 「DB 에 active=false 행이 하나라도 있나」를 셌다. 그건 **이 개발 DB 의
+          이력**을 본 것이지 코드가 지키는지를 본 게 아니라서, 빈 DB(CI)에서는 반드시 실패했다.
+          이제 **시험 안에서** 한 판을 올리고 새 판으로 바꾼 뒤, 옛 판이 지워지지 않고 `active=false`
+          로 남는지 본다. ★전부 **롤백되는 트랜잭션** 안에서 한다 — 배포 중인 프롬프트를 바꾸지 않는다.
+        """
+        import psycopg
+        from uuid import uuid4
+    
+        from app.tools.read_tools import register_prompt_files
+    
+        key, tag = "response.generate", uuid4().hex[:8]
+        folder = tmp_path / "response"
+        folder.mkdir()
+>       with get_connection() as conn:
+             ^^^^^^^^^^^^^^^^
+
+tests\contract\test_active_prompts_are_the_deployed_set.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+__________ test_customer_support_router_has_no_operator_credentials ___________
+
+    def test_customer_support_router_has_no_operator_credentials():
+        from app.domains.travel_ops.modules.web_account.admin_customer_api import build_router
+        app = FastAPI()
+        app.include_router(build_router())
+        customer = TestClient(app)
+        customer.cookies.set(auth.COOKIE, auth.issue(auth.Operator("operator", frozenset({"ops:introspect"}))))
+>       assert customer.get("/v1/web/support/inquiries").status_code == 401
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\security\test_admin_json_gateway.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:479: in get
+    return super().get(
+..\..\date_risk_env_312\Lib\site-packages\httpx\_client.py:1053: in get
+    return self.request(
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\date_risk_env_312\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\date_risk_env_312\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\date_risk_env_312\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\anyio\from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\date_risk_env_312\Lib\site-packages\anyio\from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\date_risk_env_312\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\date_risk_env_312\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\date_risk_env_312\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\date_risk_env_312\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\date_risk_env_312\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\date_risk_env_312\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\fastapi\routing.py:292: in app
+    solved_result = await solve_dependencies(
+..\..\date_risk_env_312\Lib\site-packages\fastapi\dependencies\utils.py:640: in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\starlette\concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\anyio\to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+..\..\date_risk_env_312\Lib\site-packages\anyio\_backends\_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+..\..\date_risk_env_312\Lib\site-packages\anyio\_backends\_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\modules\web_account\web_cookie.py:298: in require_identity
+    identity = authenticate(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\modules\web_account\web_cookie.py:213: in authenticate
+    identity = _identify(request, required=required, csrf=csrf)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\modules\web_account\web_cookie.py:287: in _identify
+    with get_connection() as conn, conn.transaction():
+         ^^^^^^^^^^^^^^^^
+..\..\date_risk_python_01\cpython-3.12.15-windows-x86_64-none\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('postgresql://unit:unit@127.0.0.1:1/unit',), kw = {}
+
+>   def denied(*a,**kw): raise RuntimeError('llmdate isolated runner: network/database denied')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: llmdate isolated runner: network/database denied
+
+..\..\llm-date-read-20261026\run_isolated.py:6: RuntimeError
+============================== warnings summary ===============================
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51
+  C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\llm-date-read-20261026\final-gates.xml -
+=========================== short test summary info ===========================
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_no_active_prompt_outside_the_allowlist
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[activity_judge.alternative_order]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[activity_judge.closure]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[activity_judge.disaster_effect]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[activity_judge.live_status]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[activity_judge.operating_hours]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[activity_judge.weather_sensitive]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[flight.interpret]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[lodging.interpret]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[response.generate]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[response.review_tone]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_deactivating_does_not_erase_history
+FAILED tests/security/test_admin_json_gateway.py::test_customer_support_router_has_no_operator_credentials
+ERROR tests/contract/test_consumer_idempotency_contract.py::test_duplicate_dedupe_key_has_one_side_effect[outbox_worker_contract]
+ERROR tests/contract/test_consumer_idempotency_contract.py::test_concurrent_claims_have_one_side_effect[outbox_worker_contract]
+ERROR tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried[outbox_worker_contract]
+ERROR tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit
+ERROR tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant
+ERROR tests/security/test_query_scope.py::test_case_list_without_customer_stays_inside_the_tenant
+13 failed, 617 passed, 1 warning, 6 errors in 81.07s (0:01:21)
+rc=1
