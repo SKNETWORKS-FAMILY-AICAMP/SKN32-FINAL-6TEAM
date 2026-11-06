@@ -557,6 +557,20 @@ wiki 누락 보강:
 
 - 2026-10-23 Dining 커밋·푸시 준비: 원격 `7284c42ad` 위 통합, Python 204/204·웹 79/79 통과. [최신 통합 검증](../../final_project_cs/wiki/records/reports/2026-10-23_dining-publish-validation.md).
 
+2026-10-25 — [잔여 비DB3후보 통합](2026-10-25_remaining-non-db-integration.md): 새격리본만 수정, F1/F2수정·실제현재baseline exact4 대조. 통합3/3, 회귀327/331·소켓차단4, 독립수정판검토/운영미검증.
+
+2026-10-25 — [F3 미해결·새 설계 검토 인계](2026-10-25_remaining-non-db-f3-unresolved.md): 원문 probe3실패 유지. 단일955개948통과/3실패/4bind차단. 완료 패키지가 아닌 현재 diff·동결해시·타임라인을 보존했습니다.
+
+2026-10-25 — [F3 독립 설계·회귀 수락 인계](2026-10-25_remaining-non-db-f3-acceptance.md): 새 후보만 변경, 원문·이전 실패 보존, 동등 스케줄 old RED/new GREEN과 정확 단일실행 분모를 분리했습니다. DB/외부실행 금지 유지.
+
+
+## 현재 누적 릴리스 준비 — 2026-10-25
+
+정확 history-preserving 비DB 누적 후보 준비 완료 / 릴리스 HOLD. 원문3실패·bind4차단·strict-budget 미수락 유지; admin/예약OFF는 wiki3경로 clean 병합 가능성만 확인(미적용). [최종 현황](2026-10-25_remaining-non-db-release-preparation.md).
+
+
+2026-10-25 — 관리자 예약 OFF/로컬 실행기 누적 격리 통합, 실제 실행·OFF 저장은 DB 대기. [최신 인계](2026-10-25_final-admin-non-db-integration.md).
+
 
 
 [2026-10-29 버스 scalar 독립 검토 인계](2026-10-29_bus-scalar-independent-continuation.md): 한 일·시험·제외·위험·통합 결과.
@@ -728,3 +742,12 @@ wiki 누락 보강:
 2026-10-31 C: 8차 하드링크 독립 검토(읽기 전용): 116개 inode·nlink·크기 일치, inode 24개 sha256 재계산 24/24 일치, 합계 7,315,361,792 B 일치, 실행 중 참조 0·final_workspace 대상 0. 위험: 보존 경로(_preserved bundle·backups 8개·_archive/place-quality 15개)가 작업 사본과 inode 18개 938,329,044 B 공유 — 분리·읽기 전용 지정은 사용자 결정. 변경·삭제 0. [보고서](../records/reports/2026-10-31_disk-round8-independent-review.md) · [인계](2026-10-31_disk-round8-independent-review.md).
 
 2026-10-31 C: 400GB 9차: 사용자 Temp 유휴 브라우저 자동화 프로필·WinGet·playwright 캐시 45개 735,547,156 B 삭제(실측 +749,658,112 B, 실행 중 2개 제외). 하드링크 반영 재고로 숨김 사용량 98.43GB 실측(현재 사용자 Appx 17.19GB 포함), 시스템 복원 DiskPercent 15%(153.31GB)·VSS 상한 도달 이벤트 확인(차분 영역 크기는 관리자 확인 필요). 여유 209.46GB=52.37%, 부족 190.54GB. 하드링크 추가 통합 0. [보고서](../records/reports/2026-10-31_c-drive-400gb-cleanup-round9.md).
+
+2026-10-25 v2 — [로컬 관리자 P1/P2 수정 인계](2026-10-25_local-admin-3300-v2.md). 전체 cmd 회귀·준비상태 경계 보완이며 실제 서비스·DB·예약 OFF 적용 확인과 구분합니다. 다음 독립 재검토는 부모가 새 child에 맡깁니다.
+
+2026-10-25 — [로컬 API·제품 관리자 3300 일괄 구성](2026-10-25_local-admin-3300.md). 예약 OFF 후보를 보존한 새 격리 사본이며 실제 서비스 시작·DB·외부 API·모델·push/배포는 승인 전입니다.
+
+2026-10-24 — [고객 운영시간 P1 후속 수정](2026-10-24_customer-hours-p1.md): 새 격리 사본·후속 delivery에서 독립 재현 RED와 정식 회귀 편입. 완료 SSE·고객 휴무 전파만 최소 수정하며 별도 독립 재검토 예정입니다.
+
+2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](../../final_project_cs/wiki/records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
+

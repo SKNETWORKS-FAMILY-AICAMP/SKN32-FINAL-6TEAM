@@ -52,13 +52,37 @@ class Item:
 
         장소가 없으면(이동 항목) 원래 장소 칸을 그대로 둔다. 시각을 안 주면 그대로다.
         """
+        kept = detail if detail is not None else dict(self.detail)
+        if place and str(place.get("place_id")) != str(self.place_id):
+            kept = {k: v for k, v in kept.items() if k != "customer_hours"}
         return Item(item_id=uuid4(), seq=self.seq, kind=self.kind, title=title,
                     place_id=UUID(str(place["place_id"])) if place else self.place_id,
                     starts_at=starts_at or self.starts_at,
                     ends_at=ends_at if ends_at is not None else self.ends_at,
                     locked=False, booking_id=None, replaces_item_id=self.item_id,
-                    detail=detail if detail is not None else dict(self.detail),
+                    detail=kept,
                     place=place if place else self.place)
+
+
+#: 고객이 알려 준 운영시간을 장소 보기에 붙였다는 표시(`hours_read.source`) — 화면 · 대화 · 새벽 확인이 「알려 주신」이라고 밝히는 열쇠
+TOLD_HOURS_SOURCE = "customer"
+
+
+def with_told_hours(place: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any]:
+    """`[2026-10-13 사용자 결정]` 장소가 운영시간을 모르면 그 항목에 고객이 알려 준 값(`detail.customer_hours`, 확인 화면 `items[n].hours`)을 **이 항목의 장소 보기에만** 붙인다.
+
+    ★장소 행에는 쓰지 않는다(공용 행일 수 있다 — 다른 고객에게 섞인다). 읽을 때 붙이는 판정용 값이라 대체 일정 짜기 · 지연 반영 · 대화 답 · 새벽 확인이
+      모두 같은 값을 본다. 장소 값(관광공사 · 원장 · 장소 행)이 있으면 그것이 이긴다. `hours_read.source = customer` 로 출처를 남긴다."""
+    from app.domains.travel_ops.components.places.place_hours import knows_hours
+
+    told = ((detail or {}).get("customer_hours") or {})
+    week = told.get("hours_week") if isinstance(told, dict) else None
+    attributes = dict(place.get("attributes") or {})
+    if not isinstance(week, dict) or not week or knows_hours(attributes):
+        return place
+    attributes["hours_week"] = dict(week)
+    attributes["hours_read"] = {"source": TOLD_HOURS_SOURCE, "method": "customer", "told": told.get("told")}
+    return {**place, "attributes": attributes}
 
 
 def _iso(moment: datetime | None) -> str | None:
@@ -129,7 +153,7 @@ WEATHER_BY_MIDDLE_CLASS = {"VE01": True, "VE03": True, "VE04": True, "LS03": Tru
 def _item_of(row: tuple) -> Item:
     """항목 줄(항목 11칸 + 장소 칸) → `Item`. `TripStore.items` · `_items_of_trips` 가 같이 쓴다."""
     item = Item(*row[:11])
-    item.place = _place(row[11:]) if row[11] is not None else None
+    item.place = with_told_hours(_place(row[11:]), item.detail) if row[11] is not None else None
     return item
 
 

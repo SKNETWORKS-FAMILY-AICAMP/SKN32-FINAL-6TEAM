@@ -2,15 +2,13 @@
 #  지표: 반복별 정답 · 3번 평균(사례 복원 추출 부트스트랩 95%) · pass^1/2/3 · 엉뚱한 대상 변경(반복별) · 지연 중앙/p95(CLI 기준) · 호출 실패(시스템 오류, 재시도 뒤에도 남은 것).
 #  ★사례 · 정답 표기자는 Claude 계열 세션(cases_real · long7 = claude, fact · ui25 = cs/ui 세션) — Codex 모델에는 출제자 편향이 없다. 반대로 제품 지시문(SYSTEM)이 이 사례로 다듬어져 gemma4:12b 쪽이 유리할 수 있다.
 # 사용: python codex_du_report.py   → results/codex_du_report.md
-import glob
 import json
 import os
-import statistics
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'eval_kit'))
-from stats import bootstrap_ci, fmt_ratio, pass_hat_k, percentile  # noqa: E402
+from stats import bootstrap_ci, pass_hat_k, percentile  # noqa: E402
 
 sys.stdout.reconfigure(encoding='utf-8')
 OUT = os.path.join(HERE, 'results', 'codex_du')
@@ -57,6 +55,9 @@ systems = {'우리 gemma4:12b(제품)': ours(), 'Codex 루나': codex('gpt-6-lun
 out = ['# 결정 단위 재생 — 172사례 × 3번, 같은 제품 지시문 · 검증 (우리 · Codex 루나 · 솔)\n',
        '- 사례 · 정답 표기자는 **Claude 계열 세션**이다(Codex 모델에는 출제자 편향 없음). 반대로 제품 지시문이 이 사례로 다듬어져 **gemma4:12b 가 유리**할 수 있다.',
        '- Codex 는 CLI 를 사례마다 한 번씩 불러 잰 값(구독 CLI, API 직접 호출이 아님) — 지연은 CLI 시작 오버헤드를 포함해 API 보다 느리다. 호출 실패(메모리 부족 등 시스템 오류)는 재시도했고 남은 것만 센다.',
+       '- 2026-10-16 정정: 루나 반복 2 의 cases_real 1번은 공용 Codex 호출 도구(codex_percall)의 동시 호출 파일 겹침으로 옆 문제(2번)의 답이 들어가 있었다 '
+       '— 도구를 고친 뒤 10-07 실행 직후 커밋(b4efb68cb)의 제품 코드로 그 1건만 다시 불러 바꿨다(루나 161 · 164 · 166 → 161 · 165 · 166). '
+       '나머지 1,031행은 같은 사례의 다른 실행 · 이웃 문제 답과 대조해 섞인 흔적이 없었다. 고치기 전 결과는 results/_backup/2026-10-16_codex_du_before_rerun/.',
        '- 우리 값의 3번은 2026-09-30 저장 결과(회차 사이 코드가 같았는지 기록이 없다).\n',
        '| 시스템 | 반복별 정답 /172 | 3번 평균 (부트스트랩 95%) | pass^2 | pass^3 | 엉뚱한 대상 변경(반복별) | 지연 중앙 / p95 (초) | 호출 실패 |', '|---|---|---|---:|---:|---|---|---:|']
 for name, s in systems.items():

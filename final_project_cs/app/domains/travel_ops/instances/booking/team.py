@@ -569,6 +569,8 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
         if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
         seen: set[str] = set()
@@ -600,6 +602,13 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
 
         if found.task == "status":
             return self._status(task, seen, evidence)
+        # 규칙이 기존 예약 상태 조회로 읽은 assist는 유지하고 신규 검색만 막는다.
+        if not booking_enabled(task.context.tenant_id):
+            return self._result(task, outcome="completed", confidence=1.0, next_action=NextAction.RESPOND,
+                                evidence=self._evidence(task, source_id="runtime:travel.booking.enabled",
+                                                        claim="예약 마스터 적용 상태(미설정·읽기 실패 포함 OFF)", value={"enabled": False}, base=evidence),
+                                decisions=[{"booking_disabled": True}],
+                                answer="새 예약 검색·등록·업체 인계 기능은 현재 꺼져 있습니다. 기존 예약 정보와 일정은 그대로 유지됩니다.")
         if found.task == "unclear":
             return self._respond(task, evidence, {**decision, "needs": ["task"]},
                                  "항공편을 찾아 드리려면 출발지 · 도착지 · 출발 날짜 · 인원을 알려 주세요. "
@@ -938,6 +947,14 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                                 answer=f"{item.title}은(는) 이미 예약하신 {KIND_LABEL[item.kind]}{_ira(KIND_LABEL[item.kind])} 바꾸지 않았어요. 다른 편을 원하시면 예약하신 곳에서 "
                                        "먼저 변경 · 취소 조건을 확인해 주세요.",
                                 decisions=[{"itinerary": "booked_kept", "item": item.title}])
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if not booking_enabled(task.context.tenant_id):
+            return self._result(task, outcome="completed", confidence=1.0, next_action=NextAction.RESPOND,
+                                evidence=self._evidence(task, source_id="runtime:travel.booking.enabled",
+                                                        claim="예약 마스터 적용 상태", value={"enabled": False}, base=ctx["evidence"]),
+                                decisions=[{"booking_disabled": True}],
+                                answer="새 예약 검색·등록 기능은 현재 꺼져 있습니다. 기존 항공편·기차·버스 일정은 그대로 유지됩니다.")
         choice = (ctx.get("request") or {}).get("choice")
         if choice:
             return self._choose(task, ctx, item, str(choice))

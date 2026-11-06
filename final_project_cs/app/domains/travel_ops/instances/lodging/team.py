@@ -642,6 +642,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if task.capability == "lodging.assist" and self.llm is None and not booking_enabled(task.context.tenant_id):
+            return self._result(task, outcome="completed", confidence=1.0, next_action=NextAction.RESPOND,
+                                evidence=self._evidence(task, source_id="runtime:travel.booking.enabled",
+                                                        claim="예약 마스터 적용 상태(미설정·읽기 실패 포함 OFF)", value={"enabled": False}),
+                                decisions=[{"booking_disabled": True}],
+                                answer="새 예약 검색·등록·업체 인계 기능은 현재 꺼져 있습니다. 기존 예약 정보와 일정은 그대로 유지됩니다.")
         if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
         seen: set[str] = set()
@@ -686,6 +694,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
 
         if found.task == "status":
             return self._status(task, seen, evidence)
+        # 이미 예약한 내 숙소 정보 조회·저장은 유지한다. 신규 숙소 검색만 OFF 경계다.
+        if found.task != "my_stay" and not booking_enabled(task.context.tenant_id):
+            return self._result(task, outcome="completed", confidence=1.0, next_action=NextAction.RESPOND,
+                                evidence=self._evidence(task, source_id="runtime:travel.booking.enabled",
+                                                        claim="예약 마스터 적용 상태", value={"enabled": False}, base=evidence),
+                                decisions=[{"booking_disabled": True}],
+                                answer="새 숙소 예약 검색 기능은 현재 꺼져 있습니다. 기존 숙소 정보와 일정은 그대로 유지됩니다.")
         if found.task == "unclear":
             return self._respond(task, evidence, {**decision, "needs": ["task"]},
                                  "숙소를 새로 찾아 드릴지, 이미 예약하신 숙소를 알려 주시는 것인지 말씀해 주세요. "

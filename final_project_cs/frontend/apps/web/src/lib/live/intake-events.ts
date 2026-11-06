@@ -108,6 +108,9 @@ function toItem(body: Record<string, unknown>): ReviewItem | null {
     day: maybeNum(body.day), date: maybeText(body.date), starts_at: maybeText(body.starts_at), ends_at: maybeText(body.ends_at),
     locked: body.locked === true, status: status === "keep" || status === "adjusted" || status === "review" ? status : null,
     can_lock: body.can_lock === true, place_state: (text(body.place_state, "unresolved")) as ReviewItem["place_state"],
+    hours_state: ["official", "customer", "unknown", "none"].includes(text(body.hours_state)) ? body.hours_state as ReviewItem["hours_state"] : undefined,
+    customer_hours: isObject(body.customer_hours) && typeof body.customer_hours.open === "string" && typeof body.customer_hours.close === "string" && Array.isArray(body.customer_hours.closed_days)
+      ? body.customer_hours as unknown as ReviewItem["customer_hours"] : null,
     place, booked: body.booked === true ? true : body.booked === false ? false : null, candidates_hint: maybeNum(body.candidates_hint),
     // `[2026-10-07]` Two readings of a photo's line (checked again before drawing — `from-review.ts` `rereadsOf`).
     ...(Array.isArray(body.rereads) && { rereads: body.rereads as NonNullable<ReviewItem["rereads"]> }),

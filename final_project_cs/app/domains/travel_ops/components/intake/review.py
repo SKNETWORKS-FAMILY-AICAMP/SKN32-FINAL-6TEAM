@@ -476,6 +476,11 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
 
 
 # ── 한 판 계산 ────────────────────────────────────────────────────
+def _told(line: dict[str, str]) -> dict[str, str]:
+    """Keep warnings, identify customer provenance rather than official verification."""
+    return _line(line["row"], "filled" if line["result"] == "ok" else line["result"], f"{line['text']} · 알려 주신 시간 기준")
+
+
 class _Budgeted:
     """이동 계산기를 부르는 시간에 상한을 건다 — 넘으면 못 채웠다고 답해 그 구간은 어림값으로 간다. 같은 질문은 다시 묻지 않고 기억한 답을 쓴다
     (시각을 맞추려고 같은 구간을 되풀이해 묻는 자동 추천이 계산기 시간을 두 번 쓰지 않게).
@@ -619,7 +624,7 @@ def _item_id(row: dict[str, Any], positions: dict[str, int]) -> str:
 
 #: 진행 이벤트로 내보내는 일정 칸 — 실시간 진행(`stream.Feed`)이 DB 에서 읽어 내는 `item` 이벤트와 **같은 칸**이다(같은 키가 나중 값으로 덮인다)
 _ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at", "end_date", "locked", "status",
-                      "can_lock", "place_state", "place", "candidates_hint", "booked", "parts", "rereads")
+                      "can_lock", "place_state", "place", "candidates_hint", "booked", "parts", "rereads", "hours_state", "customer_hours")
 
 
 #: 구간 키(`sig`)의 장소 상태 칸 — 뒤 일정 시각(「…+09:00」) 바로 뒤 「#」 다음 두 상태가 붙어 있다(「#customerfound」)
@@ -698,7 +703,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         note("progress", {"phase": "hours", "done": i, "total": len(rows),
                           "current": {"id": _item_id(r, positions), "title": r["title"]}})
         start, end = _dt(r["date"], r["start"]), _dt(r.get("end_date") or r["date"], r["end"])   # 숙소는 끝이 체크아웃 날이다
-        facts[i] = facts_for(conn, tenant_id, r["place"], r["kind"], start, end)
+        facts[i] = facts_for(conn, tenant_id, r["place"], r["kind"], start, end, **({"customer": r["customer_hours"]} if r.get("customer_hours") else {}))
         if start is None:
             continue
         seq_of[i] = len(parts) + 1
@@ -731,6 +736,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             if v.code == "time_order":
                 order_bad = True
         hours_line, closed_line = _hours_lines(r, facts[i], [v for v in mine if v.code in _HOURS_CODES | {"closed_day"}])
+        if facts[i].source == "customer":
+            hours_line, closed_line = _told(hours_line), _told(closed_line)
         lines = [_place_line(r, state, value)]
         booked = booked_of(r, state)
         booking = _booking_line(booked, state, r["kind"])
@@ -783,6 +790,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             "near_area": (((r["claims"].get("place") or {}).get("evidence") or {}).get("near_area") or None),
             # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
             "rereads": [{k: v for k, v in reread.items() if k != "note"} for reread in rereads],
+            "hours_state": ("none" if r["place"] is None else "customer" if facts[i].source == "customer"
+                            else "official" if facts[i].known else "unknown"),
+            "customer_hours": r.get("customer_hours"),
             "rows": lines})
         # 이 일정의 검사 줄이 정해졌다 — 이동 계산(오래 걸린다) 전에 알린다. 겹침으로 확인 필요가 되는 일정은 아래 끝에서 status 가 바뀔 수 있어 최종 값이 같은 키로 덮는다
         note("item", {**{k: items[-1][k] for k in _ITEM_EVENT_FIELDS}, "place": public_place(items[-1]["place"])})

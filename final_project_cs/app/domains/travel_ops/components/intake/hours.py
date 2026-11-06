@@ -60,7 +60,7 @@ def _tenants(tenant_id: str) -> list[str]:
 
 
 def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, start: datetime | None,
-              end: datetime | None, *, activity_verdict: bool = True) -> HoursFacts:
+              end: datetime | None, customer: dict[str, Any] | None = None, *, activity_verdict: bool = True) -> HoursFacts:
     """`place` = 읽은 장소 값(`{name, kind, latitude, longitude, place_id, content_id, source}`). 못 알면 `known=False` + 이유.
 
     `activity_verdict=False` 는 활동 원장 판정(⑤)을 섞지 않는다 — 활동 팀 자신이 읽는 사실 도구(`read.place_hours`)가 쓴다.
@@ -107,9 +107,23 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
         _apply_landmark(place, start, out)
     else:
         _landmark_tips(place, out)
+    if not out.known and customer:
+        week = customer_week(customer)
+        if week:
+            out.attributes = {**out.attributes, "hours_week": week}
+            out.known, out.source, out.why_unknown = True, "customer", None
     if not out.known:
         out.why_unknown = out.why_unknown or _why_unknown(place, kind, content_id)
     return out
+
+
+def customer_week(value: Any) -> dict[str, Any] | None:
+    """고객이 알려 준 운영시간(`{"open", "close", "closed_days"}`, `pipeline._checked` 가 모양을 확인한 값) → 판정기가 읽는 요일표(`hours_week`).
+    쉬는 요일은 `"closed"`, 나머지 요일은 같은 시간. 모양이 아니면 None(모름)."""
+    if not isinstance(value, dict) or not isinstance(value.get("open"), str) or not isinstance(value.get("close"), str):
+        return None
+    off = set(value.get("closed_days") or [])
+    return {day: "closed" if day in off else {"open": value["open"], "close": value["close"], "last_entry": None} for day in _DAYS}
 
 
 def _settle_stored_conditions(conn, start: datetime, end: datetime | None, out: HoursFacts) -> None:
@@ -336,6 +350,8 @@ def _merge_state(state: dict[str, Any], start: datetime, out: HoursFacts) -> Non
     """원장 판정(`dining_state` 모양) → 사실. 두 길(장소 행 · 가게 번호)이 같은 규칙으로 합친다."""
     attrs = dict(state.get("attributes") or {})
     out.open_at_slot, out.order_ok, out.needs_check = state.get("open_at_slot"), state.get("order_ok"), bool(state.get("needs_check"))
+    if isinstance(out.open_at_slot, bool) and not out.known:
+        out.known, out.source = True, "dining_ledger"
     week: dict[str, Any] = dict(out.attributes.get("hours_week") or {})
     if attrs.get("closed"):
         week[_DAYS[start.astimezone(_seoul()).weekday() if start.tzinfo else start.weekday()]] = "closed"

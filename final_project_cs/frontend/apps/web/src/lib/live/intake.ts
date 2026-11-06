@@ -20,7 +20,7 @@ export interface IntakeItem {
   line: number;
   day: number | null;
   date: string | null;
-  fields: Partial<Record<"title" | "starts_at" | "ends_at" | "date" | "kind" | "place" | "booking_no" | "booked" | "removed", IntakeField>>;
+  fields: Partial<Record<"title" | "starts_at" | "ends_at" | "date" | "kind" | "place" | "booking_no" | "booked" | "removed" | "hours", IntakeField>>;
 }
 
 export interface IntakeProblem { code: string; field: string; message: string; source_id: string | null }

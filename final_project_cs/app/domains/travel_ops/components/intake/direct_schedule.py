@@ -118,7 +118,7 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
         return key(row) in (fixed_times or set()) or row.get("locked") or row.get("booked") is True or bool(row.get("booking_no"))
 
     def hours_fit(row, start, end):
-        facts = facts_for(conn, tenant_id, row["place"], row["kind"], start, end)
+        facts = facts_for(conn, tenant_id, row["place"], row["kind"], start, end, **({"customer": row["customer_hours"]} if row.get("customer_hours") else {}))
         violations = check_itinerary([Part(seq=1, kind=row["kind"], title=row["title"] or "일정",
                                             starts_at=start, ends_at=end,
                                             place={"name": (row["place"] or {}).get("name", ""),

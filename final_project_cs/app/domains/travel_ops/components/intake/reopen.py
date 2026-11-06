@@ -118,6 +118,9 @@ def _claims_for(index: int, item: Item, evidence: dict[str, Any]) -> list[tuple[
         out.append(("vendor_booking", True, evidence))    # `[2026-10-15]` 화면이 잠금을 풀 때 「업체 예약은 따로 취소 · 변경해야 해요」를 알린다
     if item.locked or (item.detail or {}).get("customer_pinned") or _policy_locked(item):
         out.append(("locked", True, evidence))
+    told = ((item.detail or {}).get("customer_hours") or {}).get("told")
+    if isinstance(told, dict):
+        out.append(("hours", told, evidence))
     return [(f"items[{index}].{name}", value, why) for name, value, why in out]
 
 
@@ -299,7 +302,7 @@ def _same(origin: Item, row: dict[str, Any], starts: datetime, ends: datetime | 
     same_end = ends == origin.ends_at or (origin.ends_at is None and "ends_at" not in row["claims"])
     return ((row["title"] or "") == origin.title and row["kind"] == origin.kind and starts == origin.starts_at
             and same_end and same_place and (row["booking_no"] or None) == (booking or None) and same_booked
-            and same_lock)
+            and same_lock and row.get("customer_hours") == ((origin.detail or {}).get("customer_hours") or {}).get("told"))
 
 
 def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UUID], base_items: list[Item],
@@ -334,7 +337,7 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
         # `[2026-10-15 ST4F-490]` 정책 잠금 일정을 같은 곳에서 고쳤으면 원래 세부(편명 · 숙소 정보 등)를 이어받는다 — 다시 정하는 칸만 새로 쓴다
         inherit = same_spot and _policy_locked(origin)
         inherited = {k: v for k, v in (origin.detail or {}).items()
-                     if k not in ("provenance", "intake", "booking", "customer_pinned", "rollback_hold")} if inherit else {}
+                     if k not in ("provenance", "intake", "booking", "customer_pinned", "rollback_hold", "customer_hours")} if inherit else {}
         detail: dict[str, Any] = {**inherited, "provenance": row["provenance"], "intake": {"intake_id": intake_id, "revision": revision}}
         if origin is not None and origin.detail.get("execution"):
             from copy import deepcopy
@@ -352,6 +355,9 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
                                      **({"booking_no": row["booking_no"]} if row["booking_no"] else {})}
         if row["locked"] and not (row["kind"] in LOCKED_KINDS or vendor):
             detail["customer_pinned"] = True       # 정책 잠금 일정은 다시 열면 늘 잠금이다 — 고객 잠금으로 따로 적지 않는다
+        if row.get("customer_hours") and place:
+            from .hours import customer_week
+            detail["customer_hours"] = {"told": row["customer_hours"], "hours_week": customer_week(row["customer_hours"])}
         title = row["title"] or "(제목 없음)"
         place_claim = row["claims"].get("place") or {}
         # `[2026-10-25 사용자 결정]` 고객이 수정 화면에서 제목을 직접 고쳤으면(제목 값 줄 `customer`) 그 제목이 먼저다 — 처음 등록(`assemble._item_title`)과 같다

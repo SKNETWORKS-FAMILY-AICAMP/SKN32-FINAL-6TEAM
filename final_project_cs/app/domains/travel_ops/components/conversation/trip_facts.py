@@ -140,14 +140,15 @@ def _stored_hours(place: dict[str, Any], day: date | None = None) -> str | None:
     from app.domains.travel_ops.components.places.place_hours import hours_on
 
     attributes = place.get("attributes") or {}
+    provenance = " (알려 주신 운영시간)" if (attributes.get("hours_read") or {}).get("source") == "customer" else ""
     today = hours_on(attributes, day) if day is not None else None
     if today == "closed":
-        return f"{_day_label(day)}은 쉬는 날"
+        return f"{_day_label(day)}은 쉬는 날{provenance}"
     if today is not None:
         text = f"{today.opens:%H:%M}~{today.closes:%H:%M}"
         if today.last_entry:
             text += f" (입장·주문 마감 {today.last_entry:%H:%M})"
-        return text
+        return text + provenance
     hours = attributes.get("hours")
     if not (isinstance(hours, (list, tuple)) and len(hours) == 2):
         return None

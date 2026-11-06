@@ -8,6 +8,12 @@ domain: travel
 
 # guguroute wiki
 
+2026-10-25 v2 — 독립검토 P1/P2와 추가 cmd 실패코드 누락을 새 격리 후보에서 수정했습니다. 최종 launcher 18/18·admin 41/41·8개 개별 관문 통과, 이전 wrapper 실패 기록은 별도 보존했습니다. 이전 7개 시험은 전체 배치를 검증하지 않았습니다. 실제 3300·예약 OFF 저장은 미검증입니다. [수정·실패 이력·결과](../final_project_cs/wiki/records/reports/2026-10-25_local-admin-3300-v2.md).
+
+2026-10-25 — 로컬 일괄 실행의 개인 스크립트 필수 의존을 해소해 고객 API·운영 API·제품 관리자 3300 구성을 준비했습니다. 서비스·실DB·모델·배포는 실행하지 않았습니다. [실행 계약](../final_project_cs/wiki/operations/local-app-bundle.md) · [검증 기록](../final_project_cs/wiki/records/reports/2026-10-25_local-admin-3300.md).
+
+2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](../final_project_cs/wiki/records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
+
 2026-10-29 ST4F-728 로그아웃 경합 재현·차단: 웹1227/1227·화면11/11·필수3/3=100%,트래커종결0. [보고](../final_project_cs/wiki/records/reports/2026-10-29_st4f728-guest-logout.md).
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
@@ -215,6 +221,20 @@ ST4F-740 다음 미배정 항목으로 718의 자동 재생 이력 유실을 찾
 2026-10-17 공개 계획서 선택 장소 표시9ebf1aec의 API·worker 배포30초 안정성 확인. 실제 내부HTTP에서3응답200·장소4/4표시·첨부헤더 확인. 공개 브라우저·수동 저장 최종 화면은 미확인. [최종 확인 기록](../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)
 
 - 2026-10-18 관리자 여행 상세 운영 반영·실제 5여행 검증 완료: [인계·확인 한계](handoff/2026-10-18_admin-trip-release.md).
+
+2026-10-25 — 잔여 비DB3후보 새 격리 통합3/3, F1/F2수정2/2. 현재baseline과 같은 소켓차단4건 및 새 독립검토는 남았습니다. [결과](../final_project_cs/wiki/records/reports/2026-10-25_remaining-non-db-integration.md) · [인계](handoff/2026-10-25_remaining-non-db-integration.md).
+
+2026-10-25 — F3 새 격리 수정은 원문 probe3실패로 **수락 미해결**입니다. 단일955개948통과/원문3실패/기존4bind차단. [타임라인·실패 경로](records/reports/2026-10-25_remaining-non-db-f3-unresolved.md) · [새 설계 검토 인계](handoff/2026-10-25_remaining-non-db-f3-unresolved.md).
+
+2026-10-25 — F3 독립 설계 검토: 원문 paid-called 장벽의 인과 모순과 제품 결함을 분리하고 동등 스케줄 old RED/new GREEN을 검증했습니다. 원문 실패와 bind 차단은 보존합니다. [최신 근거](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).
+
+
+## 현재 누적 릴리스 준비 — 2026-10-25
+
+정확 history-preserving 관리자 예약OFF/로컬실행기까지 누적 통합 / 릴리스 HOLD. 원문3실패·bind4차단·strict-budget 미수락 유지, 실제 실행·OFF 저장은 DB 대기. [최신 현황](handoff/2026-10-25_final-admin-non-db-integration.md) · [직전 준비 기록](handoff/2026-10-25_remaining-non-db-release-preparation.md).
+
+
+2026-10-25 — 관리자 예약 OFF/로컬 실행기 누적 격리 통합, 실제 실행·OFF 저장은 DB 대기. [최신 인계](records/reports/2026-10-25_final-admin-non-db-integration.md).
 
 
 [2026-10-29 버스 scalar 독립 검토](records/reports/2026-10-29_bus-scalar-independent-continuation.md): 필수3/3=100%, 실제공공자료·최신코드 동등 확인, local 혼합walk 평균8.65% 감소; EKS 전체성능 미검증.

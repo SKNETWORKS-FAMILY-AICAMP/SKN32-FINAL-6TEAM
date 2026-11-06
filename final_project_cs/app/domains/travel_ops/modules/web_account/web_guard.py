@@ -206,6 +206,10 @@ def specs() -> dict[str, LimitSpec]:
              "끄면 그 칸들과 「이용 방법」의 해당 설명이 숨습니다. 설문 답과 하루 일정의 여유(손대지 않으면 설문 답 · 「적당히」)는 그대로 계획과 함께 갑니다. 이미 받은 접수 · 다른 입구는 막지 않습니다.")
     # ★`[2026-10-19 사용자 결정 — ST4F-613]` 항로 지킴이 — 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다. 기본 켜짐.
     #   읽는 곳은 `settings_hook.guardian_enabled` 하나다(판정 · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기)
+    out["travel.booking.enabled"] = LimitSpec(
+        "travel.booking.enabled", "예약 마스터 — 새 예약 검색 · 등록 · 업체 인계", "", "bool", False,
+        help="기본 꺼짐. 새 예약 검색과 업체 인계 실행만 차단합니다. 기존 예약 정보 읽기·수동 저장·잠금 및 숙소 일정 검토는 유지합니다. "
+             "켜도 미구현 예약 기능이 새로 생기거나 업체 거래 승인이 생략되지는 않습니다.")
     out["travel.guardian.enabled"] = LimitSpec(
         "travel.guardian.enabled", "항로 지킴이(끄면 웹에서 숨기고 자동 일정 변경도 멈춤)", "", "bool",
         guard.get("travel.guardian.enabled") is True, help=_guardian_help(guard))

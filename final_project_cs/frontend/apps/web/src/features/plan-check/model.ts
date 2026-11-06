@@ -1,3 +1,4 @@
+import type { ToldHours, Weekday, HoursState } from "@/lib/live/intake-review";
 import type { Coordinates } from "@/features/map/model";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import type { ItemRisk } from "@/lib/live/risks";
@@ -41,6 +42,8 @@ export interface PlaceInfo {
 }
 
 export interface PlanItem {
+  hoursState?: HoursState;
+  toldHours?: ToldHours | null;
   risk?: ItemRisk | null;
   id: string;
   day: number;
@@ -646,19 +649,51 @@ export function needs(view: Pick<PlanCheckView, "items" | "moves">): { places: n
 export const foundCount = (view: Pick<PlanCheckView, "lines">) => view.lines.filter((line) => line.read && line.found?.kind === "item").length;
 
 /** What the stop editor sends: the stop as the customer wants it. Same fields as the intake review's draft. */
-export interface ItemDraft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean }
+export function completionText(view: Pick<PlanCheckView, "items">, t: (ko: string, en: string) => string): string {
+  const unknown = view.items.filter(item => !item.noPlace && (item.hoursState === "unknown"
+    || (!item.hoursState && item.checks?.some(check => check.kind === "hours" && check.result === "unknown")))).length;
+  return unknown ? t(`고칠 곳은 없어요 · 운영시간을 못 찾은 곳 ${unknown}곳`, `No changes needed · opening hours unknown for ${unknown} stops`)
+    : t("모두 확인했어요", "All checked");
+}
 
-export const draftOfItem = (item: PlanItem): ItemDraft =>
-  ({ title: item.written ?? item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
+export interface HoursDraft { open: string; close: string; closedDays: Weekday[] }
+export const WEEKDAYS: readonly Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+
+/** The typed hours in the server's shape — null when both times are empty (nothing told, or clearing what was told). */
+export function toldOf(hours: HoursDraft): ToldHours | null {
+  if (!hours.open && !hours.close) return null;
+  return { open: hours.open, close: hours.close === "00:00" ? "24:00" : hours.close, closed_days: WEEKDAYS.filter((day) => hours.closedDays.includes(day)) };
+}
+
+export const sameTold = (a: ToldHours | null | undefined, b: ToldHours | null | undefined) =>
+  (a ?? null) === (b ?? null) || (!!a && !!b && a.open === b.open && a.close === b.close && a.closed_days.join() === b.closed_days.join());
+
+export interface ItemDraft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean; hours?: HoursDraft }
+
+/** The hours box is offered only where no other source knows the hours (or the customer already told them) — the server's own value wins anyway. */
+export const canTellHours = (item: Pick<PlanItem, "hoursState" | "noPlace">) =>
+  !item.noPlace && (item.hoursState === "unknown" || item.hoursState === "customer");
+
+export const draftOfItem = (item: PlanItem): ItemDraft => ({
+  title: item.written ?? item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace,
+  ...(canTellHours(item) && { hours: { open: item.toldHours?.open ?? "", close: item.toldHours ? (item.toldHours.close === "24:00" ? "00:00" : item.toldHours.close) : "", closedDays: [...(item.toldHours?.closed_days ?? [])] } }),
+});
 
 /**
  * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,
  * no place name (unless 「장소 없음」). Everything else — whether the place exists, the date's range — is the server's to say.
  */
-export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | null {
+export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | "hours" | null {
   if (!draft.title.trim()) return "title";
   if (draft.start && draft.end && draft.end <= draft.start) return "time";
   if (!draft.noPlace && !draft.place.trim()) return "place";
+  if (draft.hours && !draft.noPlace) {
+    const h = draft.hours, told = toldOf(h);
+    if (told && (!/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(h.open)
+      || !/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(h.close) || told.close <= told.open
+      || h.closedDays.length >= WEEKDAYS.length || new Set(h.closedDays).size !== h.closedDays.length)) return "hours";
+  }
   return null;
 }
 

@@ -108,6 +108,8 @@ def place_info(conn, tenant_id: str, place: dict[str, Any] | None) -> dict[str, 
     raw = (catalog or {}).get("raw") or {}
     from_tour = source == "tour_api" or catalog is not None or read.get("source") == "tour_api"
     hours_note, hours_evidence = official_web_note(read)
+    if read.get("source") == "customer":
+        hours_note = "운영시간은 알려 주신 값"
     phone = attributes.get("phone") or (raw.get("tel") or "").strip() or None
     phone_note = None if attributes.get("phone") else catalog_fact_note(raw, "tel")
     notes = [note for note in ("ⓒ한국관광공사" if from_tour else None, hours_note, phone_note) if note]

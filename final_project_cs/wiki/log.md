@@ -1138,6 +1138,10 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 
 실제 재개 경합·명시적 시험 DB·합성 재난 입력·웹 기대값을 보완했다. [원인·전체 검증·미확인 범위](records/reports/2026-10-18_develop-ci-repair.md). 최초 실패 기록은 보존한다.
 
+## 2026-10-25 — F3 독립 검토
+
+제품 진단 코드 보존, 별도 동등 스케줄 회귀 old RED/new GREEN, 원문 실패·bind 차단 유지. [실행 결과와 scope 판정](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).
+
 ## 2026-10-24 — timeout 복구 후 이관·대화자료 문서 반영
 
 [검증 범위·과거 자료 요약](../../wiki/records/reports/2026-10-24_workspace-migration-and-history.md)에 기존 JSON 집계와 미완료, Codex outputs 4개·D 최신인계 원문 3개를 기록했습니다. 수정 경로: 루트 wiki index/log·handoff 새문서/index·보고서 및 cs wiki index/log(총7문서). 원본/코드/서비스 변경·추가복사·전체 재검사는 하지 않았고 과거 자료를 현재 구현·배포 완료로 승격하지 않았습니다.

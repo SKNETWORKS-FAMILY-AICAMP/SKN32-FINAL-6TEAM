@@ -226,9 +226,15 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
 
 
 def _place_violations(part: Part) -> list[Violation]:
-    from app.domains.travel_ops.components.places.place_hours import break_span, hours_on
+    from app.domains.travel_ops.components.places.place_hours import break_span, hours_on, knows_hours
 
     attributes = dict((part.place or {}).get("attributes") or {})
+    ledger_known = isinstance(((part.place or {}).get("ledger") or {}).get("open_at_slot"), bool)
+    if ledger_known and (attributes.get("hours_read") or {}).get("source") == "customer":
+        attributes.pop("hours_week", None)
+    told = ((part.detail or {}).get("customer_hours") or {}).get("hours_week")
+    if not ledger_known and not knows_hours(attributes) and isinstance(told, Mapping) and told:
+        attributes["hours_week"] = dict(told)
     found: list[Violation] = []
     # ★`[2026-10-02]` 식당은 요식 원장의 그 시각 판정(`with_ledger`)이 있으면 그것을 본다. None 은 모름 — 거르지 않는다
     ledger = (part.place or {}).get("ledger") or {}

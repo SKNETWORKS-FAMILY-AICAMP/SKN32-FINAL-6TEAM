@@ -12,6 +12,28 @@ domain: travel
 
 - 진행 중 `review.build`와 최초 완료·재연결 `Feed.poll`의 item 이벤트는 `hours_state`·`customer_hours`를 모두 보존합니다. 저장된 검토값이 정본이며 진행 보관소가 비어도 같습니다.
 - `place_open_checks.source=customer_hours`는 해당 여행/항목의 확인·대체 요청 근거일 뿐 tenant 공용 휴무 장소 제외집합에 포함하지 않습니다. 같은 고객의 다른 여행·같은 여행의 다른 항목도 영향을 받지 않습니다. 공식 출처 휴무의 기존 tenant/day 공유는 유지합니다.
+- 담당: P1 수정 에이전트. 독립 재검토는 별도 예정이며 운영 반영은 하지 않습니다. [후속 기록](../../records/reports/2026-10-24_customer-hours-p1.md).
+
+### 고객이 알려 준 운영시간 — 격리 통합 (2026-10-24)
+
+- 편집 `items[n].hours`: `{open: "HH:MM", close: "HH:MM" | "24:00", closed_days?: ["mon", …, "sun"]}` 또는 삭제 `null`. 추가 속성, 중복/알 수 없는 요일, 이레 모두 휴무, 같거나 역전된 시각은 422 `invalid_value`입니다.
+- 검토 항목/SSE `hours_state`: `official | customer | unknown | none`, `customer_hours`: 입력 원값 또는 null. 공식 관광/활동/식당/대표장소 정보가 우선합니다. 고객값 근거는 `filled`와 「알려 주신 시간 기준」으로 표시합니다.
+- 등록값은 해당 항목 `detail.customer_hours.{told,hours_week}`뿐입니다. 공용 장소에 쓰지 않습니다. 장소만 교체하면 제거하며 같은 편집에 명시한 새 hours는 유지합니다. 대체 항목의 장소가 바뀌면 이전 값을 제거합니다.
+- TripStore는 항목별 장소 보기에만 `hours_read.source=customer`를 붙입니다. Google open/closed는 고객값보다 우선합니다. unknown/unmatched일 때만 고객값으로 판정하며 소스 실패/deferred는 성공으로 바꾸지 않습니다.
+- 웹 편집은 00:00 종료를 24:00으로 전송하고 공식값이 있으면 입력칸을 숨깁니다. 기존 날짜 deferred·캐시·검색/add-search/check:false 계약은 유지합니다. [검증 기록](../../records/reports/2026-10-24_customer-hours-integration.md).
+
+### 날짜 위험 2차 보완 — 격리 구현 계약 (2026-10-24)
+
+- 시작까지 24시간을 초과하는 일정은 현재상태 경보를 미래의 문제로 세지 않습니다. `as_of_now`가 없어도 현재상태 종류는 동일합니다. 예보와 방문 기간에 겹치는 명시적 통제 기간은 유지합니다(끝만 있으면 시작 이전부터, 시작만 있으면 이후로 해석하며, 양 끝 접촉도 겹침입니다). 잘못된/시간대 없는 시각은 기간 근거로 쓰지 않습니다.
+- `unknown_categories`에서 `too_early`만 분리하고 실제 소스 실패·일부 미확인·위치 없음·점검 오류는 유지합니다. 남은 problem과 실제 unknown이 없을 때만 `status: unknown`, `code: too_early`, 선택 필드 `deferred: true`로 출발 전 재확인임을 밝힙니다. `clear`로 승격하지 않습니다. 뺀 현재 문제 수는 `deferred_current`로 남깁니다.
+- 웹은 deferred만 확인필요 개수/행에서 제외하며 별도 재확인 안내를 보입니다. problem은 deferred 표식보다 우선하고 실제 unknown은 숨기지 않습니다. `risk_panel` 꺼짐은 기존대로 실제 위험만 남깁니다.
+- 10분 재사용·일정 서명·원래 `checked_at`을 유지합니다. 개별 결과의 원래 확인 시각으로도 만료를 검사하여 새 판을 거듭 만들며 수명이 연장되지 않게 합니다. 24시간 경계나 일정 종료 경계를 넘으면 다시 검사합니다. 이 계약은 검색/채팅/공지·등록 가능 판정을 바꾸지 않습니다.
+- 담당: 날짜 위험 구현 에이전트(접수/웹 겸임). 독립 검토·운영 반영은 미완료이며 [격리 검증 기록](../../records/reports/2026-10-24_date-risk-second-pass.md)에 실행 증거를 남깁니다.
+
+### 고객 운영시간 P1 후속 계약 — 2026-10-24
+
+- 진행 중 `review.build`와 최초 완료·재연결 `Feed.poll`의 item 이벤트는 `hours_state`·`customer_hours`를 모두 보존합니다. 저장된 검토값이 정본이며 진행 보관소가 비어도 같습니다.
+- `place_open_checks.source=customer_hours`는 해당 여행/항목의 확인·대체 요청 근거일 뿐 tenant 공용 휴무 장소 제외집합에 포함하지 않습니다. 같은 고객의 다른 여행·같은 여행의 다른 항목도 영향을 받지 않습니다. 공식 출처 휴무의 기존 tenant/day 공유는 유지합니다.
 - 담당: P1 수정 에이전트. 2026-10-28 원본 통합에서 원본 구조(`stream.Feed`·`dawn_check._closed_places`·`hours._merge_state`·`itinerary_checks._place_violations`)로 옮겼다 — 시험 `tests/unit/travel/test_customer_hours_original_port.py`. [후속 기록](../../records/reports/2026-10-24_customer-hours-p1.md).
 
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`

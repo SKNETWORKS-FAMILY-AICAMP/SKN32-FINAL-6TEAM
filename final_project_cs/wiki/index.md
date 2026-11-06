@@ -266,6 +266,20 @@ ST4F-740 다음 미배정 항목으로 718의 자동 재생 이력 유실을 찾
 
 2026-10-18: develop CI 실패 원인을 보완하고 독립 전체 검증을 완료했다. 게시 후 CI·운영 확인은 별도다. [기록](records/reports/2026-10-18_develop-ci-repair.md).
 
+2026-10-25 — 잔여 비DB3후보 최소 통합·원본 독립probe RED→GREEN. 회귀327/331, 소켓차단4를 유지하며 DB/서비스/운영은 미변경. [최종 기록](records/reports/2026-10-25_remaining-non-db-integration.md).
+
+2026-10-25 — F3 새 격리 수정은 원문 probe3실패로 **수락 미해결**입니다. 단일955개948통과/원문3실패/기존4bind차단. [타임라인·실패 경로·남은 계약](records/reports/2026-10-25_remaining-non-db-f3-unresolved.md).
+
+2026-10-25 — F3 독립 검토와 동등 스케줄 회귀: 원문3실패를 시험 모순으로 분리하며 제품 logical-dispatch 경계만 수락 검토합니다. [정확 실행 결과·남은 범위](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).
+
+
+## 현재 누적 릴리스 준비 — 2026-10-25
+
+정확 history-preserving 비DB 누적 후보 준비 완료 / 릴리스 HOLD. 원문3실패·bind4차단·strict-budget 미수락 유지; admin/예약OFF는 wiki3경로 clean 병합 가능성만 확인(미적용). [최종 현황](records/reports/2026-10-25_remaining-non-db-release-preparation.md).
+
+
+2026-10-25 — 관리자 예약 OFF/로컬 실행기 누적 격리 통합, 실제 실행·OFF 저장은 DB 대기. [최신 인계](records/reports/2026-10-25_final-admin-non-db-integration.md).
+
 
 2026-10-24 한 구간의 택시 이동이 전체로 확대되지 않도록 읽기·구간 생성·성향 전달을 통일했습니다. 매니저 통합·검증과 운영 확인은 [결함 기록](records/reports/debugs/2026-10-24_택시구간_범위수정_매니저반영.md)에서 구분합니다.
 2026-10-27 G 모델 품질 — 해석 문법이 쓸모없는 기준 칸 · 날짜 인용을 비워 두지 못하게(F02 통과 · I05 날짜 해소, 수용 49 엄격 38→39/49 = 77.6→79.6%, 회귀 0) · 속도 병목은 GPU 경합 · num_ctx 재적재(33 s+31 s)가 주원인 · 후보 00aca1041→a7e6da518(push 전) · W1~W6 공개 response 계약 초안: [보고서](records/reports/2026-10-27_G_모델품질_해석문법_속도_설계.md)
@@ -391,3 +405,14 @@ ST4F-740 다음 미배정 항목으로 718의 자동 재생 이력 유실을 찾
 2026-10-29 ST4F-719 auth lifetime independent review: unit32/40=80%, Edge28/28 + identity10/10 + UI1/1=100%; endpoint/race defects, security HOLD. [Review](records/reports/2026-10-29_st4f719-auth-lifetime-independent-review.md).
 
 2026-10-29 ST4F-719 ?? ???watcher 401 ?? ??: ? 1,438/1,438?PG/Edge 58/58 = 100%, Git ?? ??? ?? 1/3 = 33.3% HOLD. [??](records/reports/2026-10-29_st4f719-auth-generation-race-fix.md).
+
+2026-10-25 v2 — 독립검토 P1/P2와 추가 cmd 실패코드 누락을 새 격리 후보에서 수정했습니다. 최종 launcher 18/18·admin 41/41·8개 개별 관문 통과, 이전 wrapper 실패 기록은 별도 보존했습니다. 이전 7개 시험은 전체 배치를 검증하지 않았습니다. 실제 3300·예약 OFF 저장은 미검증입니다. [수정·실패 이력·결과](records/reports/2026-10-25_local-admin-3300-v2.md).
+
+2026-10-25 — 로컬 일괄 실행의 개인 스크립트 필수 의존을 해소해 고객 API·운영 API·제품 관리자 3300 구성을 준비했습니다. 서비스·실DB·모델·배포는 실행하지 않았습니다. [실행 계약](operations/local-app-bundle.md) · [검증 기록](records/reports/2026-10-25_local-admin-3300.md).
+
+2026-10-24 — 예약 마스터 기본 OFF를 제품 관리자 운영 설정에 연결한 격리 v2 후보입니다. 실DB·운영 OFF 적용·독립 검토는 미완료이며 [계약](operations/booking-master-switch.md)과 [실행 근거·한계](records/reports/2026-10-24_booking-admin-off-v2.md)를 구분해 확인합니다.
+
+2026-10-24 — 고객 운영시간 P1 두 건의 격리 후속 수정: 완료·재연결 SSE 보존 및 고객 휴무의 공용 제외집합 전파 차단. 독립 재검토·운영 반영 전이며 [실행 결과와 한계](records/reports/2026-10-24_customer-hours-p1.md)를 확인합니다.
+
+2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
+
